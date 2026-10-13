@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://7fvw5kim6xkq"]
+
+[ext_resource type="PackedScene" uid="uid://b3hsm84ltxcbu" path="res://scenes/menus/map_menu/map_menu.tscn" id="1_elqb8"]
+[ext_resource type="Script" uid="uid://cf6yiwekcgly1" path="res://scenes/menus/main_menu/main.gd" id="1_rvslj"]
+[ext_resource type="PackedScene" uid="uid://c3edoot4bljng" path="res://scenes/3d_scenes/node_3d.tscn" id="3_isujf"]
+
+[node name="Main" type="Node" unique_id=2082020883]
+
+[node name="WelcomeScreen" type="Control" parent="." unique_id=1815881739]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_rvslj")
+
+[node name="ColorRect" type="ColorRect" parent="WelcomeScreen" unique_id=847063018]
+layout_mode = 0
+offset_right = 504.0
+offset_bottom = 160.0
+color = Color(0.22670749, 0.22670749, 0.22670746, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="WelcomeScreen/ColorRect" unique_id=2118266471]
+layout_mode = 0
+offset_right = 507.0
+offset_bottom = 158.0
+alignment = 1
+
+[node name="RichTextLabel" type="RichTextLabel" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=1074179646]
+layout_mode = 2
+text = "Welcome to Robs Game"
+fit_content = true
+scroll_active = false
+shortcut_keys_enabled = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OpenMapMenu" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=378651687]
+layout_mode = 2
+text = "Generate or reload Map"
+
+[node name="OpenGeneratedCity" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=695819326]
+layout_mode = 2
+text = "View City"
+
+[node name="Exit" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=463418212]
+layout_mode = 2
+text = "Exit"
+
+[node name="MapMenu" parent="." unique_id=304661838 instance=ExtResource("1_elqb8")]
+visible = false
+
+[node name="Node3D" parent="." unique_id=856768213 instance=ExtResource("3_isujf")]
+
+[connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenMapMenu" to="WelcomeScreen" method="_on_open_map_menu_pressed"]
+[connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenGeneratedCity" to="WelcomeScreen" method="_on_open_generated_city_pressed"]
+[connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/Exit" to="WelcomeScreen" method="_on_exit_pressed"]

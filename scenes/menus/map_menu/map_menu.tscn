@@ -1,0 +1,218 @@
+[gd_scene format=3 uid="uid://b3hsm84ltxcbu"]
+
+[ext_resource type="Script" uid="uid://d15e3bqmj57b4" path="res://scenes/menus/map_menu/map_menu.gd" id="1_3k8dc"]
+
+[node name="MapMenu" type="Control" unique_id=304661838]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_3k8dc")
+
+[node name="BackGround" type="PanelContainer" parent="." unique_id=330356311]
+layout_mode = 0
+offset_right = 561.0
+offset_bottom = 464.0
+
+[node name="VBoxControlsContainer" type="VBoxContainer" parent="." unique_id=355657311]
+layout_mode = 0
+offset_left = 37.0
+offset_right = 530.0
+offset_bottom = 461.0
+
+[node name="Label" type="Label" parent="VBoxControlsContainer" unique_id=478195892]
+layout_mode = 2
+text = "City Creator/loader"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxControlsContainer" unique_id=1806319141]
+layout_mode = 2
+
+[node name="HBoxCityName" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1726369385]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxControlsContainer/HBoxCityName" unique_id=1624212387]
+layout_mode = 2
+text = "City Name"
+
+[node name="LineEditCityName" type="LineEdit" parent="VBoxControlsContainer/HBoxCityName" unique_id=10598260]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Pls Enter Name for city"
+alignment = 1
+max_length = 40
+expand_to_text_length = true
+
+[node name="HBoxSeedID" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=734107859]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxSeedID" unique_id=1257286795]
+layout_mode = 2
+text = "Seed Id "
+
+[node name="seed_text" type="LineEdit" parent="VBoxControlsContainer/HBoxSeedID" unique_id=606301945]
+propagate_maximum_size = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter an alpha numeric seed"
+max_length = 30
+expand_to_text_length = true
+emoji_menu_enabled = false
+select_all_on_focus = true
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxControlsContainer" unique_id=1313901814]
+layout_mode = 2
+
+[node name="VBoxCitySize" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1690527355]
+layout_mode = 2
+
+[node name="Label3" type="Label" parent="VBoxControlsContainer/VBoxCitySize" unique_id=800153827]
+layout_mode = 2
+text = "City Size"
+
+[node name="HBoxCityGrid" type="HBoxContainer" parent="VBoxControlsContainer/VBoxCitySize" unique_id=1809189029]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=755559848]
+layout_mode = 2
+text = "Width"
+
+[node name="HSliderGridWidth" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=409908587]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 5.0
+value = 5.0
+rounded = true
+tick_count = 1
+
+[node name="Label2" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
+layout_mode = 2
+text = "Height"
+
+[node name="HSliderGridHeight" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1910906089]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 5.0
+value = 5.0
+rounded = true
+tick_count = 1
+
+[node name="HBoxContainer5" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1087251699]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1068555990]
+layout_mode = 2
+text = "City Block Size"
+
+[node name="HSliderBlockSize" type="HSlider" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1003880682]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 500.0
+
+[node name="HBoxContainer6" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1374230830]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer6" unique_id=1725636807]
+layout_mode = 2
+text = "Chance of Vacant Block"
+
+[node name="HSliderVacantBlockChance" type="HSlider" parent="VBoxControlsContainer/HBoxContainer6" unique_id=1666289017]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 0.2
+step = 0.01
+
+[node name="HBoxContainer10" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1749167412]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer10" unique_id=1292359055]
+layout_mode = 2
+text = "Building Density"
+
+[node name="HSliderBuildingDensity" type="HSlider" parent="VBoxControlsContainer/HBoxContainer10" unique_id=797107221]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxControlsContainer" unique_id=387699350]
+layout_mode = 2
+
+[node name="Vbox2" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1939998373]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxControlsContainer/Vbox2" unique_id=689647285]
+layout_mode = 2
+text = "Ratio Residential - Commercial - Industrial"
+
+[node name="HBoxContainer" type="VBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=997997164]
+propagate_maximum_size = false
+layout_mode = 2
+
+[node name="HBoxContainer7" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1308591597]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=635661925]
+layout_mode = 2
+text = "Res %"
+
+[node name="HSliderResidentialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=7889145]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1350004796]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=166110774]
+layout_mode = 2
+text = "Com %"
+
+[node name="HSliderCommercialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=806739449]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+tick_count = 1
+
+[node name="HBoxContainer9" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1121579891]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=861449238]
+layout_mode = 2
+text = "Ind %"
+
+[node name="HSliderIndustrialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=1374620625]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+ticks_on_borders = true
+
+[node name="HBoxContainer11" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=2113325430]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=1225378585]
+layout_mode = 2
+text = "Residential SubDivs"
+
+[node name="CheckButtonResidentialSubdivs" type="CheckButton" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=120543125]
+layout_mode = 2
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxControlsContainer" unique_id=1262867589]
+layout_mode = 2
+
+[node name="Generate_Reload" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1071178738]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxControlsContainer/Generate_Reload" unique_id=2039371530]
+layout_mode = 2
+text = "Generate/Reload"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxControlsContainer/Generate_Reload" unique_id=505421367]
+layout_mode = 2
+
+[node name="ButtonRecallCity" type="Button" parent="VBoxControlsContainer/Generate_Reload/HBoxContainer" unique_id=637068152]
+layout_mode = 2
+text = "Reload city based on Seed"
+
+[node name="ButtonGenerateCity" type="Button" parent="VBoxControlsContainer/Generate_Reload/HBoxContainer" unique_id=1820146840]
+layout_mode = 2
+text = "Generate new city and save
+"
