@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://7fvw5kim6xkq"]
 
-[ext_resource type="PackedScene" uid="uid://b3hsm84ltxcbu" path="res://scenes/menus/map_menu/map_menu.tscn" id="1_elqb8"]
 [ext_resource type="Script" uid="uid://cf6yiwekcgly1" path="res://scenes/menus/main_menu/main.gd" id="1_rvslj"]
-[ext_resource type="PackedScene" uid="uid://c3edoot4bljng" path="res://scenes/3d_scenes/node_3d.tscn" id="3_isujf"]
 
 [node name="Main" type="Node" unique_id=2082020883]
 
@@ -45,11 +43,6 @@ text = "View City"
 [node name="Exit" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=463418212]
 layout_mode = 2
 text = "Exit"
-
-[node name="MapMenu" parent="." unique_id=304661838 instance=ExtResource("1_elqb8")]
-visible = false
-
-[node name="Node3D" parent="." unique_id=856768213 instance=ExtResource("3_isujf")]
 
 [connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenMapMenu" to="WelcomeScreen" method="_on_open_map_menu_pressed"]
 [connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenGeneratedCity" to="WelcomeScreen" method="_on_open_generated_city_pressed"]

@@ -3,7 +3,9 @@ extends Node3D
 @onready var city_crafter: Node3D = $ExampleScene/CityCrafter
 
 func _ready() -> void:
-	var settings := load_last_generated_settings()
+	var settings := load_pending_city_settings()
+	if settings.is_empty():
+		settings = load_last_generated_settings()
 	if settings.is_empty():
 		push_error("No generated city is available to display.")
 		return
@@ -16,6 +18,16 @@ func _ready() -> void:
 	set_status(status_text)
 	city_crafter.connect("generation_complete", _on_generation_complete)
 	city_crafter.call_deferred("generate_city_async")
+
+func load_pending_city_settings() -> Dictionary:
+	if not get_tree().has_meta("pending_city_settings"):
+		return {}
+	var settings = get_tree().get_meta("pending_city_settings")
+	get_tree().remove_meta("pending_city_settings")
+	if not settings is Dictionary:
+		push_error("Pending city settings are invalid.")
+		return {}
+	return settings
 
 func load_last_generated_settings() -> Dictionary:
 	var file_path := "user://cities/last_generated.json"

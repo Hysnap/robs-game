@@ -88,6 +88,7 @@ func _on_generate_city_pressed() -> void:
 	if not save_city_settings(settings):
 		return
 
+	get_tree().set_meta("pending_city_settings", settings)
 	generate_city_requested.emit(settings)
 	var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
 	if error != OK:
