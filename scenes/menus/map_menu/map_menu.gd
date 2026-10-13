@@ -85,8 +85,13 @@ func _on_generate_city_pressed() -> void:
 
 	var settings := DEFAULT_SETTINGS.duplicate()
 	settings.merge(user_settings)
+	if not save_city_settings(settings):
+		return
 
 	generate_city_requested.emit(settings)
+	var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
+	if error != OK:
+		push_error("Could not open generated city. Error code: %s" % error)
 
 func _on_recall_city_pressed() -> void:
 	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
@@ -94,38 +99,92 @@ func _on_recall_city_pressed() -> void:
 		push_error("Enter a city name before recalling a city.")
 		return
 
+	var settings := load_city_settings(city_name)
+	if settings.is_empty():
+		return
+	if not write_json_file("user://cities/last_generated.json", settings):
+		return
+
 	recall_city_requested.emit(city_name)
+	var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
+	if error != OK:
+		push_error("Could not open recalled city. Error code: %s" % error)
 
 func seed_text_to_int(seed_text: String) -> int:
 	return seed_text.strip_edges().hash()
 
-func save_city_settings(settings: Dictionary) -> void:
+func save_city_settings(settings: Dictionary) -> bool:
 	var directory := DirAccess.open("user://")
 	if directory == null:
 		push_error("Could not access the user data directory.")
-		return
+		return false
 
-	if not DirAccess.dir_exists_absolute("user://cities"):
-		var error := DirAccess.make_dir_absolute("user://cities")
-		if error != OK:
-			push_error("Could not create city save directory.")
-			return
+	var directory_error := DirAccess.make_dir_recursive_absolute("user://cities")
+	if directory_error != OK and directory_error != ERR_ALREADY_EXISTS:
+		push_error("Could not create city save directory. Error code: %s" % directory_error)
+		return false
 
-	var city_name: String = str(settings["city_name"]).to_lower().replace(" ", "_")
-	var file_path := "user://cities/%s.json" % city_name
+	var city_name: String = sanitize_city_name(str(settings["city_name"]))
+	if city_name.is_empty():
+		push_error("City name must contain at least one valid character.")
+		return false
+
+	if not write_json_file("user://cities/%s.json" % city_name, settings):
+		return false
+	return write_json_file("user://cities/last_generated.json", settings)
+
+func load_city_settings(city_name: String) -> Dictionary:
+	var safe_name := sanitize_city_name(city_name)
+	var file_path := "user://cities/%s.json" % safe_name
+	return read_json_file(file_path)
+
+func sanitize_city_name(city_name: String) -> String:
+	var safe_name := city_name.strip_edges().to_lower()
+	safe_name = safe_name.replace(" ", "_")
+	return safe_name.validate_filename()
+
+func write_json_file(file_path: String, settings: Dictionary) -> bool:
 	var file := FileAccess.open(file_path, FileAccess.WRITE)
+	if file == null:
+		push_error("Could not open city save file: %s. Error code: %s" % [
+			file_path,
+			FileAccess.get_open_error()
+		])
+		return false
+	file.store_string(JSON.stringify(settings))
+	if file.get_error() != OK:
+		push_error("Could not write city save file: %s. Error code: %s" % [
+			file_path,
+			file.get_error()
+		])
+		file.close()
+		return false
+	file.close()
+	return true
 
+func read_json_file(file_path: String) -> Dictionary:
+	if not FileAccess.file_exists(file_path):
+		push_error("City save file does not exist: %s" % file_path)
+		return {}
+	var file := FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
 		push_error("Could not open city save file: %s" % file_path)
-		return
-	
-	file.store_string(JSON.stringify(settings))
+		return {}
+	var parsed = JSON.parse_string(file.get_as_text())
 	file.close()
+	if not parsed is Dictionary:
+		push_error("City save file has invalid content: %s" % file_path)
+		return {}
+	return parsed
 
 func read_settings() -> Dictionary:
 	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
 	if city_name.is_empty():
 		push_error("Enter a city name before generating a city.")
+		return {}
+	var seed_text: String = $VBoxControlsContainer/HBoxSeedID/seed_text.text.strip_edges()
+	if seed_text.is_empty():
+		push_error("Enter a seed before generating a city.")
 		return {}
 	var residential_ratio: float = $VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/HSliderResidentialRatio.value
 	var commercial_ratio: float = $VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/HSliderCommercialRatio.value
@@ -137,11 +196,9 @@ func read_settings() -> Dictionary:
 		return {}
 
 	return {
-		"city_name": $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges(),
-		"seed_text": str($VBoxControlsContainer/HBoxSeedID/seed_text.text),
-		"seed": seed_text_to_int(
-			str($VBoxControlsContainer/HBoxSeedID/seed_text.text)
-		),
+		"city_name": city_name,
+		"seed_text": seed_text,
+		"seed": seed_text_to_int(seed_text),
 		"grid_width": int($VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSliderGridWidth.value),
 		"grid_height": int($VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSliderGridHeight.value),
 		"block_size": $VBoxControlsContainer/HBoxContainer5/HSliderBlockSize.value,

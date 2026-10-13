@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://c3edoot4bljng"]
 
 [ext_resource type="PackedScene" uid="uid://di1ngld8fyyx" path="res://addons/citycrafter/example_scene.tscn" id="1_a202f"]
+[ext_resource type="Script" path="res://scenes/3d_scenes/city_view.gd" id="2_city_view"]
 
 [node name="Node3D" type="Node3D" unique_id=856768213]
+script = ExtResource("2_city_view")
 
 [node name="ExampleScene" parent="." unique_id=563968178 instance=ExtResource("1_a202f")]

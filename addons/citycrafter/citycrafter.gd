@@ -5,6 +5,7 @@ signal generation_progress(current: int, total: int, stage: String)
 signal generation_complete()
 
 @export var city_configuration: CityConfiguration
+@export var seed_id: String = "default-city" : set = set_seed_id
 @export var generate_city_button: bool = false : set = _on_generate_pressed
 @export var clear_city_button: bool = false : set = _on_clear_pressed
 @export_group("Performance Settings")
@@ -13,6 +14,8 @@ signal generation_complete()
 @export var enable_progress_feedback: bool = true
 
 var noise: FastNoiseLite
+var random_generator := RandomNumberGenerator.new()
+var city_seed: int
 var active_blocks: Array[Vector2i] = []
 var block_sizes: Dictionary = {} 
 var is_generating: bool = false
@@ -21,9 +24,23 @@ func _ready():
 	if not city_configuration:
 		city_configuration = CityConfiguration.create_default()
 	noise = FastNoiseLite.new()
-	noise.seed = randi()
+	initialize_random_generation()
 	if city_configuration:
 		noise.frequency = city_configuration.noise_scale
+
+func set_seed_id(value: String) -> void:
+	seed_id = value.strip_edges()
+	if is_node_ready():
+		initialize_random_generation()
+
+func initialize_random_generation() -> void:
+	city_seed = seed_id.strip_edges().hash()
+	random_generator.seed = city_seed
+	if not noise:
+		noise = FastNoiseLite.new()
+		noise.seed = city_seed
+	elif noise.seed != city_seed:
+		noise.seed = city_seed
 
 func _on_generate_pressed(value):
 	if value:
@@ -52,7 +69,7 @@ func generate_city_async():
 	is_generating = true
 	if not noise:
 		noise = FastNoiseLite.new()
-		noise.seed = randi()
+	initialize_random_generation()
 	noise.frequency = city_configuration.noise_scale
 	clear_all_buildings()
 	emit_progress(0, 100, "Calculating city layout...")
@@ -114,7 +131,7 @@ func determine_block_size(x: int, z: int, occupied_positions: Dictionary) -> Vec
 		available_sizes.append({"size": Vector2i(1, 2), "chance": city_configuration.tall_block_chance})
 	available_sizes.append({"size": Vector2i(1, 1), "chance": 1.0})
 	for size_option in available_sizes:
-		if randf() < size_option.chance:
+		if random_generator.randf() < size_option.chance:
 			return size_option.size
 
 	return Vector2i(1, 1)
@@ -152,7 +169,7 @@ func apply_edge_variations_with_sizes(base_blocks: Array) -> Array:
 				Vector2i(pos.x + 1, pos.y) 
 			]
 			for adj_pos in adjacent_positions:
-				if not occupied_positions.has(adj_pos) and randf() < city_configuration.edge_variation_chance:
+				if not occupied_positions.has(adj_pos) and random_generator.randf() < city_configuration.edge_variation_chance:
 					varied_blocks.append({
 						"position": adj_pos,
 						"size": Vector2i(1, 1)
@@ -170,16 +187,16 @@ func add_random_extensions_with_sizes(base_blocks: Array) -> Array:
 			for bz in range(size.y):
 				occupied_positions[Vector2i(pos.x + bx, pos.y + bz)] = true
 	for i in range(city_configuration.random_extensions_count):
-		if randf() > city_configuration.extension_spawn_chance:
+		if random_generator.randf() > city_configuration.extension_spawn_chance:
 			continue
 		
 		var edge_blocks = get_edge_blocks_from_sized_array(extended_blocks)
 		if edge_blocks.is_empty():
 			continue
 		
-		var source_block = edge_blocks[randi() % edge_blocks.size()]
+		var source_block = edge_blocks[random_generator.randi_range(0, edge_blocks.size() - 1)]
 		var directions = [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]
-		directions.shuffle()
+		shuffle_with_seed(directions)
 		for direction in directions:
 			var new_pos = source_block + direction
 			if not occupied_positions.has(new_pos):
@@ -420,7 +437,7 @@ func generate_buildings_async():
 	var total_blocks = active_blocks.size()
 	var processed_blocks = 0
 	for block_pos in active_blocks:
-		if randf() < city_configuration.empty_block_chance:
+		if random_generator.randf() < city_configuration.empty_block_chance:
 			processed_blocks += 1
 			continue
 		
@@ -453,7 +470,7 @@ func generate_regular_block_async(grid_x: int, grid_z: int, available_buildings:
 		grid_z * (city_configuration.block_size + city_configuration.street_width) + world_height / 2
 	)
 	var size_multiplier = block_size.x * block_size.y
-	var building_count = randi_range(
+	var building_count = random_generator.randi_range(
 		density_settings.min_buildings * size_multiplier, 
 		density_settings.max_buildings * size_multiplier
 	)
@@ -465,9 +482,9 @@ func generate_regular_block_async(grid_x: int, grid_z: int, available_buildings:
 		var valid_position = false
 		while not valid_position and attempts < max_attempts:
 			var local_pos = Vector3(
-				randf_range(-world_width/2 + density_settings.border_margin, world_width/2 - density_settings.border_margin),
+				random_generator.randf_range(-world_width/2 + density_settings.border_margin, world_width/2 - density_settings.border_margin),
 				0,
-				randf_range(-world_height/2 + density_settings.border_margin, world_height/2 - density_settings.border_margin)
+				random_generator.randf_range(-world_height/2 + density_settings.border_margin, world_height/2 - density_settings.border_margin)
 			)
 			var world_pos = block_center + local_pos
 			valid_position = true
@@ -512,7 +529,7 @@ func generate_subdivided_block_async(grid_x: int, grid_z: int, available_buildin
 			var local_x = (sub_x - subdivision_grid.x / 2.0 + 0.5) * (subdivision_size_x + city_configuration.subdivision_street_width)
 			var local_z = (sub_z - subdivision_grid.y / 2.0 + 0.5) * (subdivision_size_z + city_configuration.subdivision_street_width)
 			var subdivision_center = block_center + Vector3(local_x, 0, local_z)
-			var building_count = randi_range(density_settings.min_buildings, density_settings.max_buildings)
+			var building_count = random_generator.randi_range(density_settings.min_buildings, density_settings.max_buildings)
 			var building_positions = []
 			var buildings_to_spawn = []
 			var max_attempts = building_count * 10
@@ -521,9 +538,9 @@ func generate_subdivided_block_async(grid_x: int, grid_z: int, available_buildin
 				var valid_position = false
 				while not valid_position and attempts < max_attempts:
 					var local_pos = Vector3(
-						randf_range(-subdivision_size_x/2 + density_settings.border_margin, subdivision_size_x/2 - density_settings.border_margin),
+						random_generator.randf_range(-subdivision_size_x/2 + density_settings.border_margin, subdivision_size_x/2 - density_settings.border_margin),
 						0,
-						randf_range(-subdivision_size_z/2 + density_settings.border_margin, subdivision_size_z/2 - density_settings.border_margin)
+						random_generator.randf_range(-subdivision_size_z/2 + density_settings.border_margin, subdivision_size_z/2 - density_settings.border_margin)
 					)
 					var world_pos = subdivision_center + local_pos
 					valid_position = true
@@ -545,6 +562,13 @@ func emit_progress(current: int, total: int, stage: String):
 	if enable_progress_feedback:
 		generation_progress.emit(current, total, stage)
 		print("Progress: %d%% - %s" % [current, stage])
+
+func shuffle_with_seed(values: Array) -> void:
+	for index in range(values.size() - 1, 0, -1):
+		var swap_index = random_generator.randi_range(0, index)
+		var value = values[index]
+		values[index] = values[swap_index]
+		values[swap_index] = value
 
 func block_exists_in_array(blocks: Array[Vector2i], pos: Vector2i) -> bool:
 	for block in blocks:
@@ -578,7 +602,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 			else:
 				return "residential"
 		2:
-			var seed_value = clamped_x * 1000 + clamped_z
+			var seed_value = ("%s:%d:%d" % [seed_id, clamped_x, clamped_z]).hash()
 			var rng = RandomNumberGenerator.new()
 			rng.seed = seed_value
 			var rand_val = rng.randf()
@@ -642,7 +666,7 @@ func get_subdivision_grid() -> Vector2i:
 				_: return Vector2i(2, 2)
 		1: 
 			var layouts = [Vector2i(2, 2), Vector2i(2, 3), Vector2i(3, 3)]
-			return layouts[randi() % layouts.size()]
+			return layouts[random_generator.randi_range(0, layouts.size() - 1)]
 		_:
 			return Vector2i(2, 2)
 
@@ -662,19 +686,19 @@ func generate_subdivision_road_network(block_center: Vector3, subdivision_grid: 
 		create_road_plane(road_center, Vector2(city_configuration.subdivision_street_width, actual_height), "SubdivisionRoad")
 
 func spawn_building_at_position(world_pos: Vector3, available_buildings: Array[PackedScene]):
-	var building_scene = available_buildings[randi() % available_buildings.size()]
+	var building_scene = available_buildings[random_generator.randi_range(0, available_buildings.size() - 1)]
 	var building = building_scene.instantiate()
 	building.position = world_pos
 	match city_configuration.rotation_mode:
 		0: 
-			building.rotation.y = randf_range(0, TAU)
+			building.rotation.y = random_generator.randf_range(0, TAU)
 		1:
 			var rotation_steps = [0, PI/2, PI, 3*PI/2]
-			building.rotation.y = rotation_steps[randi() % rotation_steps.size()]
+			building.rotation.y = rotation_steps[random_generator.randi_range(0, rotation_steps.size() - 1)]
 		2: 
 			building.rotation.y = 0
 	if city_configuration.scale_variation != 0:
-		var scale_factor = 1.0 + randf_range(-city_configuration.scale_variation, city_configuration.scale_variation)
+		var scale_factor = 1.0 + random_generator.randf_range(-city_configuration.scale_variation, city_configuration.scale_variation)
 		building.scale = Vector3.ONE * scale_factor
 	add_child(building)
 	building.owner = get_tree().edited_scene_root
