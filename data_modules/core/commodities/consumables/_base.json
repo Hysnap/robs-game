@@ -18,9 +18,11 @@
     "degrades_to": "SPOILED_CONSUMABLES"
   },
   "impact_velocities": {
+    "BUY": { "WORKER_FATIGUE": 0.01 },
     "SELL": {
       "REGULATORY_SCRUTINY": 0.01,
-      "POLICE_HEAT": 0.0
+      "POLICE_HEAT": 0.0,
+      "ZONE_HEALTH_EROSION": 0.0
     }
   }
 }

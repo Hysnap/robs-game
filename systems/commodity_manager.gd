@@ -1,16 +1,22 @@
+# res://systems/commodity_manager.gd
 class_name CommodityManager extends RefCounted
 
+## Recursively scans folders and builds the inheritance registry
 static func load_hierarchical_commodities(root_dir_path: String) -> Dictionary:
     var registry: Dictionary = {}
     _scan_directory_recursive(root_dir_path, {}, registry)
     return registry
 
 static func _scan_directory_recursive(current_path: String, inherited_traits: Dictionary, out_registry: Dictionary) -> void:
+    if not DirAccess.dir_exists_absolute(current_path):
+		return
+
     var dir = DirAccess.open(current_path)
     if not dir:
         return
 
     # 1. Check if a local baseline exists in this folder to layer into inherited traits
+    # 1. Inherit or override with local _base.json if present
     var local_base_path = current_path.path_join("_base.json")
     var current_scope_traits = inherited_traits.duplicate(true)
     
@@ -46,6 +52,8 @@ static func _scan_directory_recursive(current_path: String, inherited_traits: Di
 ## Recursively merges source into target (allowing nested dictionaries to cascade)
 static func _deep_merge_dict(target: Dictionary, source: Dictionary) -> void:
     for key in source.keys():
+        if key == "_meta":
+			continue # Strip developer documentation headers from memory
         if source[key] is Dictionary and target.get(key) is Dictionary:
             _deep_merge_dict(target[key], source[key])
         else:

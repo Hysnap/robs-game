@@ -2,16 +2,12 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 3,
-    "scope_id": "CRIME_CONSUMABLES_ALCOHOL",
-    "display_scope": "Crime -> Consumables -> Alcohol",
+    "scope_id": "CORE_CONSUMABLES_ALCOHOL",
+    "display_scope": "Core -> Consumables -> Alcohol",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Alcohol commodity scope."
   },
   "category": "CONSUMABLE",
-  "tags": [
-    "AGE_RESTRICTED",
-    "EXCISE_DUTY",
-    "CRIME_ECONOMY"
-  ],
+  "tags": ["AGE_RESTRICTED", "EXCISE_DUTY", "CRIME_ECONOMY"],
   "can_be_stored": true,
   "unit_type": "BOTTLE",
   "base_cost": 1.0,

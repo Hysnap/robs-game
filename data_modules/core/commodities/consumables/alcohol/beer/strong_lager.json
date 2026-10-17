@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_STRONG_LAGER",
+    "description": "9% Extra Strength Lager with high disorder impact."
+  },
+  "id": "BEER_STRONG_LAGER",
+  "display_name": "Super Strength Lager",
+  "base_cost": 1.2,
+  "impact_activations": {
+    "SELL": [
+      {
+        "metric": "POLICE_HEAT",
+        "model": "LINEAR_PER_UNIT",
+        "factor": 0.04
+      },
+      {
+        "metric": "ZONE_HEALTH",
+        "model": "EXP_PER_UNIT",
+        "factor": -0.02,
+        "params": { "exponent_base": 1.08, "rate_scale": 1.0 }
+      }
+    ],
+    "BUY": [
+      {
+        "metric": "WORKER_FATIGUE",
+        "model": "STEPPED_PER_UNIT",
+        "factor": 5.0,
+        "params": { "step_size": 24.0 }
+      }
+    ]
+  }
+}
