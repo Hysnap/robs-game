@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "tier_level": 4,
+    "scope_id": "CRIME_CONSUMABLES_ILLICIT_SUBSTANCES_AMPHETAMINE",
+    "display_scope": "Crime -> Consumables -> Illicit Substances -> Amphetamine",
+    "description": "Establishes baseline properties for the Crime -> Consumables -> Illicit Substances -> Amphetamine commodity scope."
+  },
+  "category": "CONSUMABLE",
+  "tags": [
+    "CONTROLLED_SUBSTANCE",
+    "CRIME_ECONOMY"
+  ],
+  "can_be_stored": true,
+  "unit_type": "GRAM",
+  "base_cost": 1.0,
+  "storage_footprint_per_unit": 0.05,
+  "decay_properties": {
+    "shelf_life_ticks": 52,
+    "rot_rate_per_tick": 0.01,
+    "degrades_to": "SPOILED_SUBSTANCE"
+  },
+  "impact_velocities": {
+    "SELL": {
+      "REGULATORY_SCRUTINY": 0.05,
+      "POLICE_HEAT": 0.01
+    }
+  }
+}

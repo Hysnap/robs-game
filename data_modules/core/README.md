@@ -1,0 +1,1 @@
+Universal commodities, impacts, verbs and
