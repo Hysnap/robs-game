@@ -5,26 +5,5 @@
     "scope_id": "CRIME_CONSUMABLES_TOBACCO_LOOSE_TOBACCO_ROLLING_TOBACCO",
     "display_scope": "Crime -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco commodity scope."
-  },
-  "category": "CONSUMABLE",
-  "tags": [
-    "AGE_RESTRICTED",
-    "EXCISE_DUTY",
-    "CRIME_ECONOMY"
-  ],
-  "can_be_stored": true,
-  "unit_type": "PACK",
-  "base_cost": 1.0,
-  "storage_footprint_per_unit": 0.05,
-  "decay_properties": {
-    "shelf_life_ticks": 52,
-    "rot_rate_per_tick": 0.01,
-    "degrades_to": "SPOILED_TOBACCO"
-  },
-  "impact_velocities": {
-    "SELL": {
-      "REGULATORY_SCRUTINY": 0.05,
-      "POLICE_HEAT": 0.01
-    }
   }
 }

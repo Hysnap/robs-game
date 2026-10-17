@@ -5,23 +5,5 @@
     "scope_id": "CRIME_DURABLES_ELECTRONICS",
     "display_scope": "Crime -> Durables -> Electronics",
     "description": "Establishes baseline properties for the Crime -> Durables -> Electronics commodity scope."
-  },
-  "category": "DURABLE",
-  "tags": [
-    "CRIME_ECONOMY"
-  ],
-  "can_be_stored": true,
-  "unit_type": "ITEM",
-  "base_cost": 1.0,
-  "storage_footprint_per_unit": 0.05,
-  "decay_properties": {
-    "shelf_life_ticks": 0,
-    "rot_rate_per_tick": 0.0
-  },
-  "impact_velocities": {
-    "SELL": {
-      "REGULATORY_SCRUTINY": 0.05,
-      "POLICE_HEAT": 0.01
-    }
   }
 }

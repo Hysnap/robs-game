@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_STRONG_LAGER",
+    "description": "9% Extra Strength Lager with high disorder impact."
+  },
+  "id": "BEER_STRONG_LAGER",
+  "display_name": "Super Strength Lager",
+  "base_cost": 1.2,
+  "unit_type": "BOTTLE"
+}

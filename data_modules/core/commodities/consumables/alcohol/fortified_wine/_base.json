@@ -6,25 +6,8 @@
     "display_scope": "Crime -> Consumables -> Alcohol -> Fortified Wines",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Alcohol -> Fortified Wines commodity scope."
   },
-  "category": "CONSUMABLE",
-  "tags": [
-    "AGE_RESTRICTED",
-    "EXCISE_DUTY",
-    "CRIME_ECONOMY"
-  ],
-  "can_be_stored": true,
-  "unit_type": "BOTTLE",
-  "base_cost": 1.0,
-  "storage_footprint_per_unit": 0.05,
   "decay_properties": {
     "shelf_life_ticks": 104,
-    "rot_rate_per_tick": 0.005,
-    "degrades_to": "SPOILED_ALCOHOL"
-  },
-  "impact_velocities": {
-    "SELL": {
-      "REGULATORY_SCRUTINY": 0.05,
-      "POLICE_HEAT": 0.01
-    }
+    "rot_rate_per_tick": 0.005
   }
 }

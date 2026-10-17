@@ -9,13 +9,12 @@ static func load_hierarchical_commodities(root_dir_path: String) -> Dictionary:
 
 static func _scan_directory_recursive(current_path: String, inherited_traits: Dictionary, out_registry: Dictionary) -> void:
     if not DirAccess.dir_exists_absolute(current_path):
-		return
+        return
 
     var dir = DirAccess.open(current_path)
     if not dir:
         return
 
-    # 1. Check if a local baseline exists in this folder to layer into inherited traits
     # 1. Inherit or override with local _base.json if present
     var local_base_path = current_path.path_join("_base.json")
     var current_scope_traits = inherited_traits.duplicate(true)
@@ -53,7 +52,7 @@ static func _scan_directory_recursive(current_path: String, inherited_traits: Di
 static func _deep_merge_dict(target: Dictionary, source: Dictionary) -> void:
     for key in source.keys():
         if key == "_meta":
-			continue # Strip developer documentation headers from memory
+            continue # Strip developer documentation headers from memory
         if source[key] is Dictionary and target.get(key) is Dictionary:
             _deep_merge_dict(target[key], source[key])
         else:
@@ -66,3 +65,43 @@ static func _read_json(path: String) -> Dictionary:
     if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
         return json.data
     return {}
+
+## Scans verb subfolders (e.g. strong_lager/sell/) and mounts all individual impact files
+static func _load_verb_impact_files(item_dir_path: String) -> Dictionary:
+    var activations: Dictionary = {}
+    var dir = DirAccess.open(item_dir_path)
+    if not dir:
+        return activations
+
+    dir.list_dir_begin()
+    var folder_name = dir.get_next()
+    while folder_name != "":
+        # Check for verb directories like "buy", "sell", "make"
+        if dir.current_is_dir() and not folder_name.begins_with("."):
+            var verb_key = folder_name.to_upper()
+            var verb_folder_path = item_dir_path.path_join(folder_name)
+            var impact_list = _read_impact_files_in_folder(verb_folder_path)
+
+            if not impact_list.is_empty():
+                activations[verb_key] = impact_list
+
+        folder_name = dir.get_next()
+    dir.list_dir_end()
+    return activations
+
+static func _read_impact_files_in_folder(folder_path: String) -> Array:
+	var impacts: Array = []
+	var dir = DirAccess.open(folder_path)
+	if not dir:
+		return impacts
+
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".json"):
+			var data = _read_json(folder_path.path_join(file_name))
+			if not data.is_empty() and data.has("metric"):
+				impacts.append(data)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	return impacts

@@ -1,0 +1,8 @@
+{
+  "metric": "STAFF_CONSUMPTION",
+  "model": "STEPPED_PER_UNIT",
+  "factor": 1.0,
+  "params": {
+    "step_size": 12.0
+  }
+}
