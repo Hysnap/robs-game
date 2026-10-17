@@ -11,8 +11,8 @@ script = ExtResource("1_3k8dc")
 
 [node name="BackGround" type="PanelContainer" parent="." unique_id=330356311]
 layout_mode = 0
-offset_right = 561.0
-offset_bottom = 464.0
+offset_right = 592.0
+offset_bottom = 541.0
 
 [node name="VBoxControlsContainer" type="VBoxContainer" parent="." unique_id=355657311]
 layout_mode = 0
@@ -76,25 +76,23 @@ layout_mode = 2
 layout_mode = 2
 text = "Width"
 
-[node name="HSliderGridWidth" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=409908587]
+[node name="GridWidth" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1594206458]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 5.0
 value = 5.0
 rounded = true
-tick_count = 1
 
 [node name="Label2" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
 layout_mode = 2
 text = "Height"
 
-[node name="HSliderGridHeight" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1910906089]
+[node name="GridHeight" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=136003089]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 5.0
 value = 5.0
 rounded = true
-tick_count = 1
 
 [node name="HBoxContainer5" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1087251699]
 layout_mode = 2
@@ -103,7 +101,7 @@ layout_mode = 2
 layout_mode = 2
 text = "City Block Size"
 
-[node name="HSliderBlockSize" type="HSlider" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1003880682]
+[node name="BlockSize" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1043954260]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 500.0
@@ -115,11 +113,12 @@ layout_mode = 2
 layout_mode = 2
 text = "Chance of Vacant Block"
 
-[node name="HSliderVacantBlockChance" type="HSlider" parent="VBoxControlsContainer/HBoxContainer6" unique_id=1666289017]
+[node name="VacantBlockChance" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer6" unique_id=85632914]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 0.2
-step = 0.01
+max_value = 100.0
+step = 1.0
+suffix = "%"
 
 [node name="HBoxContainer10" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1749167412]
 layout_mode = 2
@@ -128,7 +127,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Building Density"
 
-[node name="HSliderBuildingDensity" type="HSlider" parent="VBoxControlsContainer/HBoxContainer10" unique_id=797107221]
+[node name="BuildingDensity" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer10" unique_id=651104695]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -153,9 +152,12 @@ layout_mode = 2
 layout_mode = 2
 text = "Res %"
 
-[node name="HSliderResidentialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=7889145]
+[node name="ResidentialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=1115999667]
 layout_mode = 2
 size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+suffix = "%"
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1350004796]
 layout_mode = 2
@@ -164,12 +166,12 @@ layout_mode = 2
 layout_mode = 2
 text = "Com %"
 
-[node name="HSliderCommercialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=806739449]
+[node name="CommercialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=1956787371]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 1.0
-step = 0.01
-tick_count = 1
+max_value = 100.0
+step = 1.0
+suffix = "%"
 
 [node name="HBoxContainer9" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1121579891]
 layout_mode = 2
@@ -178,12 +180,12 @@ layout_mode = 2
 layout_mode = 2
 text = "Ind %"
 
-[node name="HSliderIndustrialRatio" type="HSlider" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=1374620625]
+[node name="IndustrialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=1291494675]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 1.0
-step = 0.01
-ticks_on_borders = true
+max_value = 100.0
+step = 1.0
+suffix = "%"
 
 [node name="HBoxContainer11" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=2113325430]
 layout_mode = 2
@@ -192,7 +194,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Residential SubDivs"
 
-[node name="CheckButtonResidentialSubdivs" type="CheckButton" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=120543125]
+[node name="ResidentialSubdivs" type="CheckButton" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=120543125]
 layout_mode = 2
 
 [node name="HSeparator4" type="HSeparator" parent="VBoxControlsContainer" unique_id=1262867589]

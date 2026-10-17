@@ -1,6 +1,16 @@
 extends Node3D
 
-@onready var city_crafter: Node3D = $ExampleScene/CityCrafter
+@onready var city_crafter: Node3D = $CityCrafter
+
+## camera settings
+var camera: Camera3D
+var camera_target := Vector3.ZERO
+var camera_distance := 1000.0
+var camera_yaw := 0.0
+var camera_pitch := deg_to_rad(45.0)
+
+var orbiting := false
+var panning := false
 
 func _ready() -> void:
 	var settings := load_pending_city_settings()
@@ -14,10 +24,13 @@ func _ready() -> void:
 		return
 	setup_view()
 	setup_navigation()
-	var status_text: String = "Generating city: %s" % str(settings.get("seed_text", "unknown"))
+	var status_text: String = "Loading city: %s" % str(get_seed_from_settings(settings))
 	set_status(status_text)
 	city_crafter.connect("generation_complete", _on_generation_complete)
-	city_crafter.call_deferred("generate_city_async")
+	city_crafter.call_deferred(
+		"generate_city_async",
+		get_seed_from_settings(settings)
+	)
 
 func load_pending_city_settings() -> Dictionary:
 	if not get_tree().has_meta("pending_city_settings"):
@@ -43,6 +56,10 @@ func load_last_generated_settings() -> Dictionary:
 		push_error("The last generated city save is invalid.")
 		return {}
 	return parsed
+
+func get_seed_from_settings(settings: Dictionary) -> String:
+	var seed_value = settings.get("seed_id", settings.get("seed_text", ""))
+	return str(seed_value).strip_edges()
 
 func apply_settings(settings: Dictionary) -> bool:
 	var configuration = city_crafter.get("city_configuration")
@@ -71,21 +88,22 @@ func apply_settings(settings: Dictionary) -> bool:
 		if settings.has(property_name):
 			configuration.set(property_name, settings[property_name])
 
-	if not settings.has("seed_text"):
+	var saved_seed := get_seed_from_settings(settings)
+	if saved_seed.is_empty():
 		push_error("The saved city does not contain a seed.")
 		return false
-	var saved_seed: String = str(settings["seed_text"]).strip_edges()
-	if saved_seed.is_empty():
-		push_error("The saved city has an empty seed.")
-		return false
-	city_crafter.call("set_seed_id", saved_seed)
+	city_crafter.set("seed_id", saved_seed)
 	if str(city_crafter.get("seed_id")) != saved_seed:
 		push_error("Could not apply the saved city seed: %s" % saved_seed)
+		return false
+	var expected_seed: int = saved_seed.hash()
+	if int(city_crafter.get("city_seed")) != expected_seed:
+		push_error("Could not initialize the saved city seed: %s" % saved_seed)
 		return false
 	return true
 
 func setup_view() -> void:
-	var camera := get_node_or_null("Camera3D") as Camera3D
+	camera = get_node_or_null("Camera3D") as Camera3D
 	if camera == null:
 		camera = Camera3D.new()
 		camera.name = "Camera3D"
@@ -96,6 +114,20 @@ func setup_view() -> void:
 		light = DirectionalLight3D.new()
 		light.name = "DirectionalLight3D"
 		add_child(light)
+
+	var world_environment := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_environment == null:
+		world_environment = WorldEnvironment.new()
+		world_environment.name = "WorldEnvironment"
+		add_child(world_environment)
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.08, 0.12, 0.18)
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color(0.55, 0.62, 0.75)
+	environment.ambient_light_energy = 0.7
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	world_environment.environment = environment
 
 	var configuration = city_crafter.get("city_configuration")
 	var grid_width: float = float(configuration.grid_width)
@@ -112,13 +144,88 @@ func setup_view() -> void:
 		grid_height * (block_size + street_width)
 	)
 
-	camera.global_position = city_center + Vector3(0.0, city_extent * 0.9, city_extent * 0.9)
-	camera.look_at(city_center)
-	camera.current = true
+	camera_target = city_center
+	camera_distance = city_extent * 1.3
+	camera_yaw = 0.0
+	camera_pitch = deg_to_rad(45.0)
+
 	camera.fov = 55.0
+	camera.current = true
+	update_camera_transform()
 
 	light.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	light.light_color = Color(1.0, 0.95, 0.85)
+	light.light_energy = 1.2
 	light.shadow_enabled = true
+	light.shadow_opacity = 0.7
+
+func update_camera_transform() -> void:
+	if camera == null:
+		return
+
+	var horizontal_distance := camera_distance * cos(camera_pitch)
+	var height := camera_distance * sin(camera_pitch)
+
+	camera.global_position = camera_target + Vector3(
+		sin(camera_yaw) * horizontal_distance,
+		height,
+		cos(camera_yaw) * horizontal_distance
+	)
+
+	camera.look_at(camera_target)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_button := event as InputEventMouseButton
+
+		if mouse_button.button_index == MOUSE_BUTTON_RIGHT:
+			orbiting = mouse_button.pressed
+			get_viewport().set_input_as_handled()
+
+		elif mouse_button.button_index == MOUSE_BUTTON_MIDDLE:
+			panning = mouse_button.pressed
+			get_viewport().set_input_as_handled()
+
+		elif mouse_button.pressed:
+			if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP:
+				camera_distance = max(camera_distance * 0.85, 25.0)
+				update_camera_transform()
+				get_viewport().set_input_as_handled()
+
+			elif mouse_button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				camera_distance = min(camera_distance * 1.15, 10000.0)
+				update_camera_transform()
+				get_viewport().set_input_as_handled()
+
+	elif event is InputEventMouseMotion:
+		var mouse_motion := event as InputEventMouseMotion
+
+		if orbiting:
+			camera_yaw -= mouse_motion.relative.x * 0.01
+			camera_pitch = clamp(
+				camera_pitch + mouse_motion.relative.y * 0.01,
+				deg_to_rad(10.0),
+				deg_to_rad(85.0)
+			)
+			update_camera_transform()
+			get_viewport().set_input_as_handled()
+
+		elif panning:
+			var camera_right := camera.global_transform.basis.x
+			var camera_up := camera.global_transform.basis.y
+
+			camera_right.y = 0.0
+			camera_up.y = 0.0
+
+			camera_right = camera_right.normalized()
+			camera_up = camera_up.normalized()
+
+			var pan_speed := camera_distance * 0.001
+			camera_target -= camera_right * mouse_motion.relative.x * pan_speed
+			camera_target += camera_up * mouse_motion.relative.y * pan_speed
+
+			update_camera_transform()
+			get_viewport().set_input_as_handled()
 
 func setup_navigation() -> void:
 	var canvas_layer := CanvasLayer.new()
@@ -153,3 +260,20 @@ func _on_return_to_main_menu_pressed() -> void:
 	)
 	if error != OK:
 		push_error("Could not return to the main menu. Error code: %s" % error)
+
+func _process(delta: float) -> void:
+	var movement := Vector3.ZERO
+
+	if Input.is_key_pressed(KEY_W):
+		movement.z -= 1.0
+	if Input.is_key_pressed(KEY_S):
+		movement.z += 1.0
+	if Input.is_key_pressed(KEY_A):
+		movement.x -= 1.0
+	if Input.is_key_pressed(KEY_D):
+		movement.x += 1.0
+
+	if movement != Vector3.ZERO:
+		var speed := camera_distance * 0.75
+		camera_target += movement.normalized() * speed * delta
+		update_camera_transform()

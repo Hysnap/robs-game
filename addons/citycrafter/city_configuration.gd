@@ -34,23 +34,23 @@ extends Resource
 @export_range(0.0, 1.0) var extension_spawn_chance: float = 0.4
 @export_group("District Settings")
 @export_enum("Noise Based", "Zoned Areas", "Random Mix") var district_mode: int = 0
-@export_range(0.0, 1.0) var residential_ratio: float = 0.4
-@export_range(0.0, 1.0) var commercial_ratio: float = 0.4
-@export_range(0.0, 1.0) var industrial_ratio: float = 0.2
+@export_range(0.0, 1.0) var residential_ratio: float = 0.55
+@export_range(0.0, 1.0) var commercial_ratio: float = 0.15
+@export_range(0.0, 1.0) var industrial_ratio: float = 0.30
 @export var noise_scale: float = 0.1
 @export_group("Residential Density")
 @export var enable_residential_subdivisions: bool = true
 @export_enum("Fixed Layout", "Random Layout") var subdivision_mode: int = 1
 @export_enum("2x2", "2x3", "3x3") var subdivision_layout: int = 0
 @export var subdivision_street_width: float = 8.0
-@export var residential_buildings_min: int = 3
-@export var residential_buildings_max: int = 6
+@export var residential_buildings_min: int = 8
+@export var residential_buildings_max: int = 10
 @export var residential_spacing: float = 20.0
 @export var residential_border_margin: float = 15.0
 @export_group("Commercial Density")
 @export var commercial_buildings_min: int = 8
 @export var commercial_buildings_max: int = 10
-@export var commercial_spacing: float = 50.0
+@export var commercial_spacing: float = 20.0
 @export var commercial_border_margin: float = 25.0
 @export_group("Industrial Density")
 @export var industrial_buildings_min: int = 25
@@ -69,10 +69,10 @@ extends Resource
 @export var ground_height_offset: float = -0.1
 
 static func create_default() -> CityConfiguration:
-	var config = CityConfiguration.new()
-	return config
+    var config = CityConfiguration.new()
+    return config
 
 func is_valid() -> bool:
-	return (residential_buildings.size() > 0 or 
-			commercial_buildings.size() > 0 or 
-			industrial_buildings.size() > 0)
+    return (residential_buildings.size() > 0 or 
+            commercial_buildings.size() > 0 or 
+            industrial_buildings.size() > 0)

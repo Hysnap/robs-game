@@ -9,8 +9,8 @@ signal generation_complete()
 @export var generate_city_button: bool = false : set = _on_generate_pressed
 @export var clear_city_button: bool = false : set = _on_clear_pressed
 @export_group("Performance Settings")
-@export var blocks_per_frame: int = 2
-@export var buildings_per_frame: int = 5 
+@export var blocks_per_frame: int = 4
+@export var buildings_per_frame: int = 10 
 @export var enable_progress_feedback: bool = true
 
 var noise: FastNoiseLite
@@ -53,7 +53,10 @@ func _on_clear_pressed(value):
 		clear_city()
 		clear_city_button = false
 
-func generate_city_async():
+func generate_city_async(generation_seed: String = ""):
+	if not generation_seed.is_empty():
+		set_seed_id(generation_seed)
+
 	if not city_configuration:
 		print("Load a City Configuration Resource first!")
 		return
@@ -65,13 +68,14 @@ func generate_city_async():
 	if is_generating:
 		print("Generation already in progress!")
 		return
-		
+
+	clear_city()
 	is_generating = true
 	if not noise:
 		noise = FastNoiseLite.new()
 	initialize_random_generation()
 	noise.frequency = city_configuration.noise_scale
-	clear_all_buildings()
+	await get_tree().process_frame
 	emit_progress(0, 100, "Calculating city layout...")
 	generate_active_blocks()
 	await get_tree().process_frame
@@ -151,6 +155,8 @@ func can_place_block_size(x: int, z: int, size: Vector2i, occupied_positions: Di
 func apply_edge_variations_with_sizes(base_blocks: Array) -> Array:
 	var varied_blocks = base_blocks.duplicate()
 	var occupied_positions = {}
+	var variation_count := 0
+	var max_variations: int = maxi(city_configuration.max_edge_variation, 0)
 	for block_data in base_blocks:
 		var pos = block_data.position
 		var size = block_data.size
@@ -169,12 +175,15 @@ func apply_edge_variations_with_sizes(base_blocks: Array) -> Array:
 				Vector2i(pos.x + 1, pos.y) 
 			]
 			for adj_pos in adjacent_positions:
+				if variation_count >= max_variations:
+					return varied_blocks
 				if not occupied_positions.has(adj_pos) and random_generator.randf() < city_configuration.edge_variation_chance:
 					varied_blocks.append({
 						"position": adj_pos,
 						"size": Vector2i(1, 1)
 					})
 					occupied_positions[adj_pos] = true
+					variation_count += 1
 	return varied_blocks
 
 func add_random_extensions_with_sizes(base_blocks: Array) -> Array:
@@ -258,7 +267,12 @@ func generate_ground_planes_async():
 				block_pos.y * (city_configuration.block_size + city_configuration.street_width) + world_height / 2
 			)
 			var district_type = get_district_type(block_pos.x, block_pos.y)
-			create_ground_plane(block_center, Vector2(world_width, world_height), district_type)
+			create_ground_plane(
+				block_center,
+				Vector2(world_width, world_height),
+				district_type,
+				get_block_id(block_pos.x, block_pos.y)
+			)
 			processed += 1
 		var progress = 10 + (processed * 20 / total_blocks)
 		emit_progress(progress, 100, "Generating ground planes... (%d/%d)" % [processed, total_blocks])
@@ -500,7 +514,11 @@ func generate_regular_block_async(grid_x: int, grid_z: int, available_buildings:
 		var end_idx = min(i + buildings_per_frame, buildings_to_spawn.size())
 		for j in range(i, end_idx):
 			var world_pos = buildings_to_spawn[j]
-			spawn_building_at_position(world_pos, available_buildings)
+			spawn_building_at_position(world_pos, available_buildings, {
+				"district": district,
+				"block_id": get_block_id(grid_x, grid_z),
+				"building_index": j
+			})
 		if i > 0: 
 			await get_tree().process_frame
 
@@ -552,8 +570,15 @@ func generate_subdivided_block_async(grid_x: int, grid_z: int, available_buildin
 						building_positions.append(world_pos)
 						buildings_to_spawn.append(world_pos)
 					attempts += 1
-			for world_pos in buildings_to_spawn:
-				spawn_building_at_position(world_pos, available_buildings)
+			for building_index in range(buildings_to_spawn.size()):
+				var world_pos = buildings_to_spawn[building_index]
+				spawn_building_at_position(world_pos, available_buildings, {
+					"district": "residential",
+					"block_id": get_block_id(grid_x, grid_z),
+					"subdivision_x": sub_x,
+					"subdivision_z": sub_z,
+					"building_index": building_index
+				})
 			processed_subdivisions += 1
 			if processed_subdivisions % 4 == 0:
 				await get_tree().process_frame
@@ -670,6 +695,21 @@ func get_subdivision_grid() -> Vector2i:
 		_:
 			return Vector2i(2, 2)
 
+func get_block_id(grid_x: int, grid_z: int) -> String:
+	return "block_%s_%d_%d" % [seed_id.hash(), grid_x, grid_z]
+
+func get_building_id(selection_data: Dictionary) -> String:
+	var block_id := str(selection_data.get("block_id", "unknown_block"))
+	var subdivision_x := int(selection_data.get("subdivision_x", -1))
+	var subdivision_z := int(selection_data.get("subdivision_z", -1))
+	var building_index := int(selection_data.get("building_index", 0))
+	return "%s_%d_%d_%d" % [
+		block_id,
+		subdivision_x,
+		subdivision_z,
+		building_index
+	]
+
 func generate_subdivision_road_network(block_center: Vector3, subdivision_grid: Vector2i, subdivision_size_x: float, subdivision_size_z: float, world_width: float = 0, world_height: float = 0):
 	var actual_width = world_width if world_width > 0 else city_configuration.block_size
 	var actual_height = world_height if world_height > 0 else city_configuration.block_size
@@ -685,7 +725,11 @@ func generate_subdivision_road_network(block_center: Vector3, subdivision_grid: 
 		var road_center = block_center + Vector3(x_offset, city_configuration.intersection_height_offset * 2, 0)  # Slightly higher than main roads
 		create_road_plane(road_center, Vector2(city_configuration.subdivision_street_width, actual_height), "SubdivisionRoad")
 
-func spawn_building_at_position(world_pos: Vector3, available_buildings: Array[PackedScene]):
+func spawn_building_at_position(
+	world_pos: Vector3,
+	available_buildings: Array[PackedScene],
+	selection_data: Dictionary = {}
+):
 	var building_scene = available_buildings[random_generator.randi_range(0, available_buildings.size() - 1)]
 	var building = building_scene.instantiate()
 	building.position = world_pos
@@ -702,6 +746,13 @@ func spawn_building_at_position(world_pos: Vector3, available_buildings: Array[P
 		building.scale = Vector3.ONE * scale_factor
 	add_child(building)
 	building.owner = get_tree().edited_scene_root
+	var building_id := get_building_id(selection_data)
+	building.name = "Building_%s" % building_id
+	building.add_to_group("city_building")
+	building.set_meta("city_entity_type", "building")
+	building.set_meta("city_entity_id", building_id)
+	for key in selection_data:
+		building.set_meta(str(key), selection_data[key])
 
 func create_intersection_plane(center: Vector3, size: Vector2):
 	var mesh_instance = MeshInstance3D.new()
@@ -731,7 +782,12 @@ func create_road_plane(center: Vector3, size: Vector2, road_type: String):
 	add_child(mesh_instance)
 	mesh_instance.owner = get_tree().edited_scene_root
 
-func create_ground_plane(center: Vector3, size: Vector2, district_type: String = ""):
+func create_ground_plane(
+	center: Vector3,
+	size: Vector2,
+	district_type: String = "",
+	block_id: String = ""
+):
 	var mesh_instance = MeshInstance3D.new()
 	var plane_mesh = PlaneMesh.new()
 	plane_mesh.size = size
@@ -752,6 +808,11 @@ func create_ground_plane(center: Vector3, size: Vector2, district_type: String =
 	mesh_instance.name = "Ground_" + district_type if district_type != "" else "Ground"
 	add_child(mesh_instance)
 	mesh_instance.owner = get_tree().edited_scene_root
+	mesh_instance.add_to_group("city_district")
+	mesh_instance.set_meta("city_entity_type", "district")
+	mesh_instance.set_meta("district", district_type)
+	mesh_instance.set_meta("city_entity_id", block_id)
+	mesh_instance.set_meta("block_id", block_id)
 
 func clear_city():
 	if is_generating:
