@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "tier_level": 5,
+    "scope_id": "CORE_CONSUMABLES_TOBACCO_HANDMADE_ROLLUP",
+    "display_scope": "CORE -> Consumables -> Tobacco -> Hand Made -> Rollup",
+    "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Hand Made -> Rollup commodity scope."
+  }
+}

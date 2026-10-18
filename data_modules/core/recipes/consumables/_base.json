@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "tier": 1,
+    "scope": "BASE_CONSUMABLE_RECIPE",
+    "description": "Universal prototype for physical recipe assembly."
+  },
+  "default_batch_multiplier": 1,
+  "required_tool_category": "NONE",
+  "base_labor_fatigue": 5.0,
+  "spoilage_loss_rate": 0.0,
+  "allow_cutting": false,
+  "target_container": "NONE"
+}

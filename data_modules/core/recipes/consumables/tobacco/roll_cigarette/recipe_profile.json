@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "RECIPE_ROLL_CIGARETTE",
+    "description": "Manual assembly of single hand-rolled tobacco cigarette."
+  },
+  "id": "RECIPE_ROLL_CIGARETTE",
+  "display_name": "Roll Cigarette",
+  "output_item": "CIGARETTE_ROLLUP",
+  "output_yield_units": 1.0,
+  "required_tool_category": "NONE",
+  "inputs": {
+    "TOBACCO_ROLLING": 0.8,
+    "ROLLING_PAPERS": 1.0
+  }
+}

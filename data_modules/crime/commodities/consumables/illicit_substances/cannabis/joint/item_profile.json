@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_CANNABIS_JOINT",
+    "description": "Assembled single-skin cannabis and tobacco roll (Spliff)."
+  },
+  "id": "CANNABIS_JOINT",
+  "display_name": "Rolled Cannabis Spliff",
+  "category": "CONSUMABLE",
+  "tags": ["ILLICIT", "CLASS_B", "PSYCHOACTIVE", "STREET_PORTION"],
+  "unit_type": "STICK",
+  "base_cost": 2.5,
+  "decay_properties": {
+    "shelf_life_ticks": 4,
+    "rot_rate_per_tick": 0.15
+  }
+}

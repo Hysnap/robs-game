@@ -2,46 +2,62 @@
 extends ActionBase
 class_name ActionSell
 
-static var _impacts: Array = []
-static var _loaded: bool = false
-
-static func _init_impacts() -> void:
-	if not _loaded:
-		_impacts = load_subfolder_impacts("res://data_modules/core/verbs/sell/impacts")
-		_loaded = true
+const ACTION_ORDER = preload("res://data_modules/core/verbs/order/action_order.gd")
+const ACTION_PAY = preload("res://data_modules/core/verbs/pay/action_pay.gd")
+const ACTION_RECEIVE = preload("res://data_modules/core/verbs/receive/action_receive.gd")
+const ORDER_MGR = preload("res://systems/order_manager.gd")
 
 static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
-	_init_impacts()
-	
-	var params = action.get("config", {})
-	var item_key = action.get("target_item", "")
-	var amount = float(action.get("amount", 0.0))
-	var unit_price = float(params.get("unit_price", 2.0))
-	var target_node = action.get("target_node_id", "DIST_01")
-	
-	# Fetch commodity profile from registry
-	var registry = world_state.get("commodity_registry", {})
-	var commodity = registry.get(item_key, {})
-	
-	# Primary Economic Transaction
-	var gross_cash = amount * unit_price
-	world_state["finances"]["liquid_cash"] += gross_cash[cite: 1]
-	
-	var summary = {
-		"units_transacted": amount,
-		"gross_cash": gross_cash,
-		"target_node_id": target_node
-	}
-	
-	# Compile impacts calculated through the commodity's velocity metrics
-	var deltas = compile_impact_deltas(_impacts, params, summary, commodity)
-	
-	return {
-		"success": true,
-		"verb": "SELL",
+	var item_key: String = action.get("target_item", "")
+	var amount: float = float(action.get("amount", 0.0))
+	var target_node: String = action.get("target_node_id", "DIST_01")
+	var seller_id: String = action.get("initiator_id", "PLAYER")
+	var buyer_id: String = action.get("counterparty_id", "MARKET_CONSUMERS")
+
+	# -------------------------------------------------------------
+	# 1. ORDER (Commitment: Verifies Seller Available Stock)
+	# -------------------------------------------------------------
+	var order_directive = {
+		"initiator_id": buyer_id,
+		"counterparty_id": seller_id,
+		"target_item": item_key,
+		"amount": amount,
 		"target_node_id": target_node,
-		"units_transacted": amount,
-		"gross_cash": gross_cash,
-		"impact_deltas": deltas,
-		"message": "Sold %.0f of %s for £%.2f" % [amount, item_key, gross_cash]
+		"config": action.get("config", {})
 	}
+	var order_res = ACTION_ORDER.execute(world_state, order_directive)
+	if not order_res.get("success", false):
+		return order_res
+
+	var order_id: String = order_res["order_id"]
+
+	# -------------------------------------------------------------
+	# 2. RECEIVE (Goods Transferred to Customer & SELL Impacts Run)
+	# -------------------------------------------------------------
+	var rec_res = ACTION_RECEIVE.execute(world_state, {
+		"order_id": order_id,
+		"target_node_id": target_node,
+		"allow_fronted_credit": true
+	})
+	if not rec_res.get("success", false):
+		return rec_res
+
+	# -------------------------------------------------------------
+	# 3. PAY (Revenue Settlement: Inflow to Seller Vault)
+	# -------------------------------------------------------------
+	var pay_res = ACTION_PAY.execute(world_state, {"order_id": order_id, "target_node_id": target_node})
+	if not pay_res.get("success", false):
+		return pay_res
+
+	# -------------------------------------------------------------
+	# 4. CONSOLIDATE IMPACT DELTAS (CASH + POLICE_HEAT + ZONE_HEALTH)
+	# -------------------------------------------------------------
+	var consolidated_deltas: Dictionary = {}
+	consolidated_deltas.merge(rec_res.get("impact_deltas", {}))
+	
+	# For selling, cash flows positive into player metrics/vault
+	var revenue: float = abs(pay_res.get("impact_deltas", {}).get("CASH", 0.0))
+	consolidated_deltas["CASH"] = revenue
+	ORDER_MGR.archive_order(world_state, order_id)
+
+	return EngineResult.ok("SELL", "Sold %.0f of %s to %s for £%.2f." % [amount, item_key, buyer_id, revenue], consolidated_deltas, amount, target_node).to_dict()

@@ -7,6 +7,8 @@ static var _loyalty_threshold: float = 0.60
 static var _loyalty_operator: String = "<"
 static var _ambient_increment: float = 0.01
 static var _initialized: bool = false
+static var _staff_addiction: float = 0.01
+
 
 static func _ensure_config_loaded() -> void:
 	if _initialized:

@@ -1,9 +1,11 @@
 {
   "_meta": {
-    "schema_version": "1.0.0",
-    "tier_level": 4,
-    "scope_id": "CRIME_CONSUMABLES_TOBACCO_LOOSE_TOBACCO",
-    "display_scope": "Crime -> Consumables -> Tobacco -> Loose Tobacco",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Loose Tobacco commodity scope."
-  }
+    "tier": 4,
+    "scope": "LEAF_ROLLING_TOBACCO",
+    "description": "Standard commercial rolling tobacco."
+  },
+  "id": "TOBACCO_ROLLING",
+  "display_name": "Loose Rolling Tobacco",
+  "base_cost": 0.18,
+  "unit_type": "GRAM"
 }

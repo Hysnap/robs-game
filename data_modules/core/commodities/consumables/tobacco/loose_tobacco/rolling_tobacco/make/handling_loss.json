@@ -1,0 +1,5 @@
+{
+  "metric": "MATERIAL_WASTE",
+  "model": "LINEAR_PER_UNIT",
+  "factor": 0.02
+}

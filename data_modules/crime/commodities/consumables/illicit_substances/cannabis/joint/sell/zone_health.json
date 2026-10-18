@@ -1,0 +1,5 @@
+{
+  "metric": "ZONE_HEALTH",
+  "model": "LINEAR_PER_UNIT",
+  "factor": -0.01
+}

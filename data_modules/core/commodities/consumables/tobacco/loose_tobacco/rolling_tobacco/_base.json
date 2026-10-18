@@ -2,8 +2,8 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 5,
-    "scope_id": "CRIME_CONSUMABLES_TOBACCO_LOOSE_TOBACCO_ROLLING_TOBACCO",
-    "display_scope": "Crime -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco commodity scope."
+    "scope_id": "CORE_CONSUMABLES_TOBACCO_LOOSE_TOBACCO_ROLLING_TOBACCO",
+    "display_scope": "Core -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco",
+    "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco commodity scope."
   }
 }

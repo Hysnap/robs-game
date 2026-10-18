@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "LEAF_MOROCCAN_HASH",
+    "description": "Imported commercial Moroccan resin (Soapbar)."
+  },
+  "id": "CANNABIS_RESIN_MOROCCAN",
+  "display_name": "Commercial Soapbar Resin",
+  "base_cost": 2.5,
+  "unit_type": "GRAM"
+}

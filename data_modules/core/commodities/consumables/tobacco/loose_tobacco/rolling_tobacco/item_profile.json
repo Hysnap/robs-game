@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "tier": 6,
+    "scope": "LEAF_ROLLING_TOBACCO",
+    "description": "Loose tobacco intended for hand-rolled cigarettes."
+  },
+  "id": "ROLLING_TOBACCO",
+  "display_name": "Rolling Tobacco",
+  "unit_type": "GRAM",
+  "base_cost": 0.08
+}

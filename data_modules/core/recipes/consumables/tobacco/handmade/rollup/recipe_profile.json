@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "tier": 6,
+    "scope": "RECIPE_HANDMADE_ROLLUP"
+  },
+  "id": "RECIPE_HANDMADE_ROLLUP",
+  "display_name": "Roll a Cigarette",
+  "output_item": "ROLLUP",
+  "output_yield_units": 1.0,
+  "required_tool_category": "NONE",
+  "inputs": {
+    "ROLLING_TOBACCO": 1.0,
+    "ROLLING_PAPERS": 1.0
+  }
+}

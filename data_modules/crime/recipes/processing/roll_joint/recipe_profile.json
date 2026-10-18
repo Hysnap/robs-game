@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "RECIPE_ROLL_JOINT_HASH",
+    "description": "Prep and roll mixed resin/tobacco spliff using heated knife method."
+  },
+  "id": "RECIPE_ROLL_JOINT_HASH",
+  "display_name": "Roll Hash Spliff",
+  "output_item": "CANNABIS_JOINT",
+  "output_yield_units": 1.0,
+  "required_tool_category": "POCKET_KNIFE_AND_FLAME",
+  "inputs": {
+    "CANNABIS_RESIN_MOROCCAN": 0.15,
+    "TOBACCO_ROLLING": 0.65,
+    "ROLLING_PAPERS": 1.0
+  }
+}

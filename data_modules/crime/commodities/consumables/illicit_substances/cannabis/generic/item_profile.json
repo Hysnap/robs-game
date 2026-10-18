@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "tier": 5,
+    "scope": "LEAF_CANNABIS_GENERIC",
+    "description": "A generic cannabis input that can be replaced by a more specific cannabis variety."
+  },
+  "id": "CANNABIS_GENERIC",
+  "display_name": "Cannabis",
+  "unit_type": "GRAM",
+  "base_cost": 1.0
+}

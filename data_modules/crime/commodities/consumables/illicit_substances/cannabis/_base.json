@@ -1,9 +1,16 @@
 {
   "_meta": {
-    "schema_version": "1.0.0",
-    "tier_level": 4,
-    "scope_id": "CRIME_CONSUMABLES_ILLICIT_SUBSTANCES_CANNABIS",
-    "display_scope": "Crime -> Consumables -> Illicit Substances -> Cannabis",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Illicit Substances -> Cannabis commodity scope."
+    "tier": 2,
+    "scope": "CAT_ILLICIT_CANNABIS",
+    "description": "Controlled cannabinoid substances under Misuse of Drugs schedules."
+  },
+  "category": "CONSUMABLE",
+  "tags": ["ILLICIT", "SCHEDULE_2", "CANNABINOID"],
+  "unit_type": "GRAM",
+  "storage_footprint_per_unit": 0.003,
+  "decay_properties": {
+    "shelf_life_ticks": 26,
+    "rot_rate_per_tick": 0.03,
+    "degrades_to": "SPOILED_CANNABIS"
   }
 }

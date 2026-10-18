@@ -1,15 +1,15 @@
 {
   "_meta": {
-    "schema_version": "1.0.0",
-    "tier_level": 3,
-    "scope_id": "CRIME_CONSUMABLES_OTHER",
-    "display_scope": "Crime -> Consumables -> Other",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Other commodity scope."
+    "tier": 2,
+    "scope": "CAT_OTHER_SUNDRIES",
+    "description": "Ancillary consumable accessories, paper goods, filters, and matches."
   },
-  "tags": [
-    "CRIME_ECONOMY"
-  ],
+  "category": "CONSUMABLE",
+  "unit_type": "PIECE",
+  "can_be_stored": true,
+  "storage_footprint_per_unit": 0.0001,
   "decay_properties": {
-    "degrades_to": "SPOILED_OTHER"
+    "shelf_life_ticks": 520,
+    "rot_rate_per_tick": 0.0
   }
 }

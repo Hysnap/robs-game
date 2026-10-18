@@ -1,0 +1,9 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "tier_level": 4,
+    "scope_id": "CORE_CONSUMABLES_TOBACCO_HANDMADE",
+    "display_scope": "Core -> Consumables -> Tobacco -> Hand Made",
+    "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Hand made commodity scope."
+  }
+}

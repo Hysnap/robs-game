@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_CIGARETTE_ROLLUP",
+    "description": "Hand-rolled tobacco cigarette."
+  },
+  "id": "CIGARETTE_ROLLUP",
+  "display_name": "Hand-Rolled Cigarette",
+  "category": "CONSUMABLE",
+  "tags": ["NICOTINE", "STIMULANT_MILD", "PORTABLE"],
+  "unit_type": "STICK",
+  "base_cost": 0.25,
+  "decay_properties": {
+    "shelf_life_ticks": 12,
+    "rot_rate_per_tick": 0.05
+  }
+}
