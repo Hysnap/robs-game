@@ -1,0 +1,6 @@
+{
+  "SUCCESS": [
+    "Order ticket logged with {seller_id} for {amount}x {target_item}.",
+    "Spoke with {seller_id}. Requisition on the book."
+  ]
+}

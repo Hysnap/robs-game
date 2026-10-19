@@ -1,0 +1,13 @@
+{
+  "SUCCESS": [
+    "Finished batch of {target_item}. Stacked and {done}.",
+    "Prepped {amount} units into staging."
+  ],
+  "INSUFFICIENT_RESOURCE": [
+    "Couldn't prep {target_item}—ran short of raw components.",
+    "Production halted on {target_item}. Missing ingredients on the bench."
+  ],
+  "UNKNOWN_COMMODITY": [
+    "Recipe not recognised in the workshop ledger."
+  ]
+}

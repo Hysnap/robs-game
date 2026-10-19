@@ -8,47 +8,85 @@ enum ErrorCode {
 	UNKNOWN_COMMODITY = 3,
 	INVALID_DIRECTIVE = 4,
 	ROUTER_UNMAPPED_VERB = 5,
-	SINK_REGISTRATION_MISSING = 6
+	SINK_REGISTRATION_MISSING = 6,
+	# Extended codes for supply-chain & schedule friction
+	OUTSIDE_HOURS = 7,
+	PAYMENT_REQUIRED = 8,
+	NO_SHIPMENT_PENDING = 9,
+	OPERATOR_BURNOUT = 10
 }
 
+var error_code: int = ErrorCode.OK
 var success: bool = true
-var code: int = ErrorCode.OK
 var verb: String = ""
 var message: String = ""
-var target_id: String = ""
-var units_transacted: float = 0.0
 var impact_deltas: Dictionary = {}
-var telemetry_payload: Dictionary = {}
+var amount: float = 0.0
+var target_node: String = ""
+var context: Dictionary = {}
 
-static func ok(p_verb: String, p_msg: String, p_deltas: Dictionary = {}, p_units: float = 0.0, p_target: String = "") -> EngineResult:
-	var res = EngineResult.new()
-	res.success = true
-	res.code = ErrorCode.OK
-	res.verb = p_verb
-	res.message = p_msg
-	res.impact_deltas = p_deltas
-	res.units_transacted = p_units
-	res.target_id = p_target
-	return res
+func _init(p_success: bool = true, 
+	p_error_code: int = ErrorCode.OK, 
+	p_verb: String = "", 
+	p_message: String = "", 
+	p_deltas: Dictionary = {}, 
+	p_amount: float = 0.0, 
+	p_target_node: String = "",
+	p_context: Dictionary = {}
+) -> void:
+	success = p_success
+	error_code = p_error_code
+	verb = p_verb.to_upper()
+	message = p_message
+	impact_deltas = p_deltas
+	amount = p_amount
+	target_node = p_target_node
+	context = p_context
 
-static func fail(p_code: int, p_verb: String, p_msg: String, p_target: String = "") -> EngineResult:
-	var res = EngineResult.new()
-	res.success = false
-	res.code = p_code
-	res.verb = p_verb
-	res.message = p_msg
-	res.target_id = p_target
-	# Centralized error reporting / terminal trace
-	push_warning("[ENGINE ERROR %d][%s] Target: '%s' -> %s" % [p_code, p_verb, p_target, p_msg])
-	return res
+	# Ensure basic parameters are always available to the dialogue resolver
+	if not context.has("amount"): context["amount"] = amount
+	if not context.has("target_location"): context["target_location"] = target_node
+	if not context.has("verb"): context["verb"] = verb
 
+## Returns the uppercase string name of the error code for JSON feedback lookup
+func get_code_string() -> String:
+	if error_code == ErrorCode.OK:
+		return "SUCCESS"
+	if error_code >= 0 and error_code < ErrorCode.size():
+		return ErrorCode.keys()[error_code]
+	return "UNKNOWN_ERROR"
+
+## Preserves backward-compatibility with Dictionary-expecting callers
 func to_dict() -> Dictionary:
 	return {
-		"success": success,
-		"code": code,
+"success": success,
+		"error_code": error_code,
+		"code": get_code_string(),
 		"verb": verb,
 		"message": message,
-		"target_node_id": target_id,
-		"units_transacted": units_transacted,
-		"impact_deltas": impact_deltas
+		"impact_deltas": impact_deltas,
+		"amount": amount,
+		"target_node_id": target_node,
+		"context": context
 	}
+
+# --- Convenience Constructors ---
+
+static func ok(
+	p_verb: String, 
+	p_message: String = "", 
+	p_deltas: Dictionary = {}, 
+	p_amount: float = 0.0, 
+	p_target_node: String = "",
+	p_extra_context: Dictionary = {}
+) -> EngineResult:
+	return EngineResult.new(true, ErrorCode.OK, p_verb, p_message, p_deltas, p_amount, p_target_node, p_extra_context)
+
+static func fail(
+	p_error_code: int, 
+	p_verb: String, 
+	p_message: String = "", 
+	p_target_node: String = "",
+	p_extra_context: Dictionary = {}
+) -> EngineResult:
+	return EngineResult.new(false, p_error_code, p_verb, p_message, {}, 0.0, p_target_node, p_extra_context)

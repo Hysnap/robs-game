@@ -1,0 +1,10 @@
+{
+  "SUCCESS": [
+    "Picked up {amount}x {target_item} from {seller_id}. All {done}.",
+    "Paid up and collected {target_item} at {target_location}."
+  ],
+  "INSUFFICIENT_RESOURCE": [
+    "Turned up to buy {target_item}, but was short on {wedge}.",
+    "Couldn't settle with {seller_id}—didn't have enough on me."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "SUCCESS": [
+    "Shifted {amount}x {target_item} at {target_location}. Good run.",
+    "Counter run complete for {target_item}. All {done}."
+  ],
+  "INSUFFICIENT_RESOURCE": [
+    "Turned up to sell {target_item} at {target_location}, but the stash was dry.",
+    "No {target_item} ready to move at {target_location}."
+  ]
+}

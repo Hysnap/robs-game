@@ -5,20 +5,37 @@ const VerbRouterScript = preload("res://systems/verb_router.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
-static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
-	# 1. Dispatch action through VerbRouter (which resolves aliases and mounts scripts)
-	var result: Dictionary = VerbRouterScript.dispatch(world_state, action_directive)
+static func execute_directive(world_state: Dictionary, directive: Dictionary) -> Dictionary:
+	var verb_key = directive.get("verb", "").to_upper()
+	var verb_router = preload("res://systems/verb_router.gd")
 	
-	# 2. If successful, route all emitted impact deltas to their respective sinks
+	# 1. Run the action through VerbRouter
+	var result = verb_router.dispatch(world_state, directive)
+	
+	# 2. If successful, route all resulting metrics (Fatigue, Heat, etc.) through ImpactRouter
 	if result.get("success", false):
-		var target_id: String = result.get("target_node_id", "")
-		var deltas: Dictionary = result.get("impact_deltas", {})
-		
-		for metric_key in deltas.keys():
-			var delta_val: float = float(deltas[metric_key])
-			ImpactRouter.dispatch_delta(world_state, target_id, metric_key, delta_val)
+		apply_directive_impacts(world_state, directive, result)
 		
 	return result
+
+## Routes non-financial physical/ambient side-effects through the Impact Router
+static func apply_directive_impacts(world_state: Dictionary, directive: Dictionary, result_payload: Dictionary) -> void:
+	var impact_router = preload("res://systems/impacts/impact_router.gd")
+	
+	# A. Pull fatigue/effort defined on the verb or recipe/commodity config
+	var fatigue_cost: float = result_payload.get("fatigue_generated", 0.0)
+	
+	# Fallback: check config dictionary if verb didn't return an explicit fatigue delta
+	if fatigue_cost == 0.0 and directive.has("config"):
+		fatigue_cost = float(directive["config"].get("fatigue_cost", 0.0))
+		
+	if fatigue_cost != 0.0:
+		var fatigue_event = {
+			"target_metric": "FATIGUE",
+			"delta": fatigue_cost,
+			"source": directive.get("verb", "")
+		}
+		impact_router.route_impact(world_state, fatigue_event)
 
 ## Global Weekly/Tick Heartbeat
 static func process_ambient_heartbeat(world_state: Dictionary) -> void:

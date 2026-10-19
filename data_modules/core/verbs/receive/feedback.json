@@ -1,0 +1,11 @@
+{
+  "INSUFFICIENT_RESOURCE": [
+    "Short on resources or {wedge} to get that sorted.",
+    "Couldn't proceed—needed more funds or stock."
+  ],
+  "ENTITY_NOT_FOUND": [
+    "Couldn't track down the contact or records for that job."
+  ],
+  "OUTSIDE_HOURS": ["Turned up at {target_location}, but {shut}."],
+  "OPERATOR_BURNOUT": ["Proper {tired}—couldn't even get started."]
+}

@@ -74,7 +74,7 @@ func _init() -> void:
 		"ROLLING_PAPERS": {"category": "CONSUMABLE", "base_cost": 0.5, "impact_activations": {}}
 		# Note: "FINISHED_JOINT" is intentionally missing from this pool!
 	}
-
+	
 	var broken_recipes = {
 		"RECIPE_GHOST_OUTPUT": {
 			"output_item": "FINISHED_JOINT", # Does not exist in commodities

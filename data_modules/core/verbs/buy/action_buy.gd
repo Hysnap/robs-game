@@ -55,4 +55,10 @@ static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
     # Archive the completed ticket into the permanent historical ledger
 	ORDER_MGR.archive_order(world_state, order_id)
 
-	return EngineResult.ok("BUY", "Purchased %.0f of %s from %s." % [amount, item_key, seller_id], consolidated_deltas, amount, target_node).to_dict()
+	var ctx = {
+    	"target_item": item_key,
+    	"amount": amount,
+    	"seller_id": seller_id,
+    	"target_location": target_node
+	}
+	return EngineResult.ok("BUY", "Purchased %.0f of %s from %s." % [amount, item_key, seller_id], consolidated_deltas, amount, target_node, ctx).to_dict()

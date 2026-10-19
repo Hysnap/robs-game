@@ -1,0 +1,31 @@
+{
+  "id": "DIALECT_BRUMMIE_STREET",
+  "name": "Midlands / Brummie Street",
+  "replacements": {
+    "{boss}": ["boss", "gaffer", "chief", "chuck", "mate"],
+    "{tired}": ["knackered", "proper done in", "wiped out"],
+    "{wedge}": ["wedge", "readies", "cash"],
+    "{waiting}": [
+      "kicking me heels",
+      "hanging about",
+      "stood around like a spare part"
+    ],
+    "{shut}": [
+      "the shutters was down",
+      "locked up tight",
+      "all closed up",
+      "nay one waz der"
+    ],
+    "{night}": ["half the night", "gone past dark", "ungodly hours"],
+    "{done}": ["sorted", "put away", "bang on"]
+  },
+  "affixes": {
+    "openers": [
+      "Listen {boss},",
+      "Tell you what,",
+      "Right then {boss},",
+      "Y'all right {boss}"
+    ],
+    "closers": ["Know what I mean?", "Proper nightmare.", "All safe though."]
+  }
+}

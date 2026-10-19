@@ -6,7 +6,7 @@
   },
   "id": "RECIPE_ROLL_CIGARETTE",
   "display_name": "Roll Cigarette",
-  "output_item": "CIGARETTE_ROLLUP",
+  "output_item": "ROLLUP",
   "output_yield_units": 1.0,
   "required_tool_category": "NONE",
   "inputs": {
