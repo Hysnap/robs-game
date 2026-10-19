@@ -7,7 +7,7 @@ signal generation_complete()
 @export var city_configuration: CityConfiguration
 @export var seed_id: String = "default-city" : set = set_seed_id
 @export var generate_city_button: bool = false : set = _on_generate_pressed
-@export var clear_city_button: bool = false : set = _on_clear_pressed
+@export var clear_city_button: bool = true : set = _on_clear_pressed
 @export_group("Performance Settings")
 @export var blocks_per_frame: int = 4
 @export var buildings_per_frame: int = 10 
