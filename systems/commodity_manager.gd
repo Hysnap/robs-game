@@ -23,39 +23,63 @@ static func _scan_directory_recursive(
 	var current_scope_traits = inherited_traits.duplicate(true)
 	var current_scope_activations = inherited_activations.duplicate(true)
 
-	# 1. Ingest local _base.json or item_profile.json
+	# -------------------------------------------------------------
+	# 1. READ BASELINE TRAITS (_base.json)
+	# -------------------------------------------------------------
 	var base_file = current_path.path_join("_base.json")
-	if not FileAccess.file_exists(base_file):
-		base_file = current_path.path_join("item_profile.json")
-	if not FileAccess.file_exists(base_file):
-		base_file = current_path.path_join("recipe_profile.json")
-	var is_leaf_item = false
 	if FileAccess.file_exists(base_file):
-		var profile_data = _read_json(base_file)
-		_deep_merge_dict(current_scope_traits, profile_data)
-		if profile_data.has("id"):
-			is_leaf_item = true
+		var base_data = _read_json(base_file)
+		_deep_merge_dict(current_scope_traits, base_data)
 
-	# 2. Ingest any local verb folders (buy/, sell/, make/)
+	# -------------------------------------------------------------
+	# 2. INGEST LOCAL VERB IMPACT FOLDERS (buy/, sell/, make/)
+	# -------------------------------------------------------------
 	var local_verb_activations = _load_verb_impact_files(current_path)
 	_merge_activations(current_scope_activations, local_verb_activations)
 
-	# 3. If leaf item, commit assembled dictionary to registry
-	if is_leaf_item:
-		var final_product = current_scope_traits.duplicate(true)
-		final_product["impact_activations"] = current_scope_activations.duplicate(true)
-		out_registry[final_product["id"]] = final_product
+	# -------------------------------------------------------------
+	# 3. READ LEAF PROFILE (item_profile.json or recipe_profile.json)
+	# -------------------------------------------------------------
+	var leaf_file = ""
+	if FileAccess.file_exists(current_path.path_join("item_profile.json")):
+		leaf_file = current_path.path_join("item_profile.json")
+	elif FileAccess.file_exists(current_path.path_join("recipe_profile.json")):
+		leaf_file = current_path.path_join("recipe_profile.json")
 
-	# 4. Recurse down into child directories
+	if leaf_file != "":
+		var leaf_data = _read_json(leaf_file)
+		var final_item = current_scope_traits.duplicate(true)
+		_deep_merge_dict(final_item, leaf_data)
+		final_item["impact_activations"] = current_scope_activations.duplicate(true)
+
+		# Use 'id' from JSON, fallback to uppercase folder name
+		var item_id: String = str(final_item.get("id", current_path.get_file())).to_upper()
+		final_item["id"] = item_id
+		out_registry[item_id] = final_item
+
+	# -------------------------------------------------------------
+	# 4. RECURSE INTO SUBDIRECTORIES
+	# -------------------------------------------------------------
 	dir.list_dir_begin()
 	var entry_name = dir.get_next()
 	while entry_name != "":
+		var sub_path = current_path.path_join(entry_name)
 		if dir.current_is_dir() and not entry_name.begins_with("."):
 			var upper_name = entry_name.to_upper()
-			# Exclude action folders from recursion (they are consumed by _load_verb_impact_files)
-			if upper_name != "BUY" and upper_name != "SELL" and upper_name != "MAKE":
-				var sub_path = current_path.path_join(entry_name)
+			# Skip impact verb folders from being scanned as commodity tiers
+			if upper_name != "BUY" and upper_name != "SELL" and upper_name != "MAKE" and upper_name != "ORDER" and upper_name != "PAY" and upper_name != "RECEIVE":
 				_scan_directory_recursive(sub_path, current_scope_traits, current_scope_activations, out_registry)
+		elif entry_name.ends_with(".json") and entry_name != "_base.json" and entry_name != "item_profile.json" and entry_name != "recipe_profile.json":
+			# Flat item support (e.g. beer.json)
+			var flat_data = _read_json(sub_path)
+			if flat_data is Dictionary and not flat_data.is_empty():
+				var flat_item = current_scope_traits.duplicate(true)
+				_deep_merge_dict(flat_item, flat_data)
+				flat_item["impact_activations"] = current_scope_activations.duplicate(true)
+				var flat_id: String = str(flat_item.get("id", entry_name.get_basename())).to_upper()
+				flat_item["id"] = flat_id
+				out_registry[flat_id] = flat_item
+
 		entry_name = dir.get_next()
 	dir.list_dir_end()
 
@@ -67,7 +91,6 @@ static func _merge_activations(target: Dictionary, source: Dictionary) -> void:
 		else:
 			var target_list: Array = target[verb_key]
 			var source_list: Array = source[verb_key]
-			
 			for src_impact in source_list:
 				var metric = src_impact.get("metric", "")
 				var replaced = false
@@ -88,10 +111,11 @@ static func _load_verb_impact_files(path: String) -> Dictionary:
 	dir.list_dir_begin()
 	var folder_name = dir.get_next()
 	while folder_name != "":
-		var upper_name = folder_name.to_upper()
-		if dir.current_is_dir() and (upper_name == "BUY" or upper_name == "SELL" or upper_name == "MAKE"):
-			var verb_path = path.path_join(folder_name)
-			result[upper_name] = _read_impacts_in_dir(verb_path)
+		var sub_path = path.path_join(folder_name)
+		if dir.current_is_dir() and not folder_name.begins_with("."):
+			var impacts = _read_impacts_in_dir(sub_path)
+			if not impacts.is_empty():
+				result[folder_name.to_upper()] = impacts
 		folder_name = dir.get_next()
 	dir.list_dir_end()
 	return result
@@ -105,8 +129,9 @@ static func _read_impacts_in_dir(verb_path: String) -> Array:
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	while file_name != "":
+		var full_file = verb_path.path_join(file_name)
 		if not dir.current_is_dir() and file_name.ends_with(".json"):
-			var data = _read_json(verb_path.path_join(file_name))
+			var data = _read_json(full_file)
 			if not data.is_empty() and data.has("metric"):
 				list.append(data)
 		file_name = dir.get_next()
@@ -124,7 +149,8 @@ static func _deep_merge_dict(target: Dictionary, source: Dictionary) -> void:
 
 static func _read_json(path: String) -> Dictionary:
 	var file = FileAccess.open(path, FileAccess.READ)
-	if not file: return {}
+	if not file:
+		return {}
 	var json = JSON.new()
 	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
 		return json.data

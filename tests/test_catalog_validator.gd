@@ -21,6 +21,17 @@ func _init() -> void:
 	var commodities = COMMODITY_MGR.load_hierarchical_commodities("res://data_modules/core/commodities/")
 	var recipes = COMMODITY_MGR.load_hierarchical_commodities("res://data_modules/core/recipes/")
 
+	# --- EXPLICIT N-TIER INHERITANCE ASSERTIONS ---
+	assert(commodities.size() > 0, "FAILED: No commodities loaded from disk!")
+	assert(commodities.has("ROLLING_TOBACCO"), "FAILED: ROLLING_TOBACCO leaf was not loaded!")
+	
+	var leaf_item = commodities["ROLLING_TOBACCO"]
+	assert(leaf_item.get("category", "") == "CONSUMABLE", 
+		"FAILED: ROLLING_TOBACCO failed to inherit 'category: CONSUMABLE' from parent _base.json!")
+	assert(leaf_item.get("base_cost", 0.0) == 0.08, 
+		"FAILED: ROLLING_TOBACCO failed to layer 'base_cost: 0.08' from item_profile.json!")
+	# ----------------------------------------------
+
 	var live_world_state = {
 		"commodity_registry": commodities,
 		"recipe_registry": recipes
@@ -33,7 +44,7 @@ func _init() -> void:
 	
 	assert(live_report["is_clean"] == true, "FAILED: Live catalog has integrity errors!")
 	assert(live_report["errors"].is_empty(), "FAILED: Live catalog emitted unexpected errors!")
-	print("  ✓ PASS: Live catalog data is 100% valid.")
+	print("  ✓ PASS: Live catalog data is 100% valid with proven N-tier inheritance.")
 
 	# -------------------------------------------------------------
 	# TEST SUITE 2: DETECT INVALID COMMODITIES (Injection Test)

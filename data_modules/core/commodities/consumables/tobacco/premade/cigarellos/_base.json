@@ -5,5 +5,10 @@
     "scope_id": "CRIME_CONSUMABLES_TOBACCO_PREMADE_CIGARELLOS",
     "display_scope": "Crime -> Consumables -> Tobacco -> Premade -> Cigarellos",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Premade -> Cigarellos commodity scope."
-  }
+  },
+  "id": "CIGARELLO",
+  "display_name": "Commercial Cigarello",
+  "tags": ["REGULATED", "AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
+  "unit_type": "SINGLE",
+  "base_cost": 0.25
 }

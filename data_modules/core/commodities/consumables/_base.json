@@ -7,6 +7,8 @@
     "description": "Establishes baseline properties for the Core -> Consumables commodity scope."
   },
   "category": "CONSUMABLE",
+  "id": "Consumable undefined",
+  "display_name": "Generic Consumable",
   "unit_type": "UNIT",
   "decay_properties": {
     "shelf_life_ticks": 52,

@@ -1,16 +1,18 @@
 {
   "_meta": {
-    "tier": 2,
-    "scope": "CAT_TOBACCO",
+    "tier": 3,
+    "scope_id": "CAT_TOBACCO",
     "description": "Baseline prototype for all cured and commercial tobacco products."
   },
   "category": "CONSUMABLE",
+  "id": "TOBACCO",
+  "diplay_name": "Generic Tobacco Product",
   "tags": ["AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
   "unit_type": "GRAM",
   "storage_footprint_per_unit": 0.002,
   "decay_properties": {
-    "shelf_life_ticks": 104,
-    "rot_rate_per_tick": 0.005,
+    "shelf_life_ticks": 12,
+    "rot_rate_per_tick": 0.05,
     "degrades_to": "STALE_TOBACCO"
   }
 }

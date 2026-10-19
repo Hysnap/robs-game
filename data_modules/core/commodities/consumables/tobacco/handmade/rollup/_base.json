@@ -5,5 +5,16 @@
     "scope_id": "CORE_CONSUMABLES_TOBACCO_HANDMADE_ROLLUP",
     "display_scope": "CORE -> Consumables -> Tobacco -> Hand Made -> Rollup",
     "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Hand Made -> Rollup commodity scope."
-  }
+  },
+  "id": "ROLLUP",
+  "display_name": "Hand-Rolled Cigarette",
+  "category": "CONSUMABLE",
+  "tags": [
+    "REGULATED",
+    "NO LEGAL RESALE",
+    "AGE_RESTRICTED",
+    "EXCISE_DUTY",
+    "NICOTINE"
+  ],
+  "unit_type": "Single"
 }

@@ -5,5 +5,9 @@
     "scope_id": "CRIME_CONSUMABLES_OTHER_ROLLING_PAPERS",
     "display_scope": "Crime -> Consumables -> Other -> Rolling Papers",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Other -> Rolling Papers commodity scope."
-  }
+  },
+  "id": "ROLLING_PAPERS",
+  "display_name": "Rolling Papers",
+  "unit_type": "SHEET",
+  "base_cost": 0.03
 }

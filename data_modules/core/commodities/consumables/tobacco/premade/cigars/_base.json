@@ -5,5 +5,10 @@
     "scope_id": "CRIME_CONSUMABLES_TOBACCO_PREMADE_CIGARS",
     "display_scope": "Crime -> Consumables -> Tobacco -> Premade -> Cigars",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Premade -> Cigars commodity scope."
-  }
+  },
+  "id": "CIGAR",
+  "display_name": "Commercial Cigar",
+  "tags": ["REGULATED", "AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
+  "unit_type": "SINGLE",
+  "base_cost": 0.25
 }

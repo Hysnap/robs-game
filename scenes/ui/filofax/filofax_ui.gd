@@ -82,6 +82,7 @@ func _setup_drag_and_theming() -> void:
 	drag_handle.gui_input.connect(_on_drag_handle_input)
 
 func _color_note(panel: PanelContainer, col: Color) -> void:
+	#Apply background style
 	var sb = StyleBoxFlat.new()
 	sb.bg_color = col
 	sb.set_corner_radius_all(3)
@@ -89,6 +90,10 @@ func _color_note(panel: PanelContainer, col: Color) -> void:
 	sb.shadow_color = Color(0, 0, 0, 0.25)
 	sb.shadow_size = 4
 	panel.add_theme_stylebox_override("panel", sb)
+
+	#Set all inner labels, buttons, and dropdowns to black ink
+	var ink_color = Color(0.1, 0.1, 0.1, 1.0)
+	_apply_text_color_recursive(panel, ink_color)
 
 func _on_drag_handle_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -238,3 +243,26 @@ func update_display(cache: Dictionary) -> void:
 		var slip = Label.new()
 		slip.text = "[Wk %d]: %s" % [memo.get("tick", 0), memo.get("text", "")]
 		memo_list.add_child(slip)
+	
+func _apply_text_color_recursive(node: Node, color: Color) -> void:
+	if node is Label:
+		node.add_theme_color_override("font_color", color)
+		
+	elif node is OptionButton or node is Button:
+		node.add_theme_color_override("font_color", color)
+		node.add_theme_color_override("font_pressed_color", color)
+		node.add_theme_color_override("font_hover_color", color)
+		node.add_theme_color_override("font_focus_color", color)
+		# Style the popup dropdown list menu attached to the button
+		if node is OptionButton:
+			var popup = node.get_popup()
+			popup.add_theme_color_override("font_color", color)
+			popup.add_theme_color_override("font_hover_color", color)
+			
+	elif node is SpinBox:
+		var line_edit = node.get_line_edit()
+		line_edit.add_theme_color_override("font_color", color)
+		line_edit.add_theme_color_override("font_selected_color", color)
+	
+	for child in node.get_children():
+		_apply_text_color_recursive(child, color)

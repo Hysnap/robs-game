@@ -5,5 +5,8 @@
     "scope_id": "CORE_CONSUMABLES_TOBACCO_LOOSE_TOBACCO_ROLLING_TOBACCO",
     "display_scope": "Core -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco",
     "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Loose Tobacco -> Rolling Tobacco commodity scope."
-  }
+  },
+  "id": "ROLLING_TOBACCO",
+  "display_name": "Rolling Tobacco",
+  "base_cost": 0.08
 }

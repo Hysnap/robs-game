@@ -5,5 +5,22 @@
     "scope_id": "CORE_CONSUMABLES_TOBACCO_HANDMADE",
     "display_scope": "Core -> Consumables -> Tobacco -> Hand Made",
     "description": "Establishes baseline properties for the Core -> Consumables -> Tobacco -> Hand made commodity scope."
+  },
+  "id": "HAND MADE TOBACCO PRODUCT",
+  "display_name": "Hand made tobacco product",
+  "tags": [
+    "REGULATED",
+    "NO LEGAL RESALE",
+    "AGE_RESTRICTED",
+    "EXCISE_DUTY",
+    "NICOTINE"
+  ],
+  "unit_type": "SINGLE",
+  "base_cost": 0.25,
+  "decay_properties": {
+    "shelf_life_ticks": 12,
+    "rot_rate_per_tick": 0.05,
+    "rot_weight_change": 0.95,
+    "degrades_to": "SPOILED_TOBACCO"
   }
 }

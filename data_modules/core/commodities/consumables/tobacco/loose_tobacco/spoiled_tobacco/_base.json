@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope_id": "SPOILED_TOBACCO",
+    "description": "A spoiled/degraded tobacco product"
+  },
+  "id": "SPOILED_TOBACCO",
+  "display_name": "Spoiled Tobacco",
+  "base_cost": 0.01,
+  "unit_type": "GRAM",
+  "tags": [
+    "REGULATED",
+    "NO LEGAL RESALE",
+    "AGE_RESTRICTED",
+    "EXCISE_DUTY",
+    "NICOTINE"
+  ]
+}

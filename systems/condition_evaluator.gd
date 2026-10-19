@@ -1,6 +1,18 @@
 # res://systems/condition_evaluator.gd
 class_name ConditionEvaluator extends RefCounted
 
+# Inside ConditionEvaluator (or ImpactCalculator)
+enum ModelType {
+	LINEAR_PER_UNIT,
+	WEIGHTED_PER_UNIT,
+	EXP_PER_UNIT,
+	LOG_PER_UNIT,
+	STEPPED_PER_UNIT
+}
+
+static func get_supported_models() -> Array:
+	return ModelType.keys()
+
 ## Evaluates whether a metric has breached a threshold using standard operators
 static func evaluate(current_val: float, threshold_val: float, operator: String) -> bool:
 	match operator:

@@ -1,14 +1,64 @@
 # res://systems/catalog_validator.gd
 class_name CatalogValidator extends RefCounted
 
-const VALID_CATEGORIES = ["CONSUMABLE", "DURABLE", "SERVICE"]
-const VALID_MODELS = ["LINEAR_PER_UNIT", "WEIGHTED_PER_UNIT", "EXP_PER_UNIT", "LOG_PER_UNIT", "STEPPED_PER_UNIT"]
+const COMMODITIES_ROOT = "res://data_modules/core/commodities/"
+
+## Dynamically discovers valid calculation/condition models from the evaluator
+static func get_discovered_models() -> Array:
+	# 1. Check ConditionEvaluator if it exports models or methods
+	if ClassDB.class_exists("ConditionEvaluator") or ResourceLoader.exists("res://systems/condition_evaluator.gd"):
+		var evaluator = load("res://systems/condition_evaluator.gd")
+		if evaluator:
+			if evaluator.has_method("get_supported_models"):
+				return evaluator.get_supported_models()
+			elif "ModelType" in evaluator:
+				return evaluator.ModelType.keys()
+	
+	# 2. Check ImpactCalculator fallback if models are math-impact profiles
+	if ClassDB.class_exists("ImpactCalculator") or ResourceLoader.exists("res://systems/impacts/impact_calculator.gd"):
+		var calc = load("res://systems/impacts/impact_calculator.gd")
+		if calc:
+			if calc.has_method("get_supported_models"):
+				return calc.get_supported_models()
+			elif "ModelType" in calc:
+				return calc.ModelType.keys()
+
+	# 3. Fallback baseline if evaluator is unmounted during isolated tests
+	return ["LINEAR_PER_UNIT", "WEIGHTED_PER_UNIT", "EXP_PER_UNIT", "LOG_PER_UNIT", "STEPPED_PER_UNIT"]
+
+## Dynamically discovers valid categories directly from disk directories
+static func get_discovered_categories(root_path: String = COMMODITIES_ROOT) -> Array:
+	var categories: Array = []
+	if not DirAccess.dir_exists_absolute(root_path):
+		return categories
+
+	var dir = DirAccess.open(root_path)
+	if not dir:
+		return categories
+
+	dir.list_dir_begin()
+	var entry_name = dir.get_next()
+	while entry_name != "":
+		var full_path = root_path.path_join(entry_name)
+		if dir.current_is_dir() and not entry_name.begins_with("."):
+			var cat_token = entry_name.to_upper()
+			if cat_token.ends_with("S"):
+				cat_token = cat_token.left(cat_token.length() - 1)
+			categories.append(cat_token)
+			if not categories.has(entry_name.to_upper()):
+				categories.append(entry_name.to_upper())
+		entry_name = dir.get_next()
+	dir.list_dir_end()
+
+	return categories
 
 ## Runs an end-to-end integrity audit across commodities, recipes, and verbs
 static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = true) -> Dictionary:
 	var commodities: Dictionary = world_state.get("commodity_registry", {})
 	var recipes: Dictionary = world_state.get("recipe_registry", {})
-	
+	var valid_categories: Array = get_discovered_categories()
+	var valid_models: Array = get_discovered_models()
+
 	var report: Dictionary = {
 		"timestamp": Time.get_datetime_string_from_system(),
 		"is_clean": true,
@@ -19,7 +69,9 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 		"raw_commodity_count": commodities.size(),
 		"sanitized_commodity_count": commodities.size(),
 		"raw_recipe_count": recipes.size(),
-		"sanitized_recipe_count": recipes.size()
+		"sanitized_recipe_count": recipes.size(),
+		"discovered_categories": valid_categories,
+		"discovered_models": valid_models
 	}
 
 	# -------------------------------------------------------------
@@ -31,18 +83,18 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 			report["errors"].append("Commodity '%s' is not a Dictionary." % item_id)
 			report["is_clean"] = false
 			continue
-		
-		# Check category validity
-		var cat: String = item.get("category", "")
-		if not VALID_CATEGORIES.has(cat):
-			report["errors"].append("Commodity '%s' has invalid or missing category: '%s'" % [item_id, cat])
+
+		# Category check against discovered directory tokens
+		var cat: String = item.get("category", "").to_upper()
+		if not valid_categories.has(cat):
+			report["errors"].append("Commodity '%s' has unrecognised category '%s' (not found on disk)" % [item_id, cat])
 			report["is_clean"] = false
-			
-		# Check base cost (warning only if explicitly present and <= 0.0)
+
+		# Base cost check (warning only if present and non-positive)
 		if item.has("base_cost") and float(item["base_cost"]) <= 0.0:
 			report["warnings"].append("Commodity '%s' has zero or negative base_cost." % item_id)
-			
-		# Check impact activations
+
+		# Impact activations check against discovered models
 		var activations = item.get("impact_activations", {})
 		if activations is Dictionary:
 			for verb_key in activations.keys():
@@ -51,12 +103,12 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 					for impact in act_list:
 						if impact is Dictionary:
 							var model: String = impact.get("model", "")
-							if not VALID_MODELS.has(model):
-								report["errors"].append("Commodity '%s' [%s] references unknown ImpactCalculator model: '%s'" % [item_id, verb_key, model])
+							if not valid_models.has(model):
+								report["errors"].append("Commodity '%s' [%s] references unsupported model: '%s'" % [item_id, verb_key, model])
 								report["is_clean"] = false
 
 	# -------------------------------------------------------------
-	# 2. RECIPE INTEGRITY AUDIT (Cross-Reference Against Commodities)
+	# 2. RECIPE INTEGRITY AUDIT
 	# -------------------------------------------------------------
 	for recipe_id in recipes.keys():
 		var recipe = recipes[recipe_id]
@@ -64,8 +116,7 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 			report["errors"].append("Recipe '%s' is not a Dictionary." % recipe_id)
 			report["is_clean"] = false
 			continue
-		
-		# Check Output Item Exists
+
 		var output_item: String = recipe.get("output_item", "")
 		if output_item == "":
 			report["errors"].append("Recipe '%s' defines no output_item." % recipe_id)
@@ -74,12 +125,10 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 			report["errors"].append("Recipe '%s' outputs '%s', which does not exist in commodity_registry!" % [recipe_id, output_item])
 			report["is_clean"] = false
 
-		# Check Yield
 		if float(recipe.get("output_yield_units", 0.0)) <= 0.0:
 			report["errors"].append("Recipe '%s' has zero or negative output_yield_units." % recipe_id)
 			report["is_clean"] = false
 
-		# Check All Inputs Exist in Catalog
 		var inputs = recipe.get("inputs", {})
 		if not inputs is Dictionary or inputs.is_empty():
 			report["warnings"].append("Recipe '%s' defines no inputs." % recipe_id)
@@ -92,24 +141,22 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 					report["errors"].append("Recipe '%s' requires zero or negative quantity for ingredient '%s'." % [recipe_id, ing_id])
 					report["is_clean"] = false
 
-	# -------------------------------------------------------------
-	# 3. FORMAT & LOG DUMP
-	# -------------------------------------------------------------
 	_print_summary(report)
-	
 	if write_to_disk:
 		_write_log_to_disk(report)
-		
+
 	return report
 
-## Audits registries, writes logs, and returns ONLY 100% playable items/recipes
+## Sanitizes registry by stripping invalid entries
 static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = true) -> Dictionary:
 	var raw_commodities: Dictionary = world_state.get("commodity_registry", {})
 	var raw_recipes: Dictionary = world_state.get("recipe_registry", {})
-	
+	var valid_categories: Array = get_discovered_categories()
+	var valid_models: Array = get_discovered_models()
+
 	var valid_commodities: Dictionary = {}
 	var valid_recipes: Dictionary = {}
-	
+
 	var report: Dictionary = {
 		"timestamp": Time.get_datetime_string_from_system(),
 		"is_clean": true,
@@ -120,19 +167,21 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 		"raw_commodity_count": raw_commodities.size(),
 		"raw_recipe_count": raw_recipes.size(),
 		"sanitized_commodity_count": 0,
-		"sanitized_recipe_count": 0
+		"sanitized_recipe_count": 0,
+		"discovered_categories": valid_categories,
+		"discovered_models": valid_models
 	}
 
-	# 1. AUDIT & SANITIZE COMMODITIES
+	# 1. Sanitize Commodities
 	for item_id in raw_commodities.keys():
 		var item = raw_commodities[item_id]
-		var is_item_valid = true
-		
-		var cat: String = item.get("category", "")
-		if not VALID_CATEGORIES.has(cat):
-			report["errors"].append("Commodity '%s' omitted: invalid/missing category '%s'" % [item_id, cat])
-			is_item_valid = false
-			
+		var is_valid = true
+
+		var cat: String = item.get("category", "").to_upper()
+		if not valid_categories.has(cat):
+			report["errors"].append("Commodity '%s' omitted: category '%s' not found on disk." % [item_id, cat])
+			is_valid = false
+
 		var activations = item.get("impact_activations", {})
 		if activations is Dictionary:
 			for verb_key in activations.keys():
@@ -141,28 +190,28 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 					for impact in act_list:
 						if impact is Dictionary:
 							var model: String = impact.get("model", "")
-							if not VALID_MODELS.has(model):
-								report["errors"].append("Commodity '%s' omitted: unknown impact model '%s'" % [item_id, model])
-								is_item_valid = false
+							if not valid_models.has(model):
+								report["errors"].append("Commodity '%s' omitted: unsupported model '%s'" % [item_id, model])
+								is_valid = false
 
-		if is_item_valid:
+		if is_valid:
 			valid_commodities[item_id] = item
 		else:
 			report["is_clean"] = false
 
-	# 2. AUDIT & SANITIZE RECIPES
+	# 2. Sanitize Recipes
 	for recipe_id in raw_recipes.keys():
 		var recipe = raw_recipes[recipe_id]
-		var is_recipe_valid = true
-		
+		var is_valid = true
+
 		var output_item: String = recipe.get("output_item", "")
 		if output_item == "" or not valid_commodities.has(output_item):
-			report["errors"].append("Recipe '%s' omitted: output '%s' does not exist in valid commodities." % [recipe_id, output_item])
-			is_recipe_valid = false
+			report["errors"].append("Recipe '%s' omitted: output '%s' not in valid commodities." % [recipe_id, output_item])
+			is_valid = false
 
 		if float(recipe.get("output_yield_units", 0.0)) <= 0.0:
 			report["errors"].append("Recipe '%s' omitted: non-positive yield." % recipe_id)
-			is_recipe_valid = false
+			is_valid = false
 
 		var inputs = recipe.get("inputs", {})
 		if not inputs is Dictionary or inputs.is_empty():
@@ -170,13 +219,13 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 		else:
 			for ing_id in inputs.keys():
 				if not valid_commodities.has(ing_id):
-					report["errors"].append("Recipe '%s' omitted: input '%s' is not in valid commodities." % [recipe_id, ing_id])
-					is_recipe_valid = false
+					report["errors"].append("Recipe '%s' omitted: input '%s' not in valid commodities." % [recipe_id, ing_id])
+					is_valid = false
 				elif float(inputs[ing_id]) <= 0.0:
 					report["errors"].append("Recipe '%s' omitted: non-positive quantity for '%s'." % [recipe_id, ing_id])
-					is_recipe_valid = false
+					is_valid = false
 
-		if is_recipe_valid:
+		if is_valid:
 			valid_recipes[recipe_id] = recipe
 		else:
 			report["is_clean"] = false
@@ -201,16 +250,18 @@ static func _print_summary(report: Dictionary) -> void:
 	var san_c = report.get("sanitized_commodity_count", raw_c)
 	var raw_r = report.get("raw_recipe_count", report.get("recipe_count", 0))
 	var san_r = report.get("sanitized_recipe_count", raw_r)
-	
+
+	print("  Discovered Categories: ", report.get("discovered_categories", []))
+	print("  Discovered Models:     ", report.get("discovered_models", []))
 	print("  Commodities: %d on disk  ->  %d surfaced to player" % [raw_c, san_c])
 	print("  Recipes:     %d on disk  ->  %d surfaced to player" % [raw_r, san_r])
 	print("  Status:      ", "100% CLEAN" if report["is_clean"] else "ISSUES DETECTED & ISOLATED")
-	
+
 	if not report["errors"].is_empty():
 		print("\n  [!] ISOLATED ITEMS (Hidden from player):")
 		for err in report["errors"]:
 			print("    ⚠️  ", err)
-			
+
 	print("=======================================================\n")
 
 static func _write_log_to_disk(report: Dictionary) -> void:
@@ -220,12 +271,335 @@ static func _write_log_to_disk(report: Dictionary) -> void:
 		var san_c = report.get("sanitized_commodity_count", raw_c)
 		var raw_r = report.get("raw_recipe_count", report.get("recipe_count", 0))
 		var san_r = report.get("sanitized_recipe_count", raw_r)
-		
+
 		file.store_line("CATALOG INTEGRITY AUDIT - " + report.get("timestamp", ""))
 		file.store_line("Clean: " + str(report.get("is_clean", false)))
+		file.store_line("Categories Found: " + str(report.get("discovered_categories", [])))
+		file.store_line("Models Discovered: " + str(report.get("discovered_models", [])))
 		file.store_line("Commodities Surfaced: %d / %d" % [san_c, raw_c])
 		file.store_line("Recipes Surfaced: %d / %d" % [san_r, raw_r])
 		file.store_line("\nISOLATED DEFECTS:")
 		for err in report.get("errors", []):
 			file.store_line("- " + err)
 		file.close()
+
+## Audits all N-tier structures and traces property settings to their defining files
+static func audit_hierarchy_properties(
+	root_dir: String = COMMODITIES_ROOT, 
+	write_to_disk: bool = true
+) -> Dictionary:
+	var report: Dictionary = {
+		"timestamp": Time.get_datetime_string_from_system(),
+		"root_dir": root_dir,
+		"total_files_scanned": 0,
+		"unique_properties_discovered": [],
+		"property_distribution": {}, # key: property_name -> Array of file paths setting it
+		"directory_tree": {}          # nested tree reflecting folder tiers and their keys
+	}
+	
+	if not DirAccess.dir_exists_absolute(root_dir):
+		push_warning("[CATALOG VALIDATOR] Directory not found for audit: %s" % root_dir)
+		return report
+
+	_audit_node_recursive(root_dir, [], report["directory_tree"], report)
+	report["unique_properties_discovered"].sort()
+
+	_print_hierarchy_property_summary(report)
+
+	if write_to_disk:
+		_write_hierarchy_log_to_disk(report)
+
+	return report
+
+static func _audit_node_recursive(
+	current_path: String, 
+	parent_inherited_keys: Array, 
+	out_tree_node: Dictionary, 
+	report: Dictionary
+) -> void:
+	var dir = DirAccess.open(current_path)
+	if not dir:
+		return
+
+	var folder_name: String = current_path.get_file()
+	if folder_name == "":
+		folder_name = "ROOT"
+
+	out_tree_node["folder"] = folder_name
+	out_tree_node["path"] = current_path
+	out_tree_node["files"] = {}
+	out_tree_node["subfolders"] = {}
+
+	var local_keys: Array = []
+	var cumulative_keys: Array = parent_inherited_keys.duplicate()
+
+	# 1. Scan JSON files in this directory tier
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		var full_file_path = current_path.path_join(file_name)
+		if not dir.current_is_dir() and file_name.ends_with(".json"):
+			var content = _read_json_file(full_file_path)
+			if content is Dictionary:
+				report["total_files_scanned"] += 1
+				var file_defined_keys = _extract_flattened_keys(content)
+				
+				# Identify which properties override ancestral settings
+				var overrides = []
+				for k in file_defined_keys:
+					if parent_inherited_keys.has(k):
+						overrides.append(k)
+					if not local_keys.has(k):
+						local_keys.append(k)
+					if not cumulative_keys.has(k):
+						cumulative_keys.append(k)
+					if not report["unique_properties_discovered"].has(k):
+						report["unique_properties_discovered"].append(k)
+						
+					if not report["property_distribution"].has(k):
+						report["property_distribution"][k] = []
+					report["property_distribution"][k].append(full_file_path)
+
+				out_tree_node["files"][file_name] = {
+					"keys": file_defined_keys,
+					"overrides": overrides
+				}
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+	# 2. Recurse down subdirectories passing accumulated keys
+	dir.list_dir_begin()
+	var sub_entry = dir.get_next()
+	while sub_entry != "":
+		var sub_path = current_path.path_join(sub_entry)
+		if dir.current_is_dir() and not sub_entry.begins_with("."):
+			var child_node: Dictionary = {}
+			out_tree_node["subfolders"][sub_entry] = child_node
+			_audit_node_recursive(sub_path, cumulative_keys, child_node, report)
+		sub_entry = dir.get_next()
+	dir.list_dir_end()
+
+## Flattens nested dictionary keys (e.g. decay_properties.shelf_life_ticks)
+static func _extract_flattened_keys(data: Dictionary, prefix: String = "") -> Array:
+	var keys: Array = []
+	for k in data.keys():
+		var full_key = (prefix + "." + str(k)) if prefix != "" else str(k)
+		keys.append(full_key)
+		if data[k] is Dictionary and k != "_meta":
+			keys.append_array(_extract_flattened_keys(data[k], full_key))
+	return keys
+
+static func _read_json_file(file_path: String) -> Variant:
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		return null
+	var json = JSON.new()
+	if json.parse(file.get_as_text()) == OK:
+		return json.data
+	return null
+
+static func _print_hierarchy_property_summary(report: Dictionary) -> void:
+	print("\n=======================================================")
+	print("       N-TIER HIERARCHY PROPERTY AUDIT                 ")
+	print("=======================================================")
+	print("  Root Scanned:         ", report["root_dir"])
+	print("  Files Analyzed:       ", report["total_files_scanned"])
+	print("  Unique Properties:    ", report["unique_properties_discovered"].size())
+	print("\n  [PROPERTY CATALOG & DEFINITION SOURCES]")
+
+	for prop in report["unique_properties_discovered"]:
+		var sources: Array = report["property_distribution"].get(prop, [])
+		print("    • %-32s (Set in %d file%s)" % [prop, sources.size(), "s" if sources.size() != 1 else ""])
+		for src in sources:
+			var short_path = src.replace("res://data_modules/core/", "")
+			print("        └─ %s" % short_path)
+
+	print("\n  [TIER STRUCTURE TREE]")
+	_print_tree_node_console(report["directory_tree"], 0)
+	print("=======================================================\n")
+
+static func _print_tree_node_console(node: Dictionary, depth: int) -> void:
+	var indent = "  ".repeat(depth)
+	print("%s📂 %s/" % [indent, node.get("folder", "")])
+
+	var files: Dictionary = node.get("files", {})
+	for f in files.keys():
+		var f_info = files[f]
+		var keys_count = f_info["keys"].size()
+		var override_count = f_info["overrides"].size()
+		var extra = ""
+		if override_count > 0:
+			extra = " [OVERRIDES: %s]" % ", ".join(f_info["overrides"])
+		print("%s   📄 %s -> %d properties%s" % [indent, f, keys_count, extra])
+
+	var subfolders: Dictionary = node.get("subfolders", {})
+	for sf in subfolders.keys():
+		_print_tree_node_console(subfolders[sf], depth + 1)
+
+static func _write_hierarchy_log_to_disk(report: Dictionary) -> void:
+	var file = FileAccess.open("user://n_tier_hierarchy_audit.log", FileAccess.WRITE)
+	if not file:
+		return
+
+	file.store_line("N-TIER HIERARCHY AUDIT REPORT - " + report["timestamp"])
+	file.store_line("Root: " + report["root_dir"])
+	file.store_line("Total Files: " + str(report["total_files_scanned"]))
+	file.store_line("Unique Properties: " + str(report["unique_properties_discovered"].size()))
+	file.store_line("\n=======================================================")
+	file.store_line("PROPERTY SETTINGS AND LOCATIONS")
+	file.store_line("=======================================================")
+
+	for prop in report["unique_properties_discovered"]:
+		var sources: Array = report["property_distribution"].get(prop, [])
+		file.store_line("\nPROPERTY: " + prop)
+		for src in sources:
+			file.store_line("  - " + src)
+
+	file.close()
+
+## Cross-references defined catalog properties against actual codebase usage
+static func audit_property_usage(
+	catalogs_root: String = COMMODITIES_ROOT, 
+	code_scan_roots: Array = ["res://systems/", "res://scenes/", "res://data_modules/"], 
+	write_to_disk: bool = true
+) -> Dictionary:
+	# 1. First, discover all properties declared across the catalogs
+	var catalog_audit = audit_hierarchy_properties(catalogs_root, false)
+	var defined_properties: Array = catalog_audit["unique_properties_discovered"]
+	
+	# Clean property tokens (e.g. "decay_properties.shelf_life_ticks" -> ["decay_properties", "shelf_life_ticks"])
+	var property_tokens: Dictionary = {}
+	for p in defined_properties:
+		var parts = p.split(".")
+		var leaf_token = parts[-1]
+		if leaf_token != "_meta":
+			property_tokens[leaf_token] = p
+
+	# 2. Gather all codebase script/scene/data text
+	var code_files: Dictionary = {} # file_path -> file_text
+	for root_dir in code_scan_roots:
+		_gather_source_files_recursive(root_dir, code_files)
+
+	var usage_report: Dictionary = {
+		"timestamp": Time.get_datetime_string_from_system(),
+		"total_defined_properties": property_tokens.size(),
+		"total_source_files_scanned": code_files.size(),
+		"referenced_properties": {}, # token -> Array of { file, line_no, context }
+		"orphaned_properties": []    # tokens defined in JSON but never queried anywhere
+	}
+
+	# 3. Search codebase for references to each property token
+	for token in property_tokens.keys():
+		var occurrences: Array = []
+		
+		# Build regex/string patterns:
+		# Matches: .get("token"), ["token"], {token}, or "token":
+		var pattern_get = ".get(\"%s\"" % token
+		var pattern_bracket = "[\"%s\"]" % token
+		var pattern_brace = "{%s}" % token
+		var pattern_json_key = "\"%s\":" % token
+		
+		for file_path in code_files.keys():
+			# Don't match the file that defined itself in the catalog
+			if file_path.begins_with(catalogs_root):
+				continue
+				
+			var lines: PackedStringArray = code_files[file_path]
+			for i in range(lines.size()):
+				var line_text = lines[i]
+				if line_text.contains(pattern_get) or line_text.contains(pattern_bracket) or line_text.contains(pattern_brace) or line_text.contains(pattern_json_key):
+					occurrences.append({
+						"file": file_path,
+						"line": i + 1,
+						"snippet": line_text.strip_edges()
+					})
+					
+		if not occurrences.is_empty():
+			usage_report["referenced_properties"][token] = {
+				"full_property_path": property_tokens[token],
+				"defined_in": catalog_audit["property_distribution"].get(property_tokens[token], []),
+				"references": occurrences
+			}
+		else:
+			usage_report["orphaned_properties"].append({
+				"token": token,
+				"full_property_path": property_tokens[token],
+				"defined_in": catalog_audit["property_distribution"].get(property_tokens[token], [])
+			})
+
+	# 4. Print & Log
+	_print_usage_audit_summary(usage_report)
+	if write_to_disk:
+		_write_usage_log_to_disk(usage_report)
+
+	return usage_report
+
+static func _gather_source_files_recursive(path: String, out_files: Dictionary) -> void:
+	if not DirAccess.dir_exists_absolute(path):
+		return
+	var dir = DirAccess.open(path)
+	if not dir:
+		return
+		
+	dir.list_dir_begin()
+	var entry = dir.get_next()
+	while entry != "":
+		var full_path = path.path_join(entry)
+		if dir.current_is_dir() and not entry.begins_with("."):
+			_gather_source_files_recursive(full_path, out_files)
+		elif entry.ends_with(".gd") or entry.ends_with(".tscn") or entry.ends_with(".json"):
+			var file = FileAccess.open(full_file_path_safe(full_path), FileAccess.READ)
+			if file:
+				out_files[full_path] = file.get_as_text().split("\n")
+		entry = dir.get_next()
+	dir.list_dir_end()
+
+static func full_file_path_safe(p: String) -> String:
+	return p
+
+static func _print_usage_audit_summary(report: Dictionary) -> void:
+	print("\n=======================================================")
+	print("       CATALOG PROPERTY USAGE & CODE REFERENCE AUDIT   ")
+	print("=======================================================")
+	print("  Source Files Scanned:       ", report["total_source_files_scanned"])
+	print("  Total Properties Defined:   ", report["total_defined_properties"])
+	print("  Actively Consumed:          ", report["referenced_properties"].size())
+	print("  Orphaned / Unused:          ", report["orphaned_properties"].size())
+	
+	if not report["referenced_properties"].is_empty():
+		print("\n  [ACTIVE CONSUMPTION TRACE]")
+		for token in report["referenced_properties"].keys():
+			var info = report["referenced_properties"][token]
+			print("    • %s  (Referenced in %d locations)" % [token, info["references"].size()])
+			for ref in info["references"]:
+				print("        └─ %s:%d -> %s" % [ref["file"].replace("res://", ""), ref["line"], ref["snippet"]])
+
+	if not report["orphaned_properties"].is_empty():
+		print("\n  ⚠️  [ORPHANED / UNUSED PROPERTIES (Never read in code or UI)]:")
+		for orphan in report["orphaned_properties"]:
+			print("    ❌ %-25s Defined in: %s" % [orphan["token"], orphan["defined_in"]])
+			
+	print("=======================================================\n")
+
+static func _write_usage_log_to_disk(report: Dictionary) -> void:
+	var file = FileAccess.open("user://catalog_property_usage.log", FileAccess.WRITE)
+	if not file:
+		return
+
+	file.store_line("CATALOG PROPERTY USAGE AUDIT - " + report["timestamp"])
+	file.store_line("Files Scanned: " + str(report["total_source_files_scanned"]))
+	file.store_line("Referenced: " + str(report["referenced_properties"].size()))
+	file.store_line("Orphaned: " + str(report["orphaned_properties"].size()))
+	
+	file.store_line("\n--- ACTIVE CODE REFERENCES ---")
+	for token in report["referenced_properties"].keys():
+		var info = report["referenced_properties"][token]
+		file.store_line("\nPROPERTY: " + token + " (" + info["full_property_path"] + ")")
+		for ref in info["references"]:
+			file.store_line("  - %s:%d | %s" % [ref["file"], ref["line"], ref["snippet"]])
+
+	file.store_line("\n--- ORPHANED / UNREFERENCED PROPERTIES ---")
+	for orphan in report["orphaned_properties"]:
+		file.store_line("UNUSED: " + orphan["token"] + " | Defined in: " + str(orphan["defined_in"]))
+
+	file.close()
