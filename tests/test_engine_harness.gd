@@ -121,9 +121,9 @@ func _init() -> void:
 	print("\n[STEP 5] Testing MAKE: Roll 10 Hand-Rolled Cigarettes...")
 
 	# Seed raw materials into inventory
-	world_state["inventory_registry"]["TOBACCO_ROLLING"] = {"STOCK": 10.0, "PREPPED": 0.0}
+	world_state["inventory_registry"]["ROLLING_TOBACCO"] = {"STOCK": 10.0, "PREPPED": 0.0}
 	world_state["inventory_registry"]["ROLLING_PAPERS"] = {"STOCK": 20.0, "PREPPED": 0.0}
-	world_state["inventory_registry"]["CIGARETTE_ROLLUP"] = {"STOCK": 0.0, "PREPPED": 0.0}
+	world_state["inventory_registry"]["ROLLUP"] = {"STOCK": 0.0, "PREPPED": 0.0}
 
 	# Ingest recipes
 	var recipes = COMMODITY_MANAGER.load_hierarchical_commodities("res://data_modules/core/recipes/")
@@ -132,22 +132,22 @@ func _init() -> void:
 
 	var make_cmd = {
 		"verb": "MAKE",
-		"target_item": "RECIPE_ROLL_CIGARETTE",
+		"target_item": "ROLL_CIGARETTE",
 		"amount": 10, # 10 Batches = 10 Cigarettes
 		"target_node_id": "DIST_ASTON_01"
 	}
 
 	var make_res = SIM_CONTROLLER.execute_directive(world_state, make_cmd)
 	print("  ✓ Make Result: ", make_res["message"])
-	print("  ✓ Consumed Tobacco (Remaining): ", world_state["inventory_registry"]["TOBACCO_ROLLING"]["STOCK"], "g")
+	print("  ✓ Consumed Tobacco (Remaining): ", world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"], "g")
 	print("  ✓ Consumed Papers (Remaining): ", world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"])
-	print("  ✓ Yielded Rollups in Staging: ", world_state["inventory_registry"]["CIGARETTE_ROLLUP"]["PREPPED"])
+	print("  ✓ Yielded Rollups in Staging: ", world_state["inventory_registry"]["ROLLUP"]["PREPPED"])
 	print("  ✓ Accumulated Worker Fatigue: ", world_state["operations"]["fatigue"])
 
 	assert(make_res["success"], "MAKE directive failed!")
-	assert(world_state["inventory_registry"]["TOBACCO_ROLLING"]["STOCK"] == 2.0, "Tobacco math incorrect! (10 - 8.0 = 2.0)")
+	assert(world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"] == 2.0, "Tobacco math incorrect! (10 - 8.0 = 2.0)")
 	assert(world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"] == 10.0, "Paper math incorrect! (20 - 10 = 10)")
-	assert(world_state["inventory_registry"]["CIGARETTE_ROLLUP"]["PREPPED"] == 10.0, "Output yield did not reach PREPPED lane!")
+	assert(world_state["inventory_registry"]["ROLLUP"]["PREPPED"] == 10.0, "Output yield did not reach PREPPED lane!")
 	assert(world_state["operations"]["fatigue"] > 0.0, "Worker fatigue failed to sink!")
 	
 	print("\n=======================================================")

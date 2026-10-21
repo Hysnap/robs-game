@@ -4,7 +4,7 @@
     "scope": "RECIPE_ROLL_CIGARETTE",
     "description": "Manual assembly of single hand-rolled tobacco cigarette."
   },
-  "id": "RECIPE_ROLL_CIGARETTE",
+  "id": "ROLL_CIGARETTE",
   "display_name": "Roll Cigarette",
   "output_item": "ROLLUP",
   "output_yield_units": 1.0,

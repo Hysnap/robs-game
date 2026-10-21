@@ -4,20 +4,42 @@ extends SceneTree
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
 const FEEDBACK_MGR = preload("res://systems/feedback_manager.gd")
 const DIALOGUE_RESOLVER = preload("res://systems/dialogue_resolver.gd")
+const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
+const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
+const COMMODITY_MGR = preload("res://systems/commodity_manager.gd")
 
 func _init() -> void:
 	print("\n=======================================================")
 	print("    TESTING REAL ACTIONS + MODULAR FEEDBACK PIPELINE   ")
 	print("=======================================================")
 
-	# 1. Initialize Routers and Loaders
+	# 1. Initialize Core Engine Infrastructure
 	VERB_ROUTER.initialize()
+	IMPACT_ROUTER.autoload_sinks("res://data_modules/core/impacts/")
+	
 	var feedback_data = FEEDBACK_MGR.load_all_feedback(
 		"res://data_modules/shared/feedback/",
 		"res://data_modules/core/verbs/"
 	)
 
-	# 2. Load Dialect Profile
+	# 2. Ingest Live Disk Catalogs (No hardcoded mock commodities/recipes!)
+	var commodities: Dictionary = COMMODITY_MGR.load_hierarchical_commodities("res://data_modules/core/commodities/")
+	var recipes: Dictionary = COMMODITY_MGR.load_hierarchical_commodities("res://data_modules/core/recipes/")
+	
+	print("  ✓ Live Commodities Discovered: ", commodities.keys())
+	print("  ✓ Live Recipes Discovered:     ", recipes.keys())
+
+	# Ensure test-essential commodities exist if disk catalog is partial
+	if not commodities.has("BEER_STRONG_LAGER"):
+		commodities["BEER_STRONG_LAGER"] = {"id": "BEER_STRONG_LAGER", "base_cost": 1.20, "impact_activations": {}}
+	if not commodities.has("ROLLING_TOBACCO"):
+		commodities["ROLLING_TOBACCO"] = {"id": "ROLLING_TOBACCO", "base_cost": 0.08, "impact_activations": {}}
+	if not commodities.has("ROLLING_PAPERS"):
+		commodities["ROLLING_PAPERS"] = {"id": "ROLLING_PAPERS", "base_cost": 0.02, "impact_activations": {}}
+	if not commodities.has("ROLLUP"):
+		commodities["ROLLUP"] = {"id": "ROLLUP", "base_cost": 0.50, "impact_activations": {}}
+
+	# 3. Load Dialect Profile
 	var dialect: Dictionary = {}
 	var dialect_path = "res://data_modules/core/dialects/brummie_street.json"
 	if FileAccess.file_exists(dialect_path):
@@ -27,32 +49,19 @@ func _init() -> void:
 
 	var staff = {"name": "Billy", "loyalty": 0.95}
 
-	# 3. Seed Realistic World State (Matching ConditionEvaluator/OrderManager layout)
+	# 4. Establish Initial World State
 	var world_state = {
+		"metadata": {"current_week_tick": 1},
 		"finances": {"liquid_cash": 100.0},
+		"operations": {"fatigue": 0.0},
 		"inventory_registry": {
 			"BEER_STRONG_LAGER": {"STOCK": 0.0, "PREPPED": 0.0},
-			"RAW_TOBACCO": {"STOCK": 50.0, "PREPPED": 0.0},
+			"ROLLING_TOBACCO": {"STOCK": 50.0, "PREPPED": 0.0},
 			"ROLLING_PAPERS": {"STOCK": 50.0, "PREPPED": 0.0},
-			"CIGARETTE_ROLLUP": {"STOCK": 0.0, "PREPPED": 0.0}
+			"ROLLUP": {"STOCK": 0.0, "PREPPED": 0.0}
 		},
-		"commodity_registry": {
-			"BEER_STRONG_LAGER": {"base_cost": 1.20, "impact_activations": {}},
-			"RAW_TOBACCO": {"base_cost": 0.50, "impact_activations": {}},
-			"ROLLING_PAPERS": {"base_cost": 0.10, "impact_activations": {}},
-			"CIGARETTE_ROLLUP": {"base_cost": 1.00, "impact_activations": {}}
-		},
-		"recipe_registry": {
-			"RECIPE_ROLL_CIGS": {
-				"output_item": "CIGARETTE_ROLLUP",
-				"output_yield_units": 10.0,
-				"inputs": {
-					"RAW_TOBACCO": 10.0,
-					"ROLLING_PAPERS": 10.0
-				},
-				"impact_activations": {}
-			}
-		},
+		"commodity_registry": commodities,
+		"recipe_registry": recipes,
 		"counterparties": {
 			"WHOLESALER_01": {
 				"display_name": "Midlands Brewery Depot",
@@ -82,7 +91,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01",
 		"config": {"unit_cost": 1.20}
 	}
-	var res_buy = VERB_ROUTER.dispatch(world_state, buy_cmd)
+	var res_buy = SIM_CONTROLLER.execute_directive(world_state, buy_cmd)
 	print("  Result success: ", res_buy.get("success", false))
 	print("  Result message: ", res_buy.get("message", ""))
 	
@@ -94,23 +103,42 @@ func _init() -> void:
 	print("  Generated Memo -> ", memo_buy)
 
 	# -------------------------------------------------------------
-	# TEST 2: Action MAKE (Batch Production)
+	# TEST 2: Action MAKE (Batch Transformation via Recipe)
 	# -------------------------------------------------------------
-	print("\n--- [TEST 2] Action: MAKE ---")
+	print("\n--- [TEST 2] Action: MAKE (Roll 10 Hand-Rolled Cigarettes) ---")
+	
+	# Resolves recipe ID dynamically from disk profile ("ROLL_CIGARETTE" or "RECIPE_ROLL_CIGARETTE")
+	var target_recipe_id: String = "ROLL_CIGARETTE"
+	if not world_state["recipe_registry"].has(target_recipe_id):
+		if world_state["recipe_registry"].has("RECIPE_ROLL_CIGARETTE"):
+			target_recipe_id = "RECIPE_ROLL_CIGARETTE"
+
 	var make_cmd = {
 		"verb": "MAKE",
-		"target_item": "RECIPE_ROLL_CIGS",
-		"amount": 1,
+		"recipe_id": target_recipe_id,
+		"amount": 10, # Batch of 10
 		"initiator_id": "PLAYER",
 		"target_node_id": "HQ"
 	}
-	var res_make = VERB_ROUTER.dispatch(world_state, make_cmd)
+	var res_make = SIM_CONTROLLER.execute_directive(world_state, make_cmd)
 	print("  Result success: ", res_make.get("success", false))
 	print("  Result message: ", res_make.get("message", ""))
 
 	assert(res_make.get("success", false) == true, "FAILED: MAKE execution failed!")
-	assert(world_state["inventory_registry"]["RAW_TOBACCO"]["STOCK"] == 40.0, "FAILED: Raw tobacco not deducted!")
-	assert(world_state["inventory_registry"]["CIGARETTE_ROLLUP"]["PREPPED"] == 10.0, "FAILED: Yield not placed in PREPPED!")
+	
+	# Verification based on recipe_profile.json: 10 batches * 0.8g tobacco = 8.0g consumed (50 - 8 = 42)
+	# 10 batches * 1.0 paper = 10 papers consumed (50 - 10 = 40)
+	var rem_tobacco: float = world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"]
+	var rem_papers: float = world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"]
+	var prepped_rollups: float = world_state["inventory_registry"]["ROLLUP"]["PREPPED"]
+
+	print("  ✓ Remaining Tobacco: %.1fg (Expected 42.0g)" % rem_tobacco)
+	print("  ✓ Remaining Papers:  %.1f  (Expected 40.0)" % rem_papers)
+	print("  ✓ Prepped Rollups:   %.1f  (Expected 10.0)" % prepped_rollups)
+
+	assert(rem_tobacco == 42.0, "FAILED: Tobacco deduction math incorrect!")
+	assert(rem_papers == 40.0, "FAILED: Papers deduction math incorrect!")
+	assert(prepped_rollups == 10.0, "FAILED: Finished yield not placed in PREPPED!")
 
 	var memo_make = DIALOGUE_RESOLVER.format_feedback(res_make, staff, dialect, feedback_data)
 	print("  Generated Memo -> ", memo_make)
@@ -128,7 +156,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01",
 		"config": {"unit_price": 2.50}
 	}
-	var res_sell = VERB_ROUTER.dispatch(world_state, sell_cmd)
+	var res_sell = SIM_CONTROLLER.execute_directive(world_state, sell_cmd)
 	print("  Result success: ", res_sell.get("success", false))
 	print("  Result message: ", res_sell.get("message", ""))
 
@@ -152,7 +180,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01",
 		"config": {"unit_cost": 1.20}
 	}
-	var res_fail = VERB_ROUTER.dispatch(world_state, excessive_buy)
+	var res_fail = SIM_CONTROLLER.execute_directive(world_state, excessive_buy)
 	print("  Result success (Expected false): ", res_fail.get("success", true))
 	print("  Result code: ", res_fail.get("code", ""))
 

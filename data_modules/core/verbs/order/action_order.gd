@@ -19,7 +19,7 @@ static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
 		return EngineResult.fail(EngineResult.ErrorCode.UNKNOWN_COMMODITY, "ORDER", "Commodity '%s' missing from catalog." % item_key, target_node).to_dict()
 
 	# 2. Assert Buyer and Seller Entities Exist
-	if ConditionEvaluator.get_resource_balance(world_state, buyer_id, "CASH") < 0.0:
+	if ConditionEvaluator.get_state_metric(world_state, buyer_id, "CASH") == -INF:
 		return EngineResult.fail(EngineResult.ErrorCode.ENTITY_NOT_FOUND, "ORDER", "Buyer entity '%s' does not exist." % buyer_id, target_node).to_dict()
 
 	if ConditionEvaluator.get_actor_inventory(world_state, seller_id).is_empty():
@@ -30,15 +30,14 @@ static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
 	var total_cost: float = amount * unit_cost
 
 	# 3. Assert Financial Solvency
-	if not ConditionEvaluator.has_sufficient_resource(world_state, buyer_id, "CASH", total_cost):
-		var avail = ConditionEvaluator.get_resource_balance(world_state, buyer_id, "CASH")
+	if not ConditionEvaluator.has_sufficient(world_state, buyer_id, "CASH", total_cost):
+		var avail = ConditionEvaluator.get_state_metric(world_state, buyer_id, "CASH")
 		return EngineResult.fail(EngineResult.ErrorCode.INSUFFICIENT_RESOURCE, "ORDER", "Buyer '%s' lacks funds: £%.2f available, £%.2f needed." % [buyer_id, avail, total_cost], target_node).to_dict()
 
 	# 4. Assert Seller Stock Availability
-	if not ConditionEvaluator.has_sufficient_resource(world_state, seller_id, item_key, amount):
-		var stock = ConditionEvaluator.get_resource_balance(world_state, seller_id, item_key)
+	if not ConditionEvaluator.has_sufficient(world_state, seller_id, item_key, amount):
+		var stock = ConditionEvaluator.get_state_metric(world_state, seller_id, item_key)
 		return EngineResult.fail(EngineResult.ErrorCode.INSUFFICIENT_RESOURCE, "ORDER", "Seller '%s' lacks stock: %.0f available, %.0f requested." % [seller_id, stock, amount], target_node).to_dict()
-
 	# 5. Commit Ephemeral Verbal Order
 	var order_id = ORDER_MGR.create_order(world_state, buyer_id, seller_id, item_key, amount, unit_cost)
 

@@ -6,7 +6,7 @@
   },
   "decay_modifiers": {
     "shelf_life_multiplier": 3.0,
-    "rot_rate_multiplier": 0.2,
+    "factor_multiplier": 0.2,
     "ambient_loss_per_tick": 0.0
   },
   "handling_attributes": {

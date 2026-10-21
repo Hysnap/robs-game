@@ -181,7 +181,7 @@ static func _evaluate_service_journey(
 	var total_fare: float = abs(deltas.get("CASH", 0.0))
 	var is_affordable: bool = true
 	if total_fare > 0.0:
-		is_affordable = ConditionEvaluator.has_sufficient_resource(world_state, actor_id, "CASH", total_fare)
+		is_affordable = ConditionEvaluator.has_sufficient(world_state, actor_id, "CASH", total_fare)
 
 	return {
 		"fits_capacity": true,

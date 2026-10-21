@@ -43,8 +43,8 @@ static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
 
 	for ingredient_key in inputs.keys():
 		var required_qty: float = float(inputs[ingredient_key]) * batch_multiplier
-		if not EVALUATOR.has_sufficient_resource(world_state, actor_id, ingredient_key, required_qty):
-			var available: float = EVALUATOR.get_resource_balance(world_state, actor_id, ingredient_key)
+		if not EVALUATOR.has_sufficient(world_state, actor_id, ingredient_key, required_qty):
+			var available: float = EVALUATOR.get_state_metric(world_state, actor_id, ingredient_key)
 			return EngineResult.fail(
 				EngineResult.ErrorCode.INSUFFICIENT_RESOURCE,
 				"MAKE",
