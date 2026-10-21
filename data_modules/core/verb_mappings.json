@@ -1,1 +1,8 @@
-null
+{
+  "RESTOCK": "BUY",
+  "MARKET": "SELL",
+  "MANUFACTURE": "MAKE",
+  "PROCURE": "ORDER",
+  "SETTLE": "PAY",
+  "UNLOAD": "RECEIVE"
+}

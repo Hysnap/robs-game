@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "CONTAINER_PLASTIC_BOTTLE_1500ML",
+    "description": "Standard 1500ml Screw-capped Plastic bottle."
+  },
+  "id": "CONTAINER_PLASTIC_BOTTLE_1500ML",
+  "display_name": "Plastic Bottle (1.5l)",
+  "category": "CONTAINER",
+  "accepted_phase": "LIQUID",
+  "base_cost": 0.12,
+
+  "capacity": {
+    "volume_ml": 1500.0,
+    "mass_g": 1535.0
+  },
+
+  "tare_footprint": {
+    "empty_mass_g": 35.0,
+    "storage_footprint_per_unit": 0.03
+  }
+}

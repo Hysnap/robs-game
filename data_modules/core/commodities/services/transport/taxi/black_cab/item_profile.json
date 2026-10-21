@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "tier": 5,
+    "scope": "SERVICE_TAXI_BLACK_CAB",
+    "description": "Licensed street cab. Fast, effortless, but expensive meter."
+  },
+  "id": "SERVICE_BLACK_CAB",
+  "display_name": "Hackney Carriage Taxi",
+  "category": "SERVICE",
+  "can_be_stored": false,
+  "base_fare_drop": 2.20,
+  "unit_type": "DISTANCE_UNIT",
+  "capacity": {
+    "max_passengers_per_unit": 5,
+    "max_cargo_volume_litres": 120.0,
+    "requires_multiple_units_for_groups": true
+  }
+}

@@ -6,8 +6,6 @@
     "display_scope": "Crime -> Consumables -> Tobacco -> Premade",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Premade commodity scope."
   },
-  "id": "PREMADE_TOBACCO",
-  "display_name": "Commercial Tobacco Products",
   "tags": ["REGULATED", "AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
   "decay_properties": {
     "shelf_life_ticks": 12,

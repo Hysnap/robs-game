@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "CONTAINER_CAN",
+    "description": "Standard Can for Liquids"
+  },
+  "decay_modifiers": {
+    "shelf_life_multiplier": 3.0,
+    "rot_rate_multiplier": 0.2,
+    "ambient_loss_per_tick": 0.0
+  }
+}

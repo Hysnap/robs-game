@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "SERVICE_PUB_GOSSIP",
+    "description": "Social gathering in local taproom. High rumor variance, alcohol drain, loose talk."
+  },
+  "id": "SERVICE_PUB_GOSSIP",
+  "display_name": "Pub Taproom Gossip",
+  "category": "SERVICE",
+  "can_be_stored": false,
+  "base_cost": 6.50,
+  "unit_type": "SURVEY_SESSION",
+  "intel_properties": {
+    "scope": "RUMOUR",
+    "variance_blur": 0.30,
+    "reveals_storefronts": false,
+    "confidence_rating": 0.60
+  }
+}

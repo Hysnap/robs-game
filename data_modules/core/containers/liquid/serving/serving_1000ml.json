@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "CONTAINER_DRINKS_SERVING_1L",
+    "description": "Standard 1l of a liquid in an open container."
+  },
+  "id": "CONTAINER_DRINKS_SERVING_1L",
+  "display_name": "1l Pitcher",
+  "category": "CONTAINER",
+  "accepted_phase": "LIQUID",
+  "base_cost": 0.12,
+
+  "capacity": {
+    "volume_ml": 1000.0,
+    "mass_g": 2000.0
+  },
+
+  "tare_footprint": {
+    "empty_mass_g": 1000.0,
+    "storage_footprint_per_unit": 0.03
+  }
+}

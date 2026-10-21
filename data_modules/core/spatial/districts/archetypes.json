@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "description": "Baseline demographic and socioeconomic ranges for European/UK town archetypes"
+  },
+  "commercial": {
+    "population_range": [50, 150],
+    "unemployment_rate_range": [0.08, 0.12],
+    "avg_disposable_income_range": [85.0, 110.0],
+    "zone_health_index_range": [70.0, 80.0],
+    "consumer_desperation_index": 0.30,
+    "actual_police_heat": 0.45,
+    "corruption_tolerance": 0.35
+  },
+  "high_density_low_rise": {
+    "population_range": [600, 900],
+    "unemployment_rate_range": [0.18, 0.24],
+    "avg_disposable_income_range": [55.0, 75.0],
+    "zone_health_index_range": [50.0, 60.0],
+    "consumer_desperation_index": 0.60,
+    "actual_police_heat": 0.25,
+    "corruption_tolerance": 0.50
+  },
+  "high_density_high_rise": {
+    "population_range": [1100, 1800],
+    "unemployment_rate_range": [0.26, 0.38],
+    "avg_disposable_income_range": [35.0, 50.0],
+    "zone_health_index_range": [38.0, 48.0],
+    "consumer_desperation_index": 0.85,
+    "actual_police_heat": 0.15,
+    "corruption_tolerance": 0.65
+  },
+  "industrial": {
+    "population_range": [10, 30],
+    "unemployment_rate_range": [0.03, 0.06],
+    "avg_disposable_income_range": [95.0, 125.0],
+    "zone_health_index_range": [55.0, 65.0],
+    "consumer_desperation_index": 0.40,
+    "actual_police_heat": 0.10,
+    "corruption_tolerance": 0.40
+  },
+  "suburban_low_density": {
+    "population_range": [250, 450],
+    "unemployment_rate_range": [0.05, 0.08],
+    "avg_disposable_income_range": [140.0, 185.0],
+    "zone_health_index_range": [80.0, 92.0],
+    "consumer_desperation_index": 0.15,
+    "actual_police_heat": 0.05,
+    "corruption_tolerance": 0.20
+  },
+  "civic_default": {
+    "population_range": [150, 400],
+    "unemployment_rate_range": [0.02, 0.05],
+    "avg_disposable_income_range": [110.0, 140.0],
+    "zone_health_index_range": [85.0, 95.0],
+    "consumer_desperation_index": 0.10,
+    "actual_police_heat": 0.30,
+    "corruption_tolerance": 0.15
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "tier": 2,
+    "scope": "CONTAINER_LIQUIDS",
+    "description": "basic liquid containter"
+  },
+  "decay_modifiers": {
+    "shelf_life_multiplier": 1.0,
+    "rot_rate_multiplier": 1.0,
+    "ambient_loss_per_tick": 0.0
+  },
+
+  "handling_attributes": {
+    "fragility": 0.08,
+    "tamper_evident": false,
+    "opsec_visibility": 0.1
+  }
+}

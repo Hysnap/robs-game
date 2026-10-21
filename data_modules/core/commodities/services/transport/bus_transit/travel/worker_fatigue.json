@@ -1,0 +1,8 @@
+{
+  "metric": "WORKER_FATIGUE",
+  "model": "LOG_PER_UNIT",
+  "factor": 2.5,
+  "params": {
+    "log_scale": 0.01
+  }
+}

@@ -6,8 +6,14 @@
     "display_scope": "Crime -> Consumables -> Alcohol -> Fortified Wines",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Alcohol -> Fortified Wines commodity scope."
   },
+  "unit_type": "BOTTLE",
   "decay_properties": {
     "shelf_life_ticks": 104,
-    "rot_rate_per_tick": 0.005
+    "degrades_to": "SPOILED_ALCOHOL",
+    "impact": {
+      "model": "LINEAR_PER_UNIT",
+      "factor": -0.03,
+      "params": {}
+    }
   }
 }

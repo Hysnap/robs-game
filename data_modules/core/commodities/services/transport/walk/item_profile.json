@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "SERVICE_WALK",
+    "description": "On foot through streets and cut-throughs. Free, but slow and exhausting."
+  },
+  "id": "SERVICE_WALK",
+  "display_name": "Foot Travel",
+  "category": "SERVICE",
+  "can_be_stored": false,
+  "base_fare_drop": 0.00,
+  "unit_type": "DISTANCE_UNIT",
+  "capacity": {
+    "max_passengers_per_unit": 1,
+    "max_cargo_volume_litres": 20.0,
+    "requires_multiple_units_for_groups": false
+  }
+}

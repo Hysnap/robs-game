@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "CONTAINER_DRINKS_CAN_330ML",
+    "description": "Standard 330ml Ring Pull Drinks Can."
+  },
+  "id": "CONTAINER_DRINKS_CAN_330ML",
+  "display_name": "Ring Pull Can (330ml)",
+  "category": "CONTAINER",
+  "accepted_phase": "LIQUID",
+  "base_cost": 0.12,
+
+  "capacity": {
+    "volume_ml": 330.0,
+    "mass_g": 345.0
+  },
+
+  "tare_footprint": {
+    "empty_mass_g": 15.0,
+    "storage_footprint_per_unit": 0.03
+  }
+}

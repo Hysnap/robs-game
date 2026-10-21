@@ -1,17 +1,19 @@
 [gd_scene format=3 uid="uid://c3edoot4bljng"]
 
-[ext_resource type="PackedScene" uid="uid://di1ngld8fyyx" path="res://addons/citycrafter/example_scene.tscn" id="1_a202f"]
 [ext_resource type="Script" uid="uid://cqo17xkl4eq5h" path="res://scenes/3d_scenes/city_view.gd" id="2_city_view"]
-[ext_resource type="Script" uid="uid://dvlgclv0w1a38" path="res://addons/citycrafter/citycrafter.gd" id="2_ho34v"]
-[ext_resource type="Resource" uid="uid://ben8e1qqiwbtt" path="res://addons/citycrafter/assets/example_city_resource.tres" id="3_city_config"]
+[ext_resource type="Script" uid="uid://bxjjmypitb8yf" path="res://scripts/world/custom_city_crafter.gd" id="2_ho34v"]
+[ext_resource type="PackedScene" uid="uid://bvl5rcdlvu4jy" path="res://scenes/ui/filofax/Filofax.tscn" id="4_cgrx7"]
+[ext_resource type="Resource" uid="uid://bc4as5ski1gf5" path="res://resources/city/default_european_city.tres" id="4_wmafb"]
 
 [node name="Node3D" type="Node3D" unique_id=856768213]
 script = ExtResource("2_city_view")
 
-[node name="ExampleScene" parent="." unique_id=563968178 instance=ExtResource("1_a202f")]
-visible = false
-
 [node name="CityCrafter" type="Node3D" parent="." unique_id=1858748182]
 script = ExtResource("2_ho34v")
-city_configuration = ExtResource("3_city_config")
+city_configuration = ExtResource("4_wmafb")
 metadata/_custom_type_script = "uid://dvlgclv0w1a38"
+
+[node name="FilofaxCanvas" type="CanvasLayer" parent="." unique_id=1906597282]
+
+[node name="Organiser" parent="FilofaxCanvas" unique_id=1298381080 instance=ExtResource("4_cgrx7")]
+visible = false

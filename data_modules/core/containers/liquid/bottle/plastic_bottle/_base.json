@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "CONTAINER_Plastic_BOTTLE",
+    "description": "Standard screw-capped plastic bottle."
+  },
+  "handling_attributes": {
+    "fragility": 0.95,
+    "tamper_evident": true,
+    "opsec_visibility": 0.1
+  }
+}

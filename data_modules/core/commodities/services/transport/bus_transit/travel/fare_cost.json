@@ -1,0 +1,8 @@
+{
+  "metric": "CASH",
+  "model": "STEPPED_PER_UNIT",
+  "factor": -0.30,
+  "params": {
+    "step_size": 150.0
+  }
+}

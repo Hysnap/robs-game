@@ -1,0 +1,6 @@
+{
+  "metric": "WORKER_FATIGUE",
+  "model": "LINEAR_PER_UNIT",
+  "factor": 0.04,
+  "params": {}
+}

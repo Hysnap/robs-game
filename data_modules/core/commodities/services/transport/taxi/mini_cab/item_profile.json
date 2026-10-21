@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "tier": 5,
+    "scope": "SERVICE_TAXI_Mini_CAB",
+    "description": "Licensed mini cab. Fast, effortless, but expensive meter."
+  },
+  "id": "SERVICE_Mini_CAB",
+  "display_name": "Private Hire Mini Cab Taxi",
+  "category": "SERVICE",
+  "can_be_stored": false,
+  "base_fare_drop": 1.20,
+  "unit_type": "DISTANCE_UNIT",
+  "capacity": {
+    "max_passengers_per_unit": 4,
+    "max_cargo_volume_litres": 75.0,
+    "requires_multiple_units_for_groups": true
+  }
+}

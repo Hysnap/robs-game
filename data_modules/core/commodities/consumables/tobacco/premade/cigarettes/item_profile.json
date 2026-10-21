@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "tier_level": 5,
+    "scope_id": "CRIME_CONSUMABLES_TOBACCO_PREMADE_CIGARETTES",
+    "display_scope": "Crime -> Consumables -> Tobacco -> Premade -> Cigarettes",
+    "description": "Establishes baseline properties for the Crime -> Consumables -> Tobacco -> Premade -> Cigarettes commodity scope."
+  },
+  "id": "CIGARETTES",
+  "display_name": "Commercial Cigarette",
+  "base_cost": 0.1
+}

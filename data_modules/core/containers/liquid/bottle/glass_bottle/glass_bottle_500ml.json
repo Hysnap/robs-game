@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "CONTAINER_GLASS_BOTTLE_500ML",
+    "description": "Standard 500ml crown-capped glass beverage bottle."
+  },
+  "id": "CONTAINER_GLASS_BOTTLE_500ML",
+  "display_name": "Glass Bottle (500ml)",
+  "category": "CONTAINER",
+  "accepted_phase": "LIQUID",
+  "base_cost": 0.12,
+
+  "capacity": {
+    "volume_ml": 500.0,
+    "mass_g": 850.0
+  },
+
+  "tare_footprint": {
+    "empty_mass_g": 350.0,
+    "storage_footprint_per_unit": 0.03
+  }
+}

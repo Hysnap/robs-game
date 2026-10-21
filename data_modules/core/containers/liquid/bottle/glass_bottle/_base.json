@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "CONTAINER_GLASS_BOTTLE",
+    "description": "Standard crown-capped glass beverage bottle."
+  },
+  "decay_modifiers": {
+    "shelf_life_multiplier": 3.0,
+    "rot_rate_multiplier": 0.2,
+    "ambient_loss_per_tick": 0.0
+  },
+  "handling_attributes": {
+    "fragility": 0.08,
+    "tamper_evident": true,
+    "opsec_visibility": 0.1
+  }
+}

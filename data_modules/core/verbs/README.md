@@ -1,186 +1,174 @@
-# Systems / Verbs Architecture
+# Core Verbs Architecture
 
 ## 1. Overview & Purpose
+The `res://data_modules/core/verbs/` directory contains the atomic business actions and macro workflows of the simulation[cite: 8]. Following the decoupled command pattern, verbs encapsulate execution logic (*Actions*) separately from state storage (*Nouns*)[cite: 8].
 
-The `res://systems/verbs/` directory contains the atomic business commands of the simulation. Verbs encapsulate the procedural execution logic (*Verbs*) separately from state storage (*Nouns*). 
-
-Each verb is an autonomous, stateless execution module that:
-1. Validates local operational constraints (stock availability, liquidity, physical capacity).
-2. Performs core economic transactions (deducting inputs, crediting yields, transferring cash).
-3. Automatically scans and runs its own adjacent `impacts/` subfolder to emit quantitative consequence deltas (`impact_deltas`).
+Verbs are autonomous, stateless execution modules that:
+1. Enforce preconditions and operational constraints using `ConditionEvaluator`[cite: 8].
+2. Orchestrate business transactions (order ticketing, financial settlements, physical inventory movement)[cite: 8].
+3. Compute quantitative consequence deltas (`impact_deltas`) via `ImpactCalculator` without mutating global state directly[cite: 8].
+4. Return standardized `EngineResult` payloads alongside colocated `feedback.json` narrative mappings[cite: 8].
 
 ---
 
 ## 2. Directory Layout & Organization
 
-Every verb lives in its own dedicated package directory or as an autoloaded script with an adjacent consequences subfolder:
+Verbs are packaged into dedicated folders containing their execution script and narrative feedback matrix[cite: 8]:
 
 ```text
-res://systems/verbs/
- ├── README.md                      <-- This document
- ├── verb_base.gd                   <-- Core static interface contract
- ├── verb_impact_base.gd            <-- Interface for local impact calculators
+res://data_modules/core/verbs/
+ ├── order/
+ │    ├── action_order.gd             <-- Atomic: Creates persistent order slip & checks solvency
+ │    └── feedback.json               <-- Outcome messages (e.g. ORDER_CREATED, INSUFFICIENT_CASH)
+ ├── pay/
+ │    ├── action_pay.gd               <-- Atomic: Financial settlement (CASH sink)
+ │    └── feedback.json               <-- Outcome messages (e.g. PAID_IN_FULL, ALREADY_PAID)
+ ├── receive/
+ │    ├── action_receive.gd           <-- Atomic: Physical delivery & material impact activation
+ │    └── feedback.json               <-- Outcome messages (e.g. STOCK_RECEIVED, GOODS_DAMAGED)
  ├── buy/
- │   ├── action_buy.gd              <-- Primary transaction logic
- │   └── impacts/                   <-- Local consequence calculators
- │       ├── impact_transport_fatigue.gd
- │       └── impact_supplier_coercion.gd
+ │    ├── action_buy.gd               <-- Macro: Sequences ORDER -> PAY -> RECEIVE (Wholesale)
+ │    └── feedback.json
  ├── sell/
- │   ├── action_sell.gd
- │   └── impacts/
- │       ├── impact_police_heat.gd
- │       ├── impact_unpaid_credit.gd
- │       └── impact_zhi_erosion.gd
+ │    ├── action_sell.gd              <-- Macro: Sequences ORDER -> RECEIVE -> PAY (Retail/B2B)
+ │    └── feedback.json
  └── make/
-     ├── action_make.gd
-     └── impacts/
-         ├── impact_processing_fatigue.gd
-         └── impact_batch_waste.gd
+      ├── action_make.gd              <-- Production: Recipe transformation & ingredient consumption
+      └── feedback.json
+
 ```
 
 ---
 
 ## 3. The Core Execution Contract
 
-All action scripts conform to the unified static interface (`VerbBase`):
+All action scripts inherit from `ActionBase` (`res://systems/action_base.gd`) and implement the standardized static interface:
 
 ```gdscript
-class_name VerbBase extends RefCounted
+class_name ActionBase extends RefCounted
 
 ## 1. HARVEST PHASE (Decentralized UI/Context Ingestion)
-## Pulls user configuration, sliders, or active UI input before execution
+## Reads player inputs, sliders, or active UI forms without hardcoding logic in controllers
 static func harvest(action: Dictionary, phase_config: Node, recipe_card: Node, db_mgr: Node) -> void:
     pass
 
 ## 2. EXECUTION PHASE (The Atomic Transaction)
-## Enforces constraints, calculates primary deltas, and compiles local impacts.
-## Returns a standardized outcome dictionary.
-static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
-    return {
-        "success": false,
-        "verb": "",
-        "target_node_id": "",
-        "cash_delta": 0.0,
-        "units_transacted": 0.0,
-        "impact_deltas": {},
-        "message": ""
-    }
+## Asserts constraints, executes transaction, and computes impact deltas.
+## Always returns a standardized EngineResult.
+static func execute(world_state: Dictionary, action_directive: Dictionary) -> EngineResult:
+    return EngineResult.fail("UNIMPLEMENTED", "VERB", "Unimplemented verb execution.")
+
 ```
 
 ---
 
-## 4. Subfolder Impact Delegation & Velocity Matching
+## 4. Universal Atomic Symmetry (`ORDER` $\rightarrow$ `PAY` $\rightarrow$ `RECEIVE`)
 
-Verbs do not calculate global police heat or worker fatigue directly in their main script. Instead, they delegate calculations to the scripts in their local `impacts/` directory.
-
-The verb passes:
-1. The execution summary (`units_transacted`, `gross_cash`, `target_node_id`).
-2. The active commodity's `impact_velocities` profile (loaded from `commodities/<item>.json`).
+To prevent code duplication and support both instant retail and delayed asynchronous logistics (such as beeper orders, cargo transit, or credit accounts), commercial trade is broken into three symmetrical atomic steps:
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   ACTION: action_sell.gd               │
-│  - Units Transacted: 50.0                              │
-│  - Target Commodity: "RETAIL_WRAP"                     │
+│                        ORDER                           │
+│  • Registers order slip in `world_state.pending_orders`│
+│  • Verifies buyer solvency and vendor inventory        │
 └───────────────────────────┬────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│       res://systems/verbs/sell/impacts/                │
-│       impact_police_heat.gd                            │
-│  - Queries RETAIL_WRAP["impact_velocities"]["SELL"]    │
-│  - Velocity = 0.08                                     │
-│  - Calculates: 50.0 * 0.08 = +4.0 Heat Delta           │
+│                         PAY                            │
+│  • Emits financial deltas (`CASH` sink)                │
+│  • Updates slip status: ORDERED -> PAID                │
 └───────────────────────────┬────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
-│          Standardized Action Result Output             │
-│  { "impact_deltas": { "POLICE_HEAT": 4.0 } }           │
+│                       RECEIVE                          │
+│  • Moves physical goods: `ON_ORDER` -> `STOCK`         │
+│  • Evaluates transacted commodity's impact activations │
+│  • Archives completed order slip                       │
 └────────────────────────────────────────────────────────┘
+
 ```
+
+* **Immediate Face-to-Face Trade (`BUY`, `SELL`):** Execute all three atomic steps in sequence in a single tick.
+
+
+* **Asynchronous Supply Chains:** Pipeline controllers schedule `ORDER` on Tick 1, `RECEIVE` on Tick 3, and `PAY` on Tick 4 without changing verb logic.
+
+
+* **Actor Agnostic:** Verbs execute identically whether initiated by the player, a subordinate employee, or an autonomous NPC counterparty (`initiator_id` vs `counterparty_id`).
+
+
 
 ---
 
-## 5. Reference Implementation: `action_sell.gd`
+## 5. How Verbs Process Impacts
+
+Verbs do not maintain hardcoded consequence formulas or execute local impact scripts. Instead, they delegate to `ImpactCalculator` using data definitions attached to commodities and recipes:
 
 ```gdscript
-# res://systems/verbs/sell/action_sell.gd
-extends VerbBase
-class_name ActionSell
+# Inside ActionReceive or ActionMake
+var activations: Array = commodity.get("impact_activations", {}).get("BUY", [])
 
-static var _impact_handlers: Array = []
-static var _initialized: bool = false
+for entry in activations:
+    var metric: String = entry.get("metric", "")
+    var model: String = entry.get("model", "LINEAR_PER_UNIT")
+    var factor: float = float(entry.get("factor", 0.0))
+    var params: Dictionary = entry.get("params", {})
+    
+    var delta: float = ImpactCalculator.calculate(model, units_transacted, factor, params)
+    if metric != "" and delta != 0.0:
+        impact_deltas[metric] = impact_deltas.get(metric, 0.0) + delta
 
-static func _ensure_impacts_loaded() -> void:
-    if not _initialized:
-        _impact_handlers = load_subfolder_impacts("res://systems/verbs/sell/impacts")
-        _initialized = true
-
-static func harvest(action: Dictionary, _phase_config: Node, _recipe_card: Node, _db_mgr: Node) -> void:
-    var config = action.get("config", {})
-    action["target_item"] = config.get("target_item", "LEMONADE")
-    action["amount"] = action.get("amount", config.get("order_amount", 10))
-
-static func execute(world_state: Dictionary, action: Dictionary) -> Dictionary:
-    _ensure_impacts_loaded()
-    
-    var params: Dictionary = action.get("config", {})
-    var target_item: String = action.get("target_item", "")
-    var requested_qty: float = float(action.get("amount", 0.0))
-    
-    # 1. Operational Constraint Checks
-    var inventory = world_state.get("inventory_registry", {})
-    if not inventory.has(target_item):
-        return {"success": false, "verb": "SELL", "message": "Unknown commodity: %s" % target_item}
-        
-    var available_stock = world_state.get("stashes", {}).get(target_item, 0.0)
-    var units_to_sell = min(requested_qty, available_stock)
-    
-    if units_to_sell <= 0.0:
-        return {"success": false, "verb": "SELL", "message": "Zero inventory available to sell."}
-        
-    # 2. Primary Economic Transaction
-    var unit_price = float(params.get("unit_price", 2.0))
-    var gross_cash = units_to_sell * unit_price
-    
-    world_state["stashes"][target_item] -= units_to_sell
-    world_state["finances"]["liquid_cash"] += gross_cash
-    
-    var summary = {
-        "units_transacted": units_to_sell,
-        "gross_cash": gross_cash,
-        "target_node_id": action.get("target_node_id", "HQ")
-    }
-    
-    # 3. Dynamic Impact Delta Compilation
-    var commodity_profile: Dictionary = inventory.get(target_item, {})
-    var compiled_deltas: Dictionary = compile_impact_deltas(
-        _impact_handlers,
-        params,
-        summary,
-        commodity_profile
-    )
-    
-    return {
-        "success": true,
-        "verb": "SELL",
-        "target_node_id": summary["target_node_id"],
-        "cash_delta": gross_cash,
-        "units_transacted": units_to_sell,
-        "impact_deltas": compiled_deltas,
-        "message": "Sold %.0f %s for £%.2f" % [units_to_sell, target_item, gross_cash]
-    }
 ```
+
+The resulting `impact_deltas` dictionary is packaged inside `EngineResult` and passed to `SimController`, which routes deltas to their respective sinks via `ImpactRouter`.
 
 ---
 
-## 6. Development Workflow Rules
+## 6. Narrative Feedback (`feedback.json`)
 
-* **Adding a Verb:** Add a new subfolder under `res://systems/verbs/` containing `action_<verb>.gd`. Define `harvest()` and `execute()`. Register alias tokens in `verb_mappings.json`.
-* **Adding a Consequence:** Drop an `impact_<metric>.gd` into the specific verb's `impacts/` folder. It will auto-load on the next engine boot.
-* **Tuning Balance:** Modify the `impact_velocities` inside the commodity JSON file (`res://data_modules/<variant>/commodities/`) rather than altering the verb script code.
-* **Headless Verification:** Verbs must never reference UI nodes (`$Control`, `Label`) inside `execute()`. Run standalone tests using:
-  ```bash
-  godot --headless --script res://tests/test_phase2_impacts.gd
-  ```
+Verbs do not return hardcoded display strings. Narrative generation is decoupled across three cascading layers:
+
+1. **Colocated Verb Overrides (`feedback.json`):** Defines outcome strings specific to that action (e.g. `INSUFFICIENT_CASH` for `BUY`).
+
+
+2. **Shared Outcomes (`data_modules/shared/feedback/`):** Universal fallbacks for common codes (`OUTSIDE_HOURS`, `OPERATOR_BURNOUT`).
+
+
+3. **Dialect Slang Replacement (`dialects/`):** Tokens such as `{boss}`, `{wedge}`, or `{stash}` are replaced dynamically based on the actor's regional dialect profile.
+
+
+
+---
+
+## 7. Development & Verification Rules
+
+* **Adding a Verb:**
+1. Create a dedicated folder in `res://data_modules/core/verbs/<verb_name>/`.
+
+
+2. Implement `action_<verb_name>.gd` extending `ActionBase`.
+
+
+3. Add `feedback.json` for outcome phrasing.
+
+
+4. Register optional aliases in `verb_mappings.json` (e.g. `"RESTOCK": "BUY"`).
+
+
+5. `VerbRouter` mounts the new action on boot automatically.
+
+
+
+
+* **Headless Verification:**
+Verbs must remain 100% headless and free of direct UI nodes (`$Control`, `Label`). Verify behavior using test harnesses:
+
+
+```powershell
+godot --headless --script res://tests/test_engine_harness.gd
+
+```
+
+

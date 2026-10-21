@@ -5,5 +5,9 @@
     "scope_id": "CRIME_CONSUMABLES_OTHER_PRESCRIPTION_PAD",
     "display_scope": "Crime -> Consumables -> Other -> Prescription Pad",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Other -> Prescription Pad commodity scope."
-  }
+  },
+  "id": "PRESCRIPTION_PAD",
+  "display_name": "Pescription pad",
+  "unit_type": "SHEET",
+  "base_cost": 20.0
 }

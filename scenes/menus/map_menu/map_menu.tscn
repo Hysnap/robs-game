@@ -73,10 +73,12 @@ text = "City Size"
 layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=755559848]
+visible = false
 layout_mode = 2
 text = "Width"
 
 [node name="GridWidth" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1594206458]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 5.0
@@ -84,14 +86,28 @@ value = 5.0
 rounded = true
 
 [node name="Label2" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
+visible = false
 layout_mode = 2
 text = "Height"
 
 [node name="GridHeight" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=136003089]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 5.0
 value = 5.0
+rounded = true
+
+[node name="Label3" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1287798827]
+layout_mode = 2
+text = "City Radius in Blocks"
+
+[node name="HSlider" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=883094067]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 6.0
+max_value = 25.0
+value = 6.0
 rounded = true
 
 [node name="HBoxContainer5" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1087251699]
@@ -116,18 +132,18 @@ text = "Chance of Vacant Block"
 [node name="VacantBlockChance" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer6" unique_id=85632914]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 suffix = "%"
 
 [node name="HBoxContainer10" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1749167412]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer10" unique_id=1292359055]
+visible = false
 layout_mode = 2
 text = "Building Density"
 
 [node name="BuildingDensity" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer10" unique_id=651104695]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -155,8 +171,6 @@ text = "Res %"
 [node name="ResidentialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=1115999667]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 suffix = "%"
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1350004796]
@@ -169,8 +183,6 @@ text = "Com %"
 [node name="CommercialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=1956787371]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 suffix = "%"
 
 [node name="HBoxContainer9" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1121579891]
@@ -183,8 +195,6 @@ text = "Ind %"
 [node name="IndustrialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=1291494675]
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 suffix = "%"
 
 [node name="HBoxContainer11" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=2113325430]

@@ -1,0 +1,6 @@
+{
+  "metric": "OPERATIONAL_TIME",
+  "model": "LINEAR_PER_UNIT",
+  "factor": 0.18,
+  "params": {}
+}

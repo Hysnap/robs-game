@@ -28,7 +28,7 @@ text = "WEEK 1 - 1988"
 layout_mode = 2
 text = "[DIRECT_DESK]"
 
-[node name="CloseButton" type="CheckButton" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=2082888903]
+[node name="CloseButton" type="Button" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=143652179]
 layout_mode = 2
 text = "X"
 
@@ -61,8 +61,8 @@ layout_mode = 2
 metadata/_tab_index = 2
 
 [node name="RingSpike_Center" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=1701765863]
+propagate_maximum_size = false
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="Pinned Slips" type="Label" parent="FilofaxBinder/Binder Shell/PageSpread/RingSpike_Center" unique_id=1034366898]
 layout_mode = 2
@@ -72,10 +72,11 @@ text = "Pinned Memos"
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+scroll_hint_mode = 3
 
 [node name="MemoList" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/RingSpike_Center/MemoScroll" unique_id=223659535]
+propagate_maximum_size = false
 layout_mode = 2
-size_flags_horizontal = 3
 
 [node name="RightPage_Planner" type="PanelContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=425500729]
 layout_mode = 2
@@ -101,7 +102,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "+ New Sticky Note Order"
 
-[node name="ExecuteTurnButton" type="CheckButton" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=676981487]
+[node name="ExecuteTurnButton" type="Button" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=238536953]
 layout_mode = 2
 text = "Commit Orders"
 

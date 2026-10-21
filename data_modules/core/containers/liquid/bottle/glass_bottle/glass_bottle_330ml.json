@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "CONTAINER_GLASS_BOTTLE_330ML",
+    "description": "Standard 330ml crown-capped amber glass beverage bottle."
+  },
+  "id": "CONTAINER_GLASS_BOTTLE_330ML",
+  "display_name": "Glass Bottle (330ml)",
+  "category": "CONTAINER",
+  "accepted_phase": "LIQUID",
+  "base_cost": 0.12,
+
+  "capacity": {
+    "volume_ml": 330.0,
+    "mass_g": 520.0
+  },
+
+  "tare_footprint": {
+    "empty_mass_g": 190.0,
+    "storage_footprint_per_unit": 0.03
+  }
+}

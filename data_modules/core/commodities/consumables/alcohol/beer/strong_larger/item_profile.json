@@ -7,5 +7,5 @@
   "id": "BEER_STRONG_LAGER",
   "display_name": "Super Strength Lager",
   "base_cost": 1.2,
-  "unit_type": "BOTTLE"
+  "unit_type": "CAN"
 }

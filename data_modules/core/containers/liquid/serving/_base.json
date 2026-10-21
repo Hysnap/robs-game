@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "CONTAINER_LIQUID_SERVING",
+    "description": "Standard serving container for liquid"
+  },
+  "decay_modifiers": {
+    "shelf_life_multiplier": 0.5,
+    "rot_rate_multiplier": 5.0,
+    "ambient_loss_per_tick": 0.0
+  }
+}

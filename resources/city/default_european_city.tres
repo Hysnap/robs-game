@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="CustomCityConfiguration" format=3 uid="uid://bc4as5ski1gf5"]
+
+[ext_resource type="Script" uid="uid://8qnl7nc5onh8" path="res://scripts/world/custom_city_configuration.gd" id="1_djb7o"]
+[ext_resource type="Material" uid="uid://d363p6jj6362h" path="res://resources/materials/ground_civic.tres" id="1_ik5ar"]
+[ext_resource type="Material" uid="uid://b2mk108krnkiy" path="res://resources/materials/ground_commercial.tres" id="2_8o77y"]
+[ext_resource type="Material" uid="uid://b84k3e2ilwrbg" path="res://resources/materials/ground_mat.tres" id="3_x425w"]
+[ext_resource type="Material" uid="uid://yc5evofdmcs3" path="res://resources/materials/ground_highrise_res.tres" id="4_30e0b"]
+[ext_resource type="Material" uid="uid://bwiqt20bbfuw2" path="res://resources/materials/ground_industrial.tres" id="5_82ke0"]
+[ext_resource type="Material" uid="uid://bvtko8l2vmgws" path="res://resources/materials/ground_intersection.tres" id="6_wujfr"]
+[ext_resource type="Material" uid="uid://fnqdeei8ia0h" path="res://resources/materials/ground_lowrise_res.tres" id="7_vp5eq"]
+[ext_resource type="Material" uid="uid://c6xfq1khwqdqc" path="res://resources/materials/ground_residential_suburb.tres" id="8_yhv1v"]
+[ext_resource type="Material" uid="uid://78oyk3tvmbur" path="res://resources/materials/ground_road.tres" id="9_luwf5"]
+[ext_resource type="Material" uid="uid://b17tecb4cb87p" path="res://resources/materials/ground_subdiv_road.tres" id="11_4wou7"]
+
+[resource]
+script = ExtResource("1_djb7o")
+high_rise_ground_material = ExtResource("4_30e0b")
+low_rise_ground_material = ExtResource("7_vp5eq")
+civic_ground_material = ExtResource("1_ik5ar")
+road_material = ExtResource("9_luwf5")
+intersection_material = ExtResource("6_wujfr")
+subdivision_road_material = ExtResource("11_4wou7")
+ground_material = ExtResource("3_x425w")
+residential_ground_material = ExtResource("8_yhv1v")
+commercial_ground_material = ExtResource("2_8o77y")
+industrial_ground_material = ExtResource("5_82ke0")
+block_size = 100.0
+street_width = 12.0
+empty_block_chance = 0.07
+enable_multi_size_blocks = true
+district_mode = 2
+metadata/_custom_type_script = "uid://8qnl7nc5onh8"

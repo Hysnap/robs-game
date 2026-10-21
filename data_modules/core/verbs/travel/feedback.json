@@ -1,0 +1,22 @@
+{
+  "SUCCESS": [
+    "Arrived at {target_location} via {service_id}. Took the direct road.",
+    "Journey completed to {target_location} for the crew."
+  ],
+  "INSUFFICIENT_RESOURCE": [
+    "Turned up at the stop for {target_location}, but short on the fare.",
+    "Didn't have enough wedge for the meter to {target_location}."
+  ],
+  "INVALID_TARGET": [
+    "Can't reach {target_location}: Street address not recognized on the local map.",
+    "No through-road or route connects to that ward."
+  ],
+  "CAPACITY_EXCEEDED": [
+    "Too many of the lads to squeeze in: need to order another cab or take the bus.",
+    "Trunk's completely full—can't take that much gear in a saloon car."
+  ],
+  "DOWNGRADED": [
+    "Couldn't flag a cab for {target_location} as I was short on readies—had to wait for the bus.",
+    "Didn't have the fare on me, so had to hoof it all the way to {target_location}. My feet are killing me."
+  ]
+}

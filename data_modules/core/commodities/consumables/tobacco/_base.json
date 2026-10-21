@@ -5,8 +5,6 @@
     "description": "Baseline prototype for all cured and commercial tobacco products."
   },
   "category": "CONSUMABLE",
-  "id": "TOBACCO",
-  "diplay_name": "Generic Tobacco Product",
   "tags": ["AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
   "unit_type": "GRAM",
   "storage_footprint_per_unit": 0.002,

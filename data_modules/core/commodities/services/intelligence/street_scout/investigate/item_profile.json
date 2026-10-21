@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "SERVICE_STREET_SCOUT",
+    "description": "On-foot physical survey of commercial parade and street layout."
+  },
+  "id": "SERVICE_STREET_SCOUT",
+  "display_name": "Pavement Reconnaissance",
+  "category": "SERVICE",
+  "can_be_stored": false,
+  "base_cost": 0.00,
+  "unit_type": "SURVEY_SESSION",
+  "intel_properties": {
+    "scope": "DISTRICT_PARADE",
+    "variance_blur": 0.05,
+    "reveals_storefronts": true,
+    "confidence_rating": 0.95
+  }
+}

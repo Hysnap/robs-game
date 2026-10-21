@@ -1,9 +1,8 @@
 {
   "_meta": {
     "schema_version": "1.0.0",
-    "tier_level": 4,
-    "scope_id": "CRIME_CONSUMABLES_ALCOHOL_BEER",
-    "display_scope": "Crime -> Consumables -> Alcohol -> Beer",
+    "tier_level": 3,
     "description": "Establishes baseline properties for the Crime -> Consumables -> Alcohol -> Beer commodity scope."
-  }
+  },
+  "unit_type": "BOTTLE"
 }

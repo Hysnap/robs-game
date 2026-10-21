@@ -5,5 +5,9 @@
     "scope_id": "CRIME_CONSUMABLES_OTHER_CIGARETTE_FILTERS",
     "display_scope": "Crime -> Consumables -> Other -> Cigarette Filters",
     "description": "Establishes baseline properties for the Crime -> Consumables -> Other -> Cigarette Filters commodity scope."
-  }
+  },
+  "id": "CIGARETTE_FILTER",
+  "display_name": "Cigarette Filter",
+  "unit_type": "Unit",
+  "base_cost": 0.01
 }

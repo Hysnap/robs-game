@@ -13,6 +13,12 @@
   ],
   "unit_type": "BOTTLE",
   "decay_properties": {
-    "degrades_to": "SPOILED_ALCOHOL"
+    "shelf_life_ticks": 8,
+    "degrades_to": "SPOILED_ALCOHOL",
+    "impact": {
+      "model": "LINEAR_PER_UNIT",
+      "factor": -0.1,
+      "params": {}
+    }
   }
 }

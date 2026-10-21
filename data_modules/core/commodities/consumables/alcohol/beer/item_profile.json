@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_BEER",
+    "description": "Stand off the shelf beer"
+  },
+  "id": "BEER",
+  "display_name": "Generic Beer",
+  "base_cost": 1.2
+}

@@ -1,8 +1,10 @@
+# res://scenes/3d_scenes/city_view.gd
 extends Node3D
 
 @onready var city_crafter: Node3D = $CityCrafter
+@onready var filofax_ui: FilofaxUI = get_node_or_null("FilofaxCanvas/FilofaxBinder")
 
-## camera settings
+## Camera settings
 var camera: Camera3D
 var camera_target := Vector3.ZERO
 var camera_distance := 1000.0
@@ -13,24 +15,36 @@ var orbiting := false
 var panning := false
 
 func _ready() -> void:
+	setup_navigation()
+	
+	# 1. Retrieve settings from SceneTree metadata (map_menu) or fallback to last_generated.json
 	var settings := load_pending_city_settings()
 	if settings.is_empty():
 		settings = load_last_generated_settings()
-	if settings.is_empty():
-		push_error("No generated city is available to display.")
-		return
-
-	if not apply_settings(settings):
-		return
+		
+	# 2. Apply settings (or fall back to defaults)
+	var gen_seed := "default-city"
+	if not settings.is_empty():
+		apply_settings(settings)
+		gen_seed = get_seed_from_settings(settings)
+	else:
+		# Read directly from CityCrafter node export
+		if "seed_id" in city_crafter and not str(city_crafter.seed_id).is_empty():
+			gen_seed = city_crafter.seed_id
+			
+	# 3. Setup Camera and Lighting for radial layout
 	setup_view()
-	setup_navigation()
-	var status_text: String = "Loading city: %s" % str(get_seed_from_settings(settings))
-	set_status(status_text)
-	city_crafter.connect("generation_complete", _on_generation_complete)
-	city_crafter.call_deferred(
-		"generate_city_async",
-		get_seed_from_settings(settings)
-	)
+	
+	# 4. Connect progress signal for HUD status text
+	if city_crafter.has_signal("generation_progress"):
+		city_crafter.generation_progress.connect(func(_c, _t, stage): set_status(stage))
+		
+	# 5. Await the async generator directly
+	set_status("Generating city layout...")
+	await city_crafter.generate_city_async(gen_seed)
+	
+	# 6. Generator has finished — run ingestion and the sense check!
+	_on_generation_complete()
 
 func load_pending_city_settings() -> Dictionary:
 	if not get_tree().has_meta("pending_city_settings"):
@@ -58,7 +72,7 @@ func load_last_generated_settings() -> Dictionary:
 	return parsed
 
 func get_seed_from_settings(settings: Dictionary) -> String:
-	var seed_value = settings.get("seed_id", settings.get("seed_text", ""))
+	var seed_value = settings.get("seed_id", settings.get("seed_text", settings.get("seed", "")))
 	return str(seed_value).strip_edges()
 
 func apply_settings(settings: Dictionary) -> bool:
@@ -67,7 +81,10 @@ func apply_settings(settings: Dictionary) -> bool:
 		push_error("CityCrafter has no city configuration.")
 		return false
 
+	# Full list of supported parameters including the new European radial parameters
 	var property_names := [
+		"city_radius", "radial_jitter", "enable_building_spawning",
+		"spawn_local_government", "spawn_hospital", "spawn_university",
 		"grid_width", "grid_height", "block_size", "street_width",
 		"empty_block_chance", "enable_multi_size_blocks", "large_block_chance",
 		"wide_block_chance", "tall_block_chance", "enable_edge_variations",
@@ -84,22 +101,16 @@ func apply_settings(settings: Dictionary) -> bool:
 		"intersection_height_offset", "generate_subdivision_roads", "generate_ground",
 		"ground_height_offset"
 	]
+	
 	for property_name in property_names:
-		if settings.has(property_name):
+		if settings.has(property_name) and property_name in configuration:
 			configuration.set(property_name, settings[property_name])
 
+	# Assign the seed to the CityCrafter node (NOT the configuration resource)
 	var saved_seed := get_seed_from_settings(settings)
-	if saved_seed.is_empty():
-		push_error("The saved city does not contain a seed.")
-		return false
-	city_crafter.set("seed_id", saved_seed)
-	if str(city_crafter.get("seed_id")) != saved_seed:
-		push_error("Could not apply the saved city seed: %s" % saved_seed)
-		return false
-	var expected_seed: int = saved_seed.hash()
-	if int(city_crafter.get("city_seed")) != expected_seed:
-		push_error("Could not initialize the saved city seed: %s" % saved_seed)
-		return false
+	if not saved_seed.is_empty():
+		city_crafter.set("seed_id", saved_seed)
+		
 	return true
 
 func setup_view() -> void:
@@ -120,6 +131,7 @@ func setup_view() -> void:
 		world_environment = WorldEnvironment.new()
 		world_environment.name = "WorldEnvironment"
 		add_child(world_environment)
+		
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
 	environment.background_color = Color(0.08, 0.12, 0.18)
@@ -130,22 +142,29 @@ func setup_view() -> void:
 	world_environment.environment = environment
 
 	var configuration = city_crafter.get("city_configuration")
-	var grid_width: float = float(configuration.grid_width)
-	var grid_height: float = float(configuration.grid_height)
-	var block_size: float = float(configuration.block_size)
-	var street_width: float = float(configuration.street_width)
-	var city_center := city_crafter.global_position + Vector3(
-		grid_width * (block_size + street_width) * 0.5,
-		0.0,
-		grid_height * (block_size + street_width) * 0.5
-	)
-	var city_extent: float = max(
-		grid_width * (block_size + street_width),
-		grid_height * (block_size + street_width)
-	)
+	var block_size: float = float(configuration.block_size) if configuration and "block_size" in configuration else 40.0
+	var street_width: float = float(configuration.street_width) if configuration and "street_width" in configuration else 8.0
+	var cell_extent := block_size + street_width
+	
+	var city_extent: float = 800.0
+	
+	# Radial centering: The town center is at (0, 0)
+	if configuration and "city_radius" in configuration:
+		var radius: float = float(configuration.city_radius)
+		camera_target = city_crafter.global_position # Centered on (0,0)
+		city_extent = radius * 2.0 * cell_extent
+	else:
+		# Fallback to legacy rectangular centering if non-radial
+		var grid_width: float = float(configuration.grid_width)
+		var grid_height: float = float(configuration.grid_height)
+		camera_target = city_crafter.global_position + Vector3(
+			grid_width * cell_extent * 0.5,
+			0.0,
+			grid_height * cell_extent * 0.5
+		)
+		city_extent = max(grid_width * cell_extent, grid_height * cell_extent)
 
-	camera_target = city_center
-	camera_distance = city_extent * 1.3
+	camera_distance = max(city_extent * 1.3, 100.0)
 	camera_yaw = 0.0
 	camera_pitch = deg_to_rad(45.0)
 
@@ -175,17 +194,58 @@ func update_camera_transform() -> void:
 	camera.look_at(camera_target)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Toggle Filofax on Tab key
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		if filofax_ui:
+			filofax_ui.visible = not filofax_ui.visible
+			if filofax_ui.visible:
+				filofax_ui.update_display(GameState.world_state.get("filofax_cache", {}))
+		get_viewport().set_input_as_handled()
+		return
+
 	if event is InputEventMouseButton:
 		var mouse_button := event as InputEventMouseButton
 
+		# 1. Camera Orbit (Right Click)
 		if mouse_button.button_index == MOUSE_BUTTON_RIGHT:
 			orbiting = mouse_button.pressed
 			get_viewport().set_input_as_handled()
 
+		# 2. Camera Pan (Middle Click)
 		elif mouse_button.button_index == MOUSE_BUTTON_MIDDLE:
 			panning = mouse_button.pressed
 			get_viewport().set_input_as_handled()
 
+		# 3. District Selection Raycast (Left Click)
+		elif mouse_button.button_index == MOUSE_BUTTON_LEFT and mouse_button.pressed:
+			var mouse_pos := get_viewport().get_mouse_position()
+			var from := camera.project_ray_origin(mouse_pos)
+			var to := from + camera.project_ray_normal(mouse_pos) * 5000.0 # Extended range for zoomed out views
+		
+			var space_state := get_world_3d().direct_space_state
+			var query := PhysicsRayQueryParameters3D.create(from, to)
+			var result := space_state.intersect_ray(query)
+		
+			if result and result.collider:
+				var hit_node: Node = result.collider
+				# Check both collider and its parent in case collision is nested
+				if not hit_node.has_meta("block_id") and hit_node.get_parent() and hit_node.get_parent().has_meta("block_id"):
+					hit_node = hit_node.get_parent()
+
+				if hit_node.has_meta("block_id"):
+					var block_id: String = hit_node.get_meta("block_id")
+					
+					# 1. Update GameState selection pointer
+					GameState.set_selected_district(block_id)
+					
+					# 2. Bring up the Filofax and focus the district tab
+					if filofax_ui:
+						filofax_ui.visible = true
+						filofax_ui.display_district_docket(block_id)
+						
+					get_viewport().set_input_as_handled()
+
+		# 4. Camera Zoom (Mouse Wheel)
 		elif mouse_button.pressed:
 			if mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP:
 				camera_distance = max(camera_distance * 0.85, 25.0)
@@ -196,36 +256,6 @@ func _unhandled_input(event: InputEvent) -> void:
 				camera_distance = min(camera_distance * 1.15, 10000.0)
 				update_camera_transform()
 				get_viewport().set_input_as_handled()
-
-	elif event is InputEventMouseMotion:
-		var mouse_motion := event as InputEventMouseMotion
-
-		if orbiting:
-			camera_yaw -= mouse_motion.relative.x * 0.01
-			camera_pitch = clamp(
-				camera_pitch + mouse_motion.relative.y * 0.01,
-				deg_to_rad(10.0),
-				deg_to_rad(85.0)
-			)
-			update_camera_transform()
-			get_viewport().set_input_as_handled()
-
-		elif panning:
-			var camera_right := camera.global_transform.basis.x
-			var camera_up := camera.global_transform.basis.y
-
-			camera_right.y = 0.0
-			camera_up.y = 0.0
-
-			camera_right = camera_right.normalized()
-			camera_up = camera_up.normalized()
-
-			var pan_speed := camera_distance * 0.001
-			camera_target -= camera_right * mouse_motion.relative.x * pan_speed
-			camera_target += camera_up * mouse_motion.relative.y * pan_speed
-
-			update_camera_transform()
-			get_viewport().set_input_as_handled()
 
 func setup_navigation() -> void:
 	var canvas_layer := CanvasLayer.new()
@@ -251,9 +281,6 @@ func set_status(status: String) -> void:
 	if status_label:
 		status_label.text = status
 
-func _on_generation_complete() -> void:
-	set_status("City generated")
-
 func _on_return_to_main_menu_pressed() -> void:
 	var error := get_tree().change_scene_to_file(
 		"res://scenes/menus/main_menu/main.tscn"
@@ -277,3 +304,86 @@ func _process(delta: float) -> void:
 		var speed := camera_distance * 0.75
 		camera_target += movement.normalized() * speed * delta
 		update_camera_transform()
+
+func _on_generation_complete() -> void:
+	set_status("City generated")
+	
+	# Stamp active seed
+	var current_seed: String = str(city_crafter.get("seed_id"))
+	GameState.world_state["metadata"]["active_seed"] = current_seed
+	
+	# Run the ingestion pass directly into the global singleton!
+	CitySpatialAdapter.ingest_citycrafter_generation(city_crafter, GameState.world_state, current_seed)
+	
+	# Run our sense-check audit
+	run_district_sense_check(GameState.world_state)
+
+func run_district_sense_check(world_state: Dictionary) -> void:
+	var districts: Dictionary = world_state.get("districts", {})
+	var total_count: int = districts.size()
+	
+	if total_count == 0:
+		push_error("[AUDIT FAILED] No districts were ingested into world_state!")
+		return
+
+	var type_counts: Dictionary = {}
+	var total_population: int = 0
+	var income_samples: Array = []
+	var zhi_samples: Array = []
+	var sample_dockets: Array = []
+
+	for dist_id in districts.keys():
+		var d = districts[dist_id]
+		var dtype = d.get("district_type", "unknown")
+		
+		# Count types
+		type_counts[dtype] = type_counts.get(dtype, 0) + 1
+		
+		# Aggregate demographics
+		var pop = d.get("population", 0)
+		var inc = d.get("avg_disposable_income", 0.0)
+		var zhi = d.get("zone_health_index", 0.0)
+		
+		total_population += pop
+		income_samples.append(inc)
+		zhi_samples.append(zhi)
+		
+		# Save a few sample entries to print
+		if sample_dockets.size() < 4:
+			sample_dockets.append(d)
+
+	# Calculate averages
+	income_samples.sort()
+	zhi_samples.sort()
+	var mid_income_idx: int = income_samples.size() >> 1
+	var mid_zhi_idx: int = zhi_samples.size() >> 1
+
+	var median_income = income_samples[mid_income_idx] if not income_samples.is_empty() else 0.0
+	var median_zhi = zhi_samples[mid_zhi_idx] if not zhi_samples.is_empty() else 0.0
+
+	# Print the Executive Sanity Dossier
+	print("\n=======================================================")
+	print("	   CITY GENERATION STATISTICAL SENSE-CHECK		 ")
+	print("=======================================================")
+	print("Total Ingested Districts: %d" % total_count)
+	print("Total Town Population:	~%d residents" % total_population)
+	print("Median Weekly Income:	 £%.2f / week" % median_income)
+	print("Median Zone Health (ZHI): %.1f / 100" % median_zhi)
+	print("-------------------------------------------------------")
+	print("District Breakdown:")
+	for dtype in type_counts.keys():
+		var pct = (float(type_counts[dtype]) / float(total_count)) * 100.0
+		print(" - %-24s: %3d blocks (%.1f%%)" % [dtype, type_counts[dtype], pct])
+	print("-------------------------------------------------------")
+	print("Sample Ingested District Dockets:")
+	for sample in sample_dockets:
+		print(" • [%s] \"%s\"" % [sample.get("district_type"), sample.get("display_name")])
+		print("	Pop: %d | Unemp: %.1f%% | Income: £%.2f/wk | ZHI: %.1f | Heat: %.2f" % [
+			sample.get("population"),
+			sample.get("unemployment_rate") * 100.0,
+			sample.get("avg_disposable_income"),
+			sample.get("zone_health_index"),
+			sample.get("actual_police_heat")
+		])
+	print("=======================================================\n")
+

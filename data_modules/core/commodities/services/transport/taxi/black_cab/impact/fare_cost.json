@@ -1,0 +1,6 @@
+{
+  "metric": "CASH",
+  "model": "LINEAR_PER_UNIT",
+  "factor": -0.015,
+  "params": {}
+}

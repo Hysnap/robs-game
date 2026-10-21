@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_FORTIFIED_WINE",
+    "description": "Stand off the shelf fortified wine"
+  },
+  "id": "FORTIFIED_WIINE",
+  "display_name": "Generic Fortified Wine",
+  "base_cost": 3.5
+}

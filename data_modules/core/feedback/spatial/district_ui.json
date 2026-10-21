@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "locale": "en_GB",
+    "scope": "DISTRICT_HUD"
+  },
+  "type_labels": {
+    "commercial": "Commercial Core & Retail Precinct",
+    "high_density_low_rise": "Victorian Residential Terraces",
+    "high_density_high_rise": "Municipal Housing Estate & High-Rise",
+    "industrial": "Industrial Canal Yard & Rail Depots",
+    "suburban_low_density": "Suburban Commuter Belt",
+    "local_government": "Municipal Administrative Hub",
+    "hospital_site": "Regional Infirmary & Medical Center",
+    "university_campus": "Higher Education Campus & Polytechnic"
+  },
+  "metric_labels": {
+    "population": "Estimated Residents",
+    "unemployment": "Unemployment Ratio",
+    "weekly_disposable_income": "Mean Disposable Income",
+    "zone_health_index": "Zone Health Index (ZHI)",
+    "police_presence": "Observed Patrol Density",
+    "desperation_pressure": "Consumer Desperation Index"
+  },
+  "currency_format": "£{amount}/wk",
+  "ratio_format": "{percent}%",
+  "docket_audit_stale_warning": "[!] Stale Intelligence: Last audited {weeks_ago} weeks ago",
+  "filofax_labels": {
+    "ward_dossier_title": "WARD DOSSIER: {name}",
+    "unsurveyed_header": "[!] UNSURVEYED TERRITORY",
+    "unsurveyed_subtext": "Pre-1990: No digital directory or census roll available.\nStorefronts and beat patrol patterns are unknown.\nRequires physical reconnaissance on foot.",
+    "dispatch_scout_btn": "Dispatch Runner to Walk Parade ({cost})",
+    "data_age": "Field Notes Age: {age} week(s) old",
+    "stale_warning": "[STALE PENCIL INTELLIGENCE]",
+    "type_label": "Classification: {type}",
+    "insufficient_funds": "Cannot dispatch runner: insufficient cash."
+  }
+}

@@ -1,0 +1,13 @@
+JSON
+{
+  "_meta": {
+    "tier": 3,
+    "scope": "CONTAINER_BOTTLE",
+    "description": "Standard bottle either plastic glass or other."
+  },
+  "decay_modifiers": {
+    "shelf_life_multiplier": 3.0,
+    "rot_rate_multiplier": 0.20,
+    "ambient_loss_per_tick": 0.0
+  }
+}

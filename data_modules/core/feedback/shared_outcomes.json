@@ -1,0 +1,6 @@
+{
+  "INVALID_TARGET": [
+    "Location unreachable: The specified district address cannot be found on the county map.",
+    "Target node is unknown or inaccessible by local roads."
+  ]
+}

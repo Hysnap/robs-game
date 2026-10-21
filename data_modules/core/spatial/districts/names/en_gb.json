@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "locale": "en_GB",
+    "display_language": "English (British Regional)"
+  },
+  "civic_sites": {
+    "local_government": [
+      "Guildhall Precinct", "Council House Yard", "Victoria Square", 
+      "St. Mary's Gate", "Magistrates' Walk", "The Council Chamber"
+    ],
+    "hospital_site": [
+      "Queen Elizabeth Infirmary", "St. Jude's General Hospital", 
+      "Calthorpe Medical Trust", "Victoria Memorial Hospital"
+    ],
+    "university_campus": [
+      "Redbrick Campus", "St. Jude's College Estate", 
+      "Polytechnic Precinct", "Faculty Row", "University Grove"
+    ]
+  },
+  "prefixes": {
+    "commercial": [
+      "Market", "High", "Crown", "Bull", "Broad", "Victoria", "St. Jude's", 
+      "Corporation", "Albert", "Colmore", "Regent", "New", "Exchange"
+    ],
+    "high_density_low_rise": [
+      "Aston", "Handsworth", "Birch", "Moor", "Heath", "Blackthorn", "Summer", 
+      "Wharf", "Ladywood", "Lozells", "Nechells", "Hockley", "Balsall"
+    ],
+    "high_density_high_rise": [
+      "Westfield", "Blackthorn", "Greenfields", "Parkview", "Moor Rise", 
+      "Paddock", "Rednal", "Castle", "Newtown", "Highgate", "Falcon"
+    ],
+    "industrial": [
+      "Vulcan", "Iron", "Canal", "Foundry", "Gasworks", "Mill", "Wharfside", 
+      "Soho", "Forge", "Depot", "Minworth", "Siding", "Basin"
+    ],
+    "suburban_low_density": [
+      "Kings", "Oak", "Hazel", "Meadow", "Church", "Elm", "Selly", "Edgbaston", 
+      "Solihull", "Bourn", "Harborne", "North", "Green", "Hall"
+    ]
+  },
+  "suffixes": {
+    "commercial": ["Cross", "Parade", "Row", "Square", "Precinct", "Gate", "Circus", "Street", "Arcade"],
+    "high_density_low_rise": ["Row", "Terrace", "Lane", "End", "Street", "Corner", "Alley", "Place"],
+    "high_density_high_rise": ["Estate", "Rise", "Court", "Grange", "Towers", "Mount", "Park", "Gardens"],
+    "industrial": ["Works", "Wharf", "Cut", "Basin", "Yard", "Bank", "Sidings", "Foundry", "Way"],
+    "suburban_low_density": ["Green", "Close", "Copse", "Common", "Hill", "End", "Meadow", "Avenue", "Vale", "Drive"]
+  },
+  "grammar": {
+    "format": "{prefix} {suffix}",
+    "duplicate_fallback": "{prefix} Common"
+  }
+}

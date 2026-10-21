@@ -2,14 +2,20 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 3,
-    "scope_id": "CRIME_CONSUMABLES_FOODS",
-    "display_scope": "Crime -> Consumables -> Foods",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Foods commodity scope."
+    "scope_id": "CORE_CONSUMABLES_FOODS",
+    "display_scope": "CORE -> Consumables -> Foods",
+    "description": "Establishes baseline properties for the CORE -> Consumables -> Foods commodity scope."
   },
   "tags": [
-    "CRIME_ECONOMY"
+    "CORE_ECONOMY"
   ],
   "decay_properties": {
-    "degrades_to": "SPOILED_FOOD"
+    "degrades_to": "SPOILED_FOOD",
+    "shelf_life_ticks": 5,
+    "impact": {
+      "model": "LINEAR_PER_UNIT",
+      "factor": -0.03,
+      "params": {}
+    }
   }
 }
