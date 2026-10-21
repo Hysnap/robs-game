@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "region": "West Midlands / Birmingham",
+    "era": "1980s",
+    "description": "Historical demographic weights for ethnic background and religious denominations by district density."
+  },
+  "ethnicities": {
+    "WHITE_BRITISH": {
+      "display_name": "White British",
+      "religion_distribution": {
+        "PROTESTANT_COFE": 0.65,
+        "CATHOLIC": 0.15,
+        "SECULAR_NONE": 0.20
+      },
+      "surnames_pool": "surnames"
+    },
+    "WHITE_IRISH": {
+      "display_name": "White Irish",
+      "religion_distribution": {
+        "CATHOLIC": 0.90,
+        "PROTESTANT_OTHER": 0.05,
+        "SECULAR_NONE": 0.05
+      },
+      "surnames_pool": "surnames_irish"
+    },
+    "AFRO_CARIBBEAN": {
+      "display_name": "Afro-Caribbean",
+      "religion_distribution": {
+        "PENTECOSTAL_PROTESTANT": 0.70,
+        "RASTAFARI": 0.15,
+        "SECULAR_NONE": 0.15
+      },
+      "surnames_pool": "surnames_caribbean"
+    },
+    "SOUTH_ASIAN": {
+      "display_name": "South Asian",
+      "religion_distribution": {
+        "MUSLIM": 0.55,
+        "SIKH": 0.30,
+        "HINDU": 0.15
+      },
+      "surnames_pool": "surnames_south_asian"
+    }
+  },
+  "district_ethnic_weights": {
+    "high_density": {
+      "WHITE_BRITISH": 0.55,
+      "WHITE_IRISH": 0.18,
+      "AFRO_CARIBBEAN": 0.15,
+      "SOUTH_ASIAN": 0.12
+    },
+    "suburban_low_density": {
+      "WHITE_BRITISH": 0.82,
+      "WHITE_IRISH": 0.10,
+      "AFRO_CARIBBEAN": 0.04,
+      "SOUTH_ASIAN": 0.04
+    },
+    "commercial": {
+      "WHITE_BRITISH": 0.65,
+      "WHITE_IRISH": 0.15,
+      "AFRO_CARIBBEAN": 0.08,
+      "SOUTH_ASIAN": 0.12
+    }
+  }
+}

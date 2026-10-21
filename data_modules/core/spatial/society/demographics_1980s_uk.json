@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "description": "Historical 1980s British demographic cohorts, statutory pension thresholds, and labor splits."
+  },
+  "legal_and_pension_thresholds": {
+    "minimum_school_leaving_age": 16,
+    "youth_student_threshold_age": 18,
+    "pension_age_female": 60,
+    "pension_age_male": 65
+  },
+  "life_expectancy_caps": {
+    "male_max_age": 75,
+    "female_max_age": 79
+  },
+  "household_occupancy_mean": 2.6,
+  "labor_market_splits": {
+    "commercial_tertiary_share": 0.70,
+    "industrial_secondary_share": 0.30
+  },
+  "cohort_distributions": {
+    "high_density": {
+      "youth_0_15": 0.26,
+      "young_adult_16_29": 0.24,
+      "prime_adult_30_49": 0.22,
+      "older_worker_50_plus": 0.15,
+      "pensioner_share": 0.13
+    },
+    "suburban_low_density": {
+      "youth_0_15": 0.20,
+      "young_adult_16_29": 0.13,
+      "prime_adult_30_49": 0.33,
+      "older_worker_50_plus": 0.18,
+      "pensioner_share": 0.16
+    }
+  }
+}

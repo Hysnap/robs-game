@@ -386,4 +386,3 @@ func run_district_sense_check(world_state: Dictionary) -> void:
 			sample.get("actual_police_heat")
 		])
 	print("=======================================================\n")
-

@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "locale": "en_GB",
+    "era": "1980s",
+    "description": "Period-authentic British first names and regional surnames for procedural citizen generation."
+  },
+  "first_names_male": [
+    "Terry", "Billy", "Gary", "Wayne", "Mark", "Darren", "Paul", "Dean", 
+    "Kevin", "Shaun", "Colin", "Trevor", "Nigel", "Graham", "Barry", 
+    "Keith", "Ian", "Stephen", "Martin", "Alan", "Brian", "Stuart", 
+    "Derek", "Raymond", "Malcolm", "Tony", "Clive", "Neil", "Roy", "Glyn"
+  ],
+  "first_names_female": [
+    "Sharon", "Tracey", "Julie", "Karen", "Debbie", "Donna", "Beverley", 
+    "Mandy", "Wendy", "Carol", "Diane", "Linda", "Tina", "Susan", 
+    "Denise", "Paula", "Alison", "Gillian", "Sandra", "Jacqueline", 
+    "Yvonne", "Fiona", "Shirley", "Dawn", "Clare", "Lorraine", "Nicola", "Janet"
+  ],
+  "surnames": [
+    "Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Johnson", 
+    "Davies", "Robinson", "Wright", "Thompson", "Evans", "Walker", "White", 
+    "Roberts", "Green", "Hall", "Thomas", "Clarke", "Cooper", "Ward", 
+    "Turner", "Hughes", "Edwards", "Hill", "Moore", "Clark", "Harrison", 
+    "Baker", "Shaw", "Bennett", "Price", "Watson", "Griffiths", "Wood", 
+    "Simpson", "Marshall", "Mason", "Butler", "Webb", "Stevens", "Fletcher"
+  ],
+  "surnames_irish": [
+    "O'Connor", "Murphy", "Kelly", "Byrne", "O'Brien", "Doherty", "Walsh", 
+    "Gallagher", "O'Neill", "Connolly", "Dunne", "Brennan", "McCarthy", "Maguire"
+  ],
+  "surnames_caribbean": [
+    "Campbell", "Clarke", "Bailey", "Powell", "Gordon", "Reid", "Morgan", 
+    "Grant", "Richards", "Francis", "Palmer", "Watson", "Hamilton", "Lewis"
+  ],
+  "surnames_south_asian": [
+    "Khan", "Begum", "Akhtar", "Hussain", "Ahmed", "Singh", "Kaur", 
+    "Patel", "Ali", "Choudhury", "Shah", "Malik", "Iqbal", "Gill"
+  ]
+}
