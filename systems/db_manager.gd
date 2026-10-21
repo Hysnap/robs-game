@@ -37,19 +37,20 @@ static func _drop_society_schema() -> void:
 	_db.query("DROP TABLE IF EXISTS social_relationships;")
 	_db.query("DROP TABLE IF EXISTS residents;")
 	_db.query("DROP TABLE IF EXISTS households;")
-	_db.query("DROP TABLE IF EXISTS workplaces;")
+	_db.query("DROP TABLE IF EXISTS establishments;")
 
 ## Builds the Living Society & Dunbar Graph Relational Schema
 static func _create_society_schema() -> void:
 	if _db == null: return
 
-	# Workplaces Table (Commercial & Industrial Establishments)
+	# Establishments Table (Commercial & Industrial Establishments)
 	_db.query("""
-		CREATE TABLE IF NOT EXISTS workplaces (
-			workplace_id INTEGER PRIMARY KEY,
+		CREATE TABLE IF NOT EXISTS establishments (
+			establishment_id INTEGER PRIMARY KEY,
+			borough_id TEST NOT NULL,
 			district_id TEXT NOT NULL,
-			workplace_name TEXT NOT NULL,
-			sector TEXT NOT NULL,
+			name TEXT NOT NULL,
+			category TEXT NOT NULL,
 			capacity INTEGER NOT NULL
 		);
 	""")
@@ -58,6 +59,7 @@ static func _create_society_schema() -> void:
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS households (
 			household_id INTEGER PRIMARY KEY,
+			borough_id TEST NOT NULL,
 			district_id TEXT NOT NULL,
 			residence_type TEXT NOT NULL,
 			wealth_bracket INTEGER NOT NULL,
@@ -72,7 +74,7 @@ static func _create_society_schema() -> void:
 		CREATE TABLE IF NOT EXISTS residents (
 			resident_id INTEGER PRIMARY KEY,
 			household_id INTEGER NOT NULL,
-			workplace_id INTERGER DEFAULT 0,
+			establishment_id INTERGER DEFAULT 0,
 			first_name TEXT NOT NULL,
 			surname TEXT NOT NULL,
 			age INTEGER NOT NULL,
@@ -81,7 +83,7 @@ static func _create_society_schema() -> void:
 			religion TEST NOT NULL,
 			is_active_agent INTEGER DEFAULT 0,
 			FOREIGN KEY (household_id) REFERENCES households(household_id) ON DELETE CASCADE,
-			FOREIGN KEY (workplace_id) REFERENCES workplaces(workplace_id) ON DELETE SET NULL
+			FOREIGN KEY (establishment_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL
 		);
 	""")
 
@@ -102,7 +104,7 @@ static func _create_society_schema() -> void:
 	_db.query("CREATE INDEX IF NOT EXISTS idx_hh_ethnicity ON households(ethnicity);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_hh_religion ON households(religion);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_res_household ON residents(household_id);")
-	_db.query("CREATE INDEX IF NOT EXISTS idx_res_workplace ON residents(workplace_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_res_establishment ON residents(establishment_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_res_ethnicity ON residents(ethnicity);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_res_religion ON residents(religion);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_rel_from ON social_relationships(from_resident_id);")

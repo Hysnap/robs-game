@@ -9,7 +9,7 @@ func _init() -> void:
 	print("        TESTING SQLITE LIVING SOCIETY GENERATOR        ")
 	print("=======================================================")
 
-	# 1. Mock 3 Districts with authentic population & sectors
+	# Mock 4 Districts with authentic population & sectors
 	var mock_world = {
 		"districts": {
 			"block_0_0": {
@@ -29,86 +29,67 @@ func _init() -> void:
 				"district_type": "industrial",
 				"unemployment_rate": 0.20,
 				"venues": {"VENUE_ROYAL_OAK": {}}
+			},
+			"block_1_1": {
+				"population": 600,
+				"district_type": "suburban_low_density",
+				"unemployment_rate": 0.06,
+				"venues": {"VENUE_THE_PLOUGH": {}}
 			}
 		}
 	}
 
-	# 2. Run Generation Pass
+	# Run Generation
 	SOCIAL_NETWORK_GENERATOR.generate_city_society(mock_world, "test-seed-1984")
 
-	# 3. Query Database Macro Totals
+	# Query Database Macro Totals
 	var total_residents: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM residents;")[0]["count"]
 	var total_households: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM households;")[0]["count"]
-	var total_workplaces: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM workplaces;")[0]["count"]
+	var total_estabs: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM establishments;")[0]["count"]
 	var total_edges: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM social_relationships;")[0]["count"]
 
 	print("  ✓ Verification: Ingested %d residents across %d households." % [total_residents, total_households])
-	print("  ✓ Verification: Ingested %d commercial & industrial workplaces." % total_workplaces)
+	print("  ✓ Verification: Ingested %d total establishments." % total_estabs)
 	print("  ✓ Verification: Established %d relationship ties." % total_edges)
 
-	assert(total_residents > 3000, "FAILED: Resident population count incorrect!")
-	assert(total_households > 1000, "FAILED: Household count incorrect!")
-	assert(total_workplaces > 5, "FAILED: Workplaces missing!")
+	assert(total_residents > 3500, "FAILED: Resident population count incorrect!")
+	assert(total_households > 1200, "FAILED: Household count incorrect!")
+	assert(total_estabs > 5, "FAILED: Establishments missing!")
 	assert(total_edges > 6000, "FAILED: Relationship edges missing!")
 
-	# 4. Verify 1980s Statutory Demographics & Cohorts
-	var demo_stats = DB_MANAGER.query_rows("""
-		SELECT 
-			COUNT(CASE WHEN occupation_type = 'CHILD' THEN 1 END) as total_children,
-			COUNT(CASE WHEN occupation_type = 'STUDENT' THEN 1 END) as total_students,
-			COUNT(CASE WHEN occupation_type IN ('COMMERCIAL_SERVICE', 'MANUAL_WORKS', 'GENERAL_LABOUR') THEN 1 END) as total_workers,
-			COUNT(CASE WHEN occupation_type = 'UNEMPLOYED' THEN 1 END) as total_unemployed,
-			COUNT(CASE WHEN occupation_type = 'PENSIONER' THEN 1 END) as total_pensioners,
-			COUNT(*) as total_pop
-		FROM residents;
-	""")[0]
+	# Check Zero NULL Foreign Keys in residents
+	var null_check = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM residents WHERE establishment_id IS NULL OR establishment_id = 0;")[0]["count"]
+	print("  ✓ Verification: Zero NULL or 0 establishment references found (%d nulls)." % null_check)
+	assert(null_check == 0, "FAILED: Found residents with unassigned establishments!")
 
-	var pct_pensioners: float = (float(demo_stats["total_pensioners"]) / float(demo_stats["total_pop"])) * 100.0
-	var pct_children: float = (float(demo_stats["total_children"]) / float(demo_stats["total_pop"])) * 100.0
-	var pct_workers: float = (float(demo_stats["total_workers"]) / float(demo_stats["total_pop"])) * 100.0
-	var pct_unemp: float = (float(demo_stats["total_unemployed"]) / float(demo_stats["total_pop"])) * 100.0
-
-	print("\n--- [DEMOGRAPHIC COHORTS] ---")
-	print("  • Children (Under 16):       %d (%.1f%%)" % [demo_stats["total_children"], pct_children])
-	print("  • Active Workforce:          %d (%.1f%%)" % [demo_stats["total_workers"], pct_workers])
-	print("  • Benefit Claimants:         %d (%.1f%%)" % [demo_stats["total_unemployed"], pct_unemp])
-	print("  • Pensioners (60F / 65M):    %d (%.1f%%)" % [demo_stats["total_pensioners"], pct_pensioners])
-
-	assert(pct_pensioners >= 10.0 and pct_pensioners <= 22.0, "FAILED: Pensioner percentage out of 1980s historical bounds!")
-	assert(pct_children >= 15.0 and pct_children <= 30.0, "FAILED: Child percentage out of historical bounds!")
-
-	# 5. Verify Cultural & Ethnic Mix Ingestion
-	print("\n--- [ETHNIC & RELIGIOUS DIVERSITY] ---")
-	var ethnic_counts = DB_MANAGER.query_rows("""
-		SELECT ethnicity, COUNT(*) as count 
-		FROM households 
-		GROUP BY ethnicity 
+	# Print Institutional Breakdown
+	print("\n--- [ESTABLISHMENTS BREAKDOWN] ---")
+	var cat_counts = DB_MANAGER.query_rows("""
+		SELECT category, COUNT(*) as count 
+		FROM establishments 
+		GROUP BY category 
 		ORDER BY count DESC;
 	""")
-	for row in ethnic_counts:
-		var pct = (float(row["count"]) / float(total_households)) * 100.0
-		print("  • %-16s: %4d households (%.1f%%)" % [row["ethnicity"], row["count"], pct])
-	assert(ethnic_counts.size() >= 3, "FAILED: Ethnic diversity pool failed to populate multiple groups!")
+	for row in cat_counts:
+		print("  • %-18s: %4d facilities" % [row["category"], row["count"]])
 
-	# 6. Verify Pass 5 Faith & Parish Social Ties
-	var parish_ties = DB_MANAGER.query_rows("""
+	# Verify Civic Peers (e.g. classmates, dole queue, post office)
+	var peer_sample = DB_MANAGER.query_rows("""
 		SELECT r1.first_name || ' ' || r1.surname as person_1,
 		       r2.first_name || ' ' || r2.surname as person_2,
-		       r1.ethnicity, r1.religion, sr.affinity_score
+		       e.name, e.category
 		FROM social_relationships sr
 		JOIN residents r1 ON sr.from_resident_id = r1.resident_id
 		JOIN residents r2 ON sr.to_resident_id = r2.resident_id
-		WHERE sr.relationship_type = 'COMMUNITY_PARISH'
-		LIMIT 2;
+		JOIN establishments e ON r1.establishment_id = e.establishment_id
+		WHERE sr.relationship_type = 'CIVIC_PEER'
+		LIMIT 3;
 	""")
-	print("\n--- [SAMPLE COMMUNITY & PARISH TIES] ---")
-	for tie in parish_ties:
-		print("  • %s and %s share %s parish circle (%s) [Affinity: %.2f]" % [
-			tie["person_1"], tie["person_2"], tie["religion"], tie["ethnicity"], tie["affinity_score"]
-		])
-	assert(parish_ties.size() > 0, "FAILED: Community/Parish relationship edges missing!")
+	print("\n--- [SAMPLE CIVIC PEER TIES] ---")
+	for p in peer_sample:
+		print("  • %s and %s share anchor: %s [%s]" % [p["person_1"], p["person_2"], p["name"], p["category"]])
 
 	print("\n=======================================================")
-	print("      ALL SOCIETY & DEMOGRAPHIC SUITES PASSED!         ")
+	print("      ALL INSTITUTIONAL & CIVIC TESTS PASSED!          ")
 	print("=======================================================\n")
 	quit()

@@ -1,0 +1,80 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "description": "Spatial hierarchy scales, institutional ratios, and establishment archetypes."
+  },
+  "hierarchy_scales": {
+    "blocks_per_borough": 90,
+    "family_size_min": 1,
+    "family_size_max": 4
+  },
+  "workplace_generation_rules": {
+    "commercial": {
+      "commercial_min": 6, "commercial_max": 12,
+      "industrial_min": 0, "industrial_max": 2
+    },
+    "industrial": {
+      "commercial_min": 1, "commercial_max": 2,
+      "industrial_min": 4, "industrial_max": 8
+    },
+    "residential_default": {
+      "commercial_min": 1, "commercial_max": 3,
+      "industrial_min": 0, "industrial_max": 0
+    }
+  },
+  "establishment_templates": {
+    "COMMERCIAL": {
+      "default_capacity": 30,
+      "names": ["High St Retail", "Council Offices", "Depot & Logistics", "Co-Op Store", "Local Bakery", "Printing Works"]
+    },
+    "INDUSTRIAL": {
+      "default_capacity": 60,
+      "names": ["Foundry & Castings", "Metal Finishing", "Auto Component Plant", "Textile Mill", "Engineering Shed"]
+    }
+  },
+  "civic_institutions": {
+    "PRIMARY_SCHOOL": {
+      "display_name": "Junior & Infant School",
+      "blocks_per_facility": 7,
+      "serves_role": "CHILD",
+      "default_capacity": 250
+    },
+    "PLACE_OF_WORSHIP": {
+      "display_name": "Parish Church & Hall",
+      "blocks_per_facility": 3,
+      "serves_role": "COMMUNITY_PARISH",
+      "default_capacity": 300
+    },
+    "POST_OFFICE": {
+      "display_name": "Sub-Post Office",
+      "blocks_per_facility": 12,
+      "serves_role": "PENSIONER",
+      "default_capacity": 150
+    },
+    "GP_PRACTICE": {
+      "display_name": "Health Centre & Surgery",
+      "blocks_per_facility": 18,
+      "serves_role": "CIVIC_HEALTH",
+      "default_capacity": 100
+    },
+    "SECONDARY_SCHOOL": {
+      "display_name": "Comprehensive School",
+      "blocks_per_facility": 35,
+      "serves_role": "STUDENT",
+      "default_capacity": 800
+    },
+    "JOBCENTRE": {
+      "display_name": "Borough Jobcentre & Dole Office",
+      "blocks_per_facility": 90,
+      "serves_role": "UNEMPLOYED",
+      "default_capacity": 1500
+    },
+    "HOSPITAL": {
+      "display_name": "District General Hospital",
+      "blocks_per_facility": 90,
+      "serves_role": "EMERGENCY_HEALTH",
+      "default_capacity": 600
+    }
+  }
+}

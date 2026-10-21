@@ -4,6 +4,10 @@
     "era": "1980s",
     "description": "Historical demographic weights for ethnic background and religious denominations by district density."
   },
+  "defaults": {
+    "fallback_ethnicity": "WHITE_BRITISH",
+    "secular_or_unaffiliated_religion_key": "SECULAR_NONE"
+  },
   "ethnicities": {
     "WHITE_BRITISH": {
       "display_name": "White British",

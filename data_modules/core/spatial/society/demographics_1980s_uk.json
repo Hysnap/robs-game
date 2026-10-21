@@ -5,8 +5,6 @@
     "description": "Historical 1980s British demographic cohorts, statutory pension thresholds, and labor splits."
   },
   "legal_and_pension_thresholds": {
-    "minimum_school_leaving_age": 16,
-    "youth_student_threshold_age": 18,
     "pension_age_female": 60,
     "pension_age_male": 65
   },
@@ -19,20 +17,97 @@
     "commercial_tertiary_share": 0.70,
     "industrial_secondary_share": 0.30
   },
-  "cohort_distributions": {
-    "high_density": {
-      "youth_0_15": 0.26,
-      "young_adult_16_29": 0.24,
-      "prime_adult_30_49": 0.22,
-      "older_worker_50_plus": 0.15,
-      "pensioner_share": 0.13
+  "cohort_profiles": [
+    {
+      "id": "childhood",
+      "strategy": "FIXED",
+      "role": "CHILD",
+      "anchor_category": "PRIMARY_SCHOOL",
+      "age_min": 0,
+      "age_max": 15,
+      "density_weights": {
+        "high_density": 0.26,
+        "suburban_low_density": 0.20
+      }
     },
-    "suburban_low_density": {
-      "youth_0_15": 0.20,
-      "young_adult_16_29": 0.13,
-      "prime_adult_30_49": 0.33,
-      "older_worker_50_plus": 0.18,
-      "pensioner_share": 0.16
+    {
+      "id": "youth_transition",
+      "strategy": "PROBABILISTIC",
+      "condition_probability": 0.35,
+      "if_true": {
+        "role": "STUDENT",
+        "anchor_category": "SECONDARY_SCHOOL"
+      },
+      "if_false": {
+        "role": "MANUAL_WORKS",
+        "anchor_category": "INDUSTRIAL"
+      },
+      "age_min": 16,
+      "age_max": 17,
+      "density_weights": {
+        "high_density": 0.08,
+        "suburban_low_density": 0.05
+      }
+    },
+    {
+      "id": "young_adult",
+      "strategy": "LABOR_MARKET",
+      "unemployed_role": "UNEMPLOYED",
+      "unemployed_anchor": "JOBCENTRE",
+      "commercial_role": "COMMERCIAL_SERVICE",
+      "commercial_anchor": "COMMERCIAL",
+      "industrial_role": "MANUAL_WORKS",
+      "industrial_anchor": "INDUSTRIAL",
+      "age_min": 18,
+      "age_max": 29,
+      "density_weights": {
+        "high_density": 0.16,
+        "suburban_low_density": 0.08
+      }
+    },
+    {
+      "id": "prime_adult",
+      "strategy": "LABOR_MARKET",
+      "unemployed_role": "UNEMPLOYED",
+      "unemployed_anchor": "JOBCENTRE",
+      "commercial_role": "COMMERCIAL_SERVICE",
+      "commercial_anchor": "COMMERCIAL",
+      "industrial_role": "MANUAL_WORKS",
+      "industrial_anchor": "INDUSTRIAL",
+      "age_min": 30,
+      "age_max": 49,
+      "density_weights": {
+        "high_density": 0.22,
+        "suburban_low_density": 0.33
+      }
+    },
+    {
+      "id": "older_working_tier",
+      "strategy": "LABOR_MARKET",
+      "unemployed_role": "UNEMPLOYED",
+      "unemployed_anchor": "JOBCENTRE",
+      "commercial_role": "COMMERCIAL_SERVICE",
+      "commercial_anchor": "COMMERCIAL",
+      "industrial_role": "MANUAL_WORKS",
+      "industrial_anchor": "INDUSTRIAL",
+      "age_min": 50,
+      "age_max_dynamic": "pension_age",
+      "density_weights": {
+        "high_density": 0.15,
+        "suburban_low_density": 0.18
+      }
+    },
+    {
+      "id": "pensioners",
+      "strategy": "FIXED",
+      "role": "PENSIONER",
+      "anchor_category": "POST_OFFICE",
+      "age_min_dynamic": "pension_age",
+      "age_max_dynamic": "life_cap",
+      "density_weights": {
+        "high_density": 0.13,
+        "suburban_low_density": 0.16
+      }
     }
-  }
+  ]
 }

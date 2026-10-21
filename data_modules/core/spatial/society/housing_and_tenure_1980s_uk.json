@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "description": "Housing archetypes, tenure types, and wealth bracket mappings by district density."
+  },
+  "default_fallback": {
+    "residence_type": "TERRACE",
+    "wealth_bracket": 2
+  },
+  "district_housing_profiles": {
+    "high_density_high_rise": {
+      "primary_residence_type": "COUNCIL_FLAT",
+      "wealth_bracket": 1,
+      "tenure_type": "COUNCIL_TENANT",
+      "description": "Post-war municipal tower blocks and system-built deck-access flats."
+    },
+    "high_density_low_rise": {
+      "primary_residence_type": "TERRACE",
+      "wealth_bracket": 2,
+      "tenure_type": "MIXED_RENT_AND_RIGHT_TO_BUY",
+      "description": "Victorian and Edwardian brick red-brick terraced housing."
+    },
+    "suburban_low_density": {
+      "primary_residence_type": "SEMI_DETACHED",
+      "wealth_bracket": 4,
+      "tenure_type": "OWNER_OCCUPIER_MORTGAGE",
+      "description": "1930s-1950s suburban semi-detached homes with gardens."
+    },
+    "commercial": {
+      "primary_residence_type": "FLAT_ABOVE_SHOP",
+      "wealth_bracket": 3,
+      "tenure_type": "PRIVATE_COMMERCIAL_LEASE",
+      "description": "Living quarters situated directly over retail units, banks, and parade storefronts."
+    },
+    "industrial": {
+      "primary_residence_type": "CORNER_TERRACE",
+      "wealth_bracket": 2,
+      "tenure_type": "PRIVATE_RENT",
+      "description": "Pockets of surviving workers' housing adjoining rail sidings and factories."
+    }
+  }
+}

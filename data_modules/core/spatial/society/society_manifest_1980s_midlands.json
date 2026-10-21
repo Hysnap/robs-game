@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "scenario_id": "uk_midlands_1980s",
+    "era": "1980s",
+    "region": "West Midlands, UK",
+    "description": "Master society manifest linking all demographic, cultural, civic, housing, and lexical modules."
+  },
+  "modules": {
+    "demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
+    "lexicon": "res://data_modules/core/spatial/society/names.json",
+    "cultural_demographics": "res://data_modules/core/spatial/society/cultural_demographics_1980s_midlands.json",
+    "civic_hierarchy": "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json",
+    "housing_and_tenure": "res://data_modules/core/spatial/society/housing_and_tenure_1980s_uk.json"
+  }
+}
