@@ -67,7 +67,7 @@ text = "MENU_GENERATE_MAP"
 
 [node name="OpenGeneratedCity" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=695819326]
 layout_mode = 2
-text = "MENU_VIEW_CITY"
+text = "MENU_CONTINUE_GAME"
 
 [node name="Exit" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=463418212]
 layout_mode = 2

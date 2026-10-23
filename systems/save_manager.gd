@@ -118,3 +118,27 @@ static func load_game(slot_id: String) -> bool:
 	DBManager.initialize_database(false)
 	print("[SaveManager] Loaded game slot: %s" % slot_id)
 	return true
+
+## Returns the slot_id of the most recently modified save folder, or "" if none exist
+static func get_latest_save_slot() -> String:
+	var base_da := DirAccess.open(SAVES_BASE_DIR)
+	if base_da == null:
+		return ""
+
+	base_da.list_dir_begin()
+	var file_name := base_da.get_next()
+	var latest_slot := ""
+	var latest_time := 0
+
+	while file_name != "":
+		if base_da.current_is_dir() and not file_name.begins_with("."):
+			var state_path := "%s/%s/game_state.json" % [SAVES_BASE_DIR, file_name]
+			if FileAccess.file_exists(state_path):
+				var modified_time = FileAccess.get_modified_time(state_path)
+				if modified_time > latest_time:
+					latest_time = modified_time
+					latest_slot = file_name
+		file_name = base_da.get_next()
+	base_da.list_dir_end()
+
+	return latest_slot

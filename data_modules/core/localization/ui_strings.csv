@@ -1,7 +1,7 @@
 keys,en,en_GB,fr_FR
 MENU_GAME_TITLE,"Welcome to Robs Game","Welcome to Robs Game","Ello and welcome"
-MENU_GENERATE_MAP,"Generate or reload Map","Generate or reload Map","Where is my map"
-MENU_VIEW_CITY,"View City","View City","Something in french"
+MENU_GENERATE_MAP,"New Game","Generate or reload a Map and reset to day1","Where is my map"
+MENU_CONTINUE_GAME,"Contine last game","Continue last game","Something in french"
 MENU_EXIT,"Exit","Exit","Something in french"
 LOADER_TITLE,"ESTABLISHING CITY & SOCIETY","ESTABLISHING CITY & SOCIETY","Something in french"
 LOADER_SUBTITLE,"Generating urban grid and civic infrastructure...","Generating urban grid and civic infrastructure...","Something in french"
