@@ -17,6 +17,8 @@ var world_state: Dictionary = {}
 ## Active UI Selection Pointer
 var selected_district_id: String = ""
 
+const DB_MGR = preload("res://systems/db_manager.gd")
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	initialize_fresh_state()
@@ -88,16 +90,45 @@ func get_district_filofax(district_id: String) -> Dictionary:
 	return world_state.get("filofax_cache", {}).get("districts", {}).get(district_id, {})
 
 func get_district_view(block_id: String) -> Dictionary:
-	var rows = DBManager.query_rows("SELECT * FROM v_district_census WHERE district_id = '%s';" % block_id)
-	if rows.is_empty():
-		return {}
+	var view_data: Dictionary = {}
 	
-	var data = rows[0]
-	return {
-		"district_id": block_id,
-		"active_population": int(data.get("active_living_population", 0)),
-		"total_households": int(data.get("total_households", 0)),
-		"formally_employed": int(data.get("formally_employed_count", 0)),
-		"street_informal": int(data.get("street_informal_count", 0)),
-		"incarcerated": int(data.get("incarcerated_count", 0))
-	}
+	# 1. Base spatial/macro state from memory
+	var districts: Dictionary = world_state.get("districts", {})
+	if districts.has(block_id):
+		view_data = districts[block_id].duplicate(true)
+	else:
+		view_data["district_id"] = block_id
+		view_data["display_name"] = block_id.capitalize().replace("_", " ")
+
+	# 2. Augment with SQLite census ground truth (if society database is initialized)
+	var census_rows = DB_MGR.query_rows("""
+		SELECT total_households, total_residents, active_living_population, 
+				formally_employed_count, street_informal_count, incarcerated_count 
+		FROM v_district_census 
+		WHERE district_id = '%s';
+	""" % block_id)
+
+	if not census_rows.is_empty():
+		var row: Dictionary = census_rows[0]
+		view_data["active_population"] = int(row.get("active_living_population", 0))
+		view_data["total_households"] = int(row.get("total_households", 0))
+		view_data["formally_employed_count"] = int(row.get("formally_employed_count", 0))
+		view_data["street_informal_count"] = int(row.get("street_informal_count", 0))
+		view_data["incarcerated_count"] = int(row.get("incarcerated_count", 0))
+	else:
+		view_data["active_population"] = view_data.get("population", 0)
+		view_data["total_households"] = int(round(float(view_data["active_population"]) / 2.6))
+		view_data["formally_employed_count"] = 0
+		view_data["street_informal_count"] = 0
+		view_data["incarcerated_count"] = 0
+
+	# 3. Augment with normalized establishments in this district
+	var estab_rows = DB_MGR.query_rows("""
+		SELECT name, category_title, capacity 
+		FROM v_establishments_overview 
+		WHERE district_id = '%s'
+		ORDER BY category_title ASC, name ASC;
+	""" % block_id)
+
+	view_data["establishments_summary"] = estab_rows
+	return view_data

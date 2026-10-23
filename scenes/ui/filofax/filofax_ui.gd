@@ -6,11 +6,14 @@ const FILOFAX_MGR = preload("res://systems/filofax_manager.gd")
 const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
 
+@onready var telemetry_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
+@onready var tab_container: TabContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer"
+@onready var where_option: OptionButton = $StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox/WhereOption
+
 @onready var current_date_label: Label = $"Binder Shell/HeaderBar/CurrentDateLabel"
 @onready var comms_device_icon: Label = $"Binder Shell/HeaderBar/CommsDeviceIcon"
 @onready var close_button: Button = $"Binder Shell/HeaderBar/CloseButton"
 
-@onready var telemetry_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
 @onready var roster_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab"
 @onready var financials_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab"
 
@@ -40,6 +43,7 @@ var _staged_directives: Array = []
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 var _district_ui_labels: Dictionary = {}
+var _docket_controller: FilofaxDistrictDocket = null
 
 func _ready() -> void:
 	_load_district_ui_labels()
@@ -63,6 +67,10 @@ func _ready() -> void:
 		target_opt.item_selected.connect(_recalculate_estimate)
 	if amount_spin:
 		amount_spin.value_changed.connect(_recalculate_estimate)
+	
+	if telemetry_tab != null:
+		_docket_controller = FilofaxDistrictDocket.new()
+		telemetry_tab.add_child(_docket_controller)
 
 	_setup_drag_and_theming()
 
@@ -271,93 +279,23 @@ func update_display(cache: Dictionary) -> void:
 		memo_list.add_child(slip)
 
 ## Displays a specific district's docket on the left Telemetry tab using district_ui.json tokens
-func display_district_docket(district_id: String) -> void:
-	if _district_ui_labels.is_empty():
-		_load_district_ui_labels()
+func display_district_docket(block_id: String) -> void:
+	# 1. Switch to the Telemetry tab (tab index 0)
+	if tab_container != null:
+		tab_container.current_tab = 0
 
-	if not telemetry_tab:
-		return
-		
-	for child in telemetry_tab.get_children():
-		child.queue_free()
-		
-	var cache_data: Dictionary = GameState.get_district_filofax(district_id)
-	if cache_data.is_empty():
-		var blank_lbl := Label.new()
-		blank_lbl.text = "No records found for district: %s" % district_id
-		telemetry_tab.add_child(blank_lbl)
-		return
+	# 2. Render docket via FilofaxDistrictDocket
+	var docket := telemetry_tab.get_node_or_null("FilofaxDistrictDocket") as FilofaxDistrictDocket
+	if docket == null and _docket_controller != null:
+		docket = _docket_controller
 
-	var is_surveyed: bool = (cache_data.get("survey_status", "UNSURVEYED") == "SURVEYED")
-	var disp_name: String = cache_data.get("display_name", district_id)
-
-	# 1. Header with dynamic title token
-	var title_tpl: String = _district_ui_labels.get("ward_dossier_title", "WARD DOSSIER: {name}")
-	var title := Label.new()
-	title.text = title_tpl.replace("{name}", disp_name)
-	title.add_theme_font_size_override("font_size", 16)
-	telemetry_tab.add_child(title)
-	
-	var separator := HSeparator.new()
-	telemetry_tab.add_child(separator)
-	
-	if not is_surveyed:
-		# --- UNSURVEYED FOG VIEW ---
-		var fog_box := VBoxContainer.new()
-		
-		var warn_lbl := Label.new()
-		warn_lbl.text = _district_ui_labels.get("unsurveyed_header", "[!] UNSURVEYED TERRITORY")
-		warn_lbl.modulate = Color(0.9, 0.7, 0.2)
-		fog_box.add_child(warn_lbl)
-		
-		var note_lbl := Label.new()
-		note_lbl.text = "\n" + _district_ui_labels.get("unsurveyed_subtext", "Requires physical reconnaissance on foot.")
-		note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		fog_box.add_child(note_lbl)
-		
-		var scout_btn := Button.new()
-		var btn_tpl: String = _district_ui_labels.get("dispatch_scout_btn", "Dispatch Runner to Walk Parade ({cost})")
-		scout_btn.text = btn_tpl.replace("{cost}", "£5.00")
-		scout_btn.pressed.connect(func(): _on_scout_district_pressed(district_id))
-		fog_box.add_child(scout_btn)
-		
-		telemetry_tab.add_child(fog_box)
+	if docket != null:
+		docket.display_district(block_id)
 	else:
-		# --- SURVEYED INKED VIEW ---
-		var dossier_box := VBoxContainer.new()
-		var age: int = cache_data.get("data_age_ticks", 0)
-		
-		var age_lbl := Label.new()
-		var age_tpl: String = _district_ui_labels.get("data_age", "Field Notes Age: {age} week(s) old")
-		age_lbl.text = age_tpl.replace("{age}", str(age))
-		if age > 4:
-			age_lbl.text += " " + _district_ui_labels.get("stale_warning", "[STALE PENCIL INTELLIGENCE]")
-			age_lbl.modulate = Color.DARK_ORANGE
-		else:
-			age_lbl.modulate = Color.GREEN
-		dossier_box.add_child(age_lbl)
-		
-		var type_lbl := Label.new()
-		var type_tpl: String = _district_ui_labels.get("type_label", "Classification: {type}")
-		type_lbl.text = type_tpl.replace("{type}", cache_data.get("district_type", "Residential"))
-		dossier_box.add_child(type_lbl)
-		
-		var stats_lbl := Label.new()
-		stats_lbl.text = "Reported Police Heat: %d%% | Zone Health: %d%%" % [
-			int(cache_data.get("inked_police_heat", 0.0) * 100),
-			int(cache_data.get("inked_zone_health", 0.0))
-		]
-		dossier_box.add_child(stats_lbl)
-		
-		var notes_lbl := Label.new()
-		notes_lbl.text = "\nRunner Notes:\n\"%s\"" % cache_data.get("notes", "")
-		notes_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD
-		dossier_box.add_child(notes_lbl)
-		
-		telemetry_tab.add_child(dossier_box)
+		push_error("[FilofaxUI] No FilofaxDistrictDocket found to render block: %s" % block_id)
 
-	# Auto-sync sticky note "Where" dropdown to clicked district
-	_sync_sticky_note_location(district_id)
+	# 3. Auto-sync the sticky note "WHERE" dropdown to this district
+	_sync_sticky_note_location(block_id)
 
 func _on_scout_district_pressed(district_id: String) -> void:
 	var cash: float = GameState.world_state.get("finances", {}).get("liquid_cash", 0.0)
@@ -382,13 +320,15 @@ func _on_scout_district_pressed(district_id: String) -> void:
 	display_district_docket(district_id)
 	print("[FILOFAX] Runner dispatched. Inked survey notes pinned for: %s" % cache_entry.get("display_name"))
 
-func _sync_sticky_note_location(district_id: String) -> void:
-	# Matches WhereOption declared on sticky note pad
-	if where_opt:
-		for i in range(where_opt.get_item_count()):
-			if where_opt.get_item_metadata(i) == district_id:
-				where_opt.selected = i
-				break
+func _sync_sticky_note_location(target_block_id: String) -> void:
+	if where_option == null or target_block_id.is_empty():
+		return
+
+	for i in range(where_option.item_count):
+		var meta = where_option.get_item_metadata(i)
+		if meta == target_block_id or where_option.get_item_text(i) == target_block_id:
+			where_option.select(i)
+			return
 
 func _load_district_ui_labels(path: String = "res://data_modules/core/feedback/spatial/district_ui.json") -> void:
 	if not FileAccess.file_exists(path):

@@ -26,88 +26,82 @@
     "insufficient_funds": "Cannot dispatch runner: insufficient cash."
   },
 
-  "sections": [
+"sections": [
     {
       "id": "demographics",
-      "header_label": "MUNICIPAL DEMOGRAPHICS & RESIDENCY",
+      "header_label": "MUNICIPAL CENSUS & RESIDENTS",
       "fields": [
         {
           "key": "active_population",
-          "label": "Total Residents",
+          "label": "Living Population",
           "format": "INTEGER",
-          "prefix": "",
           "suffix": " citizens"
         },
         {
           "key": "total_households",
           "label": "Registered Households",
           "format": "INTEGER",
-          "prefix": "",
           "suffix": " homes"
         },
         {
-          "key": "unemployment_rate",
-          "label": "Unemployment Ratio",
-          "format": "PERCENT",
-          "decimals": 1,
-          "prefix": "",
-          "suffix": ""
+          "key": "formally_employed_count",
+          "label": "Formally Employed",
+          "format": "INTEGER",
+          "suffix": " workers"
         },
         {
-          "key": "avg_disposable_income",
-          "label": "Est. Weekly Disposable Income",
-          "format": "CURRENCY",
-          "decimals": 2,
-          "prefix": "£",
-          "suffix": " / wk"
+          "key": "street_informal_count",
+          "label": "Informal / Dole Economy",
+          "format": "INTEGER",
+          "suffix": " claimants"
+        },
+        {
+          "key": "incarcerated_count",
+          "label": "Custodial Inmates",
+          "format": "INTEGER",
+          "suffix": " in HM Prison"
         }
       ]
     },
     {
-      "id": "civic_telemetry",
-      "header_label": "CIVIC & STREET TELEMETRY",
+      "id": "socioeconomic_telemetry",
+      "header_label": "WARD TELEMETRY & PUBLIC ORDER",
       "fields": [
+        {
+          "key": "avg_disposable_income",
+          "label": "Est. Weekly Disposable Income",
+          "format": "CURRENCY",
+          "prefix": "£",
+          "suffix": " / wk"
+        },
         {
           "key": "zone_health_index",
           "label": "Zone Health Index (ZHI)",
           "format": "FLOAT",
           "decimals": 1,
-          "prefix": "",
           "suffix": " / 100"
         },
         {
           "key": "actual_police_heat",
-          "label": "Observed Police Heat",
+          "label": "Observed Police Patrol Heat",
           "format": "PERCENT",
-          "decimals": 0,
-          "prefix": "",
-          "suffix": ""
+          "decimals": 1
         },
         {
-          "key": "consumer_desperation_index",
-          "label": "Consumer Desperation Index",
-          "format": "FLOAT",
-          "decimals": 2,
-          "prefix": "",
-          "suffix": ""
-        },
-        {
-          "key": "corruption_tolerance",
-          "label": "Municipal Graft Tolerance",
+          "key": "unemployment_rate",
+          "label": "Unemployment Ratio",
           "format": "PERCENT",
-          "decimals": 0,
-          "prefix": "",
-          "suffix": ""
+          "decimals": 1
         }
       ]
     }
   ],
-
   "establishment_section": {
-    "header_label": "LOCAL TRADE & REGISTERED ESTABLISHMENTS",
-    "empty_text": "• Purely Residential / Undeveloped (No licensed trade on file)",
-    "row_template": "• {name}: {count} units"
+    "header_label": "LOCAL TRADE & CIVIC ESTABLISHMENTS",
+    "empty_text": "• Purely Residential / Undeveloped (No licensed trade or facilities)",
+    "row_template": "• {name} [{category}]: Capacity {capacity}"
   },
+
 
   "styling": {
     "grid_columns": 2,
