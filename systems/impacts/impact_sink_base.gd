@@ -19,3 +19,7 @@ static func apply_delta(_world_state: Dictionary, _target_id: String, _delta: fl
 ## Handles passive drift, natural dissipation, or threshold event triggers.
 static func process_ambient(_world_state: Dictionary) -> void:
 	pass # Optional: not all metrics need ambient background drift
+
+## For SQL-backed metrics: computes the live ground truth value for a target entity/district
+static func query_metric_value(_target_id: String) -> Variant:
+	return null

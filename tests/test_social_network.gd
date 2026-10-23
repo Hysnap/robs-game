@@ -2,6 +2,7 @@
 extends SceneTree
 
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SOCIAL_NETWORK_GENERATOR = preload("res://systems/social_network_generator.gd")
 
 func _init() -> void:
@@ -9,7 +10,7 @@ func _init() -> void:
 	print("        TESTING SQLITE LIVING SOCIETY GENERATOR        ")
 	print("=======================================================")
 
-	# Mock 4 Districts with authentic population & sectors
+	# 1. Mock 4 Districts with authentic population & sectors
 	var mock_world = {
 		"districts": {
 			"block_0_0": {
@@ -39,57 +40,77 @@ func _init() -> void:
 		}
 	}
 
-	# Run Generation
-	SOCIAL_NETWORK_GENERATOR.generate_city_society(mock_world, "test-seed-1984")
+	# 2. Run Generation (Force rebuild to test schema and view migrations cleanly)
+	SOCIAL_NETWORK_GENERATOR.generate_city_society(mock_world, "test-seed-1984", true)
 
-	# Query Database Macro Totals
-	var total_residents: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM residents;")[0]["count"]
-	var total_households: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM households;")[0]["count"]
-	var total_estabs: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM establishments;")[0]["count"]
-	var total_edges: int = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM social_relationships;")[0]["count"]
+	# 3. Query Macro Relational Totals
+	var total_residents: int = int(DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM residents;")[0]["count"])
+	var total_households: int = int(DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM households;")[0]["count"])
+	var total_estabs: int = int(DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM establishments;")[0]["count"])
+	var total_contracts: int = int(DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM livelihood_contracts;")[0]["count"])
+	var total_edges: int = int(DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM social_relationships;")[0]["count"])
 
 	print("  ✓ Verification: Ingested %d residents across %d households." % [total_residents, total_households])
-	print("  ✓ Verification: Ingested %d total establishments." % total_estabs)
+	print("  ✓ Verification: Ingested %d normalized establishments." % total_estabs)
+	print("  ✓ Verification: Created %d active livelihood contracts." % total_contracts)
 	print("  ✓ Verification: Established %d relationship ties." % total_edges)
 
 	assert(total_residents > 3500, "FAILED: Resident population count incorrect!")
 	assert(total_households > 1200, "FAILED: Household count incorrect!")
 	assert(total_estabs > 5, "FAILED: Establishments missing!")
+	assert(total_contracts > 3500, "FAILED: Livelihood contracts missing!")
 	assert(total_edges > 6000, "FAILED: Relationship edges missing!")
 
-	# Check Zero NULL Foreign Keys in residents
-	var null_check = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM residents WHERE establishment_id IS NULL OR establishment_id = 0;")[0]["count"]
-	print("  ✓ Verification: Zero NULL or 0 establishment references found (%d nulls)." % null_check)
-	assert(null_check == 0, "FAILED: Found residents with unassigned establishments!")
-
-	# Print Institutional Breakdown
+	# 4. Verify Institutional Establishment Breakdown via Virtual View
 	print("\n--- [ESTABLISHMENTS BREAKDOWN] ---")
 	var cat_counts = DB_MANAGER.query_rows("""
-		SELECT category, COUNT(*) as count 
-		FROM establishments 
-		GROUP BY category 
+		SELECT category_title, COUNT(*) as count, SUM(capacity) as total_capacity
+		FROM v_establishments_overview
+		GROUP BY category_title
 		ORDER BY count DESC;
 	""")
+	assert(not cat_counts.is_empty(), "FAILED: v_establishments_overview returned empty!")
 	for row in cat_counts:
-		print("  • %-18s: %4d facilities" % [row["category"], row["count"]])
+		print("  • %-22s: %4d facilities (Capacity: %d)" % [row["category_title"], row["count"], row["total_capacity"]])
 
-	# Verify Civic Peers (e.g. classmates, dole queue, post office)
-	var peer_sample = DB_MANAGER.query_rows("""
-		SELECT r1.first_name || ' ' || r1.surname as person_1,
-		       r2.first_name || ' ' || r2.surname as person_2,
-		       e.name, e.category
-		FROM social_relationships sr
-		JOIN residents r1 ON sr.from_resident_id = r1.resident_id
-		JOIN residents r2 ON sr.to_resident_id = r2.resident_id
-		JOIN establishments e ON r1.establishment_id = e.establishment_id
-		WHERE sr.relationship_type = 'CIVIC_PEER'
+	# 5. Verify Virtual Views (Town Planner & Citizen Dossier)
+	print("\n--- [TESTING SQLITE VIRTUAL VIEWS] ---")
+	var census_rows = DB_MANAGER.query_rows("SELECT * FROM v_district_census LIMIT 4;")
+	assert(census_rows.size() == 4, "FAILED: v_district_census returned empty!")
+	print("  ✓ v_district_census Sample (Block 0,0):", census_rows[0])
+
+	var res_rows = DB_MANAGER.query_rows("""
+		SELECT resident_id, first_name, current_surname, formatted_birth_date, education_title, ethnicity_title, religion_title
+		FROM v_residents_overview
 		LIMIT 3;
 	""")
-	print("\n--- [SAMPLE CIVIC PEER TIES] ---")
-	for p in peer_sample:
-		print("  • %s and %s share anchor: %s [%s]" % [p["person_1"], p["person_2"], p["name"], p["category"]])
+	assert(res_rows.size() == 3, "FAILED: v_residents_overview returned empty!")
+	for r in res_rows:
+		print("  • Citizen #%d: %s %s | Born: %s | Edu: %s | Eth: %s | Rel: %s" % [
+			r["resident_id"], r["first_name"], r["current_surname"],
+			r["formatted_birth_date"], r["education_title"], r["ethnicity_title"], r["religion_title"]
+		])
+
+	# 6. Verify Active Livelihood Contracts
+	print("\n--- [SAMPLE LIVELIHOOD CONTRACTS] ---")
+	var contracts_sample = DB_MANAGER.query_rows("""
+		SELECT full_name, employer_name, contract_class_title, role_title, contract_start_date
+		FROM v_active_contracts
+		LIMIT 3;
+	""")
+	assert(contracts_sample.size() == 3, "FAILED: v_active_contracts returned empty!")
+	for c in contracts_sample:
+		print("  • %s -> %s [%s: %s] (Started: %s)" % [
+			c["full_name"], c["employer_name"], c["contract_class_title"], c["role_title"], c["contract_start_date"]
+		])
+
+	# 7. Verify CalendarHelper Date Conversion
+	var sample_day: int = CALENDAR_HELPER.get_simulation_start_day()
+	var formatted_date: String = CALENDAR_HELPER.day_to_calendar_date(sample_day)
+	print("\n  ✓ CalendarHelper Verification: Day offset %d formatted as '%s'" % [sample_day, formatted_date])
+	assert(not formatted_date.is_empty() and formatted_date != "Unknown Date", "FAILED: CalendarHelper formatting error!")
 
 	print("\n=======================================================")
-	print("      ALL INSTITUTIONAL & CIVIC TESTS PASSED!          ")
+	print("      ALL NORMALIZED SOCIETY & DB TESTS PASSED!        ")
 	print("=======================================================\n")
 	quit()

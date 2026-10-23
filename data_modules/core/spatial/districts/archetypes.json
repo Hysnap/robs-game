@@ -1,9 +1,40 @@
 {
   "_meta": {
-    "schema_version": "1.0.0",
-    "description": "Baseline demographic and socioeconomic ranges for European/UK town archetypes"
+    "schema_version": "2.0.0",
+    "description": "Canonical definitions for district archetypes: demographics, visual styles, sector classes, and housing profiles."
   },
+
+  "setup": {
+    "default_fallback_archetype": "suburban_low_density",
+    "concentric_bands": [
+      { "weight_key": "core_weight" },
+      { "weight_key": "inner_weight" },
+      { "weight_key": "mid_weight" },
+      { "weight_key": "outer_weight" }
+    ]
+  },
+
   "commercial": {
+    "display_name": "Commercial Core & Retail Precinct",
+    "sector_class": "COMMERCIAL",
+    "housing_profile": {
+      "residence_type": "FLAT_ABOVE_SHOP",
+      "wealth_bracket": 3,
+      "tenure_type": "PRIVATE_COMMERCIAL_LEASE"
+    },
+    "visual_profile": {
+      "color": "#D97706",
+      "texture_path": "",
+      "roughness": 0.85
+    },
+    "spatial_placement": {
+      "normalized_distance_min": 0.0,
+      "normalized_distance_max": 1.0,
+      "core_weight": 85,
+      "inner_weight": 40,
+      "mid_weight": 20,
+      "outer_weight": 15
+    },
     "population_range": [50, 150],
     "unemployment_rate_range": [0.08, 0.12],
     "avg_disposable_income_range": [85.0, 110.0],
@@ -12,7 +43,28 @@
     "actual_police_heat": 0.45,
     "corruption_tolerance": 0.35
   },
+
   "high_density_low_rise": {
+    "display_name": "Victorian Residential Terraces",
+    "sector_class": "RESIDENTIAL",
+    "housing_profile": {
+      "residence_type": "TERRACE",
+      "wealth_bracket": 2,
+      "tenure_type": "MIXED_RENT_AND_RIGHT_TO_BUY"
+    },
+    "visual_profile": {
+      "color": "#B91C1C",
+      "texture_path": "",
+      "roughness": 0.90
+    },
+    "spatial_placement": {
+      "normalized_distance_min": 0.10,
+      "normalized_distance_max": 0.80,
+      "core_weight": 15,
+      "inner_weight": 70,
+      "mid_weight": 35,
+      "outer_weight": 10
+    },
     "population_range": [600, 900],
     "unemployment_rate_range": [0.18, 0.24],
     "avg_disposable_income_range": [55.0, 75.0],
@@ -21,7 +73,28 @@
     "actual_police_heat": 0.25,
     "corruption_tolerance": 0.50
   },
+
   "high_density_high_rise": {
+    "display_name": "Municipal Housing Estate & High-Rise",
+    "sector_class": "RESIDENTIAL",
+    "housing_profile": {
+      "residence_type": "COUNCIL_FLAT",
+      "wealth_bracket": 1,
+      "tenure_type": "COUNCIL_TENANT"
+    },
+    "visual_profile": {
+      "color": "#6B7280",
+      "texture_path": "",
+      "roughness": 0.70
+    },
+    "spatial_placement": {
+      "normalized_distance_min": 0.20,
+      "normalized_distance_max": 0.85,
+      "core_weight": 0,
+      "inner_weight": 30,
+      "mid_weight": 60,
+      "outer_weight": 15
+    },
     "population_range": [1100, 1800],
     "unemployment_rate_range": [0.26, 0.38],
     "avg_disposable_income_range": [35.0, 50.0],
@@ -30,7 +103,28 @@
     "actual_police_heat": 0.15,
     "corruption_tolerance": 0.65
   },
+
   "industrial": {
+    "display_name": "Industrial Canal Yard & Rail Depots",
+    "sector_class": "INDUSTRIAL",
+    "housing_profile": {
+      "residence_type": "CORNER_TERRACE",
+      "wealth_bracket": 2,
+      "tenure_type": "PRIVATE_RENT"
+    },
+    "visual_profile": {
+      "color": "#4B5563",
+      "texture_path": "",
+      "roughness": 0.60
+    },
+    "spatial_placement": {
+      "normalized_distance_min": 0.15,
+      "normalized_distance_max": 1.0,
+      "core_weight": 5,
+      "inner_weight": 25,
+      "mid_weight": 45,
+      "outer_weight": 40
+    },
     "population_range": [10, 30],
     "unemployment_rate_range": [0.03, 0.06],
     "avg_disposable_income_range": [95.0, 125.0],
@@ -39,7 +133,28 @@
     "actual_police_heat": 0.10,
     "corruption_tolerance": 0.40
   },
+
   "suburban_low_density": {
+    "display_name": "Suburban Commuter Belt",
+    "sector_class": "RESIDENTIAL",
+    "housing_profile": {
+      "residence_type": "SEMI_DETACHED",
+      "wealth_bracket": 4,
+      "tenure_type": "OWNER_OCCUPIER_MORTGAGE"
+    },
+    "visual_profile": {
+      "color": "#15803D",
+      "texture_path": "",
+      "roughness": 0.95
+    },
+    "spatial_placement": {
+      "normalized_distance_min": 0.40,
+      "normalized_distance_max": 1.0,
+      "core_weight": 0,
+      "inner_weight": 5,
+      "mid_weight": 20,
+      "outer_weight": 45
+    },
     "population_range": [250, 450],
     "unemployment_rate_range": [0.05, 0.08],
     "avg_disposable_income_range": [140.0, 185.0],
@@ -48,13 +163,136 @@
     "actual_police_heat": 0.05,
     "corruption_tolerance": 0.20
   },
-  "civic_default": {
-    "population_range": [150, 400],
-    "unemployment_rate_range": [0.02, 0.05],
+
+  "local_government": {
+    "display_name": "Municipal Administrative Hub",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "NONE",
+      "wealth_bracket": 3,
+      "tenure_type": "NONE"
+    },
+    "visual_profile": {
+      "color": "#4338CA",
+      "texture_path": "",
+      "roughness": 0.50
+    },
+    "population_range": [0, 20],
+    "unemployment_rate_range": [0.0, 0.02],
+    "avg_disposable_income_range": [120.0, 160.0],
+    "zone_health_index_range": [85.0, 95.0],
+    "consumer_desperation_index": 0.10,
+    "actual_police_heat": 0.40,
+    "corruption_tolerance": 0.20
+  },
+
+  "hospital_site": {
+    "display_name": "Regional Infirmary & Medical Center",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "STAFF_QUARTERS",
+      "wealth_bracket": 3,
+      "tenure_type": "NHS_RESIDENCY"
+    },
+    "visual_profile": {
+      "color": "#0284C7",
+      "texture_path": "",
+      "roughness": 0.60
+    },
+    "population_range": [40, 100],
+    "unemployment_rate_range": [0.01, 0.03],
     "avg_disposable_income_range": [110.0, 140.0],
     "zone_health_index_range": [85.0, 95.0],
     "consumer_desperation_index": 0.10,
     "actual_police_heat": 0.30,
     "corruption_tolerance": 0.15
+  },
+
+  "university_campus": {
+    "display_name": "Higher Education Campus & Polytechnic",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "STUDENT_HALLS",
+      "wealth_bracket": 1,
+      "tenure_type": "UNIVERSITY_TENANT"
+    },
+    "visual_profile": {
+      "color": "#7E22CE",
+      "texture_path": "",
+      "roughness": 0.70
+    },
+    "population_range": [200, 500],
+    "unemployment_rate_range": [0.05, 0.10],
+    "avg_disposable_income_range": [45.0, 70.0],
+    "zone_health_index_range": [80.0, 90.0],
+    "consumer_desperation_index": 0.25,
+    "actual_police_heat": 0.20,
+    "corruption_tolerance": 0.30
+  },
+
+  "sports_arena": {
+    "display_name": "Borough Stadium & Sports Ground",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "NONE",
+      "wealth_bracket": 2,
+      "tenure_type": "NONE"
+    },
+    "visual_profile": {
+      "color": "#059669",
+      "texture_path": "",
+      "roughness": 0.80
+    },
+    "population_range": [0, 10],
+    "unemployment_rate_range": [0.0, 0.05],
+    "avg_disposable_income_range": [80.0, 110.0],
+    "zone_health_index_range": [70.0, 80.0],
+    "consumer_desperation_index": 0.30,
+    "actual_police_heat": 0.50,
+    "corruption_tolerance": 0.35
+  },
+
+  "municipal_park": {
+    "display_name": "Victorian Public Park & Rec Ground",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "PARK_LODGE",
+      "wealth_bracket": 3,
+      "tenure_type": "COUNCIL_TIED_TENANCY"
+    },
+    "visual_profile": {
+      "color": "#22C55E",
+      "texture_path": "",
+      "roughness": 0.95
+    },
+    "population_range": [0, 5],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [90.0, 120.0],
+    "zone_health_index_range": [90.0, 98.0],
+    "consumer_desperation_index": 0.05,
+    "actual_police_heat": 0.10,
+    "corruption_tolerance": 0.10
+  },
+
+  "civic_penal_block": {
+    "display_name": "HM Prison & Remand Gaol",
+    "sector_class": "CIVIC",
+    "housing_profile": {
+      "residence_type": "PRISON_CELLS",
+      "wealth_bracket": 1,
+      "tenure_type": "CUSTODIAL"
+    },
+    "visual_profile": {
+      "color": "#374151",
+      "texture_path": "",
+      "roughness": 0.50
+    },
+    "population_range": [10, 40],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [10.0, 25.0],
+    "zone_health_index_range": [60.0, 70.0],
+    "consumer_desperation_index": 0.50,
+    "actual_police_heat": 0.70,
+    "corruption_tolerance": 0.40
   }
 }

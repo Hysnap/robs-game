@@ -1,0 +1,7 @@
+{
+  "metric_id": "ZONE_HEALTH",
+  "display_name": "Zone Health Index (ZHI)",
+  "format": "FLOAT",
+  "decimals": 1,
+  "suffix": " / 100"
+}

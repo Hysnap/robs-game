@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "ACTIVE_POPULATION",
+  "label_token": "UI_METRIC_TOTAL_RESIDENTS",
+  "format": "INTEGER",
+  "suffix": " citizens",
+  "telemetry_source": {
+    "type": "SQLITE_LIVE",
+    "sink_class": "SinkActivePopulation"
+  }
+}

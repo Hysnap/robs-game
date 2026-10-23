@@ -1,0 +1,7 @@
+{
+  "metric_id": "CORRUPTION_TOLERANCE",
+  "display_name": "Tolerance of Corruption",
+  "format": "FLOAT",
+  "decimals": 1,
+  "suffix": " / 100"
+}

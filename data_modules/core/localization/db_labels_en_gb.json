@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "locale": "en_GB",
+    "description": "Core engine taxonomy baseline for system-level constants, change reasons, contracts, and relationship edge types not defined in scenario modules."
+  },
+  "labels": [
+    { "domain": "CHANGE_REASON", "code": "WORLD_GENERATION", "title": "Initial World Generation", "description": "Seeded during baseline procedural society generation." },
+    { "domain": "CHANGE_REASON", "code": "EVICTION", "title": "Tenancy Eviction", "description": "Displaced from residence due to redevelopment or arrears." },
+    { "domain": "CHANGE_REASON", "code": "DEATH_NATURAL", "title": "Natural Causes", "description": "Deceased from natural causes or old age." },
+
+    { "domain": "GENDER", "code": "M", "title": "Male", "description": "Male citizen." },
+    { "domain": "GENDER", "code": "F", "title": "Female", "description": "Female citizen." },
+
+    { "domain": "CONTRACT_TYPE", "code": "STANDARD", "title": "Standard Agreement", "description": "Standard ongoing contracted term." },
+
+    { "domain": "CONTRACT_CLASS", "code": "FORMAL_LEGAL", "title": "Formal Taxed Employment", "description": "Standard PAYE employment subject to National Insurance." },
+    { "domain": "CONTRACT_CLASS", "code": "INFORMAL_GREY", "title": "Informal / Off-the-Books", "description": "Unregistered cash-in-hand enterprise." },
+    { "domain": "CONTRACT_CLASS", "code": "ILLICIT_SYNDICATE", "title": "Syndicate Retainer", "description": "Operational criminal enterprise payroll." },
+    { "domain": "CONTRACT_CLASS", "code": "CUSTODIAL_INMATE", "title": "HM Prison Custodial Work", "description": "Mandatory internal prison labor and workshop assignment." },
+    { "domain": "CONTRACT_CLASS", "code": "ENCLAVE_STUDENT", "title": "Enclave Education / Grant", "description": "Student grant or pupil school enrollment." },
+    { "domain": "CONTRACT_CLASS", "code": "COVERT_INFORMANT", "title": "Special Branch / CID Retainer", "description": "Registered law enforcement or intelligence source." },
+
+    { "domain": "RELATIONSHIP_TYPE", "code": "FAMILY", "title": "Immediate Family", "description": "Cohabiting nuclear family or domestic partnership." },
+    { "domain": "RELATIONSHIP_TYPE", "code": "EXTENDED_FAMILY", "title": "Extended Kinship", "description": "Non-cohabiting relatives, cousins, aunts, uncles." },
+    { "domain": "RELATIONSHIP_TYPE", "code": "DRINKING_MATE", "title": "Drinking Companion", "description": "Regular patron association at the same local establishment." },
+    { "domain": "RELATIONSHIP_TYPE", "code": "COMMUNITY_PARISH", "title": "Congregational Parishioner", "description": "Shared church, temple, or faith community affiliation." },
+    { "domain": "RELATIONSHIP_TYPE", "code": "CIVIC_PEER", "title": "Workplace Colleague", "description": "Co-workers or peers at the same establishment." },
+    { "domain": "RELATIONSHIP_TYPE", "code": "CELLMATE", "title": "Inmate Associate", "description": "Shared custodial incarceration wing or workshop." }
+  ]
+}

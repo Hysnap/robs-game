@@ -8,10 +8,9 @@
 [node name="Node3D" type="Node3D" unique_id=856768213]
 script = ExtResource("2_city_view")
 
-[node name="CityCrafter" type="Node3D" parent="." unique_id=1858748182]
+[node name="CityCrafter" type="Node3D" parent="." unique_id=245368991]
 script = ExtResource("2_ho34v")
 city_configuration = ExtResource("4_wmafb")
-metadata/_custom_type_script = "uid://dvlgclv0w1a38"
 
 [node name="FilofaxCanvas" type="CanvasLayer" parent="." unique_id=1906597282]
 

@@ -1,0 +1,7 @@
+{
+  "metric_id": "REGULATORY_SCRUTINY",
+  "display_name": "Regulatory Interest",
+  "format": "FLOAT",
+  "decimals": 1,
+  "suffix": " / 100"
+}

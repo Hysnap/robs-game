@@ -28,6 +28,10 @@ window/stretch/aspect="expand"
 
 enabled=PackedStringArray("res://addons/citycrafter/plugin.cfg", "res://addons/godot-sqlite/plugin.cfg")
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://data_modules/core/localization/ui_strings.en.translation")
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

@@ -144,4 +144,4 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		child.set_meta("display_name", display_name)
 
 	# Build the living society in SQLite!
-	SOCIAL_NETWORK.generate_city_society(out_world_state, seed_id)
+	## SOCIAL_NETWORK.generate_city_society(out_world_state, seed_id)

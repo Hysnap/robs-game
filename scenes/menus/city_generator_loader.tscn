@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://bb03biucdqwsf"]
+
+[ext_resource type="PackedScene" uid="uid://b3hsm84ltxcbu" path="res://scenes/menus/map_menu/map_menu.tscn" id="1_nfmt1"]
+[ext_resource type="Script" uid="uid://i0rmeok44x1r" path="res://scenes/menus/city_generator_loader.gd" id="1_t5xg2"]
+
+[node name="CityGeneratorLoader" type="Control" unique_id=1510388796]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_t5xg2")
+
+[node name="Background" type="ColorRect" parent="." unique_id=800100235]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0627451, 0.09411765, 0.14901961, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1035151909]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=1456077979]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=317933803]
+layout_mode = 2
+text = "ESTABLISHING CITY AND SOCIETY"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=2031879339]
+layout_mode = 2
+text = "Generating urban grid and civic infrastructure..."
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="CenterContainer/VBoxContainer" unique_id=1717430394]
+custom_minimum_size = Vector2(420, 24)
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=1965805163]
+layout_mode = 2
+text = "Initializing..."
+horizontal_alignment = 1
+
+[node name="MapMenu" parent="." unique_id=304661838 instance=ExtResource("1_nfmt1")]
+visible = false
+layout_mode = 0
+offset_left = 282.0
+offset_top = 45.0
+offset_right = 880.0
+offset_bottom = 587.0

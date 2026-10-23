@@ -2,105 +2,87 @@
 class_name SocialNetworkGenerator
 extends RefCounted
 
+const DB_MANAGER = preload("res://systems/db_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
+const MANIFEST_MGR = preload("res://systems/scenario_manifest_manager.gd")
+
 static var _lexicon: Dictionary = {}
 static var _demographics: Dictionary = {}
 static var _cultural: Dictionary = {}
 static var _civic_hierarchy: Dictionary = {}
-static var _housing: Dictionary = {}
+static var _archetypes: Dictionary = {}
 
-## Resolves the scenario manifest path from business_rules.cfg
-static func _get_configured_manifest_path() -> String:
-	var cfg_path := "res://data_modules/core/business_rules.cfg"
-	if not FileAccess.file_exists(cfg_path):
-		push_error("[SocialNetwork CRITICAL] Missing business_rules.cfg at: %s" % cfg_path)
-		assert(false, "HALT: business_rules.cfg is required for scenario configuration.")
-		return ""
-		
-	var config := ConfigFile.new()
-	var err := config.load(cfg_path)
-	if err != OK:
-		push_error("[SocialNetwork CRITICAL] Failed to parse business_rules.cfg (Error: %d)" % err)
-		assert(false, "HALT: Corrupted business_rules.cfg.")
-		return ""
-		
-	var manifest_path: String = config.get_value("society", "manifest_path", "")
-	if manifest_path.is_empty():
-		push_error("[SocialNetwork CRITICAL] Section [society] 'manifest_path' missing in business_rules.cfg")
-		assert(false, "HALT: No society manifest_path declared in business_rules.cfg.")
-		return ""
-		
-	return manifest_path
-
-## Loads the master scenario manifest and all linked sub-modules
+## Loads configurations via the centralized ScenarioManifestManager
 static func _load_configs() -> void:
-	if not _demographics.is_empty() and not _lexicon.is_empty() and not _cultural.is_empty() and not _civic_hierarchy.is_empty() and not _housing.is_empty():
+	if not _demographics.is_empty() and not _lexicon.is_empty() and not _cultural.is_empty() and not _civic_hierarchy.is_empty() and not _archetypes.is_empty():
 		return
 
-	var manifest_path: String = _get_configured_manifest_path()
-	var manifest: Dictionary = _load_json(manifest_path)
-	var modules: Dictionary = manifest.get("modules", {})
-	
-	assert(modules.has("demographics"), "HALT: Manifest missing 'demographics' module mapping.")
-	assert(modules.has("lexicon"), "HALT: Manifest missing 'lexicon' module mapping.")
-	assert(modules.has("cultural_demographics"), "HALT: Manifest missing 'cultural_demographics' module mapping.")
-	assert(modules.has("civic_hierarchy"), "HALT: Manifest missing 'civic_hierarchy' module mapping.")
-	assert(modules.has("housing_and_tenure"), "HALT: Manifest missing 'housing_and_tenure' module mapping.")
+	_demographics = MANIFEST_MGR.load_module("demographics")
+	_lexicon = MANIFEST_MGR.load_module("lexicon")
+	_cultural = MANIFEST_MGR.load_module("cultural_demographics")
+	_civic_hierarchy = MANIFEST_MGR.load_module("civic_hierarchy")
 
-	_demographics = _load_json(modules["demographics"])
-	_lexicon = _load_json(modules["lexicon"])
-	_cultural = _load_json(modules["cultural_demographics"])
-	_civic_hierarchy = _load_json(modules["civic_hierarchy"])
-	_housing = _load_json(modules["housing_and_tenure"])
+	# Archetypes path resolved from business_rules.cfg or default
+	var archetypes_path := "res://data_modules/core/spatial/districts/archetypes.json"
+	var cfg := ConfigFile.new()
+	if cfg.load(MANIFEST_MGR.BUSINESS_RULES_PATH) == OK:
+		archetypes_path = cfg.get_value("spatial", "archetypes_path", archetypes_path)
 
-static func _load_json(path: String) -> Dictionary:
-	if not FileAccess.file_exists(path):
-		push_error("[SocialNetwork CRITICAL] Missing config: %s" % path)
-		assert(false, "HALT: Missing JSON file at %s" % path)
-		return {}
-	var file := FileAccess.open(path, FileAccess.READ)
-	var json := JSON.new()
-	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
-		return json.data
-	push_error("[SocialNetwork CRITICAL] Invalid JSON syntax: %s" % path)
-	assert(false, "HALT: Corrupted JSON at %s" % path)
-	return {}
+	assert(FileAccess.file_exists(archetypes_path), "FATAL: Missing archetypes: %s" % archetypes_path)
+	var f := FileAccess.open(archetypes_path, FileAccess.READ)
+	assert(f != null, "FATAL: Cannot open: %s" % archetypes_path)
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+	assert(parsed is Dictionary, "FATAL: Archetypes root must be a Dictionary")
+	_archetypes = parsed
 
-## Main Entry Point
-static func generate_city_society(world_state: Dictionary, seed_id: String) -> void:
+## Main Generation Pipeline
+static func generate_city_society(world_state: Dictionary, seed_id: String, force_regenerate: bool = false) -> void:
+	if not force_regenerate and DB_MANAGER.is_society_populated(seed_id):
+		print("[SocialNetwork] Society for seed '%s' already exists in SQLite. Skipping generation." % seed_id)
+		return
+
 	_load_configs()
-	DBManager.initialize_database(true)
-	
-	print("[SocialNetwork] Building living society, hierarchical establishments, and Dunbar ties...")
+	DB_MANAGER.initialize_database(true) # Cleans schema, populates system_labels & temporal metadata
+	DB_MANAGER.record_active_seed(seed_id)
+
+	print("[SocialNetwork] Building living society, normalized establishments, and Dunbar graph...")
 	var start_time := Time.get_ticks_msec()
-	
+
 	var districts: Dictionary = world_state.get("districts", {})
 	var rng := RandomNumberGenerator.new()
 	rng.seed = absi(seed_id.hash())
-	
-	var labor_splits: Dictionary = _demographics["labor_market_splits"]
-	var mean_household_size: float = float(_demographics.get("household_occupancy_mean", 2.6))
-	var comm_share: float = float(labor_splits["commercial_tertiary_share"])
-	
+
+	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
+	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+	var male_gender_id: int = DB_MANAGER.get_label_id("GENDER", "M")
+	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
+
 	var h_scales: Dictionary = _civic_hierarchy.get("hierarchy_scales", {})
 	var blocks_per_borough: int = int(h_scales.get("blocks_per_borough", 90))
 	var fam_min: int = int(h_scales.get("family_size_min", 1))
 	var fam_max: int = int(h_scales.get("family_size_max", 4))
-	
+	var mean_household_size: float = float(_demographics.get("household_occupancy_mean", 2.6))
+	var comm_share: float = float(_demographics["labor_market_splits"].get("commercial_tertiary_share", 0.70))
+
 	# -------------------------------------------------------------
 	# PASS 1: GENERATE ESTABLISHMENTS
 	# -------------------------------------------------------------
-	var est_data: Dictionary = _generate_all_establishments(districts, rng)
+	var est_data: Dictionary = _generate_all_establishments(districts, rng, sim_start_day, reason_world_gen_id)
 	var establishments_by_cat: Dictionary = est_data["by_category"]
 	var total_est_count: int = est_data["total_count"]
-	print("  ✓ Created %d total establishments across commercial, industrial, and civic sectors." % total_est_count)
+	print("  ✓ Created %d normalized establishments across sectors." % total_est_count)
 
 	var male_names: Array = _lexicon.get("first_names_male", ["Terry"])
 	var female_names: Array = _lexicon.get("first_names_female", ["Sharon"])
-	
+
 	var current_household_id: int = 1
 	var current_resident_id: int = 1
 	var total_edges: int = 0
-	
+
+	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
+	var rel_drinking_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "DRINKING_MATE")
+
 	# -------------------------------------------------------------
 	# PASS 2: GENERATE HOUSEHOLDS & RESIDENTS
 	# -------------------------------------------------------------
@@ -111,113 +93,163 @@ static func generate_city_society(world_state: Dictionary, seed_id: String) -> v
 		if pop <= 0:
 			block_index += 1
 			continue
-			
+
 		var district_type: String = district.get("district_type", "suburban_low_density")
 		var unemp_rate: float = float(district.get("unemployment_rate", 0.12))
 		var venues: Dictionary = district.get("venues", {})
 		var venue_keys: Array = venues.keys()
-		var default_pub: String = venue_keys[0] if not venue_keys.is_empty() else "NONE"
-		
+
 		var borough_idx: int = floori(float(block_index) / float(blocks_per_borough))
 		var borough_id := "BOROUGH_%d" % (borough_idx + 1)
 		block_index += 1
-		
+
 		var num_households: int = max(1, int(round(float(pop) / mean_household_size)))
-		
+
 		var household_inserts: Array[String] = []
 		var resident_inserts: Array[String] = []
+		var contract_inserts: Array[String] = []
 		var edge_inserts: Array[String] = []
 		var district_resident_ids: Array[int] = []
-		
-		# Dynamically resolve housing archetype and wealth bracket from JSON
-		var housing_profiles: Dictionary = _housing.get("district_housing_profiles", {})
-		var fallback_housing: Dictionary = _housing.get("default_fallback", {"residence_type": "TERRACE", "wealth_bracket": 2})
-		var profile: Dictionary = housing_profiles.get(district_type, fallback_housing)
-		
-		var residence_type: String = profile.get("primary_residence_type", fallback_housing.get("residence_type", "TERRACE"))
-		var wealth_bracket: int = int(profile.get("wealth_bracket", fallback_housing.get("wealth_bracket", 2)))
+
+		# Housing profile dynamically resolved from archetypes.json
+		var arch_data: Dictionary = _archetypes.get(district_type, {})
+		var h_prof: Dictionary = arch_data.get("housing_profile", {})
+		var res_type_code: String = str(h_prof.get("residence_type", "TERRACE"))
+		var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type_code)
+		var wealth_bracket: int = int(h_prof.get("wealth_bracket", 2))
 
 		for _h in range(num_households):
 			var h_id := current_household_id
 			current_household_id += 1
-			
-			var assigned_pub: String = venue_keys[rng.randi() % venue_keys.size()] if not venue_keys.is_empty() else default_pub
-			
+
+			# Resolve culture & localized taxonomy IDs
 			var culture: Dictionary = _roll_household_culture(rng, district_type)
-			var h_ethnicity: String = culture["ethnicity"]
-			var h_religion: String = culture["religion"]
-			var pool_key: String = culture["surnames_pool"]
-			var surname_list: Array = _lexicon.get(pool_key, _lexicon.get("surnames", ["Smith"]))
-			var family_surname: String = surname_list[rng.randi() % surname_list.size()]
-			
-			household_inserts.append(
-				"INSERT INTO households VALUES (%d, '%s', '%s', '%s', %d, '%s', '%s', '%s');" % [
-					h_id, borough_id, dist_id, residence_type, wealth_bracket, assigned_pub, h_ethnicity, h_religion
-				]
-			)
+			var eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", culture["ethnicity"])
+			var rel_id: int = DB_MANAGER.get_label_id("RELIGION", culture["religion"])
+
+			var surname_list: Array = _lexicon.get(culture["surnames_pool"], _lexicon.get("surnames", ["Smith"]))
+			var family_surname: String = str(surname_list[rng.randi() % surname_list.size()]).replace("'", "''")
+
+			household_inserts.append("""
+				INSERT INTO households (
+					household_id, borough_id, district_id, residence_type_id, 
+					wealth_bracket_id, local_pub_id, ethnicity_id, religion_id, 
+					valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, '%s', '%s', %d, %d, NULL, %d, %d, %d, NULL, %d
+				);
+			""" % [
+				h_id, borough_id, dist_id, res_type_id, wealth_bracket,
+				eth_id, rel_id, sim_start_day, reason_world_gen_id
+			])
 
 			var family_size := rng.randi_range(fam_min, fam_max)
 			var household_members: Array[int] = []
-			
+
 			for _m in range(family_size):
 				var r_id := current_resident_id
 				current_resident_id += 1
 				household_members.append(r_id)
 				district_resident_ids.append(r_id)
-				
+
 				var is_male: bool = (rng.randf() > 0.5)
+				var gender_id: int = male_gender_id if is_male else female_gender_id
+				var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
+
 				var is_high_dense: bool = district_type.begins_with("high_density")
-				var first_name: String = male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]
-				
-				# PURELY DATA-DRIVEN RESOLUTION FROM JSON:
 				var demo_profile: Dictionary = _resolve_citizen_demographics(rng, is_high_dense, is_male, unemp_rate, comm_share)
-				var age: int = demo_profile["age"]
-				var occ: String = demo_profile["occupation"]
-				var anchor_category: String = demo_profile["anchor_category"]
+				var age_years: int = demo_profile["age"]
+
+				# Temporal calculation for exact Date of Birth
+				var days_old: int = int(round(float(age_years) * 365.25)) + rng.randi_range(0, 364)
+				var dob_day: int = sim_start_day - days_old
+
+				# Resolve education based on age
+				var edu_code: String = _resolve_citizen_education(rng, age_years, is_high_dense)
+				var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_code)
+
+				resident_inserts.append("""
+					INSERT INTO residents (
+						resident_id, household_id, first_name, birth_surname, current_surname,
+						dob, dod, death_reason_id, gender_id, education_level_id,
+						ethnicity_id, religion_id, is_active_agent, valid_from, valid_to, change_reason_id
+					) VALUES (
+						%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, 0, %d, NULL, %d
+					);
+				""" % [
+					r_id, h_id, first_name, family_surname, family_surname,
+					dob_day, gender_id, edu_id, eth_id, rel_id, sim_start_day, reason_world_gen_id
+				])
+
+				# Create contract in livelihood_contracts
+				# 1. Resolve role and contract attributes from demographics profile
+				var occ_title: String = demo_profile["occupation"]
+				var anchor_cat: String = demo_profile["anchor_category"]
+				var contract_class: String = demo_profile["contract_class"]
+				var weekly_hours: float = float(demo_profile["weekly_hours"])
+				var compensation_rate: float = float(demo_profile["compensation_rate"])
+				var standard_contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 				
-				var assigned_est_id: int = _pick_anchor(establishments_by_cat, anchor_category, dist_id, rng)
-				
-				resident_inserts.append(
-					"INSERT INTO residents VALUES (%d, %d, %d, '%s', '%s', %d, '%s', '%s', '%s', 0);" % [
-						r_id, h_id, assigned_est_id, first_name.replace("'", "''"), family_surname.replace("'", "''"), age, occ, h_ethnicity, h_religion
-					]
-				)
-			
-			# Circle 1: Household Kinship
+				var assigned_est_id: int = _pick_anchor(establishments_by_cat, anchor_cat, dist_id, rng)
+
+				# 2. Strict lookup against pre-harvested system_labels (No auto-seeding!)
+				var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
+				var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
+
+				# 3. Insert into livelihood_contracts
+				contract_inserts.append("""
+					INSERT INTO livelihood_contracts (
+						resident_id, employer_entity_id, contract_class_id, role_title_id,
+						contract_type_id, schedule_window, weekly_hours, compensation_rate, 
+						valid_from, valid_to, change_reason_id
+					) VALUES (
+						%d, 'ESTAB_%d', %d, %d, %d, 'DAYTIME', %.1f, %.2f, %d, NULL, %d
+					);
+				""" % [
+					r_id, assigned_est_id, class_id, role_id, standard_contract_type_id,
+					weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
+				])
+
+			# Circle 1: Household Kinship Multi-Edge
 			if household_members.size() > 1:
 				for a in household_members:
 					for b in household_members:
 						if a != b:
-							edge_inserts.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'FAMILY', 0.90);" % [a, b])
+							edge_inserts.append("""
+								INSERT INTO social_relationships (
+									from_resident_id, to_resident_id, relationship_type_id,
+									context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+								) VALUES (%d, %d, %d, NULL, 0.90, %d, NULL, %d);
+							""" % [a, b, rel_family_id, sim_start_day, reason_world_gen_id])
 							total_edges += 1
-		
+
 		# Circle 2: Pub Catchment Edges
 		for r_id in district_resident_ids:
 			var buddy_count := rng.randi_range(2, 4)
 			for _b in range(buddy_count):
 				var target_id: int = district_resident_ids[rng.randi() % district_resident_ids.size()]
 				if target_id != r_id:
-					edge_inserts.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'DRINKING_MATE', 0.55);" % [r_id, target_id])
+					edge_inserts.append("""
+						INSERT INTO social_relationships (
+							from_resident_id, to_resident_id, relationship_type_id,
+							context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+						) VALUES (%d, %d, %d, NULL, 0.55, %d, NULL, %d);
+					""" % [r_id, target_id, rel_drinking_id, sim_start_day, reason_world_gen_id])
 					total_edges += 1
-		
-		DBManager.execute_batch(household_inserts)
-		DBManager.execute_batch(resident_inserts)
-		DBManager.execute_batch(edge_inserts)
+
+		DB_MANAGER.execute_batch(household_inserts)
+		DB_MANAGER.execute_batch(resident_inserts)
+		DB_MANAGER.execute_batch(contract_inserts)
+		DB_MANAGER.execute_batch(edge_inserts)
 
 	# Pass 3: Extended Kinship Across Households
-	var ext_edges: int = _generate_extended_kinship(rng)
-	total_edges += ext_edges
-	print("  ✓ Stitched %d extended family connections across households." % ext_edges)
+	total_edges += _generate_extended_kinship(rng, sim_start_day, reason_world_gen_id)
 
 	# Pass 4: Establishment Peer Ties
-	var peer_edges: int = _generate_establishment_peer_ties(rng)
-	total_edges += peer_edges
-	print("  ✓ Stitched %d peer & coworker relationship ties across establishments." % peer_edges)
+	total_edges += _generate_establishment_peer_ties(rng, sim_start_day, reason_world_gen_id)
 
 	# Pass 5: Community & Parish Ties
-	var faith_edges: int = _generate_faith_and_cultural_ties(rng)
-	total_edges += faith_edges
-	print("  ✓ Stitched %d community & parish connections." % faith_edges)
+	total_edges += _generate_faith_and_cultural_ties(rng, sim_start_day, reason_world_gen_id)
 
 	var elapsed := Time.get_ticks_msec() - start_time
 	print("=======================================================")
@@ -230,102 +262,40 @@ static func generate_city_society(world_state: Dictionary, seed_id: String) -> v
 	print("Network Edges:     ~%d relationship connections" % total_edges)
 	print("=======================================================\n")
 
-## Purely Data-Driven Demographic Engine
-static func _resolve_citizen_demographics(rng: RandomNumberGenerator, is_high_density: bool, is_male: bool, unemp_rate: float, comm_share: float) -> Dictionary:
-	var cohorts: Array = _demographics["cohort_profiles"]
-	var thresholds: Dictionary = _demographics["legal_and_pension_thresholds"]
-	var life_caps: Dictionary = _demographics["life_expectancy_caps"]
-	
-	var pen_age: int = int(thresholds["pension_age_male"] if is_male else thresholds["pension_age_female"])
-	var max_age: int = int(life_caps["male_max_age"] if is_male else life_caps["female_max_age"])
-	var density_key := "high_density" if is_high_density else "suburban_low_density"
-
-	# 1. Roll for Cohort based on weighted density distribution in JSON
-	var roll := rng.randf()
-	var cumulative := 0.0
-	var chosen_cohort: Dictionary = cohorts[0]
-	
-	for c in cohorts:
-		var w: float = float(c["density_weights"][density_key])
-		cumulative += w
-		if roll <= cumulative:
-			chosen_cohort = c
-			break
-			
-	# 2. Determine Age boundaries dynamically
-	var age_min: int = 0
-	if chosen_cohort.has("age_min_dynamic"):
-		age_min = pen_age
-	else:
-		age_min = int(chosen_cohort.get("age_min", 0))
-		
-	var age_max: int = 70
-	if chosen_cohort.has("age_max_dynamic"):
-		var dyn_key: String = chosen_cohort["age_max_dynamic"]
-		age_max = pen_age - 1 if dyn_key == "pension_age" else max_age
-	else:
-		age_max = int(chosen_cohort.get("age_max", 70))
-		
-	var resolved_age: int = rng.randi_range(age_min, age_max)
-	
-	# 3. Dynamic Strategy Evaluation (Driven purely by the JSON cohort rules)
-	var strategy: String = chosen_cohort.get("strategy", "FIXED")
-	var resolved_occ: String = ""
-	var resolved_anchor: String = ""
-	
-	match strategy:
-		"FIXED":
-			resolved_occ = chosen_cohort.get("role", "CITIZEN")
-			resolved_anchor = chosen_cohort.get("anchor_category", "COMMERCIAL")
-			
-		"PROBABILISTIC":
-			var prob: float = float(chosen_cohort.get("condition_probability", 0.5))
-			var outcome_key: String = "if_true" if (rng.randf() < prob) else "if_false"
-			var branch: Dictionary = chosen_cohort.get(outcome_key, {})
-			resolved_occ = branch.get("role", "CITIZEN")
-			resolved_anchor = branch.get("anchor_category", "COMMERCIAL")
-			
-		"LABOR_MARKET":
-			if rng.randf() < unemp_rate:
-				resolved_occ = chosen_cohort.get("unemployed_role", "UNEMPLOYED")
-				resolved_anchor = chosen_cohort.get("unemployed_anchor", "JOBCENTRE")
-			elif rng.randf() < comm_share:
-				resolved_occ = chosen_cohort.get("commercial_role", "COMMERCIAL_SERVICE")
-				resolved_anchor = chosen_cohort.get("commercial_anchor", "COMMERCIAL")
-			else:
-				resolved_occ = chosen_cohort.get("industrial_role", "MANUAL_WORKS")
-				resolved_anchor = chosen_cohort.get("industrial_anchor", "INDUSTRIAL")
-
-	return {
-		"age": resolved_age,
-		"occupation": resolved_occ,
-		"anchor_category": resolved_anchor
-	}
+## Ensures dynamic role titles and categories exist in system_labels without crashing
+static func _ensure_label_exists(domain: String, code: String, title: String) -> void:
+	var check_sql := "SELECT label_id FROM system_labels WHERE domain = '%s' AND code = '%s';" % [domain.to_upper(), code.to_upper()]
+	var res = DB_MANAGER.query_rows(check_sql)
+	if res.is_empty():
+		DB_MANAGER.query_rows("""
+			INSERT INTO system_labels (domain, code, title, description)
+			VALUES ('%s', '%s', '%s', 'Autogenerated runtime taxonomy');
+		""" % [domain.to_upper(), code.to_upper(), title.replace("'", "''")])
+		DB_MANAGER._rebuild_label_cache()
 
 ## Creates establishments dynamically from JSON configurations
-static func _generate_all_establishments(districts: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+static func _generate_all_establishments(districts: Dictionary, rng: RandomNumberGenerator, sim_start_day: int, reason_id: int) -> Dictionary:
 	var inserts: Array[String] = []
 	var by_cat: Dictionary = {}
 	var est_id: int = 1
 	var block_idx: int = 0
-	
+
 	var h_scales: Dictionary = _civic_hierarchy.get("hierarchy_scales", {})
 	var blocks_per_borough: int = int(h_scales.get("blocks_per_borough", 90))
 	var wp_rules: Dictionary = _civic_hierarchy.get("workplace_generation_rules", {})
 	var est_templates: Dictionary = _civic_hierarchy.get("establishment_templates", {})
 	var civic_insts: Dictionary = _civic_hierarchy.get("civic_institutions", {})
-	
-	# Dynamically initialize category buckets from the JSON templates and civic institutions
+
 	for cat in est_templates.keys():
 		by_cat[cat] = []
 	for cat in civic_insts.keys():
 		by_cat[cat] = []
-	
+
 	for dist_id in districts.keys():
 		var d = districts[dist_id]
 		var dtype: String = d.get("district_type", "")
 		var borough_id := "BOROUGH_%d" % (floori(float(block_idx) / float(blocks_per_borough)) + 1)
-		
+
 		# 1. Commercial & Industrial Workplaces
 		var rule_key := dtype if wp_rules.has(dtype) else "residential_default"
 		var rule: Dictionary = wp_rules[rule_key]
@@ -335,20 +305,34 @@ static func _generate_all_establishments(districts: Dictionary, rng: RandomNumbe
 		var comm_temp: Dictionary = est_templates.get("COMMERCIAL", {})
 		var comm_names: Array = comm_temp.get("names", ["Commercial Services"])
 		var comm_cap: int = int(comm_temp.get("default_capacity", 30))
+		_ensure_label_exists("ESTABLISHMENT_CATEGORY", "COMMERCIAL", "Commercial Sector")
+		var comm_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", "COMMERCIAL")
 
 		for _c in range(num_commercial):
-			var name: String = comm_names[rng.randi() % comm_names.size()].replace("'", "''")
-			inserts.append("INSERT INTO establishments VALUES (%d, '%s', '%s', '%s', 'COMMERCIAL', %d);" % [est_id, borough_id, dist_id, name, comm_cap])
+			var name: String = str(comm_names[rng.randi() % comm_names.size()]).replace("'", "''")
+			inserts.append("""
+				INSERT INTO establishments (
+					establishment_id, borough_id, district_id, owning_entity, name,
+					category_id, capacity, valid_from, valid_to, change_reason_id
+				) VALUES (%d, '%s', '%s', 'CIVIC', '%s', %d, %d, %d, NULL, %d);
+			""" % [est_id, borough_id, dist_id, name, comm_cat_id, comm_cap, sim_start_day, reason_id])
 			by_cat["COMMERCIAL"].append({"id": est_id, "district_id": dist_id})
 			est_id += 1
 
 		var ind_temp: Dictionary = est_templates.get("INDUSTRIAL", {})
 		var ind_names: Array = ind_temp.get("names", ["Industrial Works"])
 		var ind_cap: int = int(ind_temp.get("default_capacity", 60))
+		_ensure_label_exists("ESTABLISHMENT_CATEGORY", "INDUSTRIAL", "Industrial Sector")
+		var ind_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", "INDUSTRIAL")
 
 		for _i in range(num_industrial):
-			var name: String = ind_names[rng.randi() % ind_names.size()].replace("'", "''")
-			inserts.append("INSERT INTO establishments VALUES (%d, '%s', '%s', '%s', 'INDUSTRIAL', %d);" % [est_id, borough_id, dist_id, name, ind_cap])
+			var name: String = str(ind_names[rng.randi() % ind_names.size()]).replace("'", "''")
+			inserts.append("""
+				INSERT INTO establishments (
+					establishment_id, borough_id, district_id, owning_entity, name,
+					category_id, capacity, valid_from, valid_to, change_reason_id
+				) VALUES (%d, '%s', '%s', 'CIVIC', '%s', %d, %d, %d, NULL, %d);
+			""" % [est_id, borough_id, dist_id, name, ind_cat_id, ind_cap, sim_start_day, reason_id])
 			by_cat["INDUSTRIAL"].append({"id": est_id, "district_id": dist_id})
 			est_id += 1
 
@@ -356,10 +340,19 @@ static func _generate_all_establishments(districts: Dictionary, rng: RandomNumbe
 		for inst_key in civic_insts.keys():
 			var inst_data: Dictionary = civic_insts[inst_key]
 			var interval: int = int(inst_data.get("blocks_per_facility", 1))
-			if block_idx % interval == 0:
-				var label: String = inst_data.get("display_name", inst_key)
+			if interval > 0 and block_idx % interval == 0:
+				var label: String = str(inst_data.get("display_name", inst_key)).replace("'", "''")
 				var cap: int = int(inst_data.get("default_capacity", 100))
-				inserts.append("INSERT INTO establishments VALUES (%d, '%s', '%s', '%s', '%s', %d);" % [est_id, borough_id, dist_id, label, inst_key, cap])
+				_ensure_label_exists("ESTABLISHMENT_CATEGORY", inst_key, label)
+				var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", inst_key)
+
+				inserts.append("""
+					INSERT INTO establishments (
+						establishment_id, borough_id, district_id, owning_entity, name,
+						category_id, capacity, valid_from, valid_to, change_reason_id
+					) VALUES (%d, '%s', '%s', 'CIVIC', '%s', %d, %d, %d, NULL, %d);
+				""" % [est_id, borough_id, dist_id, label, cat_id, cap, sim_start_day, reason_id])
+
 				if not by_cat.has(inst_key):
 					by_cat[inst_key] = []
 				by_cat[inst_key].append({"id": est_id, "district_id": dist_id})
@@ -367,7 +360,7 @@ static func _generate_all_establishments(districts: Dictionary, rng: RandomNumbe
 
 		block_idx += 1
 
-	DBManager.execute_batch(inserts)
+	DB_MANAGER.execute_batch(inserts)
 	return {"by_category": by_cat, "total_count": est_id - 1}
 
 ## Helper: Picks the closest or random valid establishment of a given category
@@ -378,16 +371,107 @@ static func _pick_anchor(by_cat: Dictionary, category: String, _dist_id: String,
 	var picked: Dictionary = list[rng.randi() % list.size()]
 	return picked["id"]
 
+## Purely Data-Driven Demographic Engine (Zero Hardcoded Roles or Rates)
+static func _resolve_citizen_demographics(rng: RandomNumberGenerator, is_high_density: bool, is_male: bool, unemp_rate: float, comm_share: float) -> Dictionary:
+	var cohorts: Array = _demographics.get("cohort_profiles", [])
+	var thresholds: Dictionary = _demographics["legal_and_pension_thresholds"]
+	var life_caps: Dictionary = _demographics["life_expectancy_caps"]
+
+	var pen_age: int = int(thresholds["pension_age_male"] if is_male else thresholds["pension_age_female"])
+	var max_age: int = int(life_caps["male_max_age"] if is_male else life_caps["female_max_age"])
+	var density_key := "high_density" if is_high_density else "suburban_low_density"
+
+	assert(not cohorts.is_empty(), "FATAL: 'cohort_profiles' missing in demographics JSON")
+
+	# 1. Roll Cohort based on weighted density distribution
+	var roll := rng.randf()
+	var cumulative := 0.0
+	var chosen_cohort: Dictionary = cohorts[0]
+
+	for c in cohorts:
+		var w: float = float(c["density_weights"].get(density_key, 0.2))
+		cumulative += w
+		if roll <= cumulative:
+			chosen_cohort = c
+			break
+
+	# 2. Determine Age
+	var age_min: int = int(chosen_cohort.get("age_min", 0))
+	if chosen_cohort.has("age_min_dynamic") and chosen_cohort["age_min_dynamic"] == "pension_age":
+		age_min = pen_age
+
+	var age_max: int = int(chosen_cohort.get("age_max", 70))
+	if chosen_cohort.has("age_max_dynamic"):
+		var dyn_key: String = chosen_cohort["age_max_dynamic"]
+		age_max = pen_age - 1 if dyn_key == "pension_age" else max_age
+
+	var resolved_age: int = rng.randi_range(age_min, age_max)
+	var strategy: String = chosen_cohort.get("strategy", "FIXED")
+
+	var role: String = "CITIZEN"
+	var anchor: String = "COMMERCIAL"
+	var contract_class: String = "FORMAL_LEGAL"
+	var weekly_hours: float = 37.5
+	var comp_rate: float = 3.50
+
+	match strategy:
+		"FIXED":
+			role = str(chosen_cohort.get("role", "CITIZEN"))
+			anchor = str(chosen_cohort.get("anchor_category", "COMMERCIAL"))
+			contract_class = str(chosen_cohort.get("contract_class", "FORMAL_LEGAL"))
+			weekly_hours = float(chosen_cohort.get("weekly_hours", 0.0))
+			comp_rate = float(chosen_cohort.get("compensation_rate", 0.0))
+
+		"PROBABILISTIC":
+			var prob: float = float(chosen_cohort.get("condition_probability", 0.5))
+			var branch_key: String = "if_true" if (rng.randf() < prob) else "if_false"
+			var branch: Dictionary = chosen_cohort.get(branch_key, {})
+			role = str(branch.get("role", "CITIZEN"))
+			anchor = str(branch.get("anchor_category", "COMMERCIAL"))
+			contract_class = str(branch.get("contract_class", "FORMAL_LEGAL"))
+			weekly_hours = float(branch.get("weekly_hours", 37.5))
+			comp_rate = float(branch.get("compensation_rate", 3.00))
+
+		"LABOR_MARKET":
+			if rng.randf() < unemp_rate:
+				role = str(chosen_cohort.get("unemployed_role", "UNEMPLOYED"))
+				anchor = str(chosen_cohort.get("unemployed_anchor", "JOBCENTRE"))
+				contract_class = str(chosen_cohort.get("unemployed_contract_class", "INFORMAL_GREY"))
+				weekly_hours = float(chosen_cohort.get("unemployed_hours", 0.0))
+				comp_rate = float(chosen_cohort.get("unemployed_rate", 0.0))
+			elif rng.randf() < comm_share:
+				role = str(chosen_cohort.get("commercial_role", "COMMERCIAL_SERVICE"))
+				anchor = str(chosen_cohort.get("commercial_anchor", "COMMERCIAL"))
+				contract_class = str(chosen_cohort.get("commercial_contract_class", "FORMAL_LEGAL"))
+				weekly_hours = float(chosen_cohort.get("commercial_hours", 37.5))
+				comp_rate = float(chosen_cohort.get("commercial_rate", 3.75))
+			else:
+				role = str(chosen_cohort.get("industrial_role", "MANUAL_WORKS"))
+				anchor = str(chosen_cohort.get("industrial_anchor", "INDUSTRIAL"))
+				contract_class = str(chosen_cohort.get("industrial_contract_class", "FORMAL_LEGAL"))
+				weekly_hours = float(chosen_cohort.get("industrial_hours", 40.0))
+				comp_rate = float(chosen_cohort.get("industrial_rate", 4.20))
+
+	return {
+		"age": resolved_age,
+		"occupation": role,
+		"anchor_category": anchor,
+		"contract_class": contract_class,
+		"weekly_hours": weekly_hours,
+		"compensation_rate": comp_rate
+	}
+
 ## Pass 3: Extended Kinship Across Households
-static func _generate_extended_kinship(rng: RandomNumberGenerator) -> int:
+static func _generate_extended_kinship(rng: RandomNumberGenerator, sim_start_day: int, reason_id: int) -> int:
 	var kinship_edges: Array[String] = []
 	var edge_count: int = 0
+	var ext_fam_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "EXTENDED_FAMILY")
 
-	var surname_clusters = DBManager.query_rows("""
-		SELECT surname, district_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
+	var surname_clusters = DB_MANAGER.query_rows("""
+		SELECT current_surname as surname, district_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
-		GROUP BY surname, district_id
+		GROUP BY current_surname, district_id
 		HAVING count > 1;
 	""")
 
@@ -408,30 +492,39 @@ static func _generate_extended_kinship(rng: RandomNumberGenerator) -> int:
 			if a == b or rng.randf() > 0.60:
 				continue
 
-			var existing = DBManager.query_rows("SELECT 1 FROM social_relationships WHERE from_resident_id = %d AND to_resident_id = %d;" % [a, b])
-			if existing.is_empty():
-				kinship_edges.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'EXTENDED_FAMILY', 0.80);" % [a, b])
-				kinship_edges.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'EXTENDED_FAMILY', 0.80);" % [b, a])
-				edge_count += 2
+			kinship_edges.append("""
+				INSERT OR IGNORE INTO social_relationships (
+					from_resident_id, to_resident_id, relationship_type_id,
+					context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+				) VALUES (%d, %d, %d, NULL, 0.80, %d, NULL, %d);
+			""" % [a, b, ext_fam_id, sim_start_day, reason_id])
+			kinship_edges.append("""
+				INSERT OR IGNORE INTO social_relationships (
+					from_resident_id, to_resident_id, relationship_type_id,
+					context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+				) VALUES (%d, %d, %d, NULL, 0.80, %d, NULL, %d);
+			""" % [b, a, ext_fam_id, sim_start_day, reason_id])
+			edge_count += 2
 
 		if kinship_edges.size() >= 500:
-			DBManager.execute_batch(kinship_edges)
+			DB_MANAGER.execute_batch(kinship_edges)
 			kinship_edges.clear()
 
 	if not kinship_edges.is_empty():
-		DBManager.execute_batch(kinship_edges)
+		DB_MANAGER.execute_batch(kinship_edges)
 
 	return edge_count
 
 ## Pass 4: Links peers and coworkers at the same establishment
-static func _generate_establishment_peer_ties(rng: RandomNumberGenerator) -> int:
+static func _generate_establishment_peer_ties(rng: RandomNumberGenerator, sim_start_day: int, reason_id: int) -> int:
 	var peer_edges: Array[String] = []
 	var edge_count: int = 0
+	var peer_rel_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
 
-	var est_clusters = DBManager.query_rows("""
-		SELECT establishment_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
-		FROM residents
-		GROUP BY establishment_id
+	var est_clusters = DB_MANAGER.query_rows("""
+		SELECT employer_entity_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
+		FROM livelihood_contracts
+		GROUP BY employer_entity_id
 		HAVING count > 1;
 	""")
 
@@ -450,29 +543,35 @@ static func _generate_establishment_peer_ties(rng: RandomNumberGenerator) -> int
 			var a: int = ids[rng.randi() % ids.size()]
 			var b: int = ids[rng.randi() % ids.size()]
 			if a != b:
-				peer_edges.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'CIVIC_PEER', 0.50);" % [a, b])
+				peer_edges.append("""
+					INSERT OR IGNORE INTO social_relationships (
+						from_resident_id, to_resident_id, relationship_type_id,
+						context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %d, NULL, 0.50, %d, NULL, %d);
+				""" % [a, b, peer_rel_id, sim_start_day, reason_id])
 				edge_count += 1
 
 		if peer_edges.size() >= 500:
-			DBManager.execute_batch(peer_edges)
+			DB_MANAGER.execute_batch(peer_edges)
 			peer_edges.clear()
 
 	if not peer_edges.is_empty():
-		DBManager.execute_batch(peer_edges)
+		DB_MANAGER.execute_batch(peer_edges)
 
 	return edge_count
 
 ## Pass 5: Links churchgoers, temple members, and cultural community networks
-static func _generate_faith_and_cultural_ties(rng: RandomNumberGenerator) -> int:
+static func _generate_faith_and_cultural_ties(rng: RandomNumberGenerator, sim_start_day: int, reason_id: int) -> int:
 	var ties: Array[String] = []
 	var edge_count: int = 0
+	var parish_rel_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "COMMUNITY_PARISH")
 
-	var congregation_clusters = DBManager.query_rows("""
-		SELECT h.district_id, r.ethnicity, r.religion, GROUP_CONCAT(r.resident_id) as member_ids, COUNT(*) as count
+	var congregation_clusters = DB_MANAGER.query_rows("""
+		SELECT h.district_id, r.ethnicity_id, r.religion_id, GROUP_CONCAT(r.resident_id) as member_ids, COUNT(*) as count
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
-		WHERE r.religion != 'SECULAR_NONE' AND r.age >= 18
-		GROUP BY h.district_id, r.ethnicity, r.religion
+		WHERE r.dod IS NULL
+		GROUP BY h.district_id, r.ethnicity_id, r.religion_id
 		HAVING count > 1;
 	""")
 
@@ -491,16 +590,26 @@ static func _generate_faith_and_cultural_ties(rng: RandomNumberGenerator) -> int
 			var a: int = ids[rng.randi() % ids.size()]
 			var b: int = ids[rng.randi() % ids.size()]
 			if a != b and rng.randf() < 0.40:
-				ties.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'COMMUNITY_PARISH', 0.65);" % [a, b])
-				ties.append("INSERT OR IGNORE INTO social_relationships VALUES (%d, %d, 'COMMUNITY_PARISH', 0.65);" % [b, a])
+				ties.append("""
+					INSERT OR IGNORE INTO social_relationships (
+						from_resident_id, to_resident_id, relationship_type_id,
+						context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %d, NULL, 0.65, %d, NULL, %d);
+				""" % [a, b, parish_rel_id, sim_start_day, reason_id])
+				ties.append("""
+					INSERT OR IGNORE INTO social_relationships (
+						from_resident_id, to_resident_id, relationship_type_id,
+						context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %d, NULL, 0.65, %d, NULL, %d);
+				""" % [b, a, parish_rel_id, sim_start_day, reason_id])
 				edge_count += 2
 
 		if ties.size() >= 500:
-			DBManager.execute_batch(ties)
+			DB_MANAGER.execute_batch(ties)
 			ties.clear()
 
 	if not ties.is_empty():
-		DBManager.execute_batch(ties)
+		DB_MANAGER.execute_batch(ties)
 
 	return edge_count
 
@@ -509,12 +618,11 @@ static func _roll_household_culture(rng: RandomNumberGenerator, district_type: S
 	var weights_key := "high_density" if district_type.begins_with("high_density") else ("commercial" if district_type == "commercial" else "suburban_low_density")
 	var dist_weights: Dictionary = _cultural["district_ethnic_weights"][weights_key]
 	var defaults: Dictionary = _cultural.get("defaults", {})
-	
-	# Fallback key dynamically pulled from JSON, or the first key in the weight table
+
 	var ethnic_keys: Array = dist_weights.keys()
-	var fallback_eth: String = defaults.get("fallback_ethnicity", ethnic_keys[0] if not ethnic_keys.is_empty() else "")
+	var fallback_eth: String = defaults.get("fallback_ethnicity", ethnic_keys[0] if not ethnic_keys.is_empty() else "WHITE_BRITISH")
 	var chosen_eth: String = fallback_eth
-	
+
 	var roll := rng.randf()
 	var cumulative := 0.0
 	for eth in dist_weights.keys():
@@ -522,15 +630,14 @@ static func _roll_household_culture(rng: RandomNumberGenerator, district_type: S
 		if roll <= cumulative:
 			chosen_eth = eth
 			break
-			
+
 	var eth_profile: Dictionary = _cultural["ethnicities"][chosen_eth]
 	var rel_weights: Dictionary = eth_profile["religion_distribution"]
 	var rel_keys: Array = rel_weights.keys()
-	
-	# Default religion pulled from meta defaults, or the first key in this ethnicity's distribution
-	var fallback_rel: String = defaults.get("secular_or_unaffiliated_religion_key", rel_keys[0] if not rel_keys.is_empty() else "")
+
+	var fallback_rel: String = defaults.get("secular_or_unaffiliated_religion_key", rel_keys[0] if not rel_keys.is_empty() else "PROTESTANT_COFE")
 	var chosen_rel: String = fallback_rel
-	
+
 	roll = rng.randf()
 	cumulative = 0.0
 	for rel in rel_weights.keys():
@@ -538,9 +645,28 @@ static func _roll_household_culture(rng: RandomNumberGenerator, district_type: S
 		if roll <= cumulative:
 			chosen_rel = rel
 			break
-			
+
 	return {
 		"ethnicity": chosen_eth,
 		"religion": chosen_rel,
 		"surnames_pool": eth_profile.get("surnames_pool", "surnames")
 	}
+
+static func _resolve_citizen_education(rng: RandomNumberGenerator, age_years: int, is_high_density: bool) -> String:
+	var edu_model: Dictionary = _demographics.get("education_attainment_model", {})
+	var default_code: String = str(edu_model.get("default_code", "NO_FORMAL"))
+	var tiers: Array = edu_model.get("tiers", [])
+
+	for tier in tiers:
+		var min_age: int = int(tier.get("min_age", 16))
+		if age_years < min_age:
+			continue
+
+		var prob: float = float(tier.get("base_probability", 0.10))
+		if is_high_density:
+			prob = max(0.01, prob - float(tier.get("high_density_penalty", 0.0)))
+
+		if rng.randf() < prob:
+			return str(tier.get("code", default_code))
+
+	return default_code

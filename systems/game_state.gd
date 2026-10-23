@@ -86,3 +86,18 @@ func get_district_truth(district_id: String) -> Dictionary:
 
 func get_district_filofax(district_id: String) -> Dictionary:
 	return world_state.get("filofax_cache", {}).get("districts", {}).get(district_id, {})
+
+func get_district_view(block_id: String) -> Dictionary:
+	var rows = DBManager.query_rows("SELECT * FROM v_district_census WHERE district_id = '%s';" % block_id)
+	if rows.is_empty():
+		return {}
+	
+	var data = rows[0]
+	return {
+		"district_id": block_id,
+		"active_population": int(data.get("active_living_population", 0)),
+		"total_households": int(data.get("total_households", 0)),
+		"formally_employed": int(data.get("formally_employed_count", 0)),
+		"street_informal": int(data.get("street_informal_count", 0)),
+		"incarcerated": int(data.get("incarcerated_count", 0))
+	}

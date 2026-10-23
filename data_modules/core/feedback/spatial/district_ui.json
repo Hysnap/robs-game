@@ -1,29 +1,21 @@
 {
   "_meta": {
+    "schema_version": "2.0.0",
     "locale": "en_GB",
-    "scope": "DISTRICT_HUD"
-  },
-  "type_labels": {
-    "commercial": "Commercial Core & Retail Precinct",
-    "high_density_low_rise": "Victorian Residential Terraces",
-    "high_density_high_rise": "Municipal Housing Estate & High-Rise",
-    "industrial": "Industrial Canal Yard & Rail Depots",
-    "suburban_low_density": "Suburban Commuter Belt",
-    "local_government": "Municipal Administrative Hub",
-    "hospital_site": "Regional Infirmary & Medical Center",
-    "university_campus": "Higher Education Campus & Polytechnic"
+    "scope": "SPATIAL_DISTRICT_FEEDBACK",
+    "description": "Unified schema for district HUD tooltips, dynamic Filofax dockets, and scouting telemetry"
   },
   "metric_labels": {
-    "population": "Estimated Residents",
-    "unemployment": "Unemployment Ratio",
-    "weekly_disposable_income": "Mean Disposable Income",
-    "zone_health_index": "Zone Health Index (ZHI)",
-    "police_presence": "Observed Patrol Density",
-    "desperation_pressure": "Consumer Desperation Index"
+    "active_population": "Total Residents",
+    "total_households": "Registered Households",
+    "unemployment_rate": "Unemployment Ratio",
+    "avg_disposable_income": "Mean Disposable Income"
   },
+
   "currency_format": "£{amount}/wk",
   "ratio_format": "{percent}%",
   "docket_audit_stale_warning": "[!] Stale Intelligence: Last audited {weeks_ago} weeks ago",
+
   "filofax_labels": {
     "ward_dossier_title": "WARD DOSSIER: {name}",
     "unsurveyed_header": "[!] UNSURVEYED TERRITORY",
@@ -31,7 +23,101 @@
     "dispatch_scout_btn": "Dispatch Runner to Walk Parade ({cost})",
     "data_age": "Field Notes Age: {age} week(s) old",
     "stale_warning": "[STALE PENCIL INTELLIGENCE]",
-    "type_label": "Classification: {type}",
     "insufficient_funds": "Cannot dispatch runner: insufficient cash."
+  },
+
+  "sections": [
+    {
+      "id": "demographics",
+      "header_label": "MUNICIPAL DEMOGRAPHICS & RESIDENCY",
+      "fields": [
+        {
+          "key": "active_population",
+          "label": "Total Residents",
+          "format": "INTEGER",
+          "prefix": "",
+          "suffix": " citizens"
+        },
+        {
+          "key": "total_households",
+          "label": "Registered Households",
+          "format": "INTEGER",
+          "prefix": "",
+          "suffix": " homes"
+        },
+        {
+          "key": "unemployment_rate",
+          "label": "Unemployment Ratio",
+          "format": "PERCENT",
+          "decimals": 1,
+          "prefix": "",
+          "suffix": ""
+        },
+        {
+          "key": "avg_disposable_income",
+          "label": "Est. Weekly Disposable Income",
+          "format": "CURRENCY",
+          "decimals": 2,
+          "prefix": "£",
+          "suffix": " / wk"
+        }
+      ]
+    },
+    {
+      "id": "civic_telemetry",
+      "header_label": "CIVIC & STREET TELEMETRY",
+      "fields": [
+        {
+          "key": "zone_health_index",
+          "label": "Zone Health Index (ZHI)",
+          "format": "FLOAT",
+          "decimals": 1,
+          "prefix": "",
+          "suffix": " / 100"
+        },
+        {
+          "key": "actual_police_heat",
+          "label": "Observed Police Heat",
+          "format": "PERCENT",
+          "decimals": 0,
+          "prefix": "",
+          "suffix": ""
+        },
+        {
+          "key": "consumer_desperation_index",
+          "label": "Consumer Desperation Index",
+          "format": "FLOAT",
+          "decimals": 2,
+          "prefix": "",
+          "suffix": ""
+        },
+        {
+          "key": "corruption_tolerance",
+          "label": "Municipal Graft Tolerance",
+          "format": "PERCENT",
+          "decimals": 0,
+          "prefix": "",
+          "suffix": ""
+        }
+      ]
+    }
+  ],
+
+  "establishment_section": {
+    "header_label": "LOCAL TRADE & REGISTERED ESTABLISHMENTS",
+    "empty_text": "• Purely Residential / Undeveloped (No licensed trade on file)",
+    "row_template": "• {name}: {count} units"
+  },
+
+  "styling": {
+    "grid_columns": 2,
+    "grid_h_separation": 16,
+    "grid_v_separation": 4,
+    "header_font_size": 13,
+    "header_color": "#D4AF37",
+    "label_color": "#B0B0B0",
+    "value_color": "#FFFFFF",
+    "empty_color": "#808080",
+    "separator_alpha": 0.25
   }
 }

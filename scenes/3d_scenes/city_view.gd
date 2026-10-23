@@ -16,35 +16,23 @@ var panning := false
 
 func _ready() -> void:
 	setup_navigation()
-	
-	# 1. Retrieve settings from SceneTree metadata (map_menu) or fallback to last_generated.json
-	var settings := load_pending_city_settings()
-	if settings.is_empty():
-		settings = load_last_generated_settings()
-		
-	# 2. Apply settings (or fall back to defaults)
-	var gen_seed := "default-city"
-	if not settings.is_empty():
-		apply_settings(settings)
-		gen_seed = get_seed_from_settings(settings)
-	else:
-		# Read directly from CityCrafter node export
-		if "seed_id" in city_crafter and not str(city_crafter.seed_id).is_empty():
-			gen_seed = city_crafter.seed_id
-			
-	# 3. Setup Camera and Lighting for radial layout
 	setup_view()
+
+	# Retrieve active seed
+	var active_seed: String = str(GameState.world_state.get("metadata", {}).get("active_seed", "default-city"))
+	if "seed_id" in city_crafter:
+		city_crafter.seed_id = active_seed
+
+	# Build visuals strictly from saved layout or GameState
+	var saved_layout: Dictionary = GameState.world_state.get("city_layout", {})
+	if not saved_layout.is_empty() and city_crafter.has_method("load_visual_layout"):
+		set_status(tr("CITY_VIEW_STATUS_RENDERING"))
+		city_crafter.load_visual_layout(saved_layout)
 	
-	# 4. Connect progress signal for HUD status text
-	if city_crafter.has_signal("generation_progress"):
-		city_crafter.generation_progress.connect(func(_c, _t, stage): set_status(stage))
-		
-	# 5. Await the async generator directly
-	set_status("Generating city layout...")
-	await city_crafter.generate_city_async(gen_seed)
-	
-	# 6. Generator has finished — run ingestion and the sense check!
-	_on_generation_complete()
+	set_status(tr("CITY_VIEW_STATUS_READY"))
+
+	if not GameState.world_state.get("districts", {}).is_empty():
+		run_district_sense_check(GameState.world_state)
 
 func load_pending_city_settings() -> Dictionary:
 	if not get_tree().has_meta("pending_city_settings"):
@@ -264,7 +252,7 @@ func setup_navigation() -> void:
 
 	var return_button := Button.new()
 	return_button.name = "ReturnToMainMenu"
-	return_button.text = "Return to Main Menu"
+	return_button.text = tr("CITY_VIEW_BTN_MAIN_MENU")
 	return_button.position = Vector2(20.0, 20.0)
 	return_button.custom_minimum_size = Vector2(180.0, 44.0)
 	return_button.pressed.connect(_on_return_to_main_menu_pressed)
@@ -306,16 +294,27 @@ func _process(delta: float) -> void:
 		update_camera_transform()
 
 func _on_generation_complete() -> void:
-	set_status("City generated")
-	
-	# Stamp active seed
-	var current_seed: String = str(city_crafter.get("seed_id"))
+	var current_seed: String = city_crafter.seed_id
+	var stored_seed: String = str(GameState.world_state.get("metadata", {}).get("active_seed", ""))
+
+	var seed_changed: bool = (stored_seed != "" and stored_seed != current_seed)
+
+	# 1. Stamp active seed into the global singleton
 	GameState.world_state["metadata"]["active_seed"] = current_seed
 	
-	# Run the ingestion pass directly into the global singleton!
+	# 2. Ingest spatial districts from CityCrafter into GameState.world_state
 	CitySpatialAdapter.ingest_citycrafter_generation(city_crafter, GameState.world_state, current_seed)
 	
-	# Run our sense-check audit
+	# 3. Guard: Check if society exists FOR THIS SEED
+	if seed_changed or not DBManager.is_society_populated(current_seed):
+		set_status("Populating civic establishments & society...")
+		SocialNetworkGenerator.generate_city_society(GameState.world_state, current_seed)
+	else:
+		print("[CityView] Society for seed '%s' already loaded in SQLite. Skipping procedural generation." % current_seed)
+	
+	set_status("City generated")
+	
+	# 4. Run our sense-check audit
 	run_district_sense_check(GameState.world_state)
 
 func run_district_sense_check(world_state: Dictionary) -> void:

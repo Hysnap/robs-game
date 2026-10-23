@@ -5,27 +5,56 @@
 [node name="Main" type="Node" unique_id=2082020883]
 
 [node name="WelcomeScreen" type="Control" parent="." unique_id=1815881739]
+custom_maximum_size = Vector2(0, 0)
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 114.0
+offset_top = 52.0
+offset_right = -1038.0
+offset_bottom = -596.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_rvslj")
 
 [node name="ColorRect" type="ColorRect" parent="WelcomeScreen" unique_id=847063018]
-layout_mode = 0
-offset_right = 504.0
-offset_bottom = 160.0
+custom_minimum_size = Vector2(500, 500)
+custom_maximum_size = Vector2(500, 500)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 218.0
+offset_top = -5.0
+offset_right = 718.0
+offset_bottom = 495.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0.22670749, 0.22670749, 0.22670746, 1)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="WelcomeScreen/ColorRect" unique_id=2118266471]
-layout_mode = 0
-offset_right = 507.0
-offset_bottom = 158.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -72.0
+offset_right = 102.0
+offset_bottom = 56.0
+grow_horizontal = 2
+grow_vertical = 2
 alignment = 1
 
 [node name="RichTextLabel" type="RichTextLabel" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=1074179646]
 layout_mode = 2
-text = "Welcome to Robs Game"
+text = "MENU_GAME_TITLE"
 fit_content = true
 scroll_active = false
 shortcut_keys_enabled = false
@@ -34,15 +63,15 @@ vertical_alignment = 1
 
 [node name="OpenMapMenu" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=378651687]
 layout_mode = 2
-text = "Generate or reload Map"
+text = "MENU_GENERATE_MAP"
 
 [node name="OpenGeneratedCity" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=695819326]
 layout_mode = 2
-text = "View City"
+text = "MENU_VIEW_CITY"
 
 [node name="Exit" type="Button" parent="WelcomeScreen/ColorRect/VBoxContainer" unique_id=463418212]
 layout_mode = 2
-text = "Exit"
+text = "MENU_EXIT"
 
 [connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenMapMenu" to="WelcomeScreen" method="_on_open_map_menu_pressed"]
 [connection signal="pressed" from="WelcomeScreen/ColorRect/VBoxContainer/OpenGeneratedCity" to="WelcomeScreen" method="_on_open_generated_city_pressed"]

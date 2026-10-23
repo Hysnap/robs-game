@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "UNEMPLOYMENT_RATE",
+  "label_token": "UI_METRIC_UNEMPLOYMENT",
+  "format": "PERCENT",
+  "decimals": 1,
+  "telemetry_source": {
+    "type": "SQLITE_LIVE",
+    "sink_class": "SinkUnemploymentRate"
+  }
+}

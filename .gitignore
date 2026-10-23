@@ -1,3 +1,13 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+# SQLite Database & Runtime Files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Godot User App Data (if stored locally in project during tests)
+user/

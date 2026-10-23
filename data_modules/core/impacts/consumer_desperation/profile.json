@@ -1,0 +1,7 @@
+{
+  "metric_id": "CONSUMER_DESPERATION",
+  "display_name": "Consumer Desperation",
+  "format": "FLOAT",
+  "decimals": 1,
+  "suffix": " / 100"
+}

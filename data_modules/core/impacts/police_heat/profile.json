@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "POLICE_HEAT",
+  "label_token": "UI_METRIC_PATROL_DENSITY",
+  "display_name": "Observed Patrol Density",
+  "format": "PERCENT",
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "actual_police_heat"
+  },
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 1.0
+}
