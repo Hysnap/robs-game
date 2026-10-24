@@ -11,6 +11,7 @@ var _material_cache: Dictionary = {}
 var _civic_hierarchy: Dictionary = {}
 var _placed_facilities: Array = [] # Array of { "type": String, "origin": Vector2i, "footprint": Vector2i }
 
+
 ## Loads business rules with a strict HARD FAIL if the file does not exist
 func _init_layout_rules() -> void:
 	if not _layout_rules.is_empty():
@@ -63,19 +64,19 @@ func generate_base_grid_with_sizes() -> Array:
 	_placed_facilities.clear()
 
 	var cfg = city_configuration
-	var radius: int = int(cfg.get("city_radius")) if (cfg and "city_radius" in cfg) else int(_layout_rules.get("default_city_radius"))
-	var jitter: float = float(cfg.get("radial_jitter")) if (cfg and "radial_jitter" in cfg) else float(_layout_rules.get("default_radial_jitter"))
-	var noise_scale: float = float(_layout_rules.get("boundary_noise_scale"))
+	var radius_val: int = int(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and int(cfg.get("city_radius")) > 0) else int(_layout_rules.get("default_city_radius", 14))
+	var jitter: float = float(cfg.get("radial_jitter")) if (cfg and "radial_jitter" in cfg) else float(_layout_rules.get("default_radial_jitter", 0.35))
+	var noise_scale: float = float(_layout_rules.get("boundary_noise_scale", 15.0))
 
 	# 1. Pre-claim multi-cell & dedicated spatial archetypes
-	_preclaim_spatial_archetypes(radius, occupied_positions, blocks_data)
+	_preclaim_spatial_archetypes(radius_val, occupied_positions, blocks_data)
 
 	# 2. Populate regular blocks around pre-claimed footprints
-	for x in range(-radius, radius + 1):
-		for z in range(-radius, radius + 1):
+	for x in range(-radius_val, radius_val + 1):
+		for z in range(-radius_val, radius_val + 1):
 			var dist: float = Vector2(x, z).length()
 			var noise_val: float = noise.get_noise_2d(float(x) * noise_scale, float(z) * noise_scale)
-			var max_r: float = float(radius) * (1.0 + (noise_val * jitter))
+			var max_r: float = float(radius_val) * (1.0 + (noise_val * jitter))
 			
 			if dist > max_r:
 				continue
@@ -86,7 +87,7 @@ func generate_base_grid_with_sizes() -> Array:
 				
 			var block_size := Vector2i(1, 1)
 			if cfg and cfg.get("enable_multi_size_blocks"):
-				block_size = determine_block_size(x, z, occupied_positions) #[cite: 1, 11]
+				block_size = determine_block_size(x, z, occupied_positions)
 				
 			blocks_data.append({
 				"position": pos,
@@ -110,8 +111,8 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 		return str(_anchor_claim_map[pos])
 
 	var cfg = city_configuration
-	var radius: float = float(cfg.get("city_radius")) if (cfg and "city_radius" in cfg) else float(_layout_rules.get("default_city_radius"))
-	var norm_dist: float = Vector2(grid_x, grid_z).length() / max(radius, 1.0)
+	var radius_val: float = float(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
+	var norm_dist: float = Vector2(grid_x, grid_z).length() / max(radius_val, 1.0)
 
 	var setup: Dictionary = _archetypes_data.get("setup", {})
 	assert(setup.has("default_fallback_archetype"), "FATAL: 'setup.default_fallback_archetype' is missing in archetypes.json")
@@ -160,7 +161,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 
 	# 4. Deterministic sample via 2D spatial noise
 	assert(_layout_rules.has("zoning_noise_scale"), "FATAL: zoning_noise_scale missing in business_rules.cfg")
-	var z_noise_scale: float = float(_layout_rules.get("zoning_noise_scale"))
+	var z_noise_scale: float = float(_layout_rules.get("zoning_noise_scale", 8.0))
 	var sample_val: float = (noise.get_noise_2d(float(grid_x) * z_noise_scale, float(grid_z) * z_noise_scale) + 1.0) * 0.5
 	
 	return _sample_weighted_archetype(candidate_weights, sample_val)
@@ -259,20 +260,17 @@ func create_ground_plane(center: Vector3, size: Vector2, district_type: String =
 
 ## Dynamically resolves or generates district materials from archetypes.json visual_profile
 func _resolve_district_material(district_type: String) -> Material:
-	# 1. Return from runtime cache if already built
 	if _material_cache.has(district_type):
 		return _material_cache[district_type]
 
 	var cfg = city_configuration
 
-	# 2. Priority 1: Direct material override set in city_configuration (User Inspector override)
 	var prop_name := "%s_ground_material" % district_type
 	if cfg and prop_name in cfg and cfg.get(prop_name) != null:
 		var mat = cfg.get(prop_name)
 		_material_cache[district_type] = mat
 		return mat
 
-	# 3. Priority 2: Build dynamic StandardMaterial3D from archetypes.json
 	_init_archetypes()
 	var arch: Dictionary = _archetypes_data.get(district_type, {})
 	var visual: Dictionary = arch.get("visual_profile", {})
@@ -281,31 +279,26 @@ func _resolve_district_material(district_type: String) -> Material:
 		var mat := StandardMaterial3D.new()
 		mat.resource_name = "Mat_%s" % district_type
 		
-		# Set solid albedo color if specified (supports hex like "#D97706" or standard names)
 		var hex_color: String = str(visual.get("color", ""))
 		if not hex_color.is_empty():
 			mat.albedo_color = Color.from_string(hex_color, Color.GRAY)
 			
-		# Set image/albedo texture if a valid file path is provided
 		var tex_path: String = str(visual.get("texture_path", ""))
 		if not tex_path.is_empty() and ResourceLoader.exists(tex_path):
 			var tex = load(tex_path)
 			if tex is Texture2D:
 				mat.albedo_texture = tex
 				
-		# Optional UV scaling (for repeating tile textures)
 		var uv_scale_arr: Array = visual.get("uv_scale", [1.0, 1.0])
 		if uv_scale_arr.size() >= 2:
 			mat.uv1_scale = Vector3(float(uv_scale_arr[0]), float(uv_scale_arr[1]), 1.0)
 			
-		# PBR properties
 		mat.roughness = float(visual.get("roughness", 0.85))
 		mat.metallic = float(visual.get("metallic", 0.0))
 
 		_material_cache[district_type] = mat
 		return mat
 
-	# 4. Priority 3: Fall back to sector-class material on cfg, then generic ground_material
 	var sector_class: String = str(arch.get("sector_class", "")).to_lower()
 	if not sector_class.is_empty():
 		var sector_prop := "%s_ground_material" % sector_class
@@ -317,6 +310,25 @@ func _resolve_district_material(district_type: String) -> Material:
 	var fallback = cfg.ground_material if (cfg and "ground_material" in cfg) else null
 	return fallback
 
+## Resolves the road material from city_configuration or creates a default dark asphalt material
+func _resolve_road_material() -> Material:
+	var cfg = city_configuration
+	if cfg and "road_material" in cfg and cfg.road_material != null:
+		return cfg.road_material
+
+	var mat := StandardMaterial3D.new()
+	mat.resource_name = "Mat_Road_Default"
+	mat.albedo_color = Color("#1F2937") # Dark charcoal asphalt
+	mat.roughness = 0.9
+	return mat
+
+## Resolves intersection material, falling back to the road material
+func _resolve_intersection_material() -> Material:
+	var cfg = city_configuration
+	if cfg and "intersection_material" in cfg and cfg.intersection_material != null:
+		return cfg.intersection_material
+	return _resolve_road_material()
+
 ## Collects the current visual footprint of all ground planes and roads
 func export_visual_layout() -> Dictionary:
 	var layout := {
@@ -325,82 +337,93 @@ func export_visual_layout() -> Dictionary:
 		"seed_id": seed_id
 	}
 	
+	var default_block_sz: float = city_configuration.block_size if city_configuration else 200.0
+	var default_street_w: float = city_configuration.street_width if city_configuration else 25.0
+
+	# 1. Capture Ground District Blocks (Direct procedural children)
 	for child in get_children():
-		if child is MeshInstance3D:
-			# 1. Capture Ground District Blocks
-			if child.has_meta("block_id"):
-				var b_id: String = child.get_meta("block_id")
-				var p_mesh: PlaneMesh = child.mesh as PlaneMesh
-				var b_size := Vector2(40.0, 40.0)
-				if p_mesh:
-					b_size = p_mesh.size
-					
-				layout["districts"][b_id] = {
-					"center": [child.position.x, child.position.y, child.position.z],
-					"size": [b_size.x, b_size.y],
-					"district_type": child.get_meta("district")
-				}
-			# 2. Capture Road and Intersection Meshes!
-			elif child.name.begins_with("Road") or child.name.begins_with("Intersection") or child.name.begins_with("SubdivisionRoad"):
-				var p_mesh: PlaneMesh = child.mesh as PlaneMesh
-				var r_size := Vector2.ZERO
-				if p_mesh:
-					r_size = p_mesh.size
-				layout["roads"].append({
-					"name": child.name,
-					"position": [child.position.x, child.position.y, child.position.z],
-					"size": [r_size.x, r_size.y]
-				})
+		if child is MeshInstance3D and child.has_meta("block_id"):
+			var b_id: String = child.get_meta("block_id")
+			var b_size := Vector2(default_block_sz, default_block_sz)
+			if child.mesh is PlaneMesh:
+				b_size = (child.mesh as PlaneMesh).size
+			elif child.mesh is BoxMesh:
+				var b_sz = (child.mesh as BoxMesh).size
+				b_size = Vector2(b_sz.x, b_sz.z)
+				
+			layout["districts"][b_id] = {
+				"center": [child.position.x, child.position.y, child.position.z],
+				"size": [b_size.x, b_size.y],
+				"district_type": child.get_meta("district")
+			}
+
+	# 2. Capture Road and Intersection Meshes (Recursively finds nodes regardless of parent container)
+	var all_meshes = find_children("*", "MeshInstance3D", true, false)
+	for mesh_node in all_meshes:
+		var n_name: String = mesh_node.name.to_lower()
+		if n_name.begins_with("road") or n_name.begins_with("intersection") or n_name.begins_with("subdivisionroad"):
+			var sz := [default_street_w, default_street_w]
+			if mesh_node.mesh is PlaneMesh:
+				var pm = mesh_node.mesh as PlaneMesh
+				sz = [pm.size.x, pm.size.y]
+			elif mesh_node.mesh is BoxMesh:
+				var bm = mesh_node.mesh as BoxMesh
+				sz = [bm.size.x, bm.size.z]
+
+			layout["roads"].append({
+				"name": mesh_node.name,
+				"position": [mesh_node.position.x, mesh_node.position.y, mesh_node.position.z],
+				"rotation": [mesh_node.rotation.x, mesh_node.rotation.y, mesh_node.rotation.z],
+				"size": sz
+			})
 			
 	return layout
 
-## Instantiates ground planes directly from saved layout data (No procedural math needed)
+## Instantiates ground planes and roads directly from saved layout data
 func load_visual_layout(layout_data: Dictionary) -> void:
-	_init_archetypes()
-	var setup: Dictionary = _archetypes_data.get("setup", {})
-	assert(setup.has("default_fallback_archetype"), "FATAL: 'setup.default_fallback_archetype' is missing in archetypes.json")
-	var fallback_archetype: String = str(setup.get("default_fallback_archetype"))
-
 	for child in get_children():
 		child.queue_free()
 
-	# 1. Rebuild Ground Blocks		
+	# 1. Rebuild Ground Planes
 	var districts_data: Dictionary = layout_data.get("districts", {})
 	for b_id in districts_data.keys():
-		var data: Dictionary = districts_data[b_id]
-		var center_arr: Array = data.get("center", [0, 0, 0])
-		var size_arr: Array = data.get("size", [40, 40])
-		var dtype: String = str(data.get("district_type", fallback_archetype))
-		
-		var center := Vector3(center_arr[0], center_arr[1], center_arr[2])
-		var size := Vector2(size_arr[0], size_arr[1])
-		create_ground_plane(center, size, dtype, b_id)
+		var d = districts_data[b_id]
+		var center_arr = d["center"]
+		var size_arr = d["size"]
+		create_ground_plane(
+			Vector3(center_arr[0], center_arr[1], center_arr[2]),
+			Vector2(size_arr[0], size_arr[1]),
+			str(d["district_type"]),
+			b_id
+		)
 
 	# 2. Rebuild Roads & Intersections
 	var roads_data: Array = layout_data.get("roads", [])
-	var cfg = city_configuration
-	var road_mat: Material = cfg.road_material if (cfg and "road_material" in cfg) else null
-	var inter_mat: Material = cfg.intersection_material if (cfg and "intersection_material" in cfg) else road_mat
+	var road_mat = _resolve_road_material()
+	var inter_mat = _resolve_intersection_material()
 
 	for r in roads_data:
-		var r_pos_arr: Array = r.get("position", [0, 0, 0])
-		var r_size_arr: Array = r.get("size", [8, 8])
 		var r_name: String = str(r.get("name", "Road"))
+		var pos_arr = r["position"]
+		var sz_arr = r["size"]
 		
-		var r_mesh := PlaneMesh.new()
-		r_mesh.size = Vector2(r_size_arr[0], r_size_arr[1])
+		var road_mesh := MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(sz_arr[0], sz_arr[1])
+		road_mesh.mesh = plane
+		road_mesh.position = Vector3(pos_arr[0], pos_arr[1] + 0.02, pos_arr[2])
 		
-		var road_obj := MeshInstance3D.new()
-		road_obj.name = r_name
-		road_obj.mesh = r_mesh
-		road_obj.position = Vector3(r_pos_arr[0], r_pos_arr[1], r_pos_arr[2])
-		
-		if r_name.begins_with("Intersection") and inter_mat:
-			road_obj.material_override = inter_mat
-		elif road_mat:
-			road_obj.material_override = road_mat
+		if r.has("rotation"):
+			var rot_arr = r["rotation"]
+			road_mesh.rotation = Vector3(rot_arr[0], rot_arr[1], rot_arr[2])
 			
-		add_child(road_obj)
+		if r_name.to_lower().begins_with("Intersection"):
+			road_mesh.material_override = inter_mat
+		else:
+			road_mesh.material_override = road_mat
+			
+		road_mesh.name = r_name
+		add_child(road_mesh)
 
 func _sample_weighted_archetype(weights: Dictionary, sample: float) -> String:
 	var total_weight: int = 0
@@ -419,15 +442,11 @@ func _sample_weighted_archetype(weights: Dictionary, sample: float) -> String:
 			
 	return str(weights.keys()[-1])
 
-## Computes concentric band radial cutoffs dynamically for ANY number of bands
-## driven 100% by archetypes.json band definitions and user sector sliders
 func _compute_dynamic_concentric_bands(cfg) -> Array:
 	var setup: Dictionary = _archetypes_data.get("setup", {})
 	var bands_template: Array = setup.get("concentric_bands", [])
 	assert(not bands_template.is_empty(), "FATAL: 'setup.concentric_bands' is missing or empty in archetypes.json")
 
-	# 1. Read user ratios dynamically from configuration
-	# (Collects whatever sector ratios exist on cfg, e.g. commercial_ratio, residential_ratio, etc.)
 	var user_sector_ratios: Dictionary = {}
 	for arch_key in _archetypes_data.keys():
 		if arch_key in ["_meta", "setup"]: 
@@ -440,7 +459,6 @@ func _compute_dynamic_concentric_bands(cfg) -> Array:
 			var ratio_val: float = float(cfg.get(prop_name)) if (cfg and prop_name in cfg) else 1.0
 			user_sector_ratios[sector] = max(0.01, ratio_val)
 
-	# 2. Compute the relative demand of each configured band
 	var band_demands: Array = []
 	var total_demand: float = 0.0
 
@@ -469,7 +487,6 @@ func _compute_dynamic_concentric_bands(cfg) -> Array:
 		})
 		total_demand += band_score
 
-	# 3. Calculate dynamic radius for each band using the Area-Integral: r = sqrt(Cumulative Area)
 	var dynamic_bands: Array = []
 	var cumulative_area: float = 0.0
 	var num_bands: int = band_demands.size()
@@ -480,9 +497,8 @@ func _compute_dynamic_concentric_bands(cfg) -> Array:
 		
 		var max_r: float = 1.0
 		if i == num_bands - 1:
-			max_r = 99.0 # Outermost band absorbs any edge extensions / jitter
+			max_r = 99.0
 		else:
-			# Area(r) = r^2  =>  r = sqrt(Area)
 			max_r = sqrt(clampf(cumulative_area, 0.05, 0.95))
 			
 		dynamic_bands.append({
@@ -503,8 +519,7 @@ func _init_civic_hierarchy() -> void:
 	assert(_civic_hierarchy.has("civic_institutions"), 
 		"FATAL: civic_hierarchy module is missing 'civic_institutions' root table.")
 
-## Pre-claims any archetype declaring "spatial_rules"
-func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data: Array) -> void:
+func _preclaim_spatial_archetypes(radius_val: int, occupied: Dictionary, blocks_data: Array) -> void:
 	for arch_key in _archetypes_data.keys():
 		if arch_key in ["_meta", "setup"]:
 			continue
@@ -518,7 +533,7 @@ func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data
 		var dist_range: Array = rules.get("norm_distance_range", [0.0, 1.0])
 		var min_sep: int = int(rules.get("min_separation_blocks", 4))
 
-		var origin: Vector2i = _find_valid_anchor_site(radius, footprint, dist_range, min_sep, occupied)
+		var origin: Vector2i = _find_valid_anchor_site(radius_val, footprint, dist_range, min_sep, occupied)
 		if origin == Vector2i(9999, 9999):
 			continue
 
@@ -540,9 +555,8 @@ func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data
 		})
 		print("[CustomCityCrafter] Preclaimed '%s' [%d x %d] at %s" % [arch_key, footprint.x, footprint.y, origin])
 
-## Finds a single valid origin for an anchor footprint, respecting live occupancy and global separation
 func _find_valid_anchor_site(
-	radius: int, 
+	radius_val: int, 
 	footprint: Vector2i, 
 	dist_range: Array, 
 	min_sep: int, 
@@ -551,7 +565,6 @@ func _find_valid_anchor_site(
 	var r_min: float = float(dist_range[0])
 	var r_max: float = float(dist_range[1])
 
-	# Exact Core Check (Town Hall at 0, 0)
 	if r_max <= 0.05:
 		var core_fits := true
 		for bx in range(footprint.x):
@@ -567,18 +580,17 @@ func _find_valid_anchor_site(
 
 	var candidates: Array[Vector2i] = []
 
-	for x in range(-radius, radius - footprint.x + 1):
-		for z in range(-radius, radius - footprint.y + 1):
-			var norm_d: float = Vector2(x, z).length() / max(float(radius), 1.0)
+	for x in range(-radius_val, radius_val - footprint.x + 1):
+		for z in range(-radius_val, radius_val - footprint.y + 1):
+			var norm_d: float = Vector2(x, z).length() / max(float(radius_val), 1.0)
 			if norm_d < r_min or norm_d > r_max:
 				continue
 
-			# 1. Footprint clearance: verify entire area is unoccupied and inside radius
 			var can_fit := true
 			for bx in range(footprint.x):
 				for bz in range(footprint.y):
 					var cell := Vector2i(x + bx, z + bz)
-					if occupied.has(cell) or cell.length() > radius:
+					if occupied.has(cell) or cell.length() > radius_val:
 						can_fit = false
 						break
 				if not can_fit:
@@ -587,7 +599,6 @@ func _find_valid_anchor_site(
 			if not can_fit:
 				continue
 
-			# 2. Global separation check against ALL previously placed civic facilities
 			var separated := true
 			for placed in _placed_facilities:
 				var p_origin: Vector2i = placed["origin"]
@@ -604,7 +615,6 @@ func _find_valid_anchor_site(
 	if candidates.is_empty():
 		return Vector2i(9999, 9999)
 
-	# Deterministic shuffle using seed so sites disperse across quadrants
 	candidates.sort_custom(func(a, b):
 		var ha = abs(("%s:%d:%d" % [seed_id, a.x, a.y]).hash())
 		var hb = abs(("%s:%d:%d" % [seed_id, b.x, b.y]).hash())

@@ -102,7 +102,7 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 	var district_residents_map: Dictionary = {}
 	var dist_inserts: Array[String] = []
 
-	# =========================================================================
+# =========================================================================
 	# UNIFIED PHYSICAL PASS: BUILDINGS, UNITS, ESTABLISHMENTS & HOUSEHOLDS
 	# =========================================================================
 	for dist_id in districts.keys():
@@ -111,39 +111,52 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 		assert(_archetypes.has(district_type), "FATAL: Archetype '%s' not registered." % district_type)
 
 		var arch: Dictionary = _archetypes[district_type]
-		var borough_id := 1
 		var coords: Vector2i = d.get("grid_coords", Vector2i(0,0))
 		var bldgs_range: Array = arch.get("buildings", [1, 1])
 		var pop_range: Array = arch.get("population_range", [0, 0])
 
-		dist_inserts.append("""
-	        INSERT INTO districts (
-    	        district_id, borough_id, display_name, district_type,
-       		    grid_x, grid_z, grid_width, grid_height,
-	            target_building_count, expected_pop_min, expected_pop_max,
-            	base_unemployment_rate, base_disposable_income, base_zone_health, base_police_heat,
-	            is_home_turf, valid_from, valid_to, change_reason_id
-    	    ) VALUES (
-	            '%s', '%s', '%s', '%s',
-	            %d, %d, %d, %d,
-	            %d, %d, %d,
-	            %f, %f, %f, %f,
-            	0, %d, NULL, %d
-        	);
-    	""" % [
-        	dist_id, borough_id, str(d.get("display_name", dist_id)).replace("'", "''"), district_type,
-        	coords.x, coords.y, d.get("grid_size", Vector2i(1,1)).x, d.get("grid_size", Vector2i(1,1)).y,
-        	d.get("actual_building_count", bldgs_range[0]), pop_range[0], pop_range[1],
-        	float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
-        	float(d.get("zone_health_index", 50.0)), float(d.get("actual_police_heat", 0.20)),
-        	sim_start_day, reason_world_gen_id
-    	])
+		# 1. Sanitize Block Size & Clamp Scale Factor
+		var raw_size: Vector2i = d.get("grid_size", Vector2i(1, 1))
+		# If grid_size was passed in metres (e.g. 40x40), normalize it back to 1x1 cell
+		var block_size: Vector2i = Vector2i(1, 1) if (raw_size.x >= 10 or raw_size.y >= 10) else raw_size
+		
+		var native_footprint: Array = arch.get("footprint_size", [1, 1])
+		var native_area: int = max(1, int(native_footprint[0]) * int(native_footprint[1]))
+		var scale_factor: float = clampf(float(block_size.x * block_size.y) / float(native_area), 1.0, 4.0)
 
-		DB_MANAGER.execute_batch(dist_inserts)
+		# 2. Roll Physical Buildings ONCE
+		var min_bldgs: int = int(round(float(bldgs_range[0]) * scale_factor))
+		var max_bldgs: int = int(round(float(bldgs_range[1]) * scale_factor))
+		var building_count: int = rng.randi_range(min_bldgs, max_bldgs)
+		d["actual_building_count"] = building_count
+
+		# District Insert (Nullable borough_id during generation)
+		dist_inserts.append("""
+			INSERT INTO districts (
+				district_id, borough_id, display_name, district_type,
+				grid_x, grid_z, grid_width, grid_height,
+				target_building_count, expected_pop_min, expected_pop_max,
+				base_unemployment_rate, base_disposable_income, base_zone_health, base_police_heat,
+				is_home_turf, valid_from, valid_to, change_reason_id
+			) VALUES (
+				'%s', NULL, '%s', '%s',
+				%d, %d, %d, %d,
+				%d, %d, %d,
+				%f, %f, %f, %f,
+				0, %d, NULL, %d
+			);
+		""" % [
+			dist_id, str(d.get("display_name", dist_id)).replace("'", "''"), district_type,
+			coords.x, coords.y, block_size.x, block_size.y,
+			building_count, pop_range[0], pop_range[1],
+			float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
+			float(d.get("zone_health_index", 50.0)), float(d.get("actual_police_heat", 0.20)),
+			sim_start_day, reason_world_gen_id
+		])
 
 		district_residents_map[dist_id] = []
 
-		# 1. Macro Civic Anchor Check (Town Hall, Hospital, School, etc.)
+		# 3. Civic Anchor (if applicable)
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
@@ -153,27 +166,17 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 
 			estab_inserts.append("""
 				INSERT INTO establishments (
-					establishment_id, borough_id, district_id, owning_entity, name,
-					category_id, capacity, valid_from, valid_to, change_reason_id
-				) VALUES (%d, '%s', '%s', 'CIVIC', '%s', %d, %d, %d, NULL, %d);
-			""" % [est_id, borough_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
+					establishment_id, borough_id, district_id, building_index, unit_door_number,
+					owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+				) VALUES (%d, 'BOROUGH_UNASSIGNED', '%s', 0, 'MAIN', 'CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
+			""" % [est_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			if not by_cat.has(cat_name):
 				by_cat[cat_name] = []
 			by_cat[cat_name].append({"id": est_id, "district_id": dist_id})
 			est_id += 1
 
-		# 2. Multi-cell block scale factor
-		var block_size: Vector2i = d.get("grid_size", Vector2i(1, 1))
-		var native_footprint: Array = arch.get("footprint_size", [1, 1])
-
-		# 3. Roll physical buildings ONCE per block
-		var scale_factor: float = float(block_size.x * block_size.y) if (int(native_footprint[0]) * int(native_footprint[1]) == 1) else 1.0
-		var min_bldgs: int = int(round(float(bldgs_range[0]) * scale_factor))
-		var max_bldgs: int = int(round(float(bldgs_range[1]) * scale_factor))
-		var building_count: int = rng.randi_range(min_bldgs, max_bldgs)
-		d["actual_building_count"] = building_count
-
+		# 4. Generate Physical Units across Buildings
 		var hab_range: Array = arch.get("habitable_units_per_building", [0, 0])
 		var comm_range: Array = arch.get("commercial_units_per_building", [0, 0])
 		var ind_range: Array = arch.get("industrial_units_per_building", [0, 0])
@@ -189,23 +192,22 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 		var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type_code)
 		var tenure_type: String = str(housing_prof.get("tenure_type", "COUNCIL_TENANT"))
 
-		# 4. Generate discrete physical units across each building
 		for b_idx in range(building_count):
-			# A. Residential Units (Flats / Houses as Establishments + Households)
+			# A. Residential Units
 			if res_type_code != "NONE" and (rng.randf() * 100.0) < r_chance:
 				var num_homes: int = rng.randi_range(int(hab_range[0]), int(hab_range[1]))
 				for u_idx in range(num_homes):
 					var unit_door := "Unit %d-%d" % [b_idx + 1, u_idx + 1]
 					var unit_name := "%s, %s (%s)" % [unit_door, arch.get("display_name", "Parade"), dist_id]
-					var is_vacant: int = 1 if (rng.randf() < 0.04) else 0 # 4% natural baseline vacancy
+					var is_vacant: int = 1 if (rng.randf() < 0.04) else 0
 
 					estab_inserts.append("""
 						INSERT INTO establishments (
-							establishment_id, borough_id, district_id, building_id, unit_door_number,
+							establishment_id, borough_id, district_id, building_index, unit_door_number,
 							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', '%s', '%s','%s', '%s', '%s', %d, 5, %d, %d, NULL, %d);
+						) VALUES (%d, 'BOROUGH_UNASSIGNED', '%s', %d, '%s', '%s', '%s', %d, 5, %d, %d, NULL, %d);
 					""" % [
-						est_id, borough_id, dist_id, b_idx, unit_door, tenure_type,
+						est_id, dist_id, b_idx, unit_door, tenure_type,
 						unit_name.replace("'", "''"), res_unit_cat_id, is_vacant, sim_start_day, reason_world_gen_id
 					])
 
@@ -239,49 +241,61 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 
 					est_id += 1
 
-			# B. Commercial Establishments
+			# B. Commercial Units
 			if (rng.randf() * 100.0) < c_chance:
 				var num_comm: int = rng.randi_range(int(comm_range[0]), int(comm_range[1]))
 				for _c in range(num_comm):
 					var c_name: String = "%s (%s)" % [comm_names[rng.randi() % comm_names.size()], dist_id]
 					estab_inserts.append("""
 						INSERT INTO establishments (
-							establishment_id, borough_id, district_id, building_id, unit_door_number,
+							establishment_id, borough_id, district_id, building_index, unit_door_number,
 							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', '%s', '%s', 'SHOP', 'PRIVATE', '%s', %d, %d, 0, %d, NULL, %d);
-					""" % [est_id, borough_id, dist_id, b_idx, c_name.replace("'", "''"), comm_cat_id, comm_cap, sim_start_day, reason_world_gen_id])
+						) VALUES (%d, 'BOROUGH_UNASSIGNED', '%s', %d, 'SHOP', 'PRIVATE', '%s', %d, %d, 0, %d, NULL, %d);
+					""" % [est_id, dist_id, b_idx, c_name.replace("'", "''"), comm_cat_id, comm_cap, sim_start_day, reason_world_gen_id])
 
 					by_cat["COMMERCIAL"].append({"id": est_id, "district_id": dist_id})
 					est_id += 1
 
-			# C. Industrial Establishments
+			# C. Industrial Units
 			if (rng.randf() * 100.0) < i_chance:
 				var num_ind: int = rng.randi_range(int(ind_range[0]), int(ind_range[1]))
 				for _i in range(num_ind):
 					var i_name: String = "%s (%s)" % [ind_names[rng.randi() % ind_names.size()], dist_id]
 					estab_inserts.append("""
 						INSERT INTO establishments (
-							establishment_id, borough_id, district_id, building_id, unit_door_number,
+							establishment_id, borough_id, district_id, building_index, unit_door_number,
 							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', '%s', '%s',  'WORKS', 'PRIVATE', '%s', %d, %d, 0, %d, NULL, %d);
-					""" % [est_id, borough_id, dist_id, b_idx, i_name.replace("'", "''"), ind_cat_id, ind_cap, sim_start_day, reason_world_gen_id])
+						) VALUES (%d, 'BOROUGH_UNASSIGNED', '%s', %d, 'WORKS', 'PRIVATE', '%s', %d, %d, 0, %d, NULL, %d);
+					""" % [est_id, dist_id, b_idx, i_name.replace("'", "''"), ind_cat_id, ind_cap, sim_start_day, reason_world_gen_id])
 
 					by_cat["INDUSTRIAL"].append({"id": est_id, "district_id": dist_id})
 					est_id += 1
 
-			if on_progress.is_valid() and (block_idx % 20 == 0 or block_idx == districts.size()):
-				on_progress.call(float(block_idx), float(districts.size()), "Ward %d / %d" % [block_idx, districts.size()])
-				# Yield frame so the UI bar can animate smoothly
-				Engine.get_main_loop().process_frame
+		# 5. Flush Chunks to SQLite Every 25 Districts
+		if block_idx > 0 and block_idx % 25 == 0:
+			DB_MANAGER.execute_batch(dist_inserts)
+			DB_MANAGER.execute_batch(estab_inserts)
+			DB_MANAGER.execute_batch(household_inserts)
+			dist_inserts.clear()
+			estab_inserts.clear()
+			household_inserts.clear()
+
+		if on_progress.is_valid() and (block_idx % 20 == 0 or block_idx == districts.size()):
+			on_progress.call(float(block_idx), float(districts.size()), "Ward %d / %d" % [block_idx, districts.size()])
+			await Engine.get_main_loop().process_frame
 
 		block_idx += 1
 
-	# Commit Establishments and Households to SQLite
-	DB_MANAGER.execute_batch(estab_inserts)
-	DB_MANAGER.execute_batch(household_inserts)
+	# Flush remaining districts, establishments, and households
+	if not dist_inserts.is_empty():
+		DB_MANAGER.execute_batch(dist_inserts)
+	if not estab_inserts.is_empty():
+		DB_MANAGER.execute_batch(estab_inserts)
+	if not household_inserts.is_empty():
+		DB_MANAGER.execute_batch(household_inserts)
+
 	print("  ✓ Created %d normalized establishments across sectors." % (est_id - 1))
 	print("  ✓ Created %d physical household tenancies." % (current_household_id - 1))
-
 	# =========================================================================
 	# RESIDENT CITIZEN HYDRATION & CONTRACT ATTACHMENTS
 	# =========================================================================

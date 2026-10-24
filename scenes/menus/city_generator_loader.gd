@@ -2,7 +2,7 @@
 extends Control
 
 @onready var progress_bar: ProgressBar = $CenterContainer/VBoxContainer/ProgressBar
-@onready var title_label: Label = $CenterContainer/CenterContainer/VBoxContainer/TitleLabel
+@onready var title_label: Label = $CenterContainer/VBoxContainer/TitleLabel
 @onready var status_label: Label = $CenterContainer/VBoxContainer/StatusLabel
 
 var city_crafter: Node3D = null
@@ -73,7 +73,11 @@ func _start_pipeline(gen_seed: String) -> void:
 	await get_tree().process_frame
 	
 	# Execute society generation pass
-	SocialNetworkGenerator.generate_city_society(GameState.world_state, gen_seed, true,  func(c, t, d): monitor.update_sub_progress(c, t, d))
+	await SocialNetworkGenerator.generate_city_society(GameState.world_state,
+														gen_seed,
+														true,
+														func(c, t, d): monitor.update_sub_progress(c, t, d)
+														)
 	
 	# Step 4: Cache visual layout into GameState & Save
 	monitor.begin_stage("SAVE", "Writing game save slot_01...")

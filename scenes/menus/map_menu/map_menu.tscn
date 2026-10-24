@@ -72,7 +72,7 @@ text = "City Size"
 [node name="HBoxCityGrid" type="HBoxContainer" parent="VBoxControlsContainer/VBoxCitySize" unique_id=1809189029]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=755559848]
+[node name="GridWidthLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=755559848]
 visible = false
 layout_mode = 2
 text = "Width"
@@ -85,7 +85,7 @@ min_value = 5.0
 value = 5.0
 rounded = true
 
-[node name="Label2" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
+[node name="GridHeightLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
 visible = false
 layout_mode = 2
 text = "Height"
@@ -98,7 +98,7 @@ min_value = 5.0
 value = 5.0
 rounded = true
 
-[node name="Label3" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1287798827]
+[node name="RadiusSliderLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1287798827]
 layout_mode = 2
 text = "City Radius in Blocks"
 
@@ -110,7 +110,15 @@ max_value = 25.0
 value = 6.0
 rounded = true
 
+[node name="Label4" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1080430484]
+custom_minimum_size = Vector2(35, 0)
+layout_mode = 2
+text = "14"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="HBoxContainer5" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1087251699]
+visible = false
 layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1068555990]
@@ -135,15 +143,14 @@ size_flags_horizontal = 3
 suffix = "%"
 
 [node name="HBoxContainer10" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1749167412]
+visible = false
 layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer10" unique_id=1292359055]
-visible = false
 layout_mode = 2
 text = "Building Density"
 
 [node name="BuildingDensity" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer10" unique_id=651104695]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -198,6 +205,7 @@ size_flags_horizontal = 3
 suffix = "%"
 
 [node name="HBoxContainer11" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=2113325430]
+visible = false
 layout_mode = 2
 
 [node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=1225378585]

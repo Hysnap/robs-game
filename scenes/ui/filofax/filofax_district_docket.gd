@@ -166,3 +166,145 @@ func _render_empty_state(msg: String) -> void:
 	lbl.text = msg
 	lbl.modulate = Color.GRAY
 	add_child(lbl)
+
+## Renders the district's establishments tab
+func _populate_establishments_list(district_id: String, container: VBoxContainer) -> void:
+	for child in container.get_children():
+		child.queue_free()
+
+	var est_rows = DBManager.query_rows("""
+		SELECT 
+			e.establishment_id,
+			e.name,
+			e.unit_door_number,
+			l_cat.code AS category_code,
+			l_cat.title AS category_title,
+			e.capacity,
+			(SELECT COUNT(*) FROM livelihood_contracts c WHERE c.employer_entity_id = 'ESTAB_' || e.establishment_id AND c.valid_to IS NULL) AS worker_count
+		FROM establishments e
+		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+		WHERE e.district_id = '%s'
+		ORDER BY e.category_id ASC, e.establishment_id ASC;
+	""" % district_id)
+
+	if est_rows.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "No recorded establishments or tenancies."
+		container.add_child(empty_lbl)
+		return
+
+	for row in est_rows:
+		var btn := Button.new()
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var cat: String = row["category_code"]
+
+		if cat == "RESIDENTIAL_UNIT":
+			btn.text = "🏠 %s" % row["name"]
+		elif cat == "COMMERCIAL":
+			btn.text = "🏬 %s (%d staff)" % [row["name"], row["worker_count"]]
+		elif cat == "INDUSTRIAL":
+			btn.text = "🏭 %s (%d workers)" % [row["name"], row["worker_count"]]
+		else:
+			btn.text = "🏛️ %s (%s)" % [row["name"], row["category_title"]]
+
+		var e_id: int = int(row["establishment_id"])
+		btn.pressed.connect(func(): open_establishment_sub_docket(e_id))
+		container.add_child(btn)
+
+const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
+
+## Displays the specific details for the clicked establishment
+func open_establishment_sub_docket(estab_id: int) -> void:
+	var docket: Dictionary = SOCIETY_QUERIES.get_establishment_docket(estab_id)
+	if docket.is_empty():
+		push_error("Failed to load docket for establishment #%d" % estab_id)
+		return
+
+	var cat_code: String = docket["category_code"]
+	print("\n--- [INSPECTING ESTABLISHMENT #%d: %s] ---" % [estab_id, docket["name"]])
+
+	# 1. Residential Unit Display
+	if cat_code == "RESIDENTIAL_UNIT":
+		var hh_list: Array = docket.get("household", [])
+		var res_list: Array = docket.get("residents", [])
+
+		if hh_list.is_empty() or docket["is_vacant"] == 1:
+			_render_text_to_docket("""
+=== RESIDENTIAL TENANCY: %s ===
+Status: VACANT PROPERTY
+Owning Entity: %s
+Door: %s
+District: %s
+""" % [docket["name"], docket["owning_entity"], docket["unit_door_number"], docket["district_name"]])
+			return
+
+		var hh: Dictionary = hh_list[0]
+		var text := """
+=== RESIDENTIAL TENANCY: %s ===
+Tenure: %s (%s)
+Preferred Local Taproom: %s
+Cultural Demographic: %s | %s
+Tenants Present: %d
+
+--- RESIDENTS IN HOUSEHOLD ---
+""" % [
+			docket["name"], docket["owning_entity"], hh["residence_type"],
+			hh.get("local_pub_name", "None"), hh["ethnicity"], hh["religion"],
+			res_list.size()
+		]
+
+		for r in res_list:
+			var wage_str := "£%.2f/wk" % r["weekly_wage"] if r["weekly_wage"] != null else "None"
+			text += " • %s (%s, %d yrs) - %s | %s [%s]\n" % [
+				r["full_name"], r["gender"], r["age"], r["occupation"], r["education"], wage_str
+			]
+
+		_render_text_to_docket(text)
+
+	# 2. Commercial / Industrial / Civic Display
+	else:
+		var market: Dictionary = docket.get("market_catchment", {})
+		var employees: Array = docket.get("employees", [])
+
+		var text := """
+=== ESTABLISHMENT: %s ===
+Category: %s (%s)
+Location: %s (Grid: %d, %d)
+Operating Capacity: %d
+
+--- MARKET CATCHMENT (SURROUNDING 9 BLOCKS) ---
+Potential Customer Base: %d residents across %d households
+Average Neighborhood Disposable Income: £%.2f / week
+
+--- ACTIVE WORKFORCE (%d on staff) ---
+""" % [
+			docket["name"], docket["category_title"], docket["owning_entity"],
+			docket["district_name"], docket["grid_x"], docket["grid_z"], docket["capacity"],
+			market.get("total_catchment_population", 0),
+			market.get("total_catchment_households", 0),
+			market.get("avg_neighbor_disposable_income", 0.0),
+			employees.size()
+		]
+
+		if employees.is_empty():
+			text += " • No formal livelihood contracts attached.\n"
+		else:
+			for emp in employees:
+				text += " • %s - %s (%s, %s, £%.2f/wk)\n" % [
+					emp["full_name"], emp["role_title"], emp["schedule_window"],
+					emp["contract_class"], emp["weekly_pay"]
+				]
+
+		_render_text_to_docket(text)
+
+## Helper to display the compiled docket text into your Filofax UI pane
+func _render_text_to_docket(content: String) -> void:
+	# Prints to console for immediate verification
+	print(content)
+
+	# If you have a TextEdit or RichTextLabel in your Filofax scene:
+	var label = find_child("DocketDetailText", true, false)
+	if label and label is RichTextLabel:
+		label.text = content
+	elif label and label is Label:
+		label.text = content

@@ -47,17 +47,24 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 
 		var archetype: Dictionary = _archetypes[district_type]
 
-		# 2. Extract block geometry & calculate multi-cell scale factor
-		var block_size := Vector2i(1, 1)
+		# 2. Extract block geometry & calculate true discrete grid cell footprint
+		var raw_size_m := Vector2i(200, 200)
 		if child is MeshInstance3D and child.mesh is PlaneMesh:
 			var p_mesh: PlaneMesh = child.mesh as PlaneMesh
-			block_size = Vector2i(
-				max(1, int(round(p_mesh.size.x / 40.0))),
-				max(1, int(round(p_mesh.size.y / 40.0)))
-			)
-		elif child.has_meta("block_size"):
-			block_size = child.get_meta("block_size")
+			raw_size_m = p_mesh.size
+		elif child is MeshInstance3D and child.mesh is BoxMesh:
+			var b_mesh: BoxMesh = child.mesh as BoxMesh
+			raw_size_m = Vector2i(roundi(b_mesh.size.x), roundi(b_mesh.size.z))
+		
+		# Convert raw metres into true discrete grid units (225m pitch = 200m block + 25m street)
+		var discrete_w: int = int(round((raw_size_m.x + 25.0) / 225.0))
+		var discrete_h: int = int(round((raw_size_m.y + 25.0) / 225.0))
 
+		# Ensure minimum 1x1
+		discrete_w = maxi(1, discrete_w)
+		discrete_h = maxi(1, discrete_h)
+		
+		var block_size := Vector2i(maxi(1, discrete_w), maxi(1, discrete_h))
 		var scale_factor: float = _calculate_district_scale_factor(archetype, block_size)
 
 		# 3. Demographic metric evaluation
@@ -123,17 +130,12 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 
 		child.set_meta("display_name", display_name)
 
-## Calculates scale multiplier: 1x1 standard lots scale up when merged;
-## multi-cell complexes with native footprints > 1x1 maintain a 1.0 multiplier.
+## Multi-cell scaling: compares actual discrete cells against authored archetype footprint
 static func _calculate_district_scale_factor(archetype: Dictionary, block_size: Vector2i) -> float:
 	var allocated_cells: int = block_size.x * block_size.y
-	if allocated_cells <= 1:
-		return 1.0
-
 	var native_footprint_arr: Array = archetype.get("footprint_size", [1, 1])
-	var native_cells: int = int(native_footprint_arr[0]) * int(native_footprint_arr[1])
+	var native_cells: int = max(1, int(native_footprint_arr[0]) * int(native_footprint_arr[1]))
 
-	if native_cells > 1:
-		return 1.0
-
-	return float(allocated_cells)
+	# Only scale if an archetype was placed on an area larger than its authored footprint
+	var ratio: float = float(allocated_cells) / float(native_cells)
+	return clampf(ratio, 1.0, 4.0)

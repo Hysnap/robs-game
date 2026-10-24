@@ -112,23 +112,21 @@ static func _create_society_schema() -> void:
     		base_council_tax_rate REAL,         -- Local rates / levies
     		valid_from INTEGER NOT NULL,
     		valid_to INTEGER,
-    		change_reason_id INTEGER NOT NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+    		change_reason_id INTEGER NOT NULL
 		);
 	""")
 
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS districts (
     		district_id TEXT PRIMARY KEY,
-    		borough_id TEXT NOT NULL,
-    		display_name TEXT NOT NULL,
+    		borough_id TEXT,
+    		display_name TEXT,
     		district_type TEXT NOT NULL,
     		grid_x INTEGER NOT NULL,
     		grid_z INTEGER NOT NULL,
     		grid_width INTEGER DEFAULT 1,
     		grid_height INTEGER DEFAULT 1,
     
-    		-- Design Baseline Expectations (from Archetypes & World Gen)
     		target_building_count INTEGER DEFAULT 0,
     		expected_pop_min INTEGER DEFAULT 0,
     		expected_pop_max INTEGER DEFAULT 0,
@@ -137,13 +135,10 @@ static func _create_society_schema() -> void:
     		base_zone_health REAL DEFAULT 50.0,
     		base_police_heat REAL DEFAULT 0.20,
     
-    		-- Simulation & Auditing Flags
     		is_home_turf INTEGER DEFAULT 0,
     		valid_from INTEGER NOT NULL,
     		valid_to INTEGER,
-    		change_reason_id INTEGER NOT NULL,
-    		FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
-			FOREIGN KEY (borough_id) REFERENCES boroughs(borough_id) ON DELETE NO ACTION
+    		change_reason_id INTEGER NOT NULL
 		);
 	""")
 
@@ -154,7 +149,7 @@ static func _create_society_schema() -> void:
 			establishment_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			borough_id TEXT NOT NULL,
 			district_id TEXT NOT NULL,
-			building_id INTEGER DEFAULT 0,
+			building_index INTEGER DEFAULT 0,
 			unit_door_number TEXT,
 			owning_entity TEXT NOT NULL DEFAULT 'CIVIC', -- 'COUNCIL', 'PRIVATE_FREEHOLD', 'PRIVATE_LANDLORD'
 			name TEXT NOT NULL,							 -- e.g. "Flat 4B, Birch Towers" or "The Crown & Anchor"
@@ -293,8 +288,8 @@ static func _create_society_schema() -> void:
 		CREATE VIEW IF NOT EXISTS v_borough_census AS
 		SELECT 
 			b.borough_id,
-			b.display_name as borough_name
-			COUNT(DISTINCT d.district_id) as total_districts
+			b.display_name as borough_name,
+			COUNT(DISTINCT d.district_id) as total_districts,
 			COUNT(DISTINCT h.household_id) AS total_households,
 			COUNT(DISTINCT r.resident_id) AS total_residents,
 			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_living_population,
@@ -362,7 +357,7 @@ static func _create_society_schema() -> void:
 		FROM households h
 		JOIN establishments e on h.establishment_id = e.establishment_id
 		JOIN districts d on e.district_id = d.district_id
-		JOIN boroughs b on d.borough_id = b.borough_id
+		left JOIN boroughs b on d.borough_id = b.borough_id
 		JOIN system_labels l_res ON h.residence_type_id = l_res.label_id
 		JOIN system_labels l_eth ON h.ethnicity_id = l_eth.label_id
 		JOIN system_labels l_rel ON h.religion_id = l_rel.label_id

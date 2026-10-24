@@ -13,19 +13,23 @@ func _ready() -> void:
 	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonRecallCity.pressed.connect(
 		_on_recall_city_pressed
 	)
+	# Connect Radius Slider live feedback:
+	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
+	radius_slider.value_changed.connect(_on_radius_slider_value_changed)
 
 const DEFAULT_SETTINGS := {
 	"city_name": "New City",
 	"seed_id": "default-city",
-	"grid_width": 10,
-	"grid_height": 10,
+	"city_radius": 14, # <-- Add this line
+	"grid_width": 28,
+	"grid_height": 39,
 	"block_size": 200.0,
 	"street_width": 25.0,
 	"empty_block_chance": 5,
 	"enable_multi_size_blocks": true,
 	"large_block_chance": 0.20,
-	"wide_block_chance": 0.1,
-	"tall_block_chance": 0.1,
+	"wide_block_chance": 0.2,
+	"tall_block_chance": 0.2,
 	"enable_edge_variations": true,
 	"edge_variation_chance": 0.3,
 	"max_edge_variation": 3,
@@ -66,17 +70,22 @@ const DEFAULT_SETTINGS := {
 func apply_default_settings() -> void:
 	$VBoxControlsContainer/HBoxCityName/LineEditCityName.text = DEFAULT_SETTINGS["city_name"]
 	$VBoxControlsContainer/HBoxSeedID/seed_text.text = DEFAULT_SETTINGS["seed_id"]
-
 	$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridWidth.value = DEFAULT_SETTINGS["grid_width"]
 	$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridHeight.value = DEFAULT_SETTINGS["grid_height"]
 	$VBoxControlsContainer/HBoxContainer5/BlockSize.value = DEFAULT_SETTINGS["block_size"]
 	$VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value = DEFAULT_SETTINGS["empty_block_chance"]
-
 	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value = DEFAULT_SETTINGS["residential_ratio"]
 	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio.value = DEFAULT_SETTINGS["commercial_ratio"]
 	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value = DEFAULT_SETTINGS["industrial_ratio"]
-
 	$VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed = DEFAULT_SETTINGS["enable_residential_subdivisions"]
+	var default_r: int = int(DEFAULT_SETTINGS["city_radius"])
+	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
+	var radius_label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid.get_node_or_null("RadiusValueLabel")
+	
+	if radius_slider:
+		radius_slider.value = default_r
+	if radius_label:
+		radius_label.text = str(default_r)
 
 func _on_generate_city_pressed() -> void:
 	var settings := build_settings_from_form()
@@ -223,17 +232,17 @@ func build_settings_from_form() -> Dictionary:
 	settings["city_name"] = city_name
 	settings["seed_id"] = seed_id
 	settings["seed"] = seed_text_to_int(seed_id)
-	settings["grid_width"] = int(
-		$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridWidth.value
-	)
-	settings["grid_height"] = int(
-		$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridHeight.value
-	)
 	settings["block_size"] = $VBoxControlsContainer/HBoxContainer5/BlockSize.value
 	var vacant_block_percent: int = int(
 		$VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value
 	)
 	settings["empty_block_chance"] = float(vacant_block_percent) / 100.0
+	# Read the actual City Radius slider
+	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
+	var radius_val: int = int(radius_slider.value) if radius_slider else 14
+	settings["city_radius"] = radius_val
+	settings["grid_width"] = radius_val * 2
+	settings["grid_height"] = radius_val * 2
 	settings["residential_ratio"] = residential_ratio / ratio_total
 	settings["commercial_ratio"] = commercial_ratio / ratio_total
 	settings["industrial_ratio"] = industrial_ratio / ratio_total
@@ -241,3 +250,8 @@ func build_settings_from_form() -> Dictionary:
 		$VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed
 	)
 	return settings
+
+func _on_radius_slider_value_changed(new_value: float) -> void:
+	var label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid.get_node_or_null("RadiusValueLabel")
+	if label:
+		label.text = str(int(new_value))
