@@ -19,6 +19,7 @@ layout_mode = 2
 
 [node name="HeaderBar" type="HBoxContainer" parent="FilofaxBinder/Binder Shell" unique_id=157947419]
 layout_mode = 2
+mouse_filter = 0
 
 [node name="CurrentDateLabel" type="Label" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=1466443054]
 layout_mode = 2
@@ -44,14 +45,15 @@ size_flags_horizontal = 3
 [node name="TabContainer" type="TabContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger" unique_id=849561583]
 layout_mode = 2
 tab_alignment = 1
-current_tab = 0
+current_tab = 1
 
-[node name="TelemetryTab" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=541975539]
+[node name="TelemetryTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1091723149]
+visible = false
 layout_mode = 2
+horizontal_scroll_mode = 0
 metadata/_tab_index = 0
 
 [node name="RosterTab" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=481671852]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 

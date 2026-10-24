@@ -11,31 +11,23 @@ func _init() -> void:
 	print("=======================================================")
 
 	# 1. Mock 4 Districts with authentic population & sectors
+# 1. Mock 3 Districts (Physical Building & Unit Model)
 	var mock_world = {
 		"districts": {
 			"block_0_0": {
-				"population": 1200,
 				"district_type": "high_density_low_rise",
-				"unemployment_rate": 0.14,
-				"venues": {"VENUE_THE_CROWN": {}}
+				"grid_size": Vector2i(1, 1),
+				"unemployment_rate": 0.14
 			},
 			"block_0_1": {
-				"population": 1800,
 				"district_type": "commercial",
-				"unemployment_rate": 0.08,
-				"venues": {"VENUE_BLACKTHORN": {}}
+				"grid_size": Vector2i(1, 1),
+				"unemployment_rate": 0.08
 			},
 			"block_1_0": {
-				"population": 400,
 				"district_type": "industrial",
-				"unemployment_rate": 0.20,
-				"venues": {"VENUE_ROYAL_OAK": {}}
-			},
-			"block_1_1": {
-				"population": 600,
-				"district_type": "suburban_low_density",
-				"unemployment_rate": 0.06,
-				"venues": {"VENUE_THE_PLOUGH": {}}
+				"grid_size": Vector2i(1, 1),
+				"unemployment_rate": 0.20
 			}
 		}
 	}
@@ -55,11 +47,11 @@ func _init() -> void:
 	print("  ✓ Verification: Created %d active livelihood contracts." % total_contracts)
 	print("  ✓ Verification: Established %d relationship ties." % total_edges)
 
-	assert(total_residents > 3500, "FAILED: Resident population count incorrect!")
-	assert(total_households > 1200, "FAILED: Household count incorrect!")
-	assert(total_estabs > 5, "FAILED: Establishments missing!")
-	assert(total_contracts > 3500, "FAILED: Livelihood contracts missing!")
-	assert(total_edges > 6000, "FAILED: Relationship edges missing!")
+	assert(total_residents > 100 and total_residents <=300, "FAILED: Resident population count incorrect!")
+	assert(total_households > 40 and total_households <= 100, "FAILED: Household count incorrect!")
+	assert(total_estabs > 50, "FAILED: Establishments missing!")
+	assert(total_contracts == total_residents, "FAILED: every resident must have a contract")
+	assert(total_edges > 500, "FAILED: Relationship edges missing!")
 
 	# 4. Verify Institutional Establishment Breakdown via Virtual View
 	print("\n--- [ESTABLISHMENTS BREAKDOWN] ---")
@@ -76,7 +68,7 @@ func _init() -> void:
 	# 5. Verify Virtual Views (Town Planner & Citizen Dossier)
 	print("\n--- [TESTING SQLITE VIRTUAL VIEWS] ---")
 	var census_rows = DB_MANAGER.query_rows("SELECT * FROM v_district_census LIMIT 4;")
-	assert(census_rows.size() == 4, "FAILED: v_district_census returned empty!")
+	assert(census_rows.size() == 3, "FAILED: v_district_census returned empty!")
 	print("  ✓ v_district_census Sample (Block 0,0):", census_rows[0])
 
 	var res_rows = DB_MANAGER.query_rows("""

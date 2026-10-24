@@ -4,6 +4,15 @@
 [ext_resource type="Script" uid="uid://bxjjmypitb8yf" path="res://scripts/world/custom_city_crafter.gd" id="2_ho34v"]
 [ext_resource type="PackedScene" uid="uid://bvl5rcdlvu4jy" path="res://scenes/ui/filofax/Filofax.tscn" id="4_cgrx7"]
 [ext_resource type="Resource" uid="uid://bc4as5ski1gf5" path="res://resources/city/default_european_city.tres" id="4_wmafb"]
+[ext_resource type="Script" uid="uid://dro7lvs2xaob" path="res://scripts/world/camera/rts_camera.gd" id="5_cgrx7"]
+
+[sub_resource type="Environment" id="Environment_f7jhf"]
+background_mode = 1
+background_color = Color(0.078431375, 0.12156863, 0.18039216, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.54901963, 0.61960787, 0.7490196, 1)
+ambient_light_energy = 0.7
+tonemap_mode = 2
 
 [node name="Node3D" type="Node3D" unique_id=856768213]
 script = ExtResource("2_city_view")
@@ -15,4 +24,18 @@ city_configuration = ExtResource("4_wmafb")
 [node name="FilofaxCanvas" type="CanvasLayer" parent="." unique_id=1906597282]
 
 [node name="Organiser" parent="FilofaxCanvas" unique_id=1298381080 instance=ExtResource("4_cgrx7")]
-visible = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=620015610]
+environment = SubResource("Environment_f7jhf")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1495096697]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
+light_color = Color(1, 0.9490196, 0.8509804, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="RTSCamera3D" type="Node3D" parent="." unique_id=363026768]
+script = ExtResource("5_cgrx7")
+
+[node name="Camera3D" type="Camera3D" parent="RTSCamera3D" unique_id=347974572]
+current = true

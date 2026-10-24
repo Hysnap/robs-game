@@ -15,29 +15,44 @@ static func harvest_all_taxonomies() -> Array[Dictionary]:
 	_harvest_cultural_demographics(harvested, seen_keys)
 	_harvest_civic_hierarchy(harvested, seen_keys)
 	_harvest_demographics(harvested, seen_keys)
+	_harvest_building_classes(harvested, seen_keys)
 
 	return harvested
 
 static func _harvest_archetypes(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	var archetypes_path := "res://data_modules/core/spatial/districts/archetypes.json"
-	var arch_cfg := ConfigFile.new()
-	if arch_cfg.load(MANIFEST_MANAGER.BUSINESS_RULES_PATH) == OK:
-		archetypes_path = arch_cfg.get_value("spatial", "archetypes_path", archetypes_path)
-
-	assert(FileAccess.file_exists(archetypes_path), "FATAL: archetypes.json missing at: %s" % archetypes_path)
-	var arch_file := FileAccess.open(archetypes_path, FileAccess.READ)
-	assert(arch_file != null, "FATAL: Cannot open: %s" % archetypes_path)
-	var archetypes: Dictionary = JSON.parse_string(arch_file.get_as_text())
-	arch_file.close()
+	var archetypes: Dictionary = {}
+	if MANIFEST_MANAGER.has_module("archetypes"):
+		archetypes = MANIFEST_MANAGER.load_module("archetypes")
+	elif MANIFEST_MANAGER.has_module("spatial_archetypes"):
+		archetypes = MANIFEST_MANAGER.load_module("spatial_archetypes")
 
 	for arch_key in archetypes.keys():
-		if arch_key in ["_meta", "setup"]: 
+		if arch_key in ["_meta", "setup"]:
 			continue
 		var arch: Dictionary = archetypes[arch_key]
+
+		# 1. Residence Type from housing_profile
 		var h_prof: Dictionary = arch.get("housing_profile", {})
 		if h_prof.has("residence_type"):
 			var res_code: String = str(h_prof["residence_type"]).to_upper()
 			_add_token(out_list, seen, "RESIDENCE_TYPE", res_code, res_code.capitalize().replace("_", " "))
+
+		# 2. Establishment Category from archetype root
+		if arch.has("establishment_category"):
+			var cat_code: String = str(arch["establishment_category"]).to_upper()
+			var cat_title: String = str(arch.get("display_name", cat_code.capitalize().replace("_", " ")))
+			_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", cat_code, cat_title)
+
+		# 3. Roles from institution_profile
+		if arch.has("institution_profile"):
+			var inst: Dictionary = arch["institution_profile"]
+			if inst.has("client_profile") and inst["client_profile"].has("role_title"):
+				var r_code: String = str(inst["client_profile"]["role_title"]).to_upper()
+				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_code.capitalize().replace("_", " "))
+
+			if inst.has("staff_profile") and inst["staff_profile"].has("role_title"):
+				var s_code: String = str(inst["staff_profile"]["role_title"]).to_upper()
+				_add_token(out_list, seen, "ROLE_TITLE", s_code, s_code.capitalize().replace("_", " "))
 
 static func _harvest_cultural_demographics(out_list: Array[Dictionary], seen: Dictionary) -> void:
 	var cult_data: Dictionary = MANIFEST_MANAGER.load_module("cultural_demographics")
@@ -117,3 +132,23 @@ static func _add_token(out_list: Array[Dictionary], seen: Dictionary, domain: St
 		"code": c_clean,
 		"title": title
 	})
+
+static func _harvest_building_classes(out_list: Array[Dictionary], seen: Dictionary) -> void:
+	if not MANIFEST_MANAGER.has_module("building_classes"):
+		return
+
+	var bldg_classes: Dictionary = MANIFEST_MANAGER.load_module("building_classes")
+
+	for section_key in ["commercial_tenants", "industrial_tenants"]:
+		var tenants: Dictionary = bldg_classes.get(section_key, {})
+		for t_code in tenants.keys():
+			var t_data: Dictionary = tenants[t_code]
+			var t_title: String = str(t_data.get("display_name", t_code.capitalize().replace("_", " ")))
+			
+			# 1. Harvest establishment category
+			_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", t_code, t_title)
+
+			# 2. Harvest staff role titles if defined
+			if t_data.has("staff_roles"):
+				for r_code in t_data["staff_roles"]:
+					_add_token(out_list, seen, "ROLE_TITLE", str(r_code), str(r_code).capitalize().replace("_", " "))

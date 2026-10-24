@@ -60,54 +60,17 @@ func generate_base_grid_with_sizes() -> Array:
 	var blocks_data: Array = []
 	var occupied_positions: Dictionary = {}
 	_anchor_claim_map.clear()
-	
-	assert(_layout_rules.has("default_city_radius"), "FATAL: default_city_radius missing from business_rules.cfg")
-	assert(_layout_rules.has("default_radial_jitter"), "FATAL: default_radial_jitter missing from business_rules.cfg")
-	assert(_layout_rules.has("boundary_noise_scale"), "FATAL: boundary_noise_scale missing from business_rules.cfg")
+	_placed_facilities.clear()
 
 	var cfg = city_configuration
 	var radius: int = int(cfg.get("city_radius")) if (cfg and "city_radius" in cfg) else int(_layout_rules.get("default_city_radius"))
 	var jitter: float = float(cfg.get("radial_jitter")) if (cfg and "radial_jitter" in cfg) else float(_layout_rules.get("default_radial_jitter"))
 	var noise_scale: float = float(_layout_rules.get("boundary_noise_scale"))
 
-	# 1. Pre-claim multi-cell civic anchor footprints
-	for arch_key in _archetypes_data.keys():
-		if arch_key in ["_meta", "setup"]:
-			continue
-		var arch: Dictionary = _archetypes_data[arch_key]
-		if not arch.get("is_unique_anchor", false):
-			continue
-			
-		var sites: Array = arch.get("anchor_sites", [])
-		for site in sites:
-			var toggle_prop: String = str(site.get("toggle_property", ""))
-			var is_enabled: bool = true
-			if cfg and not toggle_prop.is_empty() and toggle_prop in cfg:
-				is_enabled = bool(cfg.get(toggle_prop))
-				
-			if not is_enabled:
-				continue
-				
-			var target_origin := Vector2i(
-				int(float(radius) * float(site.get("scale_x", 0.0))),
-				int(float(radius) * float(site.get("scale_z", 0.0)))
-			)
-			
-			var f_size_arr: Array = site.get("footprint_size", [1, 1])
-			var footprint := Vector2i(int(f_size_arr[0]), int(f_size_arr[1]))
-			
-			blocks_data.append({
-				"position": target_origin,
-				"size": footprint
-			})
-			
-			for bx in range(footprint.x):
-				for bz in range(footprint.y):
-					var cell := Vector2i(target_origin.x + bx, target_origin.y + bz)
-					occupied_positions[cell] = true
-					_anchor_claim_map[cell] = arch_key
+	# 1. Pre-claim multi-cell & dedicated spatial archetypes
+	_preclaim_spatial_archetypes(radius, occupied_positions, blocks_data)
 
-	# 2. Populate regular blocks around civic anchors
+	# 2. Populate regular blocks around pre-claimed footprints
 	for x in range(-radius, radius + 1):
 		for z in range(-radius, radius + 1):
 			var dist: float = Vector2(x, z).length()
@@ -123,7 +86,7 @@ func generate_base_grid_with_sizes() -> Array:
 				
 			var block_size := Vector2i(1, 1)
 			if cfg and cfg.get("enable_multi_size_blocks"):
-				block_size = determine_block_size(x, z, occupied_positions)
+				block_size = determine_block_size(x, z, occupied_positions) #[cite: 1, 11]
 				
 			blocks_data.append({
 				"position": pos,
@@ -358,22 +321,36 @@ func _resolve_district_material(district_type: String) -> Material:
 func export_visual_layout() -> Dictionary:
 	var layout := {
 		"districts": {},
+		"roads": [],
 		"seed_id": seed_id
 	}
 	
 	for child in get_children():
-		if child is MeshInstance3D and child.has_meta("block_id"):
-			var b_id: String = child.get_meta("block_id")
-			var p_mesh: PlaneMesh = child.mesh as PlaneMesh
-			var b_size := Vector2.ZERO
-			if p_mesh:
-				b_size = p_mesh.size
-				
-			layout["districts"][b_id] = {
-				"center": [child.position.x, child.position.y, child.position.z],
-				"size": [b_size.x, b_size.y],
-				"district_type": child.get_meta("district")
-			}
+		if child is MeshInstance3D:
+			# 1. Capture Ground District Blocks
+			if child.has_meta("block_id"):
+				var b_id: String = child.get_meta("block_id")
+				var p_mesh: PlaneMesh = child.mesh as PlaneMesh
+				var b_size := Vector2(40.0, 40.0)
+				if p_mesh:
+					b_size = p_mesh.size
+					
+				layout["districts"][b_id] = {
+					"center": [child.position.x, child.position.y, child.position.z],
+					"size": [b_size.x, b_size.y],
+					"district_type": child.get_meta("district")
+				}
+			# 2. Capture Road and Intersection Meshes!
+			elif child.name.begins_with("Road") or child.name.begins_with("Intersection") or child.name.begins_with("SubdivisionRoad"):
+				var p_mesh: PlaneMesh = child.mesh as PlaneMesh
+				var r_size := Vector2.ZERO
+				if p_mesh:
+					r_size = p_mesh.size
+				layout["roads"].append({
+					"name": child.name,
+					"position": [child.position.x, child.position.y, child.position.z],
+					"size": [r_size.x, r_size.y]
+				})
 			
 	return layout
 
@@ -386,7 +363,8 @@ func load_visual_layout(layout_data: Dictionary) -> void:
 
 	for child in get_children():
 		child.queue_free()
-		
+
+	# 1. Rebuild Ground Blocks		
 	var districts_data: Dictionary = layout_data.get("districts", {})
 	for b_id in districts_data.keys():
 		var data: Dictionary = districts_data[b_id]
@@ -396,8 +374,33 @@ func load_visual_layout(layout_data: Dictionary) -> void:
 		
 		var center := Vector3(center_arr[0], center_arr[1], center_arr[2])
 		var size := Vector2(size_arr[0], size_arr[1])
-		
 		create_ground_plane(center, size, dtype, b_id)
+
+	# 2. Rebuild Roads & Intersections
+	var roads_data: Array = layout_data.get("roads", [])
+	var cfg = city_configuration
+	var road_mat: Material = cfg.road_material if (cfg and "road_material" in cfg) else null
+	var inter_mat: Material = cfg.intersection_material if (cfg and "intersection_material" in cfg) else road_mat
+
+	for r in roads_data:
+		var r_pos_arr: Array = r.get("position", [0, 0, 0])
+		var r_size_arr: Array = r.get("size", [8, 8])
+		var r_name: String = str(r.get("name", "Road"))
+		
+		var r_mesh := PlaneMesh.new()
+		r_mesh.size = Vector2(r_size_arr[0], r_size_arr[1])
+		
+		var road_obj := MeshInstance3D.new()
+		road_obj.name = r_name
+		road_obj.mesh = r_mesh
+		road_obj.position = Vector3(r_pos_arr[0], r_pos_arr[1], r_pos_arr[2])
+		
+		if r_name.begins_with("Intersection") and inter_mat:
+			road_obj.material_override = inter_mat
+		elif road_mat:
+			road_obj.material_override = road_mat
+			
+		add_child(road_obj)
 
 func _sample_weighted_archetype(weights: Dictionary, sample: float) -> String:
 	var total_weight: int = 0
@@ -492,85 +495,77 @@ func _compute_dynamic_concentric_bands(cfg) -> Array:
 func _init_civic_hierarchy() -> void:
 	if not _civic_hierarchy.is_empty():
 		return
-	var path := "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json"
-	assert(FileAccess.file_exists(path), "FATAL: civic_hierarchy JSON missing at: %s" % path)
-	var f := FileAccess.open(path, FileAccess.READ)
-	assert(f != null, "FATAL: Unable to open: %s" % path)
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
-	assert(parsed is Dictionary, "FATAL: civic_hierarchy root must be a Dictionary")
-	_civic_hierarchy = parsed
+	
+	assert(ScenarioManifestManager.has_module("civic_hierarchy"), 
+		"FATAL: Scenario manifest is missing 'civic_hierarchy' module registration.")
+		
+	_civic_hierarchy = ScenarioManifestManager.load_module("civic_hierarchy")
+	assert(_civic_hierarchy.has("civic_institutions"), 
+		"FATAL: civic_hierarchy module is missing 'civic_institutions' root table.")
 
-## Seeds major civic anchors, sports grounds, and multi-cell facilities dynamically
-func _preclaim_civic_facilities(radius: int, city_pop: int, occupied_positions: Dictionary, blocks_data: Array) -> void:
-	_init_civic_hierarchy()
-	var facilities: Dictionary = _civic_hierarchy.get("spatial_civic_facilities", {})
-	_placed_facilities.clear()
-
-	for fac_key in facilities.keys():
-		var spec: Dictionary = facilities[fac_key]
-		var min_pop: int = int(spec.get("min_city_population", 0))
-		if city_pop < min_pop:
+## Pre-claims any archetype declaring "spatial_rules"
+func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data: Array) -> void:
+	for arch_key in _archetypes_data.keys():
+		if arch_key in ["_meta", "setup"]:
+			continue
+		var arch: Dictionary = _archetypes_data[arch_key]
+		if not arch.has("spatial_rules"):
 			continue
 
-		var ratio: int = int(spec.get("per_capita_ratio", 0))
-		var max_count: int = int(spec.get("max_per_city", 1))
-		var target_count: int = 1
-		if ratio > 0:
-			target_count = clamp(int(floor(float(city_pop) / float(ratio))), 1, max_count)
-		else:
-			target_count = max_count
-
-		var footprint_arr: Array = spec.get("footprint_size", [1, 1])
+		var footprint_arr: Array = arch.get("footprint_size", [1, 1])
 		var footprint := Vector2i(int(footprint_arr[0]), int(footprint_arr[1]))
-		var rules: Dictionary = spec.get("spatial_rules", {})
+		var rules: Dictionary = arch["spatial_rules"]
 		var dist_range: Array = rules.get("norm_distance_range", [0.0, 1.0])
-		var min_sep: int = int(rules.get("min_separation_blocks", 0))
-		var district_type: String = str(spec.get("district_type", "civic_default"))
+		var min_sep: int = int(rules.get("min_separation_blocks", 4))
 
-		var placed_count: int = 0
-		var candidates: Array = _find_valid_anchor_sites(radius, footprint, dist_range, min_sep, fac_key, occupied_positions)
+		var origin: Vector2i = _find_valid_anchor_site(radius, footprint, dist_range, min_sep, occupied)
+		if origin == Vector2i(9999, 9999):
+			continue
 
-		for origin in candidates:
-			if placed_count >= target_count:
-				break
+		blocks_data.append({
+			"position": origin,
+			"size": footprint
+		})
 
-			# Claim multi-cell footprint
-			blocks_data.append({
-				"position": origin,
-				"size": footprint
-			})
-			for bx in range(footprint.x):
-				for bz in range(footprint.y):
-					var cell := Vector2i(origin.x + bx, origin.y + bz)
-					occupied_positions[cell] = true
-					_anchor_claim_map[cell] = district_type
+		for bx in range(footprint.x):
+			for bz in range(footprint.y):
+				var cell := Vector2i(origin.x + bx, origin.y + bz)
+				occupied[cell] = true
+				_anchor_claim_map[cell] = arch_key
 
-			_placed_facilities.append({
-				"type": fac_key,
-				"district_type": district_type,
-				"origin": origin,
-				"footprint": footprint
-			})
-			placed_count += 1
+		_placed_facilities.append({
+			"type": arch_key,
+			"origin": origin,
+			"footprint": footprint
+		})
+		print("[CustomCityCrafter] Preclaimed '%s' [%d x %d] at %s" % [arch_key, footprint.x, footprint.y, origin])
 
-func _find_valid_anchor_sites(
+## Finds a single valid origin for an anchor footprint, respecting live occupancy and global separation
+func _find_valid_anchor_site(
 	radius: int, 
 	footprint: Vector2i, 
 	dist_range: Array, 
 	min_sep: int, 
-	facility_key: String, 
 	occupied: Dictionary
-) -> Array:
-	var valid_sites: Array = []
+) -> Vector2i:
 	var r_min: float = float(dist_range[0])
 	var r_max: float = float(dist_range[1])
 
-	# Exact Core Rule (Town Hall)
-	if r_max == 0.05:
-		if not occupied.has(Vector2i.ZERO):
-			return [Vector2i.ZERO]
-		return []
+	# Exact Core Check (Town Hall at 0, 0)
+	if r_max <= 0.05:
+		var core_fits := true
+		for bx in range(footprint.x):
+			for bz in range(footprint.y):
+				if occupied.has(Vector2i(bx, bz)):
+					core_fits = false
+					break
+			if not core_fits:
+				break
+		if core_fits:
+			return Vector2i.ZERO
+		return Vector2i(9999, 9999)
+
+	var candidates: Array[Vector2i] = []
 
 	for x in range(-radius, radius - footprint.x + 1):
 		for z in range(-radius, radius - footprint.y + 1):
@@ -578,7 +573,7 @@ func _find_valid_anchor_sites(
 			if norm_d < r_min or norm_d > r_max:
 				continue
 
-			# Verify entire footprint is unoccupied and inside radius
+			# 1. Footprint clearance: verify entire area is unoccupied and inside radius
 			var can_fit := true
 			for bx in range(footprint.x):
 				for bz in range(footprint.y):
@@ -592,23 +587,28 @@ func _find_valid_anchor_sites(
 			if not can_fit:
 				continue
 
-			# Minimum separation from instances of the same facility
+			# 2. Global separation check against ALL previously placed civic facilities
 			var separated := true
 			for placed in _placed_facilities:
-				if placed["type"] == facility_key:
-					var d = (Vector2(x, z) - Vector2(placed["origin"].x, placed["origin"].y)).length()
-					if d < min_sep:
-						separated = false
-						break
+				var p_origin: Vector2i = placed["origin"]
+				var dist: float = (Vector2(x, z) - Vector2(p_origin.x, p_origin.y)).length()
+				if dist < float(min_sep):
+					separated = false
+					break
+					
 			if not separated:
 				continue
 
-			valid_sites.append(Vector2i(x, z))
+			candidates.append(Vector2i(x, z))
 
-	# Deterministic shuffle using seed so sites disperse organically
-	valid_sites.sort_custom(func(a, b):
+	if candidates.is_empty():
+		return Vector2i(9999, 9999)
+
+	# Deterministic shuffle using seed so sites disperse across quadrants
+	candidates.sort_custom(func(a, b):
 		var ha = abs(("%s:%d:%d" % [seed_id, a.x, a.y]).hash())
 		var hb = abs(("%s:%d:%d" % [seed_id, b.x, b.y]).hash())
 		return ha < hb
 	)
-	return valid_sites
+	
+	return candidates[0]

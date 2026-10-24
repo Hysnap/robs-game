@@ -2,53 +2,32 @@
 class_name CitySpatialAdapter
 extends RefCounted
 
-const SOCIAL_NETWORK = preload("res://systems/social_network_generator.gd")
-
 static var _archetypes: Dictionary = {}
 
-static func load_archetypes(file_path: String = "res://data_modules/core/spatial/districts/archetypes.json") -> void:
-	if not FileAccess.file_exists(file_path):
-		push_error("[CRITICAL FATAL] Missing required district archetypes file: %s" % file_path)
-		assert(false, "HALT: Cannot generate city without valid archetypes.json at %s" % file_path)
+## Loads archetypes dynamically via ScenarioManifestManager
+static func load_archetypes() -> void:
+	if not _archetypes.is_empty():
 		return
 
-	var file := FileAccess.open(file_path, FileAccess.READ)
-	if not file:
-		var err := FileAccess.get_open_error()
-		push_error("[CRITICAL FATAL] Failed opening %s. Error code: %d" % [file_path, err])
-		assert(false, "HALT: Unreadable archetypes file: %s" % file_path)
-		return
+	if ScenarioManifestManager.has_module("archetypes"):
+		_archetypes = ScenarioManifestManager.load_module("archetypes")
+	elif ScenarioManifestManager.has_module("spatial_archetypes"):
+		_archetypes = ScenarioManifestManager.load_module("spatial_archetypes")
+	else:
+		assert(false, "FATAL: Scenario manifest missing 'archetypes' module registration.")
 
-	var json := JSON.new()
-	var parse_err := json.parse(file.get_as_text())
-	if parse_err != OK or not json.data is Dictionary:
-		push_error("[CRITICAL FATAL] JSON Syntax Error in %s on line %d: %s" % [file_path, json.get_error_line(), json.get_error_message()])
-		assert(false, "HALT: Corrupt or invalid JSON in %s" % file_path)
-		return
+	assert(not _archetypes.is_empty(), "HALT: Archetypes loaded as empty dictionary.")
+	print("[CitySpatialAdapter] Successfully loaded %d district archetypes via ScenarioManifestManager." % _archetypes.size())
 
-	_archetypes = json.data
-	print("[CitySpatialAdapter] Successfully loaded %d district archetypes from: %s" % [_archetypes.size(), file_path])
-
+## Ingests CityCrafter's 3D mesh children into the canonical GameState world_state
 static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_state: Dictionary, seed_id: String) -> void:
 	if _archetypes.is_empty():
 		load_archetypes()
 		
-	# Strict assertion: Ensure archetypes actually populated
 	assert(not _archetypes.is_empty(), "HALT: _archetypes dictionary is empty during city ingestion!")
 
 	if not out_world_state.has("districts"):
 		out_world_state["districts"] = {}
-	if not out_world_state.has("filofax_cache"):
-		out_world_state["filofax_cache"] = {"districts": {}, "pinned_memos": []}
-
-	# Identify configured home district from rules
-	var home_id: String = "block_0_0"
-	var rules_path := "res://data_modules/core/business_rules.cfg"
-	var rules_file := ConfigFile.new()
-	if rules_file.load(rules_path) == OK:
-		home_id = rules_file.get_value("starting_operations", "home_district_id", "block_0_0")
-	else:
-		push_warning("[CitySpatialAdapter] business_rules.cfg missing at %s; defaulting home_id to block_0_0" % rules_path)
 
 	var rng := RandomNumberGenerator.new()
 	
@@ -60,30 +39,39 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		var district_type: String = child.get_meta("district")
 		var pos_3d: Vector3 = child.global_position
 
-		# 1. Strict Archetype Validation: Must exist in JSON!
+		# 1. Resolve archetype
 		if not _archetypes.has(district_type):
-			# If civic site, check if civic_default exists
-			if district_type in ["local_government", "hospital_site", "university_campus"] and _archetypes.has("civic_default"):
-				district_type = "civic_default"
-			else:
-				push_error("[CRITICAL FATAL] District '%s' has type '%s' which is not defined in archetypes.json!" % [block_id, district_type])
-				assert(false, "HALT: Missing archetype definition for '%s'" % district_type)
-				return
+			push_error("[CRITICAL FATAL] District '%s' has type '%s' not in archetypes.json!" % [block_id, district_type])
+			assert(false, "HALT: Missing archetype definition for '%s'" % district_type)
+			return
 
 		var archetype: Dictionary = _archetypes[district_type]
 
-		# 2. Strict Schema Verification: Assert required arrays exist in the archetype
-		assert(archetype.has("population_range"), "Archetype '%s' missing required 'population_range'" % district_type)
-		assert(archetype.has("unemployment_rate_range"), "Archetype '%s' missing required 'unemployment_rate_range'" % district_type)
-		assert(archetype.has("avg_disposable_income_range"), "Archetype '%s' missing required 'avg_disposable_income_range'" % district_type)
-		assert(archetype.has("zone_health_index_range"), "Archetype '%s' missing required 'zone_health_index_range'" % district_type)
+		# 2. Extract block geometry & calculate multi-cell scale factor
+		var block_size := Vector2i(1, 1)
+		if child is MeshInstance3D and child.mesh is PlaneMesh:
+			var p_mesh: PlaneMesh = child.mesh as PlaneMesh
+			block_size = Vector2i(
+				max(1, int(round(p_mesh.size.x / 40.0))),
+				max(1, int(round(p_mesh.size.y / 40.0)))
+			)
+		elif child.has_meta("block_size"):
+			block_size = child.get_meta("block_size")
+
+		var scale_factor: float = _calculate_district_scale_factor(archetype, block_size)
+
+		# 3. Demographic metric evaluation
+		assert(archetype.has("population_range"), "Archetype '%s' missing 'population_range'" % district_type)
+		assert(archetype.has("unemployment_rate_range"), "Archetype '%s' missing 'unemployment_rate_range'" % district_type)
+		assert(archetype.has("avg_disposable_income_range"), "Archetype '%s' missing 'avg_disposable_income_range'" % district_type)
+		assert(archetype.has("zone_health_index_range"), "Archetype '%s' missing 'zone_health_index_range'" % district_type)
 
 		var pop_rng: Array = archetype["population_range"]
 		var unemp_rng: Array = archetype["unemployment_rate_range"]
 		var inc_rng: Array = archetype["avg_disposable_income_range"]
 		var zhi_rng: Array = archetype["zone_health_index_range"]
 
-		# Deterministic seed per block coordinate
+		# Seed deterministically per block
 		var block_seed: int = absi(("%s:%s" % [seed_id, block_id]).hash())
 		rng.seed = block_seed
 
@@ -91,8 +79,15 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		var grid_z := int(round(pos_3d.z / 48.0))
 		var display_name := DistrictNamer.generate_district_name(district_type, seed_id, grid_x, grid_z)
 
-		# Explicit demographic metric generation from confirmed valid ranges
-		var pop_val: int = rng.randi_range(int(pop_rng[0]), int(pop_rng[1]))
+		# Scaled standard zones vs. authored multi-cell complexes
+		var base_pop: int = rng.randi_range(int(pop_rng[0]), int(pop_rng[1]))
+		var pop_val: int = int(round(float(base_pop) * scale_factor))
+
+		var bldg_range: Array = archetype.get("buildings", [1, 2])
+		var min_bldgs: int = int(round(float(bldg_range[0]) * scale_factor))
+		var max_bldgs: int = int(round(float(bldg_range[1]) * scale_factor))
+		var target_buildings: int = rng.randi_range(min_bldgs, max_bldgs)
+
 		var unemp_val: float = rng.randf_range(float(unemp_rng[0]), float(unemp_rng[1]))
 		var inc_val: float = rng.randf_range(float(inc_rng[0]), float(inc_rng[1]))
 		var zhi_val: float = rng.randf_range(float(zhi_rng[0]), float(zhi_rng[1]))
@@ -101,17 +96,18 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		var desp_val: float = float(archetype.get("consumer_desperation_index", 0.0))
 		var corrupt_val: float = float(archetype.get("corruption_tolerance", 0.0))
 
-		# 3. REGISTER THE OBJECTIVE TRUTH
-		var district_payload := {
+		# 4. Pure Objective Truth (World State Reality)
+		out_world_state["districts"][block_id] = {
 			"district_id": block_id,
 			"display_name": display_name,
 			"district_type": district_type,
 			"spatial_anchor": Vector2(pos_3d.x, pos_3d.z),
 			"grid_coords": Vector2i(grid_x, grid_z),
-			"spatial_radius": 24.0,
+			"grid_size": block_size,
+			"spatial_radius": 24.0 * float(max(block_size.x, block_size.y)),
 			
-			# Strictly evaluated demographics
 			"population": pop_val,
+			"building_capacity": target_buildings,
 			"unemployment_rate": unemp_val,
 			"avg_disposable_income": inc_val,
 			"zone_health_index": zhi_val,
@@ -125,23 +121,19 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 			"venues": {}
 		}
 
-		# 4. SEED DIEGETIC FILOFAX CACHE
-		var is_home_turf: bool = (block_id == home_id)
-		var perceived_payload := {
-			"district_id": block_id,
-			"display_name": display_name + (" (Home Turf)" if is_home_turf else ""),
-			"district_type": district_type if is_home_turf else "Unknown Ward",
-			"survey_status": "SURVEYED" if is_home_turf else "UNSURVEYED",
-			"data_age_ticks": 0 if is_home_turf else 999,
-			"last_verified_tick": 1 if is_home_turf else -1,
-			"inked_police_heat": heat_val if is_home_turf else 0.0,
-			"inked_zone_health": zhi_val if is_home_turf else 0.0,
-			"notes": "Home estate. Known faces and familiar alleys." if is_home_turf else "No physical reconnaissance on file."
-		}
-
-		out_world_state["districts"][block_id] = district_payload
-		out_world_state["filofax_cache"]["districts"][block_id] = perceived_payload
 		child.set_meta("display_name", display_name)
 
-	# Build the living society in SQLite!
-	## SOCIAL_NETWORK.generate_city_society(out_world_state, seed_id)
+## Calculates scale multiplier: 1x1 standard lots scale up when merged;
+## multi-cell complexes with native footprints > 1x1 maintain a 1.0 multiplier.
+static func _calculate_district_scale_factor(archetype: Dictionary, block_size: Vector2i) -> float:
+	var allocated_cells: int = block_size.x * block_size.y
+	if allocated_cells <= 1:
+		return 1.0
+
+	var native_footprint_arr: Array = archetype.get("footprint_size", [1, 1])
+	var native_cells: int = int(native_footprint_arr[0]) * int(native_footprint_arr[1])
+
+	if native_cells > 1:
+		return 1.0
+
+	return float(allocated_cells)

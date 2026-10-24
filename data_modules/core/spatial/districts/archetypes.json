@@ -1,11 +1,12 @@
 {
   "_meta": {
-    "schema_version": "2.0.0",
-    "description": "Canonical definitions for district archetypes: demographics, visual styles, sector classes, and housing profiles."
+    "schema_version": "2.2.0",
+    "description": "Unified definitions for map district archetypes: spatial footprints, building densities, visuals, and demographic targets."
   },
 
   "setup": {
     "default_fallback_archetype": "suburban_low_density",
+    "default_block_density_estimate": 45,
     "concentric_bands": [
       { "weight_key": "core_weight" },
       { "weight_key": "inner_weight" },
@@ -17,25 +18,24 @@
   "commercial": {
     "display_name": "Commercial Core & Retail Precinct",
     "sector_class": "COMMERCIAL",
+    "footprint_size": [1, 1],
+    "buildings": [5, 7],
+    "habitable_units_per_building": [1, 3],
+    "commercial_units_per_building": [1, 2],
+    "industrial_units_per_building": [0, 1],
+    "res_com_ind_perc": [100, 100, 10],
+    "typical_population_density": 15,
     "housing_profile": {
       "residence_type": "FLAT_ABOVE_SHOP",
       "wealth_bracket": 3,
       "tenure_type": "PRIVATE_COMMERCIAL_LEASE"
     },
-    "visual_profile": {
-      "color": "#D97706",
-      "texture_path": "",
-      "roughness": 0.85
-    },
+    "visual_profile": { "color": "#D97706", "roughness": 0.85 },
     "spatial_placement": {
-      "normalized_distance_min": 0.0,
-      "normalized_distance_max": 1.0,
-      "core_weight": 85,
-      "inner_weight": 40,
-      "mid_weight": 20,
-      "outer_weight": 15
+      "normalized_distance_min": 0.0, "normalized_distance_max": 1.0,
+      "core_weight": 85, "inner_weight": 40, "mid_weight": 20, "outer_weight": 10
     },
-    "population_range": [50, 150],
+    "population_range": [6, 20],
     "unemployment_rate_range": [0.08, 0.12],
     "avg_disposable_income_range": [85.0, 110.0],
     "zone_health_index_range": [70.0, 80.0],
@@ -47,25 +47,24 @@
   "high_density_low_rise": {
     "display_name": "Victorian Residential Terraces",
     "sector_class": "RESIDENTIAL",
+    "footprint_size": [1, 1],
+    "buildings": [5, 7],
+    "habitable_units_per_building": [6, 8],
+    "commercial_units_per_building": [0, 1],
+    "industrial_units_per_building": [0, 1],
+    "res_com_ind_perc": [100, 10, 10],
+    "typical_population_density": 105,
     "housing_profile": {
       "residence_type": "TERRACE",
       "wealth_bracket": 2,
       "tenure_type": "MIXED_RENT_AND_RIGHT_TO_BUY"
     },
-    "visual_profile": {
-      "color": "#B91C1C",
-      "texture_path": "",
-      "roughness": 0.90
-    },
+    "visual_profile": { "color": "#B91C1C", "roughness": 0.90 },
     "spatial_placement": {
-      "normalized_distance_min": 0.10,
-      "normalized_distance_max": 0.80,
-      "core_weight": 15,
-      "inner_weight": 70,
-      "mid_weight": 35,
-      "outer_weight": 10
+      "normalized_distance_min": 0.10, "normalized_distance_max": 0.80,
+      "core_weight": 15, "inner_weight": 70, "mid_weight": 35, "outer_weight": 10
     },
-    "population_range": [600, 900],
+    "population_range": [80, 125],
     "unemployment_rate_range": [0.18, 0.24],
     "avg_disposable_income_range": [55.0, 75.0],
     "zone_health_index_range": [50.0, 60.0],
@@ -77,25 +76,24 @@
   "high_density_high_rise": {
     "display_name": "Municipal Housing Estate & High-Rise",
     "sector_class": "RESIDENTIAL",
+    "footprint_size": [1, 1],
+    "buildings": [1, 2],
+    "habitable_units_per_building": [40, 120],
+    "commercial_units_per_building": [0, 3],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 50, 0],
+    "typical_population_density": 180,
     "housing_profile": {
       "residence_type": "COUNCIL_FLAT",
       "wealth_bracket": 1,
       "tenure_type": "COUNCIL_TENANT"
     },
-    "visual_profile": {
-      "color": "#6B7280",
-      "texture_path": "",
-      "roughness": 0.70
-    },
+    "visual_profile": { "color": "#6B7280", "roughness": 0.70 },
     "spatial_placement": {
-      "normalized_distance_min": 0.20,
-      "normalized_distance_max": 0.85,
-      "core_weight": 0,
-      "inner_weight": 30,
-      "mid_weight": 60,
-      "outer_weight": 15
+      "normalized_distance_min": 0.20, "normalized_distance_max": 0.85,
+      "core_weight": 0, "inner_weight": 30, "mid_weight": 60, "outer_weight": 15
     },
-    "population_range": [1100, 1800],
+    "population_range": [100, 300],
     "unemployment_rate_range": [0.26, 0.38],
     "avg_disposable_income_range": [35.0, 50.0],
     "zone_health_index_range": [38.0, 48.0],
@@ -104,58 +102,27 @@
     "corruption_tolerance": 0.65
   },
 
-  "industrial": {
-    "display_name": "Industrial Canal Yard & Rail Depots",
-    "sector_class": "INDUSTRIAL",
-    "housing_profile": {
-      "residence_type": "CORNER_TERRACE",
-      "wealth_bracket": 2,
-      "tenure_type": "PRIVATE_RENT"
-    },
-    "visual_profile": {
-      "color": "#4B5563",
-      "texture_path": "",
-      "roughness": 0.60
-    },
-    "spatial_placement": {
-      "normalized_distance_min": 0.15,
-      "normalized_distance_max": 1.0,
-      "core_weight": 5,
-      "inner_weight": 25,
-      "mid_weight": 45,
-      "outer_weight": 40
-    },
-    "population_range": [10, 30],
-    "unemployment_rate_range": [0.03, 0.06],
-    "avg_disposable_income_range": [95.0, 125.0],
-    "zone_health_index_range": [55.0, 65.0],
-    "consumer_desperation_index": 0.40,
-    "actual_police_heat": 0.10,
-    "corruption_tolerance": 0.40
-  },
-
   "suburban_low_density": {
     "display_name": "Suburban Commuter Belt",
     "sector_class": "RESIDENTIAL",
+    "footprint_size": [1, 1],
+    "buildings": [1, 3],
+    "habitable_units_per_building": [1, 2],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 8,
     "housing_profile": {
       "residence_type": "SEMI_DETACHED",
       "wealth_bracket": 4,
       "tenure_type": "OWNER_OCCUPIER_MORTGAGE"
     },
-    "visual_profile": {
-      "color": "#15803D",
-      "texture_path": "",
-      "roughness": 0.95
-    },
+    "visual_profile": { "color": "#15803D", "roughness": 0.95 },
     "spatial_placement": {
-      "normalized_distance_min": 0.40,
-      "normalized_distance_max": 1.0,
-      "core_weight": 0,
-      "inner_weight": 5,
-      "mid_weight": 20,
-      "outer_weight": 45
+      "normalized_distance_min": 0.40, "normalized_distance_max": 1.0,
+      "core_weight": 0, "inner_weight": 5, "mid_weight": 20, "outer_weight": 45
     },
-    "population_range": [250, 450],
+    "population_range": [1, 15],
     "unemployment_rate_range": [0.05, 0.08],
     "avg_disposable_income_range": [140.0, 185.0],
     "zone_health_index_range": [80.0, 92.0],
@@ -164,20 +131,258 @@
     "corruption_tolerance": 0.20
   },
 
-  "local_government": {
-    "display_name": "Municipal Administrative Hub",
-    "sector_class": "CIVIC",
+  "industrial": {
+    "display_name": "Industrial Canal Yard & Rail Depots",
+    "sector_class": "INDUSTRIAL",
+    "footprint_size": [1, 1],
+    "buildings": [1, 6],
+    "habitable_units_per_building": [0, 1],
+    "commercial_units_per_building": [0, 1],
+    "industrial_units_per_building": [1, 3],
+    "res_com_ind_perc": [10, 10, 100],
+    "typical_population_density": 4,
     "housing_profile": {
-      "residence_type": "NONE",
-      "wealth_bracket": 3,
-      "tenure_type": "NONE"
+      "residence_type": "CARETAKERS_LOFT",
+      "wealth_bracket": 2,
+      "tenure_type": "PRIVATE_RENT"
     },
-    "visual_profile": {
-      "color": "#4338CA",
-      "texture_path": "",
-      "roughness": 0.50
+    "visual_profile": { "color": "#4B5563", "roughness": 0.60 },
+    "spatial_placement": {
+      "normalized_distance_min": 0.15, "normalized_distance_max": 1.0,
+      "core_weight": 5, "inner_weight": 25, "mid_weight": 45, "outer_weight": 40
     },
-    "population_range": [0, 20],
+    "population_range": [1, 16],
+    "unemployment_rate_range": [0.03, 0.06],
+    "avg_disposable_income_range": [95.0, 125.0],
+    "zone_health_index_range": [55.0, 65.0],
+    "consumer_desperation_index": 0.40,
+    "actual_police_heat": 0.10,
+    "corruption_tolerance": 0.40
+  },
+
+  "place_of_worship": {
+    "display_name": "Parish Church & Grounds",
+    "sector_class": "CIVIC",
+    "footprint_size": [1, 1],
+    "buildings": [1, 2],
+    "habitable_units_per_building": [0, 1],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 2,
+    "spatial_rules": {
+      "placement_mode": "CADENCE",
+      "blocks_per_facility": 4,
+      "min_city_population": 0,
+      "norm_distance_range": [0.10, 0.85],
+      "min_separation_blocks": 3
+    },
+    "institution_profile": {
+      "serves_role": "COMMUNITY_PARISH",
+      "default_capacity": 300,
+      "staff_profile": {
+        "role_title": "CLERGY_OR_CARETAKER",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "FLEXIBLE_DAYTIME",
+        "weekly_hours": 30.0,
+        "hourly_rate": 3.00,
+        "age_min": 25,
+        "age_max_dynamic": "pension_age",
+        "education_required": "O_LEVELS_CSE"
+      }
+    },
+    "housing_profile": { "residence_type": "RECTORY", "wealth_bracket": 3, "tenure_type": "EMPLOYMENT_TIED" },
+    "visual_profile": { "color": "#A855F7", "roughness": 0.85 },
+    "population_range": [0, 4],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [65.0, 90.0],
+    "zone_health_index_range": [80.0, 90.0],
+    "consumer_desperation_index": 0.15,
+    "actual_police_heat": 0.10,
+    "corruption_tolerance": 0.15
+  },
+
+  "primary_school": {
+    "display_name": "Junior & Infant School",
+    "sector_class": "CIVIC",
+    "footprint_size": [1, 2],
+    "buildings": [1, 2],
+    "habitable_units_per_building": [0, 1],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 2,
+    "spatial_rules": {
+      "placement_mode": "CADENCE",
+      "blocks_per_facility": 7,
+      "min_city_population": 0,
+      "norm_distance_range": [0.15, 0.85],
+      "min_separation_blocks": 5
+    },
+    "institution_profile": {
+      "serves_role": "CHILD",
+      "default_capacity": 250,
+      "client_to_staff_ratio": 18.0,
+      "client_profile": {
+        "role_title": "PUPIL",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 30,
+        "compensation_rate": 0.0,
+        "age_min": 4,
+        "age_max": 11
+      },
+      "staff_profile": {
+        "role_title": "PRIMARY_TEACHER",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 35,
+        "hourly_rate": 4.25,
+        "age_min": 21,
+        "age_max_dynamic": "pension_age",
+        "education_required": "DEGREE_OR_HIGHER"
+      }
+    },
+    "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 2, "tenure_type": "EMPLOYMENT_TIED" },
+    "visual_profile": { "color": "#FBBF24", "roughness": 0.70 },
+    "population_range": [0, 4],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [70.0, 95.0],
+    "zone_health_index_range": [75.0, 85.0],
+    "consumer_desperation_index": 0.20,
+    "actual_police_heat": 0.15,
+    "corruption_tolerance": 0.20
+  },
+
+  "secondary_school": {
+    "display_name": "Comprehensive School",
+    "sector_class": "CIVIC",
+    "footprint_size": [2, 2],
+    "buildings": [2, 4],
+    "habitable_units_per_building": [0, 1],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 2,
+    "spatial_rules": {
+      "placement_mode": "CADENCE",
+      "blocks_per_facility": 35,
+      "min_city_population": 0,
+      "norm_distance_range": [0.25, 0.80],
+      "min_separation_blocks": 10
+    },
+
+    "institution_profile": {
+      "serves_role": "STUDENT",
+      "default_capacity": 800,
+      "client_to_staff_ratio": 16.0,
+      "client_profile": {
+        "role_title": "STUDENT",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 30,
+        "compensation_rate": 0.0,
+        "age_min": 11,
+        "age_max": 18
+      },
+      "staff_profile": {
+        "role_title": "TEACHER_OR_STAFF",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 35,
+        "hourly_rate": 4.50,
+        "age_min": 21,
+        "age_max_dynamic": "pension_age",
+        "education_required": "DEGREE_OR_HIGHER"
+      }
+    },
+    "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 2, "tenure_type": "EMPLOYMENT_TIED" },
+    "visual_profile": { "color": "#F59E0B", "roughness": 0.70 },
+    "population_range": [0, 4],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [70.0, 95.0],
+    "zone_health_index_range": [70.0, 80.0],
+    "consumer_desperation_index": 0.30,
+    "actual_police_heat": 0.25,
+    "corruption_tolerance": 0.25
+  },
+
+  "jobcentre_block": {
+    "display_name": "Borough Jobcentre & DHSS Office",
+    "sector_class": "CIVIC",
+    "footprint_size": [1, 1],
+    "buildings": [1, 1],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 0, 0],
+    "typical_population_density": 0,
+    "spatial_rules": {
+      "placement_mode": "CADENCE",
+      "blocks_per_facility": 90,
+      "min_city_population": 0,
+      "norm_distance_range": [0.05, 0.50],
+      "min_separation_blocks": 8
+    },
+    "institution_profile": {
+      "serves_role": "UNEMPLOYED",
+      "default_capacity": 1500,
+      "staff_profile": {
+        "role_title": "DHSS_OFFICER",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_OFFICE",
+        "weekly_hours": 37.0,
+        "hourly_rate": 3.75,
+        "age_min": 20,
+        "age_max_dynamic": "pension_age",
+        "education_required": "O_LEVELS_CSE"
+      }
+    },
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 1, "tenure_type": "NONE" },
+    "visual_profile": { "color": "#64748B", "roughness": 0.50 },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [0.0, 0.0],
+    "zone_health_index_range": [45.0, 60.0],
+    "consumer_desperation_index": 0.80,
+    "actual_police_heat": 0.45,
+    "corruption_tolerance": 0.40
+  },
+
+  "local_government": {
+    "display_name": "Municipal Administrative Hub & Town Hall",
+    "sector_class": "CIVIC",
+    "footprint_size": [1, 1],
+    "buildings": [1, 2],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 2],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 50, 0],
+    "typical_population_density": 0,
+    "spatial_rules": {
+      "placement_mode": "EXACT_CORE",
+      "min_city_population": 0,
+      "max_per_city": 1,
+      "norm_distance_range": [0.0, 0.05],
+      "min_separation_blocks": 0
+    },
+    "institution_profile": {
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 400,
+      "staff_profile": {
+        "role_title": "CIVIC_CLERK_OR_OFFICIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_OFFICE",
+        "weekly_hours": 37.0,
+        "hourly_rate": 4.10,
+        "age_min": 21,
+        "age_max_dynamic": "pension_age",
+        "education_required": "O_LEVELS_CSE"
+      }
+    },
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 3, "tenure_type": "NONE" },
+    "visual_profile": { "color": "#4338CA", "roughness": 0.50 },
+    "population_range": [0, 0],
     "unemployment_rate_range": [0.0, 0.02],
     "avg_disposable_income_range": [120.0, 160.0],
     "zone_health_index_range": [85.0, 95.0],
@@ -189,15 +394,38 @@
   "hospital_site": {
     "display_name": "Regional Infirmary & Medical Center",
     "sector_class": "CIVIC",
-    "housing_profile": {
-      "residence_type": "STAFF_QUARTERS",
-      "wealth_bracket": 3,
-      "tenure_type": "NHS_RESIDENCY"
+    "establishment_category": "HOSPITAL",
+    "footprint_size": [4, 5],
+    "buildings": [4, 8],
+    "habitable_units_per_building": [1, 2],
+    "commercial_units_per_building": [1, 2],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [50, 100, 0],
+    "housing_profile": { "residence_type": "STAFF_QUARTERS", "wealth_bracket": 3, "tenure_type": "EMPLOYMENT_TIED" },
+    "visual_profile": { "color": "#0284C7", "roughness": 0.60 },
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 0,
+      "per_capita_ratio": 30000,
+      "max_per_city": 4,
+      "norm_distance_range": [0.25, 0.65],
+      "min_separation_blocks": 15,
+      "repel_sectors": ["INDUSTRIAL"],
+      "prefer_sectors": ["COMMERCIAL", "RESIDENTIAL"]
     },
-    "visual_profile": {
-      "color": "#0284C7",
-      "texture_path": "",
-      "roughness": 0.60
+    "institution_profile": {
+      "serves_role": "EMERGENCY_HEALTH",
+      "default_capacity": 650,
+      "staff_profile": {
+        "role_title": "HOSPITAL_MEDICAL_OR_NURSE",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "SHIFTS_ROTATING",
+        "weekly_hours": 40.0,
+        "hourly_rate": 4.60,
+        "age_min": 20,
+        "age_max_dynamic": "pension_age",
+        "education_required": "DEGREE_OR_HIGHER"
+      }
     },
     "population_range": [40, 100],
     "unemployment_rate_range": [0.01, 0.03],
@@ -208,18 +436,51 @@
     "corruption_tolerance": 0.15
   },
 
-  "university_campus": {
-    "display_name": "Higher Education Campus & Polytechnic",
+"university_campus": {
+    "display_name": "Polytechnic & Higher Education Campus",
     "sector_class": "CIVIC",
-    "housing_profile": {
-      "residence_type": "STUDENT_HALLS",
-      "wealth_bracket": 1,
-      "tenure_type": "UNIVERSITY_TENANT"
+    "establishment_category": "UNIVERSITY_OR_POLYTECHNIC",
+    "footprint_size": [3, 3],
+    "buildings": [4, 8],
+    "habitable_units_per_building": [10, 30],
+    "commercial_units_per_building": [1, 2],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 50, 0],
+    "housing_profile": { "residence_type": "STUDENT_HALLS", "wealth_bracket": 1, "tenure_type": "STUDENT" },
+    "visual_profile": { "color": "#7E22CE", "roughness": 0.70 },
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 50000,
+      "per_capita_ratio": 60000,
+      "max_per_city": 2,
+      "norm_distance_range": [0.35, 0.70],
+      "min_separation_blocks": 12,
+      "repel_sectors": ["INDUSTRIAL"],
+      "prefer_sectors": ["RESIDENTIAL", "COMMERCIAL"]
     },
-    "visual_profile": {
-      "color": "#7E22CE",
-      "texture_path": "",
-      "roughness": 0.70
+    "institution_profile": {
+      "serves_role": "HIGHER_ED_STUDENT",
+      "default_capacity": 1200,
+      "client_to_staff_ratio": 12.0,
+      "client_profile": {
+        "role_title": "HIGHER_ED_STUDENT",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "FLEXIBLE_DAYTIME",
+        "weekly_hours": 20.0,
+        "compensation_rate": 18.50,
+        "age_min": 18,
+        "age_max": 24
+      },
+      "staff_profile": {
+        "role_title": "LECTURER_OR_ADMIN",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_OFFICE",
+        "weekly_hours": 37.0,
+        "hourly_rate": 5.40,
+        "age_min": 24,
+        "age_max_dynamic": "pension_age",
+        "education_required": "DEGREE_OR_HIGHER"
+      }
     },
     "population_range": [200, 500],
     "unemployment_rate_range": [0.05, 0.10],
@@ -231,19 +492,42 @@
   },
 
   "sports_arena": {
-    "display_name": "Borough Stadium & Sports Ground",
+    "display_name": "Borough Football Ground",
     "sector_class": "CIVIC",
-    "housing_profile": {
-      "residence_type": "NONE",
-      "wealth_bracket": 2,
-      "tenure_type": "NONE"
+    "footprint_size": [4, 4],
+    "buildings": [1, 1],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [1, 1],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 100, 0],
+    "typical_population_density": 0,
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 25000,
+      "per_capita_ratio": 60000,
+      "max_per_city": 1,
+      "norm_distance_range": [0.30, 0.65],
+      "min_separation_blocks": 15,
+      "repel_sectors": ["HOSPITAL"],
+      "prefer_sectors": ["RESIDENTIAL", "INDUSTRIAL"]
     },
-    "visual_profile": {
-      "color": "#059669",
-      "texture_path": "",
-      "roughness": 0.80
+    "institution_profile": {
+      "serves_role": "COMMUNITY_RECREATION",
+      "default_capacity": 15000,
+      "staff_profile": {
+        "role_title": "GROUNDSMAN_OR_STEWARD",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "WEEKEND",
+        "weekly_hours": 16.0,
+        "hourly_rate": 3.20,
+        "age_min": 18,
+        "age_max_dynamic": "pension_age",
+        "education_required": "NO_QUALIFICATIONS"
+      }
     },
-    "population_range": [0, 10],
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 2, "tenure_type": "NONE" },
+    "visual_profile": { "color": "#059669", "roughness": 0.80 },
+    "population_range": [0, 5],
     "unemployment_rate_range": [0.0, 0.05],
     "avg_disposable_income_range": [80.0, 110.0],
     "zone_health_index_range": [70.0, 80.0],
@@ -255,17 +539,40 @@
   "municipal_park": {
     "display_name": "Victorian Public Park & Rec Ground",
     "sector_class": "CIVIC",
-    "housing_profile": {
-      "residence_type": "PARK_LODGE",
-      "wealth_bracket": 3,
-      "tenure_type": "COUNCIL_TIED_TENANCY"
+    "footprint_size": [2, 3],
+    "buildings": [0, 1],
+    "habitable_units_per_building": [0, 1],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 1,
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 0,
+      "per_capita_ratio": 20000,
+      "max_per_city": 4,
+      "norm_distance_range": [0.20, 0.75],
+      "min_separation_blocks": 8,
+      "repel_sectors": [],
+      "prefer_sectors": ["RESIDENTIAL"]
     },
-    "visual_profile": {
-      "color": "#22C55E",
-      "texture_path": "",
-      "roughness": 0.95
+    "institution_profile": {
+      "serves_role": "COMMUNITY_RECREATION",
+      "default_capacity": 500,
+      "staff_profile": {
+        "role_title": "PARK_KEEPER",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "DAYTIME_OUTDOORS",
+        "weekly_hours": 38.0,
+        "hourly_rate": 3.10,
+        "age_min": 21,
+        "age_max_dynamic": "pension_age",
+        "education_required": "NO_QUALIFICATIONS"
+      }
     },
-    "population_range": [0, 5],
+    "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 3, "tenure_type": "EMPLOYMENT_TIED" },
+    "visual_profile": { "color": "#22C55E", "roughness": 0.95 },
+    "population_range": [0, 4],
     "unemployment_rate_range": [0.0, 0.0],
     "avg_disposable_income_range": [90.0, 120.0],
     "zone_health_index_range": [90.0, 98.0],
@@ -277,17 +584,49 @@
   "civic_penal_block": {
     "display_name": "HM Prison & Remand Gaol",
     "sector_class": "CIVIC",
-    "housing_profile": {
-      "residence_type": "PRISON_CELLS",
-      "wealth_bracket": 1,
-      "tenure_type": "CUSTODIAL"
+    "footprint_size": [3, 3],
+    "buildings": [1, 1],
+    "habitable_units_per_building": [45, 100],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 20,
+    "spatial_rules": {
+      "placement_mode": "OUTER_FRINGE",
+      "min_city_population": 50000,
+      "max_per_city": 1,
+      "norm_distance_range": [0.70, 0.95],
+      "min_separation_blocks": 20,
+      "repel_sectors": ["RESIDENTIAL", "COMMERCIAL"],
+      "prefer_sectors": ["INDUSTRIAL"]
     },
-    "visual_profile": {
-      "color": "#374151",
-      "texture_path": "",
-      "roughness": 0.50
+    "institution_profile": {
+      "serves_role": "PRISON_INMATE",
+      "default_capacity": 650,
+      "client_to_staff_ratio": 4.0,
+      "client_profile": {
+        "role_title": "PRISON_INMATE",
+        "contract_class": "CUSTODIAL_INMATE",
+        "schedule_window": "REGULATED_FULL_TIME",
+        "weekly_hours": 30.0,
+        "compensation_rate": 2.50,
+        "age_min": 17,
+        "age_max": 65
+      },
+      "staff_profile": {
+        "role_title": "PRISON_OFFICER",
+        "contract_class": "FORMAL_LEGAL",
+        "schedule_window": "SHIFTS_ROTATING",
+        "weekly_hours": 39.0,
+        "hourly_rate": 3.85,
+        "age_min": 21,
+        "age_max_dynamic": "pension_age",
+        "education_required": "O_LEVELS_CSE"
+      }
     },
-    "population_range": [10, 40],
+    "housing_profile": { "residence_type": "CUSTODIAL", "wealth_bracket": 1, "tenure_type": "CUSTODIAL" },
+    "visual_profile": { "color": "#374151", "roughness": 0.50 },
+    "population_range": [20, 60],
     "unemployment_rate_range": [0.0, 0.0],
     "avg_disposable_income_range": [10.0, 25.0],
     "zone_health_index_range": [60.0, 70.0],

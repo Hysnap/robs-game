@@ -65,13 +65,18 @@ static func _drop_society_schema() -> void:
 	_db.query("DROP VIEW IF EXISTS v_households_overview;")
 	_db.query("DROP VIEW IF EXISTS v_residents_overview;")
 	_db.query("DROP VIEW IF EXISTS v_district_census;")
+	_db.query("DROP VIEW IF EXISTS v_borough_census;")
 	_db.query("DROP TABLE IF EXISTS livelihood_contracts;")
 	_db.query("DROP TABLE IF EXISTS social_relationships;")
 	_db.query("DROP TABLE IF EXISTS residents;")
 	_db.query("DROP TABLE IF EXISTS households;")
 	_db.query("DROP TABLE IF EXISTS establishments;")
+	_db.query("DROP TABLE IF EXISTS districts;")
+	_db.query("DROP TABLE IF EXISTS boroughs;")
 	_db.query("DROP TABLE IF EXISTS system_labels;")
 	_db.query("DROP TABLE IF EXISTS world_metadata;")
+	
+	
 
 ## Builds the Living Society & Dunbar Graph Relational Schema
 static func _create_society_schema() -> void:
@@ -97,21 +102,71 @@ static func _create_society_schema() -> void:
 		);
 	""")
 
+	# 2.5 borough and district tables
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS boroughs (
+    		borough_id TEXT PRIMARY KEY,
+    		display_name TEXT NOT NULL,         -- e.g., "Aston Borough Council", "Solihull Metropolitan"
+    		controlling_party_id INTEGER,       -- Political control / council majority
+    		police_division_code TEXT,          -- "D_DIVISION" (patrol division)
+    		base_council_tax_rate REAL,         -- Local rates / levies
+    		valid_from INTEGER NOT NULL,
+    		valid_to INTEGER,
+    		change_reason_id INTEGER NOT NULL,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+		);
+	""")
+
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS districts (
+    		district_id TEXT PRIMARY KEY,
+    		borough_id TEXT NOT NULL,
+    		display_name TEXT NOT NULL,
+    		district_type TEXT NOT NULL,
+    		grid_x INTEGER NOT NULL,
+    		grid_z INTEGER NOT NULL,
+    		grid_width INTEGER DEFAULT 1,
+    		grid_height INTEGER DEFAULT 1,
+    
+    		-- Design Baseline Expectations (from Archetypes & World Gen)
+    		target_building_count INTEGER DEFAULT 0,
+    		expected_pop_min INTEGER DEFAULT 0,
+    		expected_pop_max INTEGER DEFAULT 0,
+    		base_unemployment_rate REAL DEFAULT 0.0,
+    		base_disposable_income REAL DEFAULT 0.0,
+    		base_zone_health REAL DEFAULT 50.0,
+    		base_police_heat REAL DEFAULT 0.20,
+    
+    		-- Simulation & Auditing Flags
+    		is_home_turf INTEGER DEFAULT 0,
+    		valid_from INTEGER NOT NULL,
+    		valid_to INTEGER,
+    		change_reason_id INTEGER NOT NULL,
+    		FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (borough_id) REFERENCES boroughs(borough_id) ON DELETE NO ACTION
+		);
+	""")
+
+
 	# 3. Establishments Table (Commercial & Industrial Establishments, Civic Enclaves)
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS establishments (
 			establishment_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			borough_id TEXT NOT NULL,
 			district_id TEXT NOT NULL,
-			owning_entity TEXT NOT NULL DEFAULT 'CIVIC',
-			name TEXT NOT NULL,
-			category_id INTEGER NOT NULL,
-			capacity INTEGER NOT NULL,
+			building_id INTEGER DEFAULT 0,
+			unit_door_number TEXT,
+			owning_entity TEXT NOT NULL DEFAULT 'CIVIC', -- 'COUNCIL', 'PRIVATE_FREEHOLD', 'PRIVATE_LANDLORD'
+			name TEXT NOT NULL,							 -- e.g. "Flat 4B, Birch Towers" or "The Crown & Anchor"
+			category_id INTEGER NOT NULL,				 -- Links to system_labels (RESIDENTIAL_UNIT, COMMERCIAL, etc.)
+			capacity INTEGER NOT NULL,					 -- Resident capacity for flats, employee/patron for commercial
+			is_vacant INTEGER DEFAULT 0,				 -- 1 = Vacant property, 0 = Occupied
 			valid_from INTEGER NOT NULL,
 			valid_to INTEGER,
 			change_reason_id INTEGER,
-			FOREIGN KEY (category_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL
+			FOREIGN KEY (category_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (district_id) REFERENCES districts(district_id) ON DELETE NO ACTION
 		);
 	""")
 
@@ -119,22 +174,22 @@ static func _create_society_schema() -> void:
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS households (
 			household_id INTEGER PRIMARY KEY AUTOINCREMENT,
-			borough_id TEXT NOT NULL,
-			district_id TEXT NOT NULL,
-			residence_type_id INTEGER NOT NULL,
-			wealth_bracket_id INTEGER NOT NULL DEFAULT 1,
-			local_pub_id INTEGER,
+			establishment_id INTEGER NOT NULL,  			-- The physical flat/unit they reside in
+			residence_type_id INTEGER NOT NULL, 			-- COUNCIL_FLAT, TERRACE, SEMI_DETACHED
+			wealth_bracket_id INTEGER NOT NULL DEFAULT 1,	-- 1 to 5
+			local_pub_id INTEGER,							-- Preferred taproom / social anchor
 			ethnicity_id INTEGER NOT NULL,
 			religion_id INTEGER NOT NULL,
 			valid_from INTEGER NOT NULL,
 			valid_to INTEGER,
 			change_reason_id INTEGER,
-			FOREIGN KEY (residence_type_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (wealth_bracket_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (local_pub_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
-			FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL
+			FOREIGN KEY (residence_type_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (establishment_id) REFERENCES establishments(establishment_id) ON DELETE NO ACTION,
+			FOREIGN KEY (wealth_bracket_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (local_pub_id) REFERENCES establishments(establishment_id) ON DELETE NO ACTION,
+			FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 		);
 	""")
 
@@ -157,13 +212,13 @@ static func _create_society_schema() -> void:
 			valid_from INTEGER NOT NULL,
 			valid_to INTEGER,
 			change_reason_id INTEGER,
-			FOREIGN KEY (household_id) REFERENCES households(household_id) ON DELETE CASCADE,
-			FOREIGN KEY (death_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (gender_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (education_level_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL
+			FOREIGN KEY (household_id) REFERENCES households(household_id) ON DELETE NO ACTION,
+			FOREIGN KEY (death_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (gender_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (education_level_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 		);
 	""")
 
@@ -182,9 +237,9 @@ static func _create_society_schema() -> void:
 			UNIQUE(from_resident_id, to_resident_id, relationship_type_id, context_establishment_id),
 			FOREIGN KEY (from_resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
 			FOREIGN KEY (to_resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
-			FOREIGN KEY (relationship_type_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (context_establishment_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL
+			FOREIGN KEY (relationship_type_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (context_establishment_id) REFERENCES establishments(establishment_id) ON DELETE NO ACTION
 		);
 	""")
 
@@ -204,10 +259,10 @@ static func _create_society_schema() -> void:
 			valid_to INTEGER,
 			change_reason_id INTEGER,
 			FOREIGN KEY (resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
-			FOREIGN KEY (contract_class_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (role_title_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (contract_type_id) REFERENCES system_labels(label_id) ON DELETE SET NULL,
-			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE SET NULL
+			FOREIGN KEY (contract_class_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (role_title_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (contract_type_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 		);
 	""")
 
@@ -217,18 +272,43 @@ static func _create_society_schema() -> void:
 	_db.query("""
 		CREATE VIEW IF NOT EXISTS v_district_census AS
 		SELECT 
-			h.district_id,
+			d.district_id,
+			d.display_name as district_name,
 			COUNT(DISTINCT h.household_id) AS total_households,
 			COUNT(DISTINCT r.resident_id) AS total_residents,
 			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_living_population,
 			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code = 'FORMAL_LEGAL' THEN r.resident_id END) AS formally_employed_count,
 			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code IN ('INFORMAL_GREY', 'ILLICIT_SYNDICATE') THEN r.resident_id END) AS street_informal_count,
 			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code = 'CUSTODIAL_INMATE' THEN r.resident_id END) AS incarcerated_count
-		FROM households h
+		From districts d
+		LEFT JOIN establishments e on d.district_id = e.district_id
+		LEFT JOIN households h ON h.establishment_id = e.establishment_id
 		LEFT JOIN residents r ON h.household_id = r.household_id
 		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id AND c.valid_to IS NULL
 		LEFT JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
-		GROUP BY h.district_id;
+		GROUP BY d.district_id, d.display_name;
+	""")
+
+	_db.query("""
+		CREATE VIEW IF NOT EXISTS v_borough_census AS
+		SELECT 
+			b.borough_id,
+			b.display_name as borough_name
+			COUNT(DISTINCT d.district_id) as total_districts
+			COUNT(DISTINCT h.household_id) AS total_households,
+			COUNT(DISTINCT r.resident_id) AS total_residents,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_living_population,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code = 'FORMAL_LEGAL' THEN r.resident_id END) AS formally_employed_count,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code IN ('INFORMAL_GREY', 'ILLICIT_SYNDICATE') THEN r.resident_id END) AS street_informal_count,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL AND c.contract_id IS NOT NULL AND l_class.code = 'CUSTODIAL_INMATE' THEN r.resident_id END) AS incarcerated_count
+		From boroughs b
+		LEFT JOIN districts d on b.borough_id = d.borough_id
+		LEFT JOIN establishments e on d.district_id = e.district_id
+		LEFT JOIN households h ON h.establishment_id = e.establishment_id
+		LEFT JOIN residents r ON h.household_id = r.household_id
+		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id AND c.valid_to IS NULL
+		LEFT JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
+		GROUP BY b.borough_id, b.display_name;
 	""")
 
 	_db.query("""
@@ -236,7 +316,7 @@ static func _create_society_schema() -> void:
 		SELECT 
 			r.resident_id,
 			r.household_id,
-			h.district_id,
+			e.district_id,
 			r.first_name,
 			r.current_surname,
 			r.birth_surname,
@@ -257,6 +337,7 @@ static func _create_society_schema() -> void:
 			r.is_active_agent
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
+		JOIN establishments e on h.establishment_id = e.establishment_id
 		JOIN system_labels l_gender ON r.gender_id = l_gender.label_id
 		JOIN system_labels l_edu ON r.education_level_id = l_edu.label_id
 		JOIN system_labels l_eth ON r.ethnicity_id = l_eth.label_id
@@ -267,8 +348,10 @@ static func _create_society_schema() -> void:
 		CREATE VIEW IF NOT EXISTS v_households_overview AS
 		SELECT 
 			h.household_id,
-			h.borough_id,
-			h.district_id,
+			b.display_name as borough_name,
+			b.borough_id,
+			d.display_name as district_name,
+			d.district_id,
 			l_res.code AS residence_type_code,
 			l_res.title AS residence_type_title,
 			h.wealth_bracket_id,
@@ -277,6 +360,9 @@ static func _create_society_schema() -> void:
 			l_eth.title AS dominant_ethnicity_title,
 			l_rel.title AS dominant_religion_title
 		FROM households h
+		JOIN establishments e on h.establishment_id = e.establishment_id
+		JOIN districts d on e.district_id = d.district_id
+		JOIN boroughs b on d.borough_id = b.borough_id
 		JOIN system_labels l_res ON h.residence_type_id = l_res.label_id
 		JOIN system_labels l_eth ON h.ethnicity_id = l_eth.label_id
 		JOIN system_labels l_rel ON h.religion_id = l_rel.label_id
@@ -289,7 +375,7 @@ static func _create_society_schema() -> void:
 			c.contract_id,
 			c.resident_id,
 			r.first_name || ' ' || r.current_surname AS full_name,
-			h.district_id AS home_district_id,
+			e.district_id AS home_district_id,
 			c.employer_entity_id,
 			COALESCE(e.name, c.employer_entity_id) AS employer_name,
 			l_class.code AS contract_class_code,
@@ -346,11 +432,19 @@ static func _create_society_schema() -> void:
 	_db.query("CREATE INDEX IF NOT EXISTS idx_labels_lookup ON system_labels(domain, code);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_res_living ON residents(dod) WHERE dod IS NULL;")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_res_household ON residents(household_id);")
-	_db.query("CREATE INDEX IF NOT EXISTS idx_hh_district ON households(district_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_est_district ON establishments(district_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_dis_borough ON districts(borough_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_est_category ON establishments(category_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_est_vacant ON establishments(is_vacant) WHERE is_vacant = 1;")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_hh_pub ON households(local_pub_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_rel_pair ON social_relationships(from_resident_id, to_resident_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_resident ON livelihood_contracts(resident_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_employer ON livelihood_contracts(employer_entity_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_households_estab ON households(establishment_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_districts_borough ON districts(borough_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_rel_to ON social_relationships(to_resident_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_res_surname ON residents(current_surname);")
+
 
 ## 1. Populates core engine labels from external localized JSON dictionary
 static func populate_core_system_labels(labels_file_path: String = "res://data_modules/core/localization/db_labels_en_gb.json") -> void:
@@ -519,3 +613,7 @@ static func close_database() -> void:
 		_db = null
 		_label_cache.clear()
 		print("[DBManager] Database connection closed.")
+
+## Returns true if the internal SQLite instance exists and has an open connection
+static func is_database_open() -> bool:
+	return _db != null

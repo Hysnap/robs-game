@@ -1,0 +1,157 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "version": "1.0.0",
+    "description": "Establishment classes, tenancy types, and staffing distributions for individual building lots."
+  },
+  "commercial_tenants": {
+    "CORNER_SHOP": {
+      "display_name": "Corner Shop / Newsagent",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "high_density_high_rise"],
+      "default_capacity": 4,
+      "default_employees": [1, 2],
+      "weight": 25
+    },
+    "OFF_LICENCE": {
+      "display_name": "Off-Licence & Wine Merchant",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
+      "default_capacity": 6,
+      "default_employees": [1, 3],
+      "weight": 15
+    },
+    "LOCAL_PUB": {
+      "display_name": "Public House & Taproom",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density", "industrial"],
+      "default_capacity": 60,
+      "default_employees": [3, 8],
+      "weight": 20
+    },
+    "BETTING_SHOP": {
+      "display_name": "Turf Accountant / Bookmakers",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
+      "default_capacity": 15,
+      "default_employees": [2, 4],
+      "weight": 12
+    },
+    "HARDWARE_STORE": {
+      "display_name": "Ironmonger & DIY Supplies",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "suburban_low_density"],
+      "default_capacity": 8,
+      "default_employees": [1, 3],
+      "weight": 10
+    },
+    "BAKERY_OR_BUTCHER": {
+      "display_name": "Family Butcher & Bakery",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
+      "default_capacity": 8,
+      "default_employees": [2, 4],
+      "weight": 15
+    },
+    "GROCERS": {
+      "display_name": "Family Green Grocers",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
+      "default_capacity": 8,
+      "default_employees": [2, 4],
+      "weight": 15
+    },
+    "POST_OFFICE": {
+      "display_name": "Sub-Post Office",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 10,
+      "default_employees": [2, 4],
+      "weight": 8
+    },
+    "GP_SURGERY": {
+      "display_name": "Medical Practice & Surgery",
+      "sector": "CIVIC_SERVICE",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 20,
+      "default_employees": [3, 6],
+      "weight": 6
+    },
+    "BARBERS_OR_HAIRDRESSERS": {
+      "display_name": "Hairdressers",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 6,
+      "default_employees": [3, 6],
+      "weight": 6
+    },
+    "CAFE": {
+      "display_name": "Greasy Spoon Cafe",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 25,
+      "default_employees": [2, 5],
+      "weight": 6
+    },
+    "RESTAURANT": {
+      "display_name": "Family Restaurant",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 20,
+      "default_employees": [3, 6],
+      "weight": 6
+    },
+    "TOY_SHOP": {
+      "display_name": "Toy Shop",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 10,
+      "default_employees": [1, 2],
+      "weight": 6
+    },
+    "PET_SHOP": {
+      "display_name": "Pet Shop",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
+      "default_capacity": 10,
+      "default_employees": [1, 2],
+      "weight": 6
+    }
+  },
+
+  "industrial_tenants": {
+    "FOUNDRY_CASTINGS": {
+      "display_name": "Metal Foundry & Castings",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 45,
+      "default_employees": [15, 35],
+      "weight": 20
+    },
+    "AUTO_REPAIR_DEPOT": {
+      "display_name": "Motor Repair Works & Body Shop",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial", "suburban_low_density"],
+      "default_capacity": 12,
+      "default_employees": [3, 8],
+      "weight": 25
+    },
+    "SCRAP_MERCHANT": {
+      "display_name": "Scrap & Metal Reclamation",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 10,
+      "default_employees": [2, 6],
+      "weight": 15
+    },
+    "TEXTILE_OR_JOINERY": {
+      "display_name": "Joinery Works & Timber Yard",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "default_employees": [6, 18],
+      "weight": 20
+    }
+  }
+}

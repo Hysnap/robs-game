@@ -6,14 +6,14 @@ const FILOFAX_MGR = preload("res://systems/filofax_manager.gd")
 const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
 
-@onready var telemetry_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
-@onready var tab_container: TabContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer"
-@onready var where_option: OptionButton = $StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox/WhereOption
-
+# Window & Page Hierarchy
+@onready var header_bar: HBoxContainer = $"Binder Shell/HeaderBar"
+@onready var close_button: Button = $"Binder Shell/HeaderBar/CloseButton"
 @onready var current_date_label: Label = $"Binder Shell/HeaderBar/CurrentDateLabel"
 @onready var comms_device_icon: Label = $"Binder Shell/HeaderBar/CommsDeviceIcon"
-@onready var close_button: Button = $"Binder Shell/HeaderBar/CloseButton"
 
+@onready var tab_container: TabContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer"
+@onready var telemetry_tab: Control = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
 @onready var roster_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab"
 @onready var financials_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab"
 
@@ -23,31 +23,57 @@ const VERB_ROUTER = preload("res://systems/verb_router.gd")
 @onready var execute_turn_button: Button = $"Binder Shell/PageSpread/RightPage_Planner/Operational/ExecuteTurnButton"
 
 # Floating Sticky Note Hub
-@onready var sticky_popup: PanelContainer = get_node("../StickyNotePopup")
-@onready var drag_handle: Label = get_node("../StickyNotePopup/VBoxContainer/StickyHeader/DragHandle")
-@onready var close_note_btn: Button = get_node("../StickyNotePopup/VBoxContainer/StickyHeader/CloseNoteButton")
+@onready var sticky_popup: PanelContainer = get_node_or_null("../StickyNotePopup") if has_node("../StickyNotePopup") else get_node_or_null("StickyNotePopup")
+@onready var drag_handle: Label = get_node_or_null("../StickyNotePopup/VBoxContainer/StickyHeader/DragHandle")
+@onready var close_note_btn: Button = get_node_or_null("../StickyNotePopup/VBoxContainer/StickyHeader/CloseNoteButton")
 
-@onready var verb_opt: OptionButton = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox/VerbOption")
-@onready var target_opt: OptionButton = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox/TargetOption")
-@onready var amount_spin: SpinBox = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox/AmountSpin")
-@onready var who_opt: OptionButton = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox/WhoOption")
-@onready var where_opt: OptionButton = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox/WhereOption")
-@onready var est_label: Label = get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox/EstimatedCostLabel")
+@onready var verb_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox/VerbOption")
+@onready var target_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox/TargetOption")
+@onready var amount_spin: SpinBox = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox/AmountSpin")
+@onready var who_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox/WhoOption")
+@onready var where_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox/WhereOption")
+@onready var est_label: Label = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox/EstimatedCostLabel")
 
-@onready var pin_btn: Button = get_node("../StickyNotePopup/VBoxContainer/ButtonBox/SaveNoteBtn")
-@onready var discard_btn: Button = get_node("../StickyNotePopup/VBoxContainer/ButtonBox/DiscardBtn")
+@onready var pin_btn: Button = get_node_or_null("../StickyNotePopup/VBoxContainer/ButtonBox/SaveNoteBtn")
+@onready var discard_btn: Button = get_node_or_null("../StickyNotePopup/VBoxContainer/ButtonBox/DiscardBtn")
+
+# Autonomous Docket Sub-Component
+var _docket_controller: FilofaxDistrictDocket = null
 
 var _world_state: Dictionary = {}
 var _filofax_cache: Dictionary = {}
 var _staged_directives: Array = []
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
-var _district_ui_labels: Dictionary = {}
-var _docket_controller: FilofaxDistrictDocket = null
+var _is_binder_dragging: bool = false
+var _binder_drag_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
-	_load_district_ui_labels()
+	_setup_binder_dragging()
+	_setup_docket_controller()
+	_setup_sticky_note_buttons()
+	_setup_drag_and_theming()
+
+func initialize(world_state: Dictionary, filofax_cache: Dictionary) -> void:
+	_world_state = world_state
+	_filofax_cache = filofax_cache
+	update_display(_filofax_cache)
+
+## Resolves or instantiates the docket controller once
+func _setup_docket_controller() -> void:
+	if telemetry_tab == null:
+		return
 	
+	# Look for an existing child in the scene tree
+	_docket_controller = telemetry_tab.find_child("DocketContent", true, false) as FilofaxDistrictDocket
+	
+	# If not placed in the .tscn, instantiate it as a permanent child
+	if _docket_controller == null:
+		_docket_controller = FilofaxDistrictDocket.new()
+		_docket_controller.name = "DocketContent"
+		telemetry_tab.add_child(_docket_controller)
+
+func _setup_sticky_note_buttons() -> void:
 	if close_button:
 		close_button.toggled.connect(func(pressed): visible = not pressed)
 	if execute_turn_button:
@@ -67,30 +93,56 @@ func _ready() -> void:
 		target_opt.item_selected.connect(_recalculate_estimate)
 	if amount_spin:
 		amount_spin.value_changed.connect(_recalculate_estimate)
-	
-	if telemetry_tab != null:
-		_docket_controller = FilofaxDistrictDocket.new()
-		telemetry_tab.add_child(_docket_controller)
 
-	_setup_drag_and_theming()
+## Public API: Displays a specific district's docket on the left Telemetry tab
+func display_district_docket(block_id: String) -> void:
+	if tab_container != null:
+		tab_container.current_tab = 0
 
-func initialize(world_state: Dictionary, filofax_cache: Dictionary) -> void:
-	_world_state = world_state
-	_filofax_cache = filofax_cache
-	update_display(_filofax_cache)
+	if _docket_controller != null:
+		_docket_controller.display_district(block_id)
 
+	_sync_sticky_note_location(block_id)
+
+func _sync_sticky_note_location(target_block_id: String) -> void:
+	if where_opt == null or target_block_id.is_empty():
+		return
+	for i in range(where_opt.item_count):
+		var meta = where_opt.get_item_metadata(i)
+		if meta == target_block_id or where_opt.get_item_text(i) == target_block_id:
+			where_opt.select(i)
+			return
+
+# --- BINDER DRAGGING ---
+func _setup_binder_dragging() -> void:
+	if header_bar:
+		header_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+		header_bar.gui_input.connect(_on_header_bar_gui_input)
+
+func _on_header_bar_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.is_pressed():
+			_is_binder_dragging = true
+			_binder_drag_offset = global_position - get_global_mouse_position()
+			accept_event()
+		else:
+			_is_binder_dragging = false
+			accept_event()
+	elif event is InputEventMouseMotion and _is_binder_dragging:
+		global_position = get_global_mouse_position() + _binder_drag_offset
+		accept_event()
+
+# --- STICKY NOTE HUB LOGIC ---
 func _setup_drag_and_theming() -> void:
 	if not sticky_popup:
 		return
-	# 1. Pastel Color Styling
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action"), Color("#FFF899"))
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What"), Color("#BAE1FF"))
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount"), Color("#FFDFBA"))
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who"), Color("#BFFCC6"))
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where"), Color("#E8C5FF"))
-	_color_note(get_node("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate"), Color("#FFB3BA"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action"), Color("#FFF899"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What"), Color("#BAE1FF"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount"), Color("#FFDFBA"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who"), Color("#BFFCC6"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where"), Color("#E8C5FF"))
+	_color_note(get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate"), Color("#FFB3BA"))
 
-	# 2. Window Dragging
 	if drag_handle:
 		drag_handle.mouse_filter = Control.MOUSE_FILTER_STOP
 		drag_handle.gui_input.connect(_on_drag_handle_input)
@@ -104,9 +156,7 @@ func _color_note(panel: PanelContainer, col: Color) -> void:
 	sb.shadow_color = Color(0, 0, 0, 0.25)
 	sb.shadow_size = 4
 	panel.add_theme_stylebox_override("panel", sb)
-
-	var ink_color := Color(0.1, 0.1, 0.1, 1.0)
-	_apply_text_color_recursive(panel, ink_color)
+	_apply_text_color_recursive(panel, Color(0.1, 0.1, 0.1, 1.0))
 
 func _apply_text_color_recursive(node: Node, color: Color) -> void:
 	if node is Label:
@@ -117,14 +167,9 @@ func _apply_text_color_recursive(node: Node, color: Color) -> void:
 		node.add_theme_color_override("font_hover_color", color)
 		node.add_theme_color_override("font_focus_color", color)
 		if node is OptionButton:
-			var popup: PopupMenu = node.get_popup()
-			popup.add_theme_color_override("font_color", color)
-			popup.add_theme_color_override("font_hover_color", color)
+			node.get_popup().add_theme_color_override("font_color", color)
 	elif node is SpinBox:
-		var line_edit: LineEdit = node.get_line_edit()
-		line_edit.add_theme_color_override("font_color", color)
-		line_edit.add_theme_color_override("font_selected_color", color)
-	
+		node.get_line_edit().add_theme_color_override("font_color", color)
 	for child in node.get_children():
 		_apply_text_color_recursive(child, color)
 
@@ -146,7 +191,6 @@ func _open_sticky_pad() -> void:
 	verb_opt.add_item("SELL")
 	verb_opt.add_item("MAKE")
 	
-	# Populate Where Options dynamically from registered districts
 	where_opt.clear()
 	for dist_id in _world_state.get("districts", {}).keys():
 		var d: Dictionary = _world_state["districts"][dist_id]
@@ -251,20 +295,6 @@ func update_display(cache: Dictionary) -> void:
 	current_date_label.text = "WEEK %d - 1988" % tick
 	comms_device_icon.text = "[%s]" % cache.get("metadata", {}).get("active_hardware", "DIRECT_DESK")
 
-	for child in telemetry_tab.get_children():
-		child.queue_free()
-	for dist_id in cache.get("districts", {}).keys():
-		var data: Dictionary = cache["districts"][dist_id]
-		var row := HBoxContainer.new()
-		var n_lbl := Label.new()
-		n_lbl.text = "%s: " % data.get("display_name", dist_id)
-		row.add_child(n_lbl)
-		var s_lbl := Label.new()
-		s_lbl.text = "Heat %d%% | ZHI %d%%" % [int(data.get("inked_police_heat", 0.0) * 100), int(data.get("inked_zone_health", 100.0))]
-		s_lbl.modulate = Color.GREEN if data.get("data_age_ticks", 0) <= 2 else Color.DARK_ORANGE
-		row.add_child(s_lbl)
-		telemetry_tab.add_child(row)
-
 	for child in financials_tab.get_children():
 		child.queue_free()
 	var c_lbl := Label.new()
@@ -277,66 +307,3 @@ func update_display(cache: Dictionary) -> void:
 		var slip := Label.new()
 		slip.text = "[Wk %d]: %s" % [memo.get("tick", 0), memo.get("text", "")]
 		memo_list.add_child(slip)
-
-## Displays a specific district's docket on the left Telemetry tab using district_ui.json tokens
-func display_district_docket(block_id: String) -> void:
-	# 1. Switch to the Telemetry tab (tab index 0)
-	if tab_container != null:
-		tab_container.current_tab = 0
-
-	# 2. Render docket via FilofaxDistrictDocket
-	var docket := telemetry_tab.get_node_or_null("FilofaxDistrictDocket") as FilofaxDistrictDocket
-	if docket == null and _docket_controller != null:
-		docket = _docket_controller
-
-	if docket != null:
-		docket.display_district(block_id)
-	else:
-		push_error("[FilofaxUI] No FilofaxDistrictDocket found to render block: %s" % block_id)
-
-	# 3. Auto-sync the sticky note "WHERE" dropdown to this district
-	_sync_sticky_note_location(block_id)
-
-func _on_scout_district_pressed(district_id: String) -> void:
-	var cash: float = GameState.world_state.get("finances", {}).get("liquid_cash", 0.0)
-	if cash < 5.00:
-		var warn_msg: String = _district_ui_labels.get("insufficient_funds", "Cannot dispatch runner: insufficient cash.")
-		print("[FILOFAX] %s" % warn_msg)
-		return
-		
-	GameState.world_state["finances"]["liquid_cash"] = cash - 5.00
-	
-	var truth: Dictionary = GameState.get_district_truth(district_id)
-	var cache_entry: Dictionary = GameState.get_district_filofax(district_id)
-	
-	cache_entry["survey_status"] = "SURVEYED"
-	cache_entry["district_type"] = truth.get("district_type", "Residential")
-	cache_entry["inked_police_heat"] = truth.get("actual_police_heat", 0.20)
-	cache_entry["inked_zone_health"] = truth.get("zone_health_index", 50.0)
-	cache_entry["data_age_ticks"] = 0
-	cache_entry["last_verified_tick"] = GameState.world_state.get("metadata", {}).get("current_week_tick", 1)
-	cache_entry["notes"] = "Pavements walked. Commercial parade and local footfall catalogued."
-	
-	display_district_docket(district_id)
-	print("[FILOFAX] Runner dispatched. Inked survey notes pinned for: %s" % cache_entry.get("display_name"))
-
-func _sync_sticky_note_location(target_block_id: String) -> void:
-	if where_option == null or target_block_id.is_empty():
-		return
-
-	for i in range(where_option.item_count):
-		var meta = where_option.get_item_metadata(i)
-		if meta == target_block_id or where_option.get_item_text(i) == target_block_id:
-			where_option.select(i)
-			return
-
-func _load_district_ui_labels(path: String = "res://data_modules/core/feedback/spatial/district_ui.json") -> void:
-	if not FileAccess.file_exists(path):
-		push_error("[FILOFAX] UI definition file missing: %s" % path)
-		return
-	
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file:
-		var json := JSON.new()
-		if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
-			_district_ui_labels = json.data.get("filofax_labels", {})

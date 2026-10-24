@@ -18,9 +18,11 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameState="*uid://jv5mk34yclny"
+AppLogger="*uid://cfjw3c8o2wqye"
 
 [display]
 
+window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

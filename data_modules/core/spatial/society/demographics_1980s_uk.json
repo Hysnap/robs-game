@@ -10,6 +10,11 @@
     "simulation_start_date": "1980-01-01",
     "simulation_start_tick": 0
   },
+  "anchor_category_fallbacks": {
+    "POST_OFFICE": "COMMERCIAL",
+    "GP_PRACTICE": "COMMERCIAL",
+    "DEFAULT": "COMMERCIAL"
+  },
   "legal_and_pension_thresholds": {
     "pension_age_female": 60,
     "pension_age_male": 65
@@ -67,21 +72,24 @@
     {
       "id": "young_adult",
       "strategy": "LABOR_MARKET",
-      "unemployed_role": "UNEMPLOYED",
-      "unemployed_anchor": "JOBCENTRE",
-      "unemployed_contract_class": "INFORMAL_GREY",
-      "unemployed_hours": 0.0,
-      "unemployed_rate": 0.0,
-      "commercial_role": "COMMERCIAL_SERVICE",
-      "commercial_anchor": "COMMERCIAL",
-      "commercial_contract_class": "FORMAL_LEGAL",
-      "commercial_hours": 37.5,
-      "commercial_rate": 3.75,
-      "industrial_role": "MANUAL_WORKS",
-      "industrial_anchor": "INDUSTRIAL",
-      "industrial_contract_class": "FORMAL_LEGAL",
-      "industrial_hours": 40.0,
-      "industrial_rate": 4.20,
+      "unemployed_branch": {
+        "role": "UNEMPLOYED",
+        "anchor_category": "JOBCENTRE",
+        "contract_class": "INFORMAL_GREY",
+        "weekly_hours": 0.0,
+        "compensation_rate": 0.0},
+      "commercial_branch": {
+        "role": "COMMERCIAL_SERVICE",
+        "anchor_category": "COMMERCIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 37.5,
+        "compensation_rate": 3.75},
+      "industrial_branch": {
+        "role": "MANUAL_WORKS",
+        "anchor_category": "INDUSTRIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 40.0,
+        "compensation_rate": 4.20},
       "age_min": 18,
       "age_max": 29,
       "density_weights": {
@@ -92,21 +100,24 @@
     {
       "id": "prime_adult",
       "strategy": "LABOR_MARKET",
-      "unemployed_role": "UNEMPLOYED",
-      "unemployed_anchor": "JOBCENTRE",
-      "unemployed_contract_class": "INFORMAL_GREY",
-      "unemployed_hours": 0.0,
-      "unemployed_rate": 0.0,
-      "commercial_role": "COMMERCIAL_SERVICE",
-      "commercial_anchor": "COMMERCIAL",
-      "commercial_contract_class": "FORMAL_LEGAL",
-      "commercial_hours": 37.5,
-      "commercial_rate": 4.00,
-      "industrial_role": "MANUAL_WORKS",
-      "industrial_anchor": "INDUSTRIAL",
-      "industrial_contract_class": "FORMAL_LEGAL",
-      "industrial_hours": 40.0,
-      "industrial_rate": 4.50,
+      "unemployed_branch": {
+        "role": "UNEMPLOYED",
+        "anchor_category": "JOBCENTRE",
+        "contract_class": "INFORMAL_GREY",
+        "weekly_hours": 0.0,
+        "compensation_rate": 0.0},
+      "commercial_branch": {
+        "role": "COMMERCIAL_SERVICE",
+        "anchor_category": "COMMERCIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 37.5,
+        "compensation_rate": 3.75},
+      "industrial_branch": {
+        "role": "MANUAL_WORKS",
+        "anchor_category": "INDUSTRIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 40.0,
+        "compensation_rate": 4.20},
       "age_min": 30,
       "age_max": 49,
       "density_weights": {
@@ -117,21 +128,24 @@
     {
       "id": "older_working_tier",
       "strategy": "LABOR_MARKET",
-      "unemployed_role": "UNEMPLOYED",
-      "unemployed_anchor": "JOBCENTRE",
-      "unemployed_contract_class": "INFORMAL_GREY",
-      "unemployed_hours": 0.0,
-      "unemployed_rate": 0.0,
-      "commercial_role": "COMMERCIAL_SERVICE",
-      "commercial_anchor": "COMMERCIAL",
-      "commercial_contract_class": "FORMAL_LEGAL",
-      "commercial_hours": 37.5,
-      "commercial_rate": 4.00,
-      "industrial_role": "MANUAL_WORKS",
-      "industrial_anchor": "INDUSTRIAL",
-      "industrial_contract_class": "FORMAL_LEGAL",
-      "industrial_hours": 40.0,
-      "industrial_rate": 4.50,
+      "unemployed_branch": {
+        "role": "UNEMPLOYED",
+        "anchor_category": "JOBCENTRE",
+        "contract_class": "INFORMAL_GREY",
+        "weekly_hours": 0.0,
+        "compensation_rate": 0.0},
+      "commercial_branch": {
+        "role": "COMMERCIAL_SERVICE",
+        "anchor_category": "COMMERCIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 37.5,
+        "compensation_rate": 3.75},
+      "industrial_branch": {
+        "role": "MANUAL_WORKS",
+        "anchor_category": "INDUSTRIAL",
+        "contract_class": "FORMAL_LEGAL",
+        "weekly_hours": 40.0,
+        "compensation_rate": 4.20},
       "age_min": 50,
       "age_max_dynamic": "pension_age",
       "density_weights": {
@@ -143,7 +157,7 @@
       "id": "pensioners",
       "strategy": "FIXED",
       "role": "PENSIONER",
-      "anchor_category": "POST_OFFICE",
+      "anchor_category": "COMMERCIAL",
       "contract_class": "INFORMAL_GREY",
       "weekly_hours": 0.0,
       "compensation_rate": 0.0,
@@ -173,13 +187,13 @@
       {
         "code": "A_LEVELS",
         "min_age": 18,
-        "base_probability": 0.22,
+        "base_probability": 0.17,
         "high_density_penalty": 0.04
       },
       {
         "code": "O_LEVELS_CSE",
         "min_age": 16,
-        "base_probability": 0.65,
+        "base_probability": 0.80,
         "high_density_penalty": 0.0
       }
     ]
