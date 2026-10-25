@@ -3,19 +3,11 @@ extends Control
 signal generate_city_requested(settings: Dictionary)
 signal recall_city_requested(city_name: String)
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	apply_default_settings()
+@onready var radius_slider: HSlider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
+@onready var radius_label: Label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/RadiusValueLabel
 
-	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonGenerateCity.pressed.connect(
-		_on_generate_city_pressed
-	)
-	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonRecallCity.pressed.connect(
-		_on_recall_city_pressed
-	)
-	# Connect Radius Slider live feedback:
-	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
-	radius_slider.value_changed.connect(_on_radius_slider_value_changed)
+var _density_profiles: Array[Dictionary] = [] # Array of { "id": String, "label": String, "index": int }
+var _default_density_index: int = 0
 
 const DEFAULT_SETTINGS := {
 	"city_name": "New City",
@@ -67,6 +59,27 @@ const DEFAULT_SETTINGS := {
 	"ground_height_offset": -0.1
 }
 
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	# 1. Load dynamic density profiles first
+	_load_density_profiles_from_archetypes()
+	
+	# 2. Apply defaults & setup UI
+	apply_default_settings()
+	
+	# Connect buttons
+	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonGenerateCity.pressed.connect(_on_generate_city_pressed)
+	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonRecallCity.pressed.connect(_on_recall_city_pressed)
+	
+	# 1. Connect the slider signal so the label updates live!
+	if radius_slider:
+		radius_slider.value_changed.connect(_on_radius_slider_changed)
+		_on_radius_slider_changed(radius_slider.value)
+
+func _on_radius_slider_changed(val: float) -> void:
+	if radius_label:
+		radius_label.text = str(int(val))
+
 func apply_default_settings() -> void:
 	$VBoxControlsContainer/HBoxCityName/LineEditCityName.text = DEFAULT_SETTINGS["city_name"]
 	$VBoxControlsContainer/HBoxSeedID/seed_text.text = DEFAULT_SETTINGS["seed_id"]
@@ -79,8 +92,6 @@ func apply_default_settings() -> void:
 	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value = DEFAULT_SETTINGS["industrial_ratio"]
 	$VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed = DEFAULT_SETTINGS["enable_residential_subdivisions"]
 	var default_r: int = int(DEFAULT_SETTINGS["city_radius"])
-	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
-	var radius_label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid.get_node_or_null("RadiusValueLabel")
 	
 	if radius_slider:
 		radius_slider.value = default_r
@@ -210,15 +221,9 @@ func build_settings_from_form() -> Dictionary:
 	if seed_id.is_empty():
 		push_error("Enter a seed before generating a city.")
 		return {}
-	var residential_percent: int = int(
-		$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value
-	)
-	var commercial_percent: int = int(
-		$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio.value
-	)
-	var industrial_percent: int = int(
-		$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value
-	)
+	var residential_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value)
+	var commercial_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio.value)
+	var industrial_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value)
 	var residential_ratio := float(residential_percent) / 100.0
 	var commercial_ratio := float(commercial_percent) / 100.0
 	var industrial_ratio := float(industrial_percent) / 100.0
@@ -233,12 +238,9 @@ func build_settings_from_form() -> Dictionary:
 	settings["seed_id"] = seed_id
 	settings["seed"] = seed_text_to_int(seed_id)
 	settings["block_size"] = $VBoxControlsContainer/HBoxContainer5/BlockSize.value
-	var vacant_block_percent: int = int(
-		$VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value
-	)
+	var vacant_block_percent: int = int($VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value)
 	settings["empty_block_chance"] = float(vacant_block_percent) / 100.0
 	# Read the actual City Radius slider
-	var radius_slider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
 	var radius_val: int = int(radius_slider.value) if radius_slider else 14
 	settings["city_radius"] = radius_val
 	settings["grid_width"] = radius_val * 2
@@ -246,12 +248,70 @@ func build_settings_from_form() -> Dictionary:
 	settings["residential_ratio"] = residential_ratio / ratio_total
 	settings["commercial_ratio"] = commercial_ratio / ratio_total
 	settings["industrial_ratio"] = industrial_ratio / ratio_total
-	settings["enable_residential_subdivisions"] = (
-		$VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed
-	)
+	settings["enable_residential_subdivisions"] = ($VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed)
+	# Pass the profile ID string ("suburban", "balanced", or "dense")
+	var density_opt = $VBoxControlsContainer/Vbox2/HBoxResidentialDensity/OptionDensityProfile
+	var profile_id: String = "balanced"
+	if density_opt and density_opt.item_count > 0:
+		var meta = density_opt.get_selected_metadata()
+		if meta != null:
+			profile_id = str(meta)
+	settings["residential_density_profile"] = profile_id
 	return settings
 
 func _on_radius_slider_value_changed(new_value: float) -> void:
 	var label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid.get_node_or_null("RadiusValueLabel")
 	if label:
 		label.text = str(int(new_value))
+
+## Dynamically loads residential density profiles from archetypes.json
+func _load_density_profiles_from_archetypes() -> void:
+	_density_profiles.clear()
+	
+	# Resolve archetypes JSON path
+	var path := "res://data_modules/core/spatial/districts/archetypes.json"
+	if ScenarioManifestManager.has_module("archetypes"):
+		path = ScenarioManifestManager.get_module_path("archetypes")
+
+	if not FileAccess.file_exists(path):
+		return
+
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return
+	var parsed = JSON.parse_string(f.get_as_text())
+	f.close()
+
+	if not (parsed is Dictionary and parsed.has("setup")):
+		return
+
+	var density_cfg: Dictionary = parsed["setup"].get("density_profiles", {})
+	var default_key: String = str(density_cfg.get("default_profile", "balanced"))
+	var profiles_dict: Dictionary = density_cfg.get("profiles", {})
+
+	var density_opt: OptionButton = $VBoxControlsContainer/Vbox2/HBoxResidentialDensity/OptionDensityProfile
+	if density_opt:
+		density_opt.clear()
+
+	var idx: int = 0
+	for key in profiles_dict.keys():
+		var p_data: Dictionary = profiles_dict[key]
+		var label_str: String = str(p_data.get("label", key))
+
+		_density_profiles.append({
+			"id": key,
+			"label": label_str,
+			"index": idx
+		})
+
+		if density_opt:
+			density_opt.add_item(label_str, idx)
+			density_opt.set_item_metadata(idx, key)
+
+		if key == default_key:
+			_default_density_index = idx
+
+		idx += 1
+
+	if density_opt and density_opt.item_count > 0:
+		density_opt.select(_default_density_index)

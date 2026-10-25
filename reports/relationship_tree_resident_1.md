@@ -1,0 +1,1709 @@
+# Relationship tree: Gillian Brennan (resident #1)
+
+Generated from the active rows in `residents`, `social_relationships`, and `livelihood_contracts`.
+
+## Resident
+- **Name:** Gillian Brennan
+- **Resident ID:** `1`
+- **Birth surname:** Brennan
+- **Status:** living
+- **Home:** Unit 1-1, Victorian Semi-Detached (block_3610453934_-14_-5) (Church Meadow)
+
+### Active contracts
+- `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+
+## Resident's direct social relationships
+- **incoming** Mark Hall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Marshall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Turner `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Brennan `FAMILY` — affinity 0.9
+- **incoming** Neil Brennan `FAMILY` — affinity 0.9
+- **outgoing** Shaun Brennan `FAMILY` — affinity 0.9
+- **incoming** Shaun Brennan `FAMILY` — affinity 0.9
+- **outgoing** Shirley Brennan `FAMILY` — affinity 0.9
+
+## Direct family
+- **Neil Brennan** — Immediate Family; affinity 0.9 (resident #3)
+  - `Family Bakery` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Shaun Brennan** — Immediate Family; affinity 0.9 (resident #4)
+  - `Public House & Taproom` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Shirley Brennan** — Immediate Family; affinity 0.9 (resident #2)
+  - `Public House & Taproom` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+
+## Work friends (shared active employer contracts)
+- **Jacqueline Ahmed** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #74408
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Ian Ali** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #394168
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Ian Bailey** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #419279
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Trevor Baker** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #605319
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Dawn Begum** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #334718
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Tina Begum** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #36836
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Diane Bennett** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #175833
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Donna Bennett** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #694668
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Darren Brennan** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #397613
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Beverley Brown** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #207897
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Mandy Brown** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #584143
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Tina Brown** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #184699
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Gary Butler** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #158982
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Wayne Butler** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #107592
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Stephen Choudhury** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #651857
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Gillian Clark** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #504331
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Ian Clarke** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #642280
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Linda Clarke** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #604177
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Lorraine Clarke** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #527954
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Sharon Clarke** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #409539
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Wayne Connolly** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #276470
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Fiona Cooper** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #20784
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Ian Cooper** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #435030
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Julie Cooper** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #83859
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Paula Cooper** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #487194
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Karen Davies** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #651030
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Stephen Davies** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #162405
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Beverley Doherty** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #571463
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Glyn Dunne** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #74105
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Billy Evans** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #326853
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Trevor Evans** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #36854
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Trevor Evans** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #453757
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Wayne Evans** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #122636
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Diane Fletcher** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #618674
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Linda Fletcher** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #544504
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Paul Fletcher** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #708855
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Sandra Francis** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #709622
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Debbie Gallagher** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #620846
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Roy Gallagher** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #155428
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Alison Green** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #223365
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Barry Green** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #613710
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Denise Green** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #549717
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Julie Green** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #717148
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Denise Hamilton** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #441049
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Alan Harrison** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #33015
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Darren Harrison** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #100072
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Dean Harrison** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #476208
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Linda Harrison** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #240590
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Malcolm Harrison** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #79880
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Alan Hill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #520564
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Gary Hill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #284425
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Lorraine Hill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #630814
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Nigel Hill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #52953
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Carol Hughes** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #32500
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Dawn Hughes** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #675
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Donna Hussain** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #297414
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Gillian Hussain** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #641683
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Stuart Iqbal** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #392055
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Stephen Jones** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #238705
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Tina Jones** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #357160
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Mark Kaur** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #161845
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Alison Khan** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #459791
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Ian Lewis** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #669200
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Stephen Maguire** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #688620
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Roy Malik** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #449812
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Debbie Marshall** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #390122
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Alan Mason** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #700369
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Gary Mason** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #110090
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Denise McCarthy** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #488965
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Malcolm Moore** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #258018
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Terry Moore** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #245201
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Tina Moore** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #738955
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Alan Morgan** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #602760
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Jacqueline Morgan** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #343221
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Kevin Morgan** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #654629
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Alan Murphy** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #426434
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Beverley Murphy** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #624100
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Clive Murphy** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #361532
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Lorraine Murphy** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #145657
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Martin O'Brien** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #722226
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Julie O'Connor** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #48372
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Sandra O'Connor** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #228951
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Colin O'Neill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #250718
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Shirley O'Neill** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #488806
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Diane Patel** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #323332
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Gillian Patel** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #249319
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Roy Powell** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #558044
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Karen Reid** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #179555
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Carol Richards** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #630433
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Linda Richards** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #228435
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Terry Richards** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #397253
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Brian Roberts** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #243672
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Tracey Roberts** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #546347
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Donna Shah** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #603632
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Trevor Shah** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #198192
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Gillian Shaw** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #526861
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Jacqueline Shaw** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #222518
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Sharon Shaw** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #49937
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Sharon Shaw** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #416420
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Trevor Simpson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #180092
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Wayne Simpson** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #402803
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Wendy Simpson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #277272
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Graham Singh** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #367326
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Graham Smith** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #520974
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Nicola Smith** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #153452
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Darren Taylor** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #33424
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Kevin Taylor** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #121897
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Sharon Thomas** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #550860
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Beverley Thompson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #285738
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Donna Thompson** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #585356
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Gary Thompson** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #371008
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Shirley Thompson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #573966
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Wendy Thompson** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #634625
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Donna Turner** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #41878
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Raymond Turner** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #333305
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Malcolm Walsh** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #66467
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Alison Watson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #443324
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Alison Watson** — Pensioner at `Local Retail Unit`; Informal / Off-the-Books; resident #593270
+  - `Local Retail Unit` — Pensioner; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Lorraine Watson** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #700711
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Neil Watson** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #647685
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Janet Webb** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #259231
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Dean White** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #389465
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Graham White** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #28191
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Janet White** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #388973
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Shirley White** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #742998
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Lorraine Williams** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #341843
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Brian Wood** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #436476
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Mark Wood** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #126764
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Tracey Wood** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #170678
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+- **Wayne Wood** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #649834
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Clare Wright** — Commercial Service Worker at `Local Retail Unit`; Formal Taxed Employment; resident #128395
+  - `Local Retail Unit` — Commercial Service Worker; Formal Taxed Employment; Standard Full-Time Agreement; 37.5 hrs/week at 3.75
+- **Clare Wright** — Manual Laborer / Tradesman at `Local Retail Unit`; Formal Taxed Employment; resident #153318
+  - `Local Retail Unit` — Manual Laborer / Tradesman; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 4.20
+- **Graham Wright** — Apprentice at `Local Retail Unit`; Formal Taxed Employment; resident #79276
+  - `Local Retail Unit` — Apprentice; Formal Taxed Employment; Standard Full-Time Agreement; 40.0 hrs/week at 2.10
+- **Jacqueline Wright** — Registered Jobseeker / Claimant at `Local Retail Unit`; Informal / Off-the-Books; resident #269220
+  - `Local Retail Unit` — Registered Jobseeker / Claimant; Informal / Off-the-Books; Standard Full-Time Agreement; 0.0 hrs/week at 0.00
+## Direct relationships of family and work friends
+### Neil Brennan (resident #3)
+- **incoming** Alison Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stephen Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wendy Simpson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Brennan `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Shirley Brennan `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Gillian Brennan `FAMILY` — affinity 0.9
+- **incoming** Gillian Brennan `FAMILY` — affinity 0.9
+### Shaun Brennan (resident #4)
+- **outgoing** Nigel Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alison Simpson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mandy Wilson `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Brennan `FAMILY` — affinity 0.9
+- **incoming** Gillian Brennan `FAMILY` — affinity 0.9
+- **outgoing** Neil Brennan `FAMILY` — affinity 0.9
+- **incoming** Neil Brennan `FAMILY` — affinity 0.9
+- **outgoing** Shirley Brennan `FAMILY` — affinity 0.9
+- **incoming** Shirley Brennan `FAMILY` — affinity 0.9
+### Shirley Brennan (resident #2)
+- **outgoing** Glyn White `CIVIC_PEER` — affinity 0.5
+- **outgoing** Dawn Murphy `CONGREGATIONAL` — affinity 0.65
+- **incoming** Dawn Murphy `CONGREGATIONAL` — affinity 0.65
+- **incoming** Mandy Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Glyn Jones `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Stevens `DRINKING_MATE` — affinity 0.55
+### Jacqueline Ahmed (resident #74408)
+- **outgoing** Janet White `CIVIC_PEER` — affinity 0.5
+- **incoming** Derek Choudhury `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Francis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Ahmed `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Barry Ahmed `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Barry Ahmed `FAMILY` — affinity 0.9
+- **incoming** Barry Ahmed `FAMILY` — affinity 0.9
+- **outgoing** Kevin Ahmed `FAMILY` — affinity 0.9
+### Ian Ali (resident #394168)
+- **incoming** Barry Green `CIVIC_PEER` — affinity 0.5
+- **outgoing** Roy Ali `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stephen Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Brian Lewis `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona Shah `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Ali `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Wayne Ali `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Malcolm Ali `FAMILY` — affinity 0.9
+### Ian Bailey (resident #419279)
+- **incoming** Carol Hughes `CIVIC_PEER` — affinity 0.5
+- **outgoing** Jacqueline Ali `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Fletcher `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Hamilton `DRINKING_MATE` — affinity 0.55
+- **incoming** Barry Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Bailey `FAMILY` — affinity 0.9
+- **incoming** Raymond Bailey `FAMILY` — affinity 0.9
+### Trevor Baker (resident #605319)
+- **outgoing** Stephen Campbell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Neil Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Palmer `DRINKING_MATE` — affinity 0.55
+- **incoming** Diane Richards `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Baker `FAMILY` — affinity 0.9
+- **incoming** Carol Baker `FAMILY` — affinity 0.9
+### Dawn Begum (resident #334718)
+- **incoming** Stuart Iqbal `CIVIC_PEER` — affinity 0.5
+- **outgoing** Sharon Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Malik `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Clive Richards `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Thomas `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Begum `FAMILY` — affinity 0.9
+### Tina Begum (resident #36836)
+- **outgoing** Dean Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Gill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Begum `FAMILY` — affinity 0.9
+- **incoming** Sandra Begum `FAMILY` — affinity 0.9
+- **outgoing** Wendy Begum `FAMILY` — affinity 0.9
+### Diane Bennett (resident #175833)
+- **outgoing** Raymond Ahmed `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Gallagher `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Malik `DRINKING_MATE` — affinity 0.55
+- **incoming** Donna McCarthy `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Bennett `FAMILY` — affinity 0.9
+- **incoming** Paula Bennett `FAMILY` — affinity 0.9
+### Donna Bennett (resident #694668)
+- **incoming** Terry Richards `CIVIC_PEER` — affinity 0.5
+- **incoming** Clare Baker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Butler `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Graham Griffiths `DRINKING_MATE` — affinity 0.55
+- **incoming** Dean Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Bennett `FAMILY` — affinity 0.9
+- **incoming** Julie Bennett `FAMILY` — affinity 0.9
+- **outgoing** Karen Bennett `FAMILY` — affinity 0.9
+- **incoming** Karen Bennett `FAMILY` — affinity 0.9
+### Darren Brennan (resident #397613)
+- **outgoing** Gary Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Hill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Powell `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Tony Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Brennan `FAMILY` — affinity 0.9
+- **incoming** Darren Brennan `FAMILY` — affinity 0.9
+### Beverley Brown (resident #207897)
+- **incoming** Kevin Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Moore `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Brown `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Neil Brown `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Beverley Brown `FAMILY` — affinity 0.9
+- **incoming** Beverley Brown `FAMILY` — affinity 0.9
+- **outgoing** Denise Brown `FAMILY` — affinity 0.9
+### Mandy Brown (resident #584143)
+- **incoming** Stuart Baker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Ian Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Hamilton `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie O'Neill `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Simpson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Wilson `DRINKING_MATE` — affinity 0.55
+- **incoming** Graham Wright `DRINKING_MATE` — affinity 0.55
+### Tina Brown (resident #184699)
+- **outgoing** Kevin Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Johnson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Brown `FAMILY` — affinity 0.9
+- **incoming** Raymond Brown `FAMILY` — affinity 0.9
+- **outgoing** Tracey Brown `FAMILY` — affinity 0.9
+- **incoming** Tracey Brown `FAMILY` — affinity 0.9
+### Gary Butler (resident #158982)
+- **incoming** Debbie Marshall `CIVIC_PEER` — affinity 0.5
+- **incoming** Diane Patel `CIVIC_PEER` — affinity 0.5
+- **outgoing** Neil Jones `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Lewis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley O'Neill `DRINKING_MATE` — affinity 0.55
+### Wayne Butler (resident #107592)
+- **incoming** Fiona Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Harrison `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Thomas `DRINKING_MATE` — affinity 0.55
+### Stephen Choudhury (resident #651857)
+- **outgoing** Gary Akhtar `CONGREGATIONAL` — affinity 0.65
+- **incoming** Gary Akhtar `CONGREGATIONAL` — affinity 0.65
+- **incoming** Ian Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Choudhury `FAMILY` — affinity 0.9
+- **incoming** Malcolm Choudhury `FAMILY` — affinity 0.9
+### Gillian Clark (resident #504331)
+- **outgoing** Malcolm Ahmed `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek Robinson `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Singh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Clark `FAMILY` — affinity 0.9
+- **incoming** Barry Clark `FAMILY` — affinity 0.9
+- **outgoing** Roy Clark `FAMILY` — affinity 0.9
+- **incoming** Roy Clark `FAMILY` — affinity 0.9
+- **outgoing** Tina Clark `FAMILY` — affinity 0.9
+### Ian Clarke (resident #642280)
+- **incoming** Glyn Butler `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Connolly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wendy Hussain `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Keith Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Janet Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Clarke `FAMILY` — affinity 0.9
+- **incoming** Gillian Clarke `FAMILY` — affinity 0.9
+### Linda Clarke (resident #604177)
+- **incoming** Donna Thompson `CIVIC_PEER` — affinity 0.5
+- **outgoing** Ian Begum `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Williams `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Clarke `FAMILY` — affinity 0.9
+- **incoming** Alan Clarke `FAMILY` — affinity 0.9
+- **outgoing** Brian Clarke `FAMILY` — affinity 0.9
+- **incoming** Brian Clarke `FAMILY` — affinity 0.9
+### Lorraine Clarke (resident #527954)
+- **outgoing** Barry Patel `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Patel `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Clarke `FAMILY` — affinity 0.9
+- **incoming** Fiona Clarke `FAMILY` — affinity 0.9
+- **outgoing** Susan Clarke `FAMILY` — affinity 0.9
+- **incoming** Susan Clarke `FAMILY` — affinity 0.9
+### Sharon Clarke (resident #409539)
+- **incoming** Terry Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Kelly `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula O'Brien `DRINKING_MATE` — affinity 0.55
+- **incoming** Nigel Robinson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Clarke `FAMILY` — affinity 0.9
+- **incoming** Neil Clarke `FAMILY` — affinity 0.9
+- **outgoing** Raymond Clarke `FAMILY` — affinity 0.9
+### Wayne Connolly (resident #276470)
+- **outgoing** Julie O'Connor `CIVIC_PEER` — affinity 0.5
+- **incoming** Donna Thompson `CIVIC_PEER` — affinity 0.5
+- **incoming** Sharon Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Jones `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin McCarthy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Turner `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Watson `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Connolly `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Jacqueline Connolly `EXTENDED_FAMILY` — affinity 0.8
+### Fiona Cooper (resident #20784)
+- **outgoing** Denise Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola O'Neill `DRINKING_MATE` — affinity 0.55
+- **incoming** Darren Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Sharon Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Cooper `FAMILY` — affinity 0.9
+- **incoming** Billy Cooper `FAMILY` — affinity 0.9
+- **outgoing** Graham Cooper `FAMILY` — affinity 0.9
+- **incoming** Graham Cooper `FAMILY` — affinity 0.9
+### Ian Cooper (resident #435030)
+- **incoming** Denise Byrne `DRINKING_MATE` — affinity 0.55
+- **incoming** Jacqueline Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Palmer `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Shah `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Cooper `FAMILY` — affinity 0.9
+- **incoming** Malcolm Cooper `FAMILY` — affinity 0.9
+- **outgoing** Sandra Cooper `FAMILY` — affinity 0.9
+- **incoming** Sandra Cooper `FAMILY` — affinity 0.9
+- **outgoing** Tony Cooper `FAMILY` — affinity 0.9
+- **incoming** Tony Cooper `FAMILY` — affinity 0.9
+### Julie Cooper (resident #83859)
+- **incoming** Jacqueline Morgan `CIVIC_PEER` — affinity 0.5
+- **incoming** Denise Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Byrne `DRINKING_MATE` — affinity 0.55
+- **incoming** Clare Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Terry Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Robinson `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Cooper `FAMILY` — affinity 0.9
+- **incoming** Clare Cooper `FAMILY` — affinity 0.9
+### Paula Cooper (resident #487194)
+- **outgoing** Denise McCarthy `CIVIC_PEER` — affinity 0.5
+- **outgoing** Barry Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Cooper `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Denise Cooper `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Diane Cooper `FAMILY` — affinity 0.9
+- **incoming** Diane Cooper `FAMILY` — affinity 0.9
+- **outgoing** Jacqueline Cooper `FAMILY` — affinity 0.9
+- **incoming** Jacqueline Cooper `FAMILY` — affinity 0.9
+- **outgoing** Shirley Cooper `FAMILY` — affinity 0.9
+### Karen Davies (resident #651030)
+- **outgoing** Billy Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Davies `FAMILY` — affinity 0.9
+- **incoming** Malcolm Davies `FAMILY` — affinity 0.9
+- **outgoing** Susan Davies `FAMILY` — affinity 0.9
+- **incoming** Susan Davies `FAMILY` — affinity 0.9
+### Stephen Davies (resident #162405)
+- **incoming** Clare Clark `DRINKING_MATE` — affinity 0.55
+- **incoming** Darren Dunne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Gill `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Ward `DRINKING_MATE` — affinity 0.55
+- **incoming** Shirley Williams `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Davies `FAMILY` — affinity 0.9
+- **incoming** Debbie Davies `FAMILY` — affinity 0.9
+- **outgoing** Derek Davies `FAMILY` — affinity 0.9
+### Beverley Doherty (resident #571463)
+- **outgoing** Trevor Simpson `CIVIC_PEER` — affinity 0.5
+- **outgoing** Karen Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Marshall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Doherty `FAMILY` — affinity 0.9
+- **incoming** Gary Doherty `FAMILY` — affinity 0.9
+- **outgoing** Stuart Doherty `FAMILY` — affinity 0.9
+- **incoming** Stuart Doherty `FAMILY` — affinity 0.9
+### Glyn Dunne (resident #74105)
+- **incoming** Clive Murphy `CIVIC_PEER` — affinity 0.5
+- **outgoing** Nigel Murphy `CONGREGATIONAL` — affinity 0.65
+- **incoming** Nigel Murphy `CONGREGATIONAL` — affinity 0.65
+- **incoming** Stephen Choudhury `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Thomas `DRINKING_MATE` — affinity 0.55
+- **incoming** Stephen White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Dunne `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Clare Dunne `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Julie Dunne `FAMILY` — affinity 0.9
+### Billy Evans (resident #326853)
+- **outgoing** Linda Byrne `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Gordon `DRINKING_MATE` — affinity 0.55
+- **incoming** Dean Harrison `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark O'Neill `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Taylor `DRINKING_MATE` — affinity 0.55
+- **incoming** Wayne Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Evans `FAMILY` — affinity 0.9
+### Trevor Evans (resident #36854)
+- **incoming** Jacqueline Bailey `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Taylor `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Thompson `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Walsh `DRINKING_MATE` — affinity 0.55
+- **incoming** Donna Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Evans `FAMILY` — affinity 0.9
+- **incoming** Neil Evans `FAMILY` — affinity 0.9
+### Trevor Evans (resident #453757)
+- **outgoing** Tony Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Glyn Ward `DRINKING_MATE` — affinity 0.55
+### Wayne Evans (resident #122636)
+- **incoming** Brian Iqbal `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Robinson `DRINKING_MATE` — affinity 0.55
+- **incoming** Shirley Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Singh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Evans `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Darren Evans `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Darren Evans `FAMILY` — affinity 0.9
+- **incoming** Darren Evans `FAMILY` — affinity 0.9
+### Diane Fletcher (resident #618674)
+- **incoming** Kevin Morgan `CIVIC_PEER` — affinity 0.5
+- **outgoing** Stuart Shaw `CONGREGATIONAL` — affinity 0.65
+- **incoming** Stuart Shaw `CONGREGATIONAL` — affinity 0.65
+- **outgoing** Tracey White `CONGREGATIONAL` — affinity 0.65
+- **incoming** Tracey White `CONGREGATIONAL` — affinity 0.65
+- **incoming** Tracey Ali `DRINKING_MATE` — affinity 0.55
+- **incoming** Janet Baker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Ward `DRINKING_MATE` — affinity 0.55
+### Linda Fletcher (resident #544504)
+- **outgoing** Donna Turner `CIVIC_PEER` — affinity 0.5
+- **incoming** Carol Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Neil Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nigel Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alison White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Fletcher `FAMILY` — affinity 0.9
+- **incoming** Donna Fletcher `FAMILY` — affinity 0.9
+- **outgoing** Mandy Fletcher `FAMILY` — affinity 0.9
+- **incoming** Mandy Fletcher `FAMILY` — affinity 0.9
+### Paul Fletcher (resident #708855)
+- **incoming** Barry Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Brian Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Billy O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Fletcher `FAMILY` — affinity 0.9
+- **incoming** Dawn Fletcher `FAMILY` — affinity 0.9
+- **outgoing** Nicola Fletcher `FAMILY` — affinity 0.9
+- **incoming** Nicola Fletcher `FAMILY` — affinity 0.9
+### Sandra Francis (resident #709622)
+- **incoming** Tracey Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Terry Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek Hussain `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Singh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Walker `DRINKING_MATE` — affinity 0.55
+- **incoming** Alan Ward `DRINKING_MATE` — affinity 0.55
+### Debbie Gallagher (resident #620846)
+- **outgoing** Clare Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Mason `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda O'Brien `DRINKING_MATE` — affinity 0.55
+- **incoming** Sharon Shah `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wendy Walker `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Gallagher `FAMILY` — affinity 0.9
+- **incoming** Debbie Gallagher `FAMILY` — affinity 0.9
+### Roy Gallagher (resident #155428)
+- **outgoing** Mandy Francis `DRINKING_MATE` — affinity 0.55
+- **incoming** Brian Gordon `DRINKING_MATE` — affinity 0.55
+- **incoming** Shaun Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin O'Connor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Turner `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Gallagher `FAMILY` — affinity 0.9
+- **incoming** Clive Gallagher `FAMILY` — affinity 0.9
+### Alison Green (resident #223365)
+- **incoming** Tracey Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Keith Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Williams `DRINKING_MATE` — affinity 0.55
+### Barry Green (resident #613710)
+- **outgoing** Ian Ali `CIVIC_PEER` — affinity 0.5
+- **incoming** Lorraine Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Keith Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Clive Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Sharon Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Tina Ward `DRINKING_MATE` — affinity 0.55
+### Denise Green (resident #549717)
+- **outgoing** Colin Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Roberts `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Thompson `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Green `FAMILY` — affinity 0.9
+- **incoming** Clare Green `FAMILY` — affinity 0.9
+- **outgoing** Nigel Green `FAMILY` — affinity 0.9
+- **incoming** Nigel Green `FAMILY` — affinity 0.9
+### Julie Green (resident #717148)
+- **incoming** Shirley O'Neill `CIVIC_PEER` — affinity 0.5
+- **incoming** Gary Thompson `CIVIC_PEER` — affinity 0.5
+- **incoming** Jacqueline Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Donna Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Johnson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Billy Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Green `FAMILY` — affinity 0.9
+### Denise Hamilton (resident #441049)
+- **outgoing** Carol Hughes `CIVIC_PEER` — affinity 0.5
+- **incoming** Sharon Thomas `CIVIC_PEER` — affinity 0.5
+- **incoming** Karen Baker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Nigel Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin McCarthy `DRINKING_MATE` — affinity 0.55
+- **incoming** Graham Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Hamilton `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Shaun Hamilton `EXTENDED_FAMILY` — affinity 0.8
+### Alan Harrison (resident #33015)
+- **incoming** Denise Davies `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie White `DRINKING_MATE` — affinity 0.55
+- **incoming** Mandy Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Harrison `FAMILY` — affinity 0.9
+- **incoming** Dean Harrison `FAMILY` — affinity 0.9
+### Darren Harrison (resident #100072)
+- **outgoing** Glyn Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Tony Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Kaur `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Harrison `FAMILY` — affinity 0.9
+- **incoming** Alan Harrison `FAMILY` — affinity 0.9
+### Dean Harrison (resident #476208)
+- **outgoing** Graham Smith `CIVIC_PEER` — affinity 0.5
+- **incoming** Darren Taylor `CIVIC_PEER` — affinity 0.5
+- **outgoing** Clive Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Harrison `FAMILY` — affinity 0.9
+- **incoming** Debbie Harrison `FAMILY` — affinity 0.9
+- **outgoing** Glyn Harrison `FAMILY` — affinity 0.9
+- **incoming** Glyn Harrison `FAMILY` — affinity 0.9
+- **outgoing** Ian Harrison `FAMILY` — affinity 0.9
+- **incoming** Ian Harrison `FAMILY` — affinity 0.9
+### Linda Harrison (resident #240590)
+- **outgoing** Stephen Jones `CIVIC_PEER` — affinity 0.5
+- **outgoing** Denise Butler `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Byrne `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Gallagher `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Kelly `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Patel `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Robinson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Wood `DRINKING_MATE` — affinity 0.55
+### Malcolm Harrison (resident #79880)
+- **outgoing** Clare Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Clare Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Glyn Davies `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Francis `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Roberts `DRINKING_MATE` — affinity 0.55
+- **incoming** Alison Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Karen Harrison `FAMILY` — affinity 0.9
+- **incoming** Karen Harrison `FAMILY` — affinity 0.9
+### Alan Hill (resident #520564)
+- **incoming** Wendy Akhtar `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Terry Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Tina McCarthy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola Hill `FAMILY` — affinity 0.9
+- **incoming** Nicola Hill `FAMILY` — affinity 0.9
+- **outgoing** Nigel Hill `FAMILY` — affinity 0.9
+- **incoming** Nigel Hill `FAMILY` — affinity 0.9
+### Gary Hill (resident #284425)
+- **incoming** Alison Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Green `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Shaw `DRINKING_MATE` — affinity 0.55
+- **incoming** Jacqueline Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Hill `FAMILY` — affinity 0.9
+- **incoming** Denise Hill `FAMILY` — affinity 0.9
+- **outgoing** Ian Hill `FAMILY` — affinity 0.9
+- **incoming** Ian Hill `FAMILY` — affinity 0.9
+### Lorraine Hill (resident #630814)
+- **outgoing** Glyn Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Hill `FAMILY` — affinity 0.9
+- **incoming** Denise Hill `FAMILY` — affinity 0.9
+- **outgoing** Malcolm Hill `FAMILY` — affinity 0.9
+- **incoming** Malcolm Hill `FAMILY` — affinity 0.9
+- **outgoing** Trevor Hill `FAMILY` — affinity 0.9
+- **incoming** Trevor Hill `FAMILY` — affinity 0.9
+### Nigel Hill (resident #52953)
+- **outgoing** Diane Ahmed `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Choudhury `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Terry Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Graham Hill `FAMILY` — affinity 0.9
+- **incoming** Graham Hill `FAMILY` — affinity 0.9
+- **outgoing** Keith Hill `FAMILY` — affinity 0.9
+- **incoming** Keith Hill `FAMILY` — affinity 0.9
+- **outgoing** Shaun Hill `FAMILY` — affinity 0.9
+### Carol Hughes (resident #32500)
+- **outgoing** Ian Bailey `CIVIC_PEER` — affinity 0.5
+- **incoming** Denise Hamilton `CIVIC_PEER` — affinity 0.5
+- **incoming** Graham Bailey `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Green `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Palmer `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nigel Hughes `FAMILY` — affinity 0.9
+- **incoming** Nigel Hughes `FAMILY` — affinity 0.9
+### Dawn Hughes (resident #675)
+- **incoming** Wayne Gordon `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Ward `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Hughes `FAMILY` — affinity 0.9
+- **incoming** Dean Hughes `FAMILY` — affinity 0.9
+### Donna Hussain (resident #297414)
+- **outgoing** Kevin Ali `CONGREGATIONAL` — affinity 0.65
+- **incoming** Kevin Ali `CONGREGATIONAL` — affinity 0.65
+- **incoming** Terry Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Wilson `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mandy Hussain `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Mandy Hussain `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Mandy Hussain `EXTENDED_FAMILY` — affinity 0.8
+### Gillian Hussain (resident #641683)
+- **outgoing** Graham Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Terry Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Raymond Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Morgan `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Reid `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Thomas `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Thomas `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Hussain `FAMILY` — affinity 0.9
+### Stuart Iqbal (resident #392055)
+- **outgoing** Dawn Begum `CIVIC_PEER` — affinity 0.5
+- **outgoing** Clive Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Lorraine Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Patel `DRINKING_MATE` — affinity 0.55
+- **incoming** Lorraine Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Robinson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Iqbal `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Kevin Iqbal `EXTENDED_FAMILY` — affinity 0.8
+### Stephen Jones (resident #238705)
+- **incoming** Linda Harrison `CIVIC_PEER` — affinity 0.5
+- **incoming** Janet Webb `CIVIC_PEER` — affinity 0.5
+- **outgoing** Paula Byrne `DRINKING_MATE` — affinity 0.55
+- **incoming** Tony Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Patel `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Robinson `DRINKING_MATE` — affinity 0.55
+- **incoming** Diane Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Turner `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Jones `FAMILY` — affinity 0.9
+- **incoming** Dean Jones `FAMILY` — affinity 0.9
+### Tina Jones (resident #357160)
+- **outgoing** Gary Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Iqbal `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Malik `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Jones `FAMILY` — affinity 0.9
+- **incoming** Dean Jones `FAMILY` — affinity 0.9
+### Mark Kaur (resident #161845)
+- **outgoing** Dawn Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Lorraine Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Stephen Butler `DRINKING_MATE` — affinity 0.55
+- **incoming** Nigel Dunne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Brian Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Glyn Kaur `FAMILY` — affinity 0.9
+- **incoming** Glyn Kaur `FAMILY` — affinity 0.9
+### Alison Khan (resident #459791)
+- **outgoing** Paul Khan `CONGREGATIONAL` — affinity 0.65
+- **incoming** Paul Khan `CONGREGATIONAL` — affinity 0.65
+- **outgoing** Sandra Akhtar `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Billy Khan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Malik `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Murphy `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Reid `DRINKING_MATE` — affinity 0.55
+- **incoming** Clare Stevens `DRINKING_MATE` — affinity 0.55
+### Ian Lewis (resident #669200)
+- **incoming** Alan Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Dawn Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Griffiths `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Richards `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Lewis `FAMILY` — affinity 0.9
+- **incoming** Wayne Lewis `FAMILY` — affinity 0.9
+### Stephen Maguire (resident #688620)
+- **outgoing** Shaun Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Barry Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Tina Palmer `DRINKING_MATE` — affinity 0.55
+- **outgoing** Karen Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Billy Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Maguire `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Carol Maguire `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Diane Maguire `FAMILY` — affinity 0.9
+- **incoming** Diane Maguire `FAMILY` — affinity 0.9
+### Roy Malik (resident #449812)
+- **incoming** Shaun Ahmed `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nigel Ali `DRINKING_MATE` — affinity 0.55
+- **incoming** Martin Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Williams `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Malik `FAMILY` — affinity 0.9
+- **incoming** Darren Malik `FAMILY` — affinity 0.9
+- **outgoing** Derek Malik `FAMILY` — affinity 0.9
+- **incoming** Derek Malik `FAMILY` — affinity 0.9
+### Debbie Marshall (resident #390122)
+- **outgoing** Gary Butler `CIVIC_PEER` — affinity 0.5
+- **incoming** Colin Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Green `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Jones `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Marshall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Marshall `FAMILY` — affinity 0.9
+- **incoming** Clive Marshall `FAMILY` — affinity 0.9
+### Alan Mason (resident #700369)
+- **outgoing** Clive Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Malik `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Tina Turner `DRINKING_MATE` — affinity 0.55
+### Gary Mason (resident #110090)
+- **outgoing** Denise Choudhury `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Williams `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Mason `FAMILY` — affinity 0.9
+- **incoming** Clare Mason `FAMILY` — affinity 0.9
+- **outgoing** Clive Mason `FAMILY` — affinity 0.9
+- **incoming** Clive Mason `FAMILY` — affinity 0.9
+### Denise McCarthy (resident #488965)
+- **incoming** Paula Cooper `CIVIC_PEER` — affinity 0.5
+- **incoming** Wayne Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Ian Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Gallagher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola Hill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Richards `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy McCarthy `FAMILY` — affinity 0.9
+### Malcolm Moore (resident #258018)
+- **outgoing** Tony Bailey `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Marshall `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Singh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Moore `FAMILY` — affinity 0.9
+- **incoming** Janet Moore `FAMILY` — affinity 0.9
+- **outgoing** Nicola Moore `FAMILY` — affinity 0.9
+### Terry Moore (resident #245201)
+- **outgoing** Clare Ahmed `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Murphy `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Moore `FAMILY` — affinity 0.9
+- **incoming** Jacqueline Moore `FAMILY` — affinity 0.9
+- **outgoing** Karen Moore `FAMILY` — affinity 0.9
+### Tina Moore (resident #738955)
+- **outgoing** Tracey Ali `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Griffiths `DRINKING_MATE` — affinity 0.55
+- **incoming** Yvonne Hall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Moore `FAMILY` — affinity 0.9
+- **incoming** Billy Moore `FAMILY` — affinity 0.9
+- **outgoing** Stuart Moore `FAMILY` — affinity 0.9
+- **incoming** Stuart Moore `FAMILY` — affinity 0.9
+### Alan Morgan (resident #602760)
+- **incoming** Kevin Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Hamilton `DRINKING_MATE` — affinity 0.55
+- **incoming** Diane O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nigel O'Connor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Graham Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Morgan `FAMILY` — affinity 0.9
+- **incoming** Alan Morgan `FAMILY` — affinity 0.9
+- **outgoing** Alison Morgan `FAMILY` — affinity 0.9
+- **incoming** Alison Morgan `FAMILY` — affinity 0.9
+### Jacqueline Morgan (resident #343221)
+- **outgoing** Julie Cooper `CIVIC_PEER` — affinity 0.5
+- **incoming** Sandra Butler `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Richards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Karen Morgan `FAMILY` — affinity 0.9
+- **incoming** Karen Morgan `FAMILY` — affinity 0.9
+- **outgoing** Nigel Morgan `FAMILY` — affinity 0.9
+- **incoming** Nigel Morgan `FAMILY` — affinity 0.9
+### Kevin Morgan (resident #654629)
+- **outgoing** Diane Fletcher `CIVIC_PEER` — affinity 0.5
+- **outgoing** Donna Bailey `CONGREGATIONAL` — affinity 0.65
+- **incoming** Donna Bailey `CONGREGATIONAL` — affinity 0.65
+- **outgoing** Janet Bailey `DRINKING_MATE` — affinity 0.55
+- **incoming** Susan Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Mason `DRINKING_MATE` — affinity 0.55
+### Alan Murphy (resident #426434)
+- **outgoing** Ian Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Wayne Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mandy Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Wayne Green `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Murphy `FAMILY` — affinity 0.9
+- **incoming** Jacqueline Murphy `FAMILY` — affinity 0.9
+### Beverley Murphy (resident #624100)
+- **outgoing** Sharon Shaw `CIVIC_PEER` — affinity 0.5
+- **incoming** Clare Wright `CIVIC_PEER` — affinity 0.5
+- **outgoing** Raymond Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Doherty `DRINKING_MATE` — affinity 0.55
+- **incoming** Lorraine Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Griffiths `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Hamilton `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Smith `DRINKING_MATE` — affinity 0.55
+### Clive Murphy (resident #361532)
+- **outgoing** Glyn Dunne `CIVIC_PEER` — affinity 0.5
+- **incoming** Keith Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Clare Jones `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Mason `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Morgan `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Murphy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Ian Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Walker `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Ward `DRINKING_MATE` — affinity 0.55
+### Lorraine Murphy (resident #145657)
+- **outgoing** Stuart Campbell `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Wendy Johnson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stephen Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare Murphy `FAMILY` — affinity 0.9
+- **incoming** Clare Murphy `FAMILY` — affinity 0.9
+- **outgoing** Sandra Murphy `FAMILY` — affinity 0.9
+- **incoming** Sandra Murphy `FAMILY` — affinity 0.9
+### Martin O'Brien (resident #722226)
+- **outgoing** Dawn Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Jones `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Walker `DRINKING_MATE` — affinity 0.55
+### Julie O'Connor (resident #48372)
+- **incoming** Wayne Connolly `CIVIC_PEER` — affinity 0.5
+- **incoming** Linda Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Hamilton `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Harrison `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol O'Connor `FAMILY` — affinity 0.9
+- **incoming** Carol O'Connor `FAMILY` — affinity 0.9
+- **outgoing** Graham O'Connor `FAMILY` — affinity 0.9
+### Sandra O'Connor (resident #228951)
+- **incoming** Diane Patel `CIVIC_PEER` — affinity 0.5
+- **outgoing** Ian Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Tracey Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Gallagher `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Morgan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian O'Connor `FAMILY` — affinity 0.9
+- **incoming** Gillian O'Connor `FAMILY` — affinity 0.9
+- **outgoing** Keith O'Connor `FAMILY` — affinity 0.9
+- **incoming** Keith O'Connor `FAMILY` — affinity 0.9
+### Colin O'Neill (resident #250718)
+- **incoming** Jacqueline Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Alison Mason `DRINKING_MATE` — affinity 0.55
+- **incoming** Graham Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Roberts `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Trevor Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet O'Neill `FAMILY` — affinity 0.9
+- **incoming** Janet O'Neill `FAMILY` — affinity 0.9
+- **outgoing** Shirley O'Neill `FAMILY` — affinity 0.9
+- **incoming** Shirley O'Neill `FAMILY` — affinity 0.9
+### Shirley O'Neill (resident #488806)
+- **outgoing** Julie Green `CIVIC_PEER` — affinity 0.5
+- **incoming** Brian Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Ian Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Shah `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Ward `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Watson `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley O'Neill `FAMILY` — affinity 0.9
+- **incoming** Shirley O'Neill `FAMILY` — affinity 0.9
+### Diane Patel (resident #323332)
+- **outgoing** Gary Butler `CIVIC_PEER` — affinity 0.5
+- **outgoing** Sandra O'Connor `CIVIC_PEER` — affinity 0.5
+- **incoming** Beverley Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Brian O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Turner `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Patel `FAMILY` — affinity 0.9
+- **incoming** Billy Patel `FAMILY` — affinity 0.9
+- **outgoing** Carol Patel `FAMILY` — affinity 0.9
+- **incoming** Carol Patel `FAMILY` — affinity 0.9
+### Gillian Patel (resident #249319)
+- **outgoing** Denise Akhtar `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Wright `DRINKING_MATE` — affinity 0.55
+- **outgoing** Brian Patel `FAMILY` — affinity 0.9
+- **incoming** Brian Patel `FAMILY` — affinity 0.9
+- **outgoing** Mark Patel `FAMILY` — affinity 0.9
+- **incoming** Mark Patel `FAMILY` — affinity 0.9
+### Roy Powell (resident #558044)
+- **outgoing** Julie Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Maguire `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Moore `DRINKING_MATE` — affinity 0.55
+- **incoming** Martin Murphy `DRINKING_MATE` — affinity 0.55
+- **incoming** Clive O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Lorraine Powell `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Lorraine Powell `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Donna Powell `FAMILY` — affinity 0.9
+### Karen Reid (resident #179555)
+- **incoming** Wendy Butler `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Jacqueline Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Tina Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Darren O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Brian Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Ward `DRINKING_MATE` — affinity 0.55
+### Carol Richards (resident #630433)
+- **outgoing** Linda Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Powell `DRINKING_MATE` — affinity 0.55
+- **incoming** Graham Richards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Thompson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Richards `FAMILY` — affinity 0.9
+- **incoming** Barry Richards `FAMILY` — affinity 0.9
+- **outgoing** Janet Richards `FAMILY` — affinity 0.9
+- **incoming** Janet Richards `FAMILY` — affinity 0.9
+- **outgoing** Wendy Richards `FAMILY` — affinity 0.9
+### Linda Richards (resident #228435)
+- **incoming** Trevor Simpson `CIVIC_PEER` — affinity 0.5
+- **outgoing** Lorraine Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian McCarthy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Reid `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Richards `FAMILY` — affinity 0.9
+- **incoming** Gary Richards `FAMILY` — affinity 0.9
+- **outgoing** Stephen Richards `FAMILY` — affinity 0.9
+- **incoming** Stephen Richards `FAMILY` — affinity 0.9
+### Terry Richards (resident #397253)
+- **outgoing** Donna Bennett `CIVIC_PEER` — affinity 0.5
+- **outgoing** Nicola Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Gill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stephen Hall `DRINKING_MATE` — affinity 0.55
+- **incoming** Tony Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Richards `FAMILY` — affinity 0.9
+- **incoming** Dean Richards `FAMILY` — affinity 0.9
+- **outgoing** Roy Richards `FAMILY` — affinity 0.9
+- **incoming** Roy Richards `FAMILY` — affinity 0.9
+### Brian Roberts (resident #243672)
+- **incoming** Stuart Green `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Kaur `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Mason `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Keith Roberts `FAMILY` — affinity 0.9
+- **incoming** Keith Roberts `FAMILY` — affinity 0.9
+- **outgoing** Mark Roberts `FAMILY` — affinity 0.9
+- **incoming** Mark Roberts `FAMILY` — affinity 0.9
+- **outgoing** Sandra Roberts `FAMILY` — affinity 0.9
+- **incoming** Sandra Roberts `FAMILY` — affinity 0.9
+### Tracey Roberts (resident #546347)
+- **incoming** Malcolm Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Raymond Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Kelly `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alison Wilson `DRINKING_MATE` — affinity 0.55
+### Donna Shah (resident #603632)
+- **incoming** Nigel Butler `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Butler `DRINKING_MATE` — affinity 0.55
+- **outgoing** Mark Hall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Karen Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Shah `FAMILY` — affinity 0.9
+- **incoming** Donna Shah `FAMILY` — affinity 0.9
+- **outgoing** Sandra Shah `FAMILY` — affinity 0.9
+- **incoming** Sandra Shah `FAMILY` — affinity 0.9
+- **outgoing** Stuart Shah `FAMILY` — affinity 0.9
+### Trevor Shah (resident #198192)
+- **incoming** Ian Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Gill `DRINKING_MATE` — affinity 0.55
+- **incoming** Shirley Grant `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Hill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Shah `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Paula Shah `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Paula Shah `FAMILY` — affinity 0.9
+- **incoming** Paula Shah `FAMILY` — affinity 0.9
+### Gillian Shaw (resident #526861)
+- **incoming** Darren Taylor `CIVIC_PEER` — affinity 0.5
+- **incoming** Susan Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary McCarthy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Shaw `FAMILY` — affinity 0.9
+- **incoming** Barry Shaw `FAMILY` — affinity 0.9
+- **outgoing** Nigel Shaw `FAMILY` — affinity 0.9
+- **incoming** Nigel Shaw `FAMILY` — affinity 0.9
+### Jacqueline Shaw (resident #222518)
+- **incoming** Martin Gallagher `DRINKING_MATE` — affinity 0.55
+- **incoming** Diane Harrison `DRINKING_MATE` — affinity 0.55
+- **outgoing** Jacqueline Jones `DRINKING_MATE` — affinity 0.55
+- **incoming** Nigel Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Shaw `FAMILY` — affinity 0.9
+- **incoming** Janet Shaw `FAMILY` — affinity 0.9
+- **outgoing** Julie Shaw `FAMILY` — affinity 0.9
+- **incoming** Julie Shaw `FAMILY` — affinity 0.9
+- **outgoing** Lorraine Shaw `FAMILY` — affinity 0.9
+### Sharon Shaw (resident #49937)
+- **incoming** Beverley Murphy `CIVIC_PEER` — affinity 0.5
+- **outgoing** Alison Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean McCarthy `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Shaw `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paul Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Shaw `FAMILY` — affinity 0.9
+- **incoming** Shaun Shaw `FAMILY` — affinity 0.9
+- **outgoing** Wayne Shaw `FAMILY` — affinity 0.9
+- **incoming** Wayne Shaw `FAMILY` — affinity 0.9
+### Sharon Shaw (resident #416420)
+- **incoming** Colin Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Marshall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Debbie Williams `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Shaw `FAMILY` — affinity 0.9
+- **incoming** Shirley Shaw `FAMILY` — affinity 0.9
+- **outgoing** Stuart Shaw `FAMILY` — affinity 0.9
+- **incoming** Stuart Shaw `FAMILY` — affinity 0.9
+- **outgoing** Terry Shaw `FAMILY` — affinity 0.9
+- **incoming** Terry Shaw `FAMILY` — affinity 0.9
+### Trevor Simpson (resident #180092)
+- **incoming** Beverley Doherty `CIVIC_PEER` — affinity 0.5
+- **outgoing** Linda Richards `CIVIC_PEER` — affinity 0.5
+- **outgoing** Karen Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Campbell `DRINKING_MATE` — affinity 0.55
+- **incoming** Stephen Griffiths `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Hamilton `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Lewis `DRINKING_MATE` — affinity 0.55
+### Wayne Simpson (resident #402803)
+- **incoming** Raymond Turner `CIVIC_PEER` — affinity 0.5
+- **incoming** Tracey Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gary Brennan `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Alan Gill `DRINKING_MATE` — affinity 0.55
+- **incoming** Alan Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Smith `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Wilson `DRINKING_MATE` — affinity 0.55
+### Wendy Simpson (resident #277272)
+- **outgoing** Wendy Bailey `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Shaun White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Simpson `FAMILY` — affinity 0.9
+- **incoming** Beverley Simpson `FAMILY` — affinity 0.9
+- **outgoing** Tina Simpson `FAMILY` — affinity 0.9
+- **incoming** Tina Simpson `FAMILY` — affinity 0.9
+### Graham Singh (resident #367326)
+- **incoming** Alan Butler `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Singh `FAMILY` — affinity 0.9
+- **incoming** Beverley Singh `FAMILY` — affinity 0.9
+- **outgoing** Glyn Singh `FAMILY` — affinity 0.9
+- **incoming** Glyn Singh `FAMILY` — affinity 0.9
+### Graham Smith (resident #520974)
+- **incoming** Dean Harrison `CIVIC_PEER` — affinity 0.5
+- **outgoing** Wayne Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Julie Shaw `DRINKING_MATE` — affinity 0.55
+- **incoming** Derek Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Stevens `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Graham Smith `FAMILY` — affinity 0.9
+- **incoming** Graham Smith `FAMILY` — affinity 0.9
+- **outgoing** Nicola Smith `FAMILY` — affinity 0.9
+- **incoming** Nicola Smith `FAMILY` — affinity 0.9
+### Nicola Smith (resident #153452)
+- **outgoing** Trevor Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Johnson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Smith `FAMILY` — affinity 0.9
+- **incoming** Donna Smith `FAMILY` — affinity 0.9
+- **outgoing** Shirley Smith `FAMILY` — affinity 0.9
+- **incoming** Shirley Smith `FAMILY` — affinity 0.9
+- **outgoing** Susan Smith `FAMILY` — affinity 0.9
+- **incoming** Susan Smith `FAMILY` — affinity 0.9
+### Darren Taylor (resident #33424)
+- **outgoing** Dean Harrison `CIVIC_PEER` — affinity 0.5
+- **outgoing** Gillian Shaw `CIVIC_PEER` — affinity 0.5
+- **incoming** Clive Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Iqbal `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona Jones `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary Khan `DRINKING_MATE` — affinity 0.55
+- **incoming** Janet Shaw `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Taylor `EXTENDED_FAMILY` — affinity 0.8
+### Kevin Taylor (resident #121897)
+- **outgoing** Graham Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Davies `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola Patel `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Simpson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Carol Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Taylor `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Roy Taylor `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Terry Taylor `FAMILY` — affinity 0.9
+- **incoming** Terry Taylor `FAMILY` — affinity 0.9
+### Sharon Thomas (resident #550860)
+- **outgoing** Denise Hamilton `CIVIC_PEER` — affinity 0.5
+- **outgoing** Beverley Ward `CONGREGATIONAL` — affinity 0.65
+- **incoming** Beverley Ward `CONGREGATIONAL` — affinity 0.65
+- **incoming** Linda Ali `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Bailey `DRINKING_MATE` — affinity 0.55
+- **incoming** Diane Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Davies `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Terry Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Roy Mason `DRINKING_MATE` — affinity 0.55
+### Beverley Thompson (resident #285738)
+- **incoming** Dawn Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Evans `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Hill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wendy Johnson `DRINKING_MATE` — affinity 0.55
+- **incoming** Fiona O'Neill `DRINKING_MATE` — affinity 0.55
+- **incoming** Stuart Simpson `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Walker `DRINKING_MATE` — affinity 0.55
+- **incoming** Sharon Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Susan Watson `DRINKING_MATE` — affinity 0.55
+### Donna Thompson (resident #585356)
+- **outgoing** Linda Clarke `CIVIC_PEER` — affinity 0.5
+- **outgoing** Wayne Connolly `CIVIC_PEER` — affinity 0.5
+- **incoming** Kevin Dunne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wendy Williams `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Thompson `FAMILY` — affinity 0.9
+- **incoming** Dawn Thompson `FAMILY` — affinity 0.9
+- **outgoing** Mandy Thompson `FAMILY` — affinity 0.9
+- **incoming** Mandy Thompson `FAMILY` — affinity 0.9
+### Gary Thompson (resident #371008)
+- **outgoing** Julie Green `CIVIC_PEER` — affinity 0.5
+- **outgoing** Jacqueline Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Linda Clark `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Roy Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Jones `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Robinson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Malcolm Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Ian Thompson `FAMILY` — affinity 0.9
+### Shirley Thompson (resident #573966)
+- **outgoing** Jacqueline Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Janet Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tina Robinson `DRINKING_MATE` — affinity 0.55
+- **incoming** Gary Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Wilson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Dean Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Julie Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Julie Thompson `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Roy Thompson `FAMILY` — affinity 0.9
+### Wendy Thompson (resident #634625)
+- **outgoing** Trevor Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Denise Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Donna Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Thompson `FAMILY` — affinity 0.9
+- **incoming** Darren Thompson `FAMILY` — affinity 0.9
+- **outgoing** Sandra Thompson `FAMILY` — affinity 0.9
+- **incoming** Sandra Thompson `FAMILY` — affinity 0.9
+- **outgoing** Wayne Thompson `FAMILY` — affinity 0.9
+- **incoming** Wayne Thompson `FAMILY` — affinity 0.9
+### Donna Turner (resident #41878)
+- **incoming** Linda Fletcher `CIVIC_PEER` — affinity 0.5
+- **outgoing** Shirley Brennan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Choudhury `DRINKING_MATE` — affinity 0.55
+- **incoming** Glyn Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Raymond Lewis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Donna Mason `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Turner `FAMILY` — affinity 0.9
+- **incoming** Tracey Turner `FAMILY` — affinity 0.9
+### Raymond Turner (resident #333305)
+- **outgoing** Wayne Simpson `CIVIC_PEER` — affinity 0.5
+- **incoming** Alison Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Kevin Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Grant `DRINKING_MATE` — affinity 0.55
+- **incoming** Clive Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Colin Turner `FAMILY` — affinity 0.9
+- **incoming** Colin Turner `FAMILY` — affinity 0.9
+### Malcolm Walsh (resident #66467)
+- **outgoing** Derek Gordon `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dean Walsh `FAMILY` — affinity 0.9
+- **incoming** Dean Walsh `FAMILY` — affinity 0.9
+### Alison Watson (resident #443324)
+- **incoming** Gary Baker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Cooper `DRINKING_MATE` — affinity 0.55
+- **incoming** Paul Morgan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Shaw `DRINKING_MATE` — affinity 0.55
+- **incoming** Shaun White `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Watson `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Wayne Watson `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Alison Watson `FAMILY` — affinity 0.9
+- **incoming** Alison Watson `FAMILY` — affinity 0.9
+- **outgoing** Wayne Watson `FAMILY` — affinity 0.9
+### Alison Watson (resident #593270)
+- **incoming** Paula Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nigel McCarthy `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Patel `DRINKING_MATE` — affinity 0.55
+- **incoming** Brian Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alison Watson `FAMILY` — affinity 0.9
+- **incoming** Alison Watson `FAMILY` — affinity 0.9
+- **outgoing** Clive Watson `FAMILY` — affinity 0.9
+- **incoming** Clive Watson `FAMILY` — affinity 0.9
+- **outgoing** Denise Watson `FAMILY` — affinity 0.9
+- **incoming** Denise Watson `FAMILY` — affinity 0.9
+### Lorraine Watson (resident #700711)
+- **outgoing** Beverley Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Davies `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Harrison `DRINKING_MATE` — affinity 0.55
+- **incoming** Neil Hughes `DRINKING_MATE` — affinity 0.55
+- **outgoing** Neil Kelly `DRINKING_MATE` — affinity 0.55
+- **incoming** Linda Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Gillian Ward `DRINKING_MATE` — affinity 0.55
+- **outgoing** Julie Watson `FAMILY` — affinity 0.9
+- **incoming** Julie Watson `FAMILY` — affinity 0.9
+- **outgoing** Karen Watson `FAMILY` — affinity 0.9
+### Neil Watson (resident #647685)
+- **outgoing** Stuart Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Gordon `DRINKING_MATE` — affinity 0.55
+- **outgoing** Keith Hall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin Shah `DRINKING_MATE` — affinity 0.55
+- **incoming** Glyn Taylor `DRINKING_MATE` — affinity 0.55
+- **incoming** Neil Walker `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clive Watson `FAMILY` — affinity 0.9
+- **incoming** Clive Watson `FAMILY` — affinity 0.9
+- **outgoing** Glyn Watson `FAMILY` — affinity 0.9
+### Janet Webb (resident #259231)
+- **outgoing** Stephen Jones `CIVIC_PEER` — affinity 0.5
+- **incoming** Paula Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Raymond Bennett `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sharon Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stephen Moore `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Denise Webb `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Denise Webb `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Denise Webb `FAMILY` — affinity 0.9
+- **incoming** Denise Webb `FAMILY` — affinity 0.9
+### Dean White (resident #389465)
+- **outgoing** Roy Brown `DRINKING_MATE` — affinity 0.55
+- **outgoing** Darren Dunne `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Fletcher `DRINKING_MATE` — affinity 0.55
+- **incoming** Darren Hamilton `DRINKING_MATE` — affinity 0.55
+- **incoming** Sandra Lewis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Morgan `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Patel `DRINKING_MATE` — affinity 0.55
+- **incoming** Clare Powell `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shirley White `FAMILY` — affinity 0.9
+- **incoming** Shirley White `FAMILY` — affinity 0.9
+### Graham White (resident #28191)
+- **outgoing** Julie Edwards `DRINKING_MATE` — affinity 0.55
+- **incoming** Shaun Gill `DRINKING_MATE` — affinity 0.55
+- **incoming** Malcolm Hamilton `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Moore `DRINKING_MATE` — affinity 0.55
+- **incoming** Alan Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Raymond Price `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Nicola Richards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Shaun Walsh `DRINKING_MATE` — affinity 0.55
+- **incoming** Alan Webb `DRINKING_MATE` — affinity 0.55
+### Janet White (resident #388973)
+- **incoming** Jacqueline Ahmed `CIVIC_PEER` — affinity 0.5
+- **outgoing** Shaun Baker `DRINKING_MATE` — affinity 0.55
+- **incoming** Sharon Bennett `DRINKING_MATE` — affinity 0.55
+- **incoming** Clive Hall `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Malik `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Turner `DRINKING_MATE` — affinity 0.55
+- **incoming** Trevor Wood `DRINKING_MATE` — affinity 0.55
+- **outgoing** Clare White `FAMILY` — affinity 0.9
+- **incoming** Clare White `FAMILY` — affinity 0.9
+### Shirley White (resident #742998)
+- **incoming** Darren Clarke `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Lewis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet O'Brien `DRINKING_MATE` — affinity 0.55
+- **outgoing** Martin Price `DRINKING_MATE` — affinity 0.55
+- **incoming** Nigel Singh `DRINKING_MATE` — affinity 0.55
+- **incoming** Shirley Watson `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley White `EXTENDED_FAMILY` — affinity 0.8
+- **incoming** Beverley White `EXTENDED_FAMILY` — affinity 0.8
+- **outgoing** Beverley White `FAMILY` — affinity 0.9
+- **incoming** Beverley White `FAMILY` — affinity 0.9
+### Lorraine Williams (resident #341843)
+- **outgoing** Darren Cooper `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Hamilton `DRINKING_MATE` — affinity 0.55
+- **outgoing** Ian Williams `FAMILY` — affinity 0.9
+- **incoming** Ian Williams `FAMILY` — affinity 0.9
+### Brian Wood (resident #436476)
+- **outgoing** Debbie Clarke `DRINKING_MATE` — affinity 0.55
+- **outgoing** Wayne Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Walsh `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Wood `FAMILY` — affinity 0.9
+- **incoming** Billy Wood `FAMILY` — affinity 0.9
+- **outgoing** Diane Wood `FAMILY` — affinity 0.9
+- **incoming** Diane Wood `FAMILY` — affinity 0.9
+### Mark Wood (resident #126764)
+- **outgoing** Nigel Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Kevin O'Connor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Gillian Wood `FAMILY` — affinity 0.9
+- **incoming** Gillian Wood `FAMILY` — affinity 0.9
+- **outgoing** Glyn Wood `FAMILY` — affinity 0.9
+- **incoming** Glyn Wood `FAMILY` — affinity 0.9
+### Tracey Wood (resident #170678)
+- **outgoing** Janet Francis `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Taylor `DRINKING_MATE` — affinity 0.55
+- **incoming** Paula Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Diane Wood `FAMILY` — affinity 0.9
+- **incoming** Diane Wood `FAMILY` — affinity 0.9
+- **outgoing** Gary Wood `FAMILY` — affinity 0.9
+- **incoming** Gary Wood `FAMILY` — affinity 0.9
+- **outgoing** Terry Wood `FAMILY` — affinity 0.9
+- **incoming** Terry Wood `FAMILY` — affinity 0.9
+### Wayne Wood (resident #649834)
+- **outgoing** Linda Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian O'Neill `DRINKING_MATE` — affinity 0.55
+- **outgoing** Malcolm Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tony Thomas `DRINKING_MATE` — affinity 0.55
+- **incoming** Dean Webb `DRINKING_MATE` — affinity 0.55
+- **outgoing** Stuart Wood `FAMILY` — affinity 0.9
+- **incoming** Stuart Wood `FAMILY` — affinity 0.9
+- **outgoing** Susan Wood `FAMILY` — affinity 0.9
+- **incoming** Susan Wood `FAMILY` — affinity 0.9
+- **outgoing** Yvonne Wood `FAMILY` — affinity 0.9
+### Clare Wright (resident #128395)
+- **incoming** Lorraine Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Janet Evans `DRINKING_MATE` — affinity 0.55
+- **incoming** Beverley Jones `DRINKING_MATE` — affinity 0.55
+- **outgoing** Tracey Moore `DRINKING_MATE` — affinity 0.55
+- **incoming** Ian Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Alan Wright `FAMILY` — affinity 0.9
+- **incoming** Alan Wright `FAMILY` — affinity 0.9
+- **outgoing** Brian Wright `FAMILY` — affinity 0.9
+- **incoming** Brian Wright `FAMILY` — affinity 0.9
+- **outgoing** Gillian Wright `FAMILY` — affinity 0.9
+### Clare Wright (resident #153318)
+- **outgoing** Beverley Murphy `CIVIC_PEER` — affinity 0.5
+- **outgoing** Wendy Ahmed `DRINKING_MATE` — affinity 0.55
+- **outgoing** Billy Brown `DRINKING_MATE` — affinity 0.55
+- **incoming** Carol Connolly `DRINKING_MATE` — affinity 0.55
+- **incoming** Neil Doherty `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Hill `DRINKING_MATE` — affinity 0.55
+- **incoming** Debbie Hughes `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Roberts `DRINKING_MATE` — affinity 0.55
+- **outgoing** Yvonne Wright `FAMILY` — affinity 0.9
+- **incoming** Yvonne Wright `FAMILY` — affinity 0.9
+### Graham Wright (resident #79276)
+- **incoming** Jacqueline Edwards `DRINKING_MATE` — affinity 0.55
+- **outgoing** Barry Fletcher `DRINKING_MATE` — affinity 0.55
+- **outgoing** Fiona Green `DRINKING_MATE` — affinity 0.55
+- **incoming** Mark Moore `DRINKING_MATE` — affinity 0.55
+- **outgoing** Derek O'Brien `DRINKING_MATE` — affinity 0.55
+- **incoming** Karen Smith `DRINKING_MATE` — affinity 0.55
+- **incoming** Colin Taylor `DRINKING_MATE` — affinity 0.55
+- **outgoing** Nicola Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Brian Wright `FAMILY` — affinity 0.9
+- **incoming** Brian Wright `FAMILY` — affinity 0.9
+### Jacqueline Wright (resident #269220)
+- **incoming** Sharon Byrne `DRINKING_MATE` — affinity 0.55
+- **outgoing** Paula Harrison `DRINKING_MATE` — affinity 0.55
+- **outgoing** Sandra Maguire `DRINKING_MATE` — affinity 0.55
+- **outgoing** Beverley Stevens `DRINKING_MATE` — affinity 0.55
+- **incoming** Billy Thomas `DRINKING_MATE` — affinity 0.55
+- **outgoing** Dawn Wright `FAMILY` — affinity 0.9
+- **incoming** Dawn Wright `FAMILY` — affinity 0.9
+- **outgoing** Tina Wright `FAMILY` — affinity 0.9
+- **incoming** Tina Wright `FAMILY` — affinity 0.9
+
+## Interpretation
+- Family is taken from active `FAMILY`, `SPOUSE`, and `EXTENDED_FAMILY` edges in either direction.
+- Work friends are all other living residents with an active contract at any employer shared by the resident.
+- Direct relationship lists include both outgoing and incoming social edges, because `social_relationships` is directed.
+- Expanded relationship sections are limited to 10 edges per person for this report.
+- Contract rows are limited to `valid_to IS NULL`; historical contracts are excluded.

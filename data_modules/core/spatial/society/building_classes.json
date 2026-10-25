@@ -2,139 +2,158 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.0.0",
-    "description": "Establishment classes, tenancy types, and staffing distributions for individual building lots."
+    "version": "1.1.0",
+    "description": "Establishment classes, staffing distributions, and customer catchment thresholds."
   },
   "commercial_tenants": {
     "CORNER_SHOP": {
-      "display_name": "Corner Shop / Newsagent",
+      "display_name": "Corner Shop & Newsagent",
       "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "high_density_high_rise"],
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
       "default_capacity": 4,
-      "default_employees": [1, 2],
+      "employee_range": [1, 3],
+      "customer_travel_distance_m": 450.0,
+      "required_customer_threshold": 80,
       "weight": 25
     },
     "OFF_LICENCE": {
       "display_name": "Off-Licence & Wine Merchant",
       "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
       "default_capacity": 6,
-      "default_employees": [1, 3],
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 600.0,
+      "required_customer_threshold": 120,
       "weight": 15
     },
     "LOCAL_PUB": {
       "display_name": "Public House & Taproom",
       "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density", "industrial"],
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "industrial"],
       "default_capacity": 60,
-      "default_employees": [3, 8],
+      "employee_range": [3, 8],
+      "customer_travel_distance_m": 750.0,
+      "required_customer_threshold": 250,
+      "weight": 20
+    },
+    "FISH_AND_CHIP_SHOP": {
+      "display_name": "Fish and Chip Shop",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "industrial"],
+      "default_capacity": 60,
+      "employee_range": [3, 8],
+      "customer_travel_distance_m": 750.0,
+      "required_customer_threshold": 250,
+      "weight": 20
+    },
+    "CHINESE_TAKEAWAY": {
+      "display_name": "Chinese Take Away",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "industrial"],
+      "default_capacity": 60,
+      "employee_range": [3, 5],
+      "customer_travel_distance_m": 750.0,
+      "required_customer_threshold": 250,
+      "weight": 20
+    },
+    "INDIAN_TAKEAWAY": {
+      "display_name": "Indian Take Away",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "industrial"],
+      "default_capacity": 60,
+      "employee_range": [3, 8],
+      "customer_travel_distance_m": 750.0,
+      "required_customer_threshold": 250,
+      "weight": 20
+    },
+    "INDIAN_RESTAURANT": {
+      "display_name": "Indian Restaurant",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "industrial"],
+      "default_capacity": 60,
+      "employee_range": [3, 8],
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 550,
       "weight": 20
     },
     "BETTING_SHOP": {
-      "display_name": "Turf Accountant / Bookmakers",
+      "display_name": "Turf Accountant & Bookmakers",
       "sector": "COMMERCIAL",
       "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
       "default_capacity": 15,
-      "default_employees": [2, 4],
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 900.0,
+      "required_customer_threshold": 180,
       "weight": 12
+    },
+    "BUTCHER": {
+      "display_name": "Family Butcher",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
+      "default_capacity": 8,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 500.0,
+      "required_customer_threshold": 100,
+      "weight": 15
+    },
+    "BAKERY": {
+      "display_name": "Family Bakery",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
+      "default_capacity": 8,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 500.0,
+      "required_customer_threshold": 100,
+      "weight": 15
+    },
+    "PET_SHOP": {
+      "display_name": "Pet Shop",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
+      "default_capacity": 8,
+      "employee_range": [1, 2],
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 400,
+      "weight": 15
+    },
+    "Toy Shop": {
+      "display_name": "Toy Shop",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential"],
+      "default_capacity": 8,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 400,
+      "weight": 15
     },
     "HARDWARE_STORE": {
       "display_name": "Ironmonger & DIY Supplies",
       "sector": "COMMERCIAL",
       "spawns_in_archetypes": ["commercial", "suburban_low_density"],
-      "default_capacity": 8,
-      "default_employees": [1, 3],
+      "default_capacity": 10,
+      "employee_range": [2, 5],
+      "customer_travel_distance_m": 1200.0,
+      "required_customer_threshold": 300,
       "weight": 10
-    },
-    "BAKERY_OR_BUTCHER": {
-      "display_name": "Family Butcher & Bakery",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
-      "default_capacity": 8,
-      "default_employees": [2, 4],
-      "weight": 15
-    },
-    "GROCERS": {
-      "display_name": "Family Green Grocers",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise"],
-      "default_capacity": 8,
-      "default_employees": [2, 4],
-      "weight": 15
-    },
-    "POST_OFFICE": {
-      "display_name": "Sub-Post Office",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 10,
-      "default_employees": [2, 4],
-      "weight": 8
-    },
-    "GP_SURGERY": {
-      "display_name": "Medical Practice & Surgery",
-      "sector": "CIVIC_SERVICE",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 20,
-      "default_employees": [3, 6],
-      "weight": 6
-    },
-    "BARBERS_OR_HAIRDRESSERS": {
-      "display_name": "Hairdressers",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 6,
-      "default_employees": [3, 6],
-      "weight": 6
-    },
-    "CAFE": {
-      "display_name": "Greasy Spoon Cafe",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 25,
-      "default_employees": [2, 5],
-      "weight": 6
-    },
-    "RESTAURANT": {
-      "display_name": "Family Restaurant",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 20,
-      "default_employees": [3, 6],
-      "weight": 6
-    },
-    "TOY_SHOP": {
-      "display_name": "Toy Shop",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 10,
-      "default_employees": [1, 2],
-      "weight": 6
-    },
-    "PET_SHOP": {
-      "display_name": "Pet Shop",
-      "sector": "COMMERCIAL",
-      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "suburban_low_density"],
-      "default_capacity": 10,
-      "default_employees": [1, 2],
-      "weight": 6
     }
   },
-
   "industrial_tenants": {
     "FOUNDRY_CASTINGS": {
-      "display_name": "Metal Foundry & Castings",
+      "display_name": "Metal Foundry & Heavy Engineering",
       "sector": "INDUSTRIAL",
       "spawns_in_archetypes": ["industrial"],
-      "default_capacity": 45,
-      "default_employees": [15, 35],
+      "default_capacity": 50,
+      "employee_range": [15, 35],
       "weight": 20
     },
     "AUTO_REPAIR_DEPOT": {
       "display_name": "Motor Repair Works & Body Shop",
       "sector": "INDUSTRIAL",
-      "spawns_in_archetypes": ["industrial", "suburban_low_density"],
+      "spawns_in_archetypes": ["industrial", "suburban_low_density", "medium_density_residential"],
       "default_capacity": 12,
-      "default_employees": [3, 8],
+      "employee_range": [3, 8],
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 200,
       "weight": 25
     },
     "SCRAP_MERCHANT": {
@@ -142,16 +161,116 @@
       "sector": "INDUSTRIAL",
       "spawns_in_archetypes": ["industrial"],
       "default_capacity": 10,
-      "default_employees": [2, 6],
+      "employee_range": [2, 6],
       "weight": 15
     },
-    "TEXTILE_OR_JOINERY": {
+    "JOINERY": {
       "display_name": "Joinery Works & Timber Yard",
       "sector": "INDUSTRIAL",
       "spawns_in_archetypes": ["industrial"],
       "default_capacity": 25,
-      "default_employees": [6, 18],
+      "employee_range": [6, 18],
       "weight": 20
+    },
+    "TEXTILES": {
+      "display_name": "Textiles and Cloth",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [6, 18],
+      "weight": 20
+    },
+    "CLOTHS_MANUFACTURER": {
+      "display_name": "Clothes Manufacturers",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [16, 32],
+      "weight": 20
+    },
+    "INDURSTRIAL_PRINTERS": {
+      "display_name": "Printers",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [6, 12],
+      "weight": 20
+    },
+    "MAILHOUSE": {
+      "display_name": "Mail house",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [6, 18],
+      "weight": 20
+    },
+    "FURNITURE_MANUFACTURER": {
+      "display_name": "Furniture Manufacturer",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [6, 18],
+      "weight": 20
+    },
+    "BREWERY": {
+      "display_name": "Brewery",
+      "sector": "INDUSTRIAL",
+      "spawns_in_archetypes": ["industrial"],
+      "default_capacity": 25,
+      "employee_range": [6, 18],
+      "weight": 20
+    }
+  },
+  "civic_tenants": {
+    "GP_SURGERY": {
+      "display_name": "Medical Practice & Surgery",
+      "sector": "CIVIC_SERVICE",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "high_density_high_rise"],
+      "default_capacity": 20,
+      "employee_range": [3, 6],
+      "customer_travel_distance_m": 650.0,
+      "required_customer_threshold": 400,
+      "weight": 8
+    },
+    "DENTAL_PRACTICE": {
+      "display_name": "Dental Surgery",
+      "sector": "CIVIC_SERVICE",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "high_density_high_rise"],
+      "default_capacity": 15,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 900.0,
+      "required_customer_threshold": 600,
+      "weight": 5
+    },
+    "CHIROPODIST": {
+      "display_name": "Chiropodist Surgery",
+      "sector": "CIVIC_SERVICE",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "high_density_high_rise"],
+      "default_capacity": 15,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 900.0,
+      "required_customer_threshold": 600,
+      "weight": 5
+    },
+    "SUB_POST_OFFICE": {
+      "display_name": "Sub-Post Office & Newsagent",
+      "sector": "COMMERCIAL",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "medium_density_residential", "suburban_low_density", "high_density_high_rise"],
+      "default_capacity": 12,
+      "employee_range": [2, 4],
+      "customer_travel_distance_m": 500.0,
+      "required_customer_threshold": 300,
+      "weight": 10
+    },
+    "LOCAL_POLICE_POST": {
+      "display_name": "Section Police Station",
+      "sector": "CIVIC_SERVICE",
+      "spawns_in_archetypes": ["commercial", "high_density_low_rise", "industrial", "high_density_high_rise"],
+      "default_capacity": 25,
+      "employee_range": [4, 8],
+      "customer_travel_distance_m": 1200.0,
+      "required_customer_threshold": 800,
+      "weight": 4
     }
   }
 }

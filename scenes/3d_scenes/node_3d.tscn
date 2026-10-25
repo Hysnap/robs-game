@@ -6,9 +6,15 @@
 [ext_resource type="Resource" uid="uid://bc4as5ski1gf5" path="res://resources/city/default_european_city.tres" id="4_wmafb"]
 [ext_resource type="Script" uid="uid://dro7lvs2xaob" path="res://scripts/world/camera/rts_camera.gd" id="5_cgrx7"]
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_s5x6w"]
+
+[sub_resource type="Sky" id="Sky_fpx6n"]
+sky_material = SubResource("ProceduralSkyMaterial_s5x6w")
+
 [sub_resource type="Environment" id="Environment_f7jhf"]
-background_mode = 1
-background_color = Color(0.078431375, 0.12156863, 0.18039216, 1)
+background_mode = 2
+background_color = Color(0.08235294, 0.3372549, 0.21176471, 1)
+sky = SubResource("Sky_fpx6n")
 ambient_light_source = 2
 ambient_light_color = Color(0.54901963, 0.61960787, 0.7490196, 1)
 ambient_light_energy = 0.7

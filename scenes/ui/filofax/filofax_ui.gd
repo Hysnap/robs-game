@@ -13,11 +13,11 @@ const VERB_ROUTER = preload("res://systems/verb_router.gd")
 @onready var comms_device_icon: Label = $"Binder Shell/HeaderBar/CommsDeviceIcon"
 
 @onready var tab_container: TabContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer"
-@onready var telemetry_tab: Control = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
-@onready var roster_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab"
-@onready var financials_tab: VBoxContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab"
+@onready var telemetry_tab: ScrollContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab"
+@onready var roster_tab: ScrollContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab"
+@onready var financials_tab: ScrollContainer = $"Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab"
 
-@onready var memo_list: VBoxContainer = $"Binder Shell/PageSpread/RingSpike_Center/MemoScroll/MemoList"
+@onready var memo_list: ScrollContainer = $"Binder Shell/PageSpread/RingSpike_Center/MemoScroll"
 @onready var directive_queue: ItemList = $"Binder Shell/PageSpread/RightPage_Planner/Operational/DirectiveQueue"
 @onready var add_order_button: Button = $"Binder Shell/PageSpread/RightPage_Planner/Operational/ActionButtons/AddOrderButton"
 @onready var execute_turn_button: Button = $"Binder Shell/PageSpread/RightPage_Planner/Operational/ExecuteTurnButton"
@@ -75,7 +75,7 @@ func _setup_docket_controller() -> void:
 
 func _setup_sticky_note_buttons() -> void:
 	if close_button:
-		close_button.toggled.connect(func(pressed): visible = not pressed)
+		close_button.pressed.connect(_on_close_button_pressed)
 	if execute_turn_button:
 		execute_turn_button.pressed.connect(_on_commit_orders_pressed)
 	if add_order_button:
@@ -307,3 +307,15 @@ func update_display(cache: Dictionary) -> void:
 		var slip := Label.new()
 		slip.text = "[Wk %d]: %s" % [memo.get("tick", 0), memo.get("text", "")]
 		memo_list.add_child(slip)
+
+func _on_close_button_pressed() -> void:
+	# Hide this binder panel
+	visible = false
+
+	# Also hide the parent CanvasLayer if we are nested inside one (e.g. FilofaxCanvas in city_view)
+	var canvas := get_parent()
+	while canvas != null and not (canvas is CanvasLayer):
+		canvas = canvas.get_parent()
+
+	if canvas is CanvasLayer:
+		canvas.visible = false

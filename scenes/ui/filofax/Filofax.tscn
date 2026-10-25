@@ -2,16 +2,15 @@
 
 [ext_resource type="Script" uid="uid://c2xy7x3xr1bh8" path="res://scenes/ui/filofax/test_filofax_scene.gd" id="1_test_scene"]
 [ext_resource type="Script" uid="uid://ct3ycsrlofjir" path="res://scenes/ui/filofax/filofax_ui.gd" id="2_filofax_ui"]
+[ext_resource type="Script" uid="uid://cf438ffbyqhml" path="res://scenes/ui/filofax/filofax_district_docket.gd" id="3_x0ver"]
 
 [node name="Organiser" type="Node2D" unique_id=1298381080]
 script = ExtResource("1_test_scene")
 
 [node name="FilofaxBinder" type="PanelContainer" parent="." unique_id=1485764081]
 custom_minimum_size = Vector2(850, 520)
-offset_left = 50.0
-offset_top = 50.0
-offset_right = 900.0
-offset_bottom = 570.0
+offset_right = 850.0
+offset_bottom = 520.0
 script = ExtResource("2_filofax_ui")
 
 [node name="Binder Shell" type="VBoxContainer" parent="FilofaxBinder" unique_id=310659577]
@@ -46,22 +45,36 @@ size_flags_horizontal = 3
 propagate_maximum_size = false
 layout_mode = 2
 tab_alignment = 1
-current_tab = 1
+current_tab = 0
 
 [node name="TelemetryTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1091723149]
-visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 metadata/_tab_index = 0
 
-[node name="RosterTab" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=481671852]
+[node name="DocketContent" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab" unique_id=579887223]
 layout_mode = 2
-metadata/_tab_index = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("3_x0ver")
 
-[node name="FinancialsTab" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1841752188]
+[node name="RosterTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=994621366]
 visible = false
 layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 1
+
+[node name="RosterTabText" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab" unique_id=1180418853]
+layout_mode = 2
+
+[node name="FinancialsTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1701325989]
+visible = false
+layout_mode = 2
+horizontal_scroll_mode = 0
 metadata/_tab_index = 2
+
+[node name="FinancialTabText" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab" unique_id=1847576026]
+layout_mode = 2
 
 [node name="RingSpike_Center" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=1701765863]
 propagate_maximum_size = false

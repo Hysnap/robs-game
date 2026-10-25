@@ -147,7 +147,6 @@ static func _create_society_schema() -> void:
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS establishments (
 			establishment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-			borough_id TEXT NOT NULL,
 			district_id TEXT NOT NULL,
 			building_index INTEGER DEFAULT 0,
 			unit_door_number TEXT,
@@ -312,6 +311,9 @@ static func _create_society_schema() -> void:
 			r.resident_id,
 			r.household_id,
 			e.district_id,
+			d.display_name  as district_name,
+			d.borough_id
+			b.display_name as borough_name
 			r.first_name,
 			r.current_surname,
 			r.birth_surname,
@@ -333,6 +335,8 @@ static func _create_society_schema() -> void:
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
 		JOIN establishments e on h.establishment_id = e.establishment_id
+		JOIN districts d on e.district_id = d.district_id
+		JOIN boroughs b on d.borough_id = b.borough_id
 		JOIN system_labels l_gender ON r.gender_id = l_gender.label_id
 		JOIN system_labels l_edu ON r.education_level_id = l_edu.label_id
 		JOIN system_labels l_eth ON r.ethnicity_id = l_eth.label_id
@@ -394,7 +398,9 @@ static func _create_society_schema() -> void:
 		CREATE VIEW IF NOT EXISTS v_establishments_overview AS
 		SELECT 
 			e.establishment_id,
-			e.borough_id,
+			b.display_name as borough_name,
+			d.borough_id,
+			d.display_name as district_name,
 			e.district_id,
 			e.name,
 			e.owning_entity,
@@ -403,6 +409,8 @@ static func _create_society_schema() -> void:
 			e.capacity,
 			COUNT(c.contract_id) AS active_contract_count
 		FROM establishments e
+		JOIN districts d on d.district_id = e.district_id
+		JOIN boroughs b on b.borough_id = d.borough_id
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
 		LEFT JOIN livelihood_contracts c ON ('ESTAB_' || e.establishment_id) = c.employer_entity_id AND c.valid_to IS NULL
 		WHERE e.valid_to IS NULL

@@ -5,44 +5,21 @@
     "version": "1.0.0",
     "description": "Commercial, light-industrial, and civic tenancy classes that occupy individual buildings."
   },
-"hierarchy_scales": {
+  "hierarchy_scales": {
     "blocks_per_borough": 90,
     "neighbourhood_block_span": 16,
     "family_size_min": 1,
     "family_size_max": 4
   },
-
-  "workplace_generation_rules": {
-    "commercial": {
-      "commercial_min": 6, "commercial_max": 12,
-      "industrial_min": 0, "industrial_max": 2
-    },
-    "industrial": {
-      "commercial_min": 1, "commercial_max": 2,
-      "industrial_min": 4, "industrial_max": 8
-    },
-    "residential_default": {
-      "commercial_min": 1, "commercial_max": 3,
-      "industrial_min": 0, "industrial_max": 0
-    }
-  },
-
-  "establishment_templates": {
-    "COMMERCIAL": {
-      "default_capacity": 30,
-      "names": [
-        "High St Retail", "Council Offices", "Depot & Logistics", 
-        "Co-Op Store", "Local Bakery", "Printing Works", 
-        "Wholesale Cash & Carry", "Dry Cleaners", "Hardware Merchant"
-      ]
-    },
-    "INDUSTRIAL": {
-      "default_capacity": 60,
-      "names": [
-        "Foundry & Castings", "Metal Finishing", "Auto Component Plant", 
-        "Textile Mill", "Engineering Shed", "Scrap & Metal Reclamation", 
-        "Canal Wharf Depot", "Rail Freight Yard"
-      ]
+  "borough_clustering": {
+    "allocation_model": "uk_concentric_organic",
+    "target_population_per_ward": 25000.0,
+    "core_radius_ratio": 0.22,
+    "cardinal_sectors": 4,
+    "outer_ring_angle_offset_deg": 60.0,
+    "central_core_borough": {
+      "borough_id": "BOROUGH_CORE",
+      "display_name": "Central Municipal Core Council"
     }
   }
 }

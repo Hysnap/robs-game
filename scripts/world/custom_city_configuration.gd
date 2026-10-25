@@ -7,6 +7,7 @@ extends CityConfiguration
 @export_group("European Layout")
 @export_range(3, 40, 1) var city_radius: int = 14
 @export_range(0.0, 1.0, 0.05) var radial_jitter: float = 0.35
+@export var residential_density_profile: String = "balanced"
 @export var enable_building_spawning: bool = false
 
 # --- CIVIC ANCHORS ---

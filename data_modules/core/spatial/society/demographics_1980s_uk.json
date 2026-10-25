@@ -16,6 +16,8 @@
     "DEFAULT": "COMMERCIAL"
   },
   "legal_and_pension_thresholds": {
+    "majority_head_of_household_age": 18,
+    "minimum_school_leaving_age": 16,
     "pension_age_female": 60,
     "pension_age_male": 65
   },

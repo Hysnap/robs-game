@@ -25,7 +25,7 @@
 </node>
 </node>
 <node CREATED="1791916650207" ID="ID_941215085" MODIFIED="1791916657411" POSITION="left" TEXT="In Game Interface">
-<node COLOR="#006633" CREATED="1791916695272" FOLDED="true" ID="ID_1027766483" MODIFIED="1792841613026">
+<node COLOR="#006633" CREATED="1791916695272" FOLDED="true" ID="ID_1027766483" MODIFIED="1792967038351">
 <richcontent TYPE="NODE"><html>
   <head>
     
@@ -117,11 +117,14 @@
 <node CREATED="1792764522431" ID="ID_1636032331" MODIFIED="1792764636620" TEXT="user selected city variables"/>
 </node>
 <node CREATED="1792764640881" ID="ID_126812091" MODIFIED="1792764643706" POSITION="left" TEXT="Bugs">
-<node CREATED="1792764647464" ID="ID_1043035938" MODIFIED="1792764657088" TEXT="city radius slider not being honoured"/>
+<node CREATED="1792764647464" ID="ID_1043035938" MODIFIED="1792915643691" TEXT="city radius slider not being honoured">
+<icon BUILTIN="button_ok"/>
+</node>
 <node CREATED="1792766463577" ID="ID_1275778486" MODIFIED="1792787848634" TEXT="population count in city/town nearing 250K , which is excessive">
 <icon BUILTIN="button_ok"/>
 </node>
 <node CREATED="1792842048481" ID="ID_1964919231" MODIFIED="1792842056449" TEXT="Local pub id empty"/>
+<node CREATED="1792966639049" ID="ID_347768637" MODIFIED="1792966667769" TEXT="expected_pop_min and max on district not scaling with grid width and  height"/>
 </node>
 <node CREATED="1792764704528" ID="ID_52031529" MODIFIED="1792764709635" POSITION="right" TEXT="City locations">
 <node CREATED="1792764715081" ID="ID_935130306" MODIFIED="1792764717970" TEXT="Night clubs"/>
@@ -134,7 +137,10 @@
 <node CREATED="1792781333448" ID="ID_1324305001" MODIFIED="1792781344948" TEXT="offer alternative road network mechanic"/>
 </node>
 <node CREATED="1792840273004" ID="ID_1082300146" MODIFIED="1792840279574" POSITION="left" TEXT="code cleaning">
-<node CREATED="1792840282406" ID="ID_78401471" MODIFIED="1792840294252" TEXT="db_manager - db_labels setup"/>
+<node CREATED="1792840282406" ID="ID_78401471" MODIFIED="1792961665145" TEXT="db_manager - db_labels setup">
+<icon BUILTIN="info"/>
+</node>
+<node CREATED="1792961597616" ID="ID_685923600" MODIFIED="1792961613890" TEXT="Dunbar modelling - reusable and definable"/>
 </node>
 </node>
 </map>

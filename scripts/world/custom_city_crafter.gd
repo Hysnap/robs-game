@@ -10,20 +10,23 @@ var _anchor_claim_map: Dictionary = {} # Vector2i -> archetype_id
 var _material_cache: Dictionary = {}
 var _civic_hierarchy: Dictionary = {}
 var _placed_facilities: Array = [] # Array of { "type": String, "origin": Vector2i, "footprint": Vector2i }
-
+var _road_counter: int = 0
+var _intersection_counter: int = 0
 
 ## Loads business rules with a strict HARD FAIL if the file does not exist
 func _init_layout_rules() -> void:
 	if not _layout_rules.is_empty():
 		return
-		
-	var path := "res://data_modules/core/business_rules.cfg"
-	assert(FileAccess.file_exists(path), "FATAL: business_rules.cfg does not exist at: %s" % path)
-	
+
+	# 1. Use the canonical path constant owned by ScenarioManifestManager
+	var path: String = ScenarioManifestManager.BUSINESS_RULES_PATH
+	assert(FileAccess.file_exists(path), "FATAL: business_rules.cfg missing at: %s" % path)
+
 	var cfg := ConfigFile.new()
 	var err := cfg.load(path)
-	assert(err == OK, "FATAL: Could not parse business_rules.cfg. Error code: %d" % err)
-	
+	assert(err == OK, "FATAL: Could not parse %s (Error code: %d)" % [path, err])
+
+	# 2. Ingest operational map layout and engine diagnostic rules
 	if cfg.has_section("map_layout"):
 		for key in cfg.get_section_keys("map_layout"):
 			_layout_rules[key] = cfg.get_value("map_layout", key)
@@ -34,23 +37,17 @@ func _init_layout_rules() -> void:
 		for key in cfg.get_section_keys("system_diagnostics"):
 			_layout_rules[key] = cfg.get_value("system_diagnostics", key)
 
-## Loads archetypes with a strict HARD FAIL if the file does not exist
+## Loads district archetypes strictly via ScenarioManifestManager
 func _init_archetypes() -> void:
 	if not _archetypes_data.is_empty():
 		return
-		
-	_init_layout_rules()
-	assert(_layout_rules.has("archetypes_path"), "FATAL: [spatial] archetypes_path is missing from business_rules.cfg")
-	var path: String = str(_layout_rules.get("archetypes_path"))
-	
-	assert(FileAccess.file_exists(path), "FATAL: Archetypes configuration file not found at: %s" % path)
-	var f := FileAccess.open(path, FileAccess.READ)
-	assert(f != null, "FATAL: Failed to read archetypes file at: %s" % path)
-	
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
-	assert(parsed is Dictionary, "FATAL: Archetypes JSON root must be a Dictionary: %s" % path)
-	_archetypes_data = parsed
+
+	# Ingest archetypes JSON directly through the centralized manifest manager
+	assert(ScenarioManifestManager.has_module("archetypes"), 
+		"FATAL: Scenario manifest missing 'archetypes' module registration.")
+
+	_archetypes_data = ScenarioManifestManager.load_module("archetypes")
+	assert(not _archetypes_data.is_empty(), "FATAL: Loaded archetypes dictionary is empty.")
 
 ## Overrides generate_base_grid_with_sizes() -> Array
 ## Claims multi-cell anchor footprints first, then populates surrounding blocks
@@ -62,6 +59,12 @@ func generate_base_grid_with_sizes() -> Array:
 	var occupied_positions: Dictionary = {}
 	_anchor_claim_map.clear()
 	_placed_facilities.clear()
+	_road_counter = 0
+	_intersection_counter = 0
+
+	# Clear parent collections so road generator sees the entire grid
+	active_blocks.clear()
+	block_sizes.clear()
 
 	var cfg = city_configuration
 	var radius_val: int = int(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and int(cfg.get("city_radius")) > 0) else int(_layout_rules.get("default_city_radius", 14))
@@ -70,6 +73,13 @@ func generate_base_grid_with_sizes() -> Array:
 
 	# 1. Pre-claim multi-cell & dedicated spatial archetypes
 	_preclaim_spatial_archetypes(radius_val, occupied_positions, blocks_data)
+
+	# Register pre-claimed anchors into parent active_blocks & block_sizes
+	for b in blocks_data:
+		var p: Vector2i = b["position"]
+		var s: Vector2i = b["size"]
+		active_blocks.append(p)
+		block_sizes[p] = s
 
 	# 2. Populate regular blocks around pre-claimed footprints
 	for x in range(-radius_val, radius_val + 1):
@@ -93,11 +103,16 @@ func generate_base_grid_with_sizes() -> Array:
 				"position": pos,
 				"size": block_size
 			})
+
+			# CRITICAL: Register into parent active_blocks & block_sizes for road generation!
+			active_blocks.append(pos)
+			block_sizes[pos] = block_size
 			
 			for bx in range(block_size.x):
 				for bz in range(block_size.y):
 					occupied_positions[Vector2i(x + bx, z + bz)] = true
 					
+	print("[CustomCityCrafter] Base grid generated: %d blocks registered in active_blocks." % active_blocks.size())
 	return blocks_data
 
 ## 100% Data-Driven Zoning Selection
@@ -105,14 +120,19 @@ func generate_base_grid_with_sizes() -> Array:
 func get_district_type(grid_x: int, grid_z: int) -> String:
 	_init_archetypes()
 	var pos := Vector2i(grid_x, grid_z)
+
 	
 	# 1. Check if claimed by a multi-cell civic anchor
 	if _anchor_claim_map.has(pos):
 		return str(_anchor_claim_map[pos])
 
 	var cfg = city_configuration
-	var radius_val: float = float(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
+	var radius_val: float = float(cfg.get("city_radius")) if (cfg and 
+									"city_radius" in cfg and 
+									float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
 	var norm_dist: float = Vector2(grid_x, grid_z).length() / max(radius_val, 1.0)
+	# Resolved safely on Object/Resource (1 argument):
+	# var density_profile: int = int(cfg.get("residential_density_profile")) if (cfg and "residential_density_profile" in cfg) else 1
 
 	var setup: Dictionary = _archetypes_data.get("setup", {})
 	assert(setup.has("default_fallback_archetype"), "FATAL: 'setup.default_fallback_archetype' is missing in archetypes.json")
@@ -152,9 +172,39 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 				if cfg and ratio_prop in cfg:
 					user_weight = float(cfg.get(ratio_prop))
 					
-				var effective_w: int = int(round(base_w * user_weight * 100.0))
-				if effective_w > 0:
-					candidate_weights[arch_key] = effective_w
+				var effective_w: float = base_w * user_weight * 100.0
+				
+				# Modulate residential weights based on user choice:
+				if arch.get("sector_class", "") == "RESIDENTIAL":
+					var tier: String = str(arch.get("density_tier", "")).to_upper()
+					if tier.is_empty():
+						if "high_rise" in arch_key or "high_density" in arch_key:
+							tier = "HIGH"
+						elif "suburban" in arch_key or "low_density" in arch_key:
+							tier = "LOW"
+						else:
+							tier = "MEDIUM"
+
+					# Resolve user profile key (default: "balanced")
+					var selected_profile_key: String = "balanced"
+					if cfg and "residential_density_profile" in cfg:
+						selected_profile_key = str(cfg.get("residential_density_profile"))
+
+					# Read profile multipliers from archetypes.json "setup"
+					var density_multiplier: float = 1.0
+					var setup_dict: Dictionary = _archetypes_data.get("setup", {})
+					var density_cfg: Dictionary = setup_dict.get("density_profiles", {})
+					var profiles: Dictionary = density_cfg.get("profiles", {})
+
+					if profiles.has(selected_profile_key):
+						var multipliers: Dictionary = profiles[selected_profile_key].get("multipliers", {})
+						if multipliers.has(tier):
+							density_multiplier = float(multipliers[tier])
+
+					effective_w *= density_multiplier
+
+				if effective_w > 0.0:
+					candidate_weights[arch_key] = int(round(effective_w))
 
 	if candidate_weights.is_empty():
 		return fallback_archetype
@@ -203,9 +253,9 @@ func generate_ground_planes_async() -> void:
 		var world_h: float = float(block_size.y) * city_configuration.block_size + float(block_size.y - 1) * city_configuration.street_width
 		
 		var center := Vector3(
-			float(pos.x) * cell_size + world_w * 0.5 + half_street,
+			float(pos.x) * cell_size + world_w * 0.5,
 			city_configuration.ground_height_offset,
-			float(pos.y) * cell_size + world_h * 0.5 + half_street
+			float(pos.y) * cell_size + world_h * 0.5
 		)
 		
 		var district_type: String = get_district_type(pos.x, pos.y)
@@ -230,7 +280,8 @@ func create_ground_plane(center: Vector3, size: Vector2, district_type: String =
 	var ground := MeshInstance3D.new()
 	ground.mesh = plane_mesh
 	ground.position = center
-	
+	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
 	var mat: Material = _resolve_district_material(district_type)
 	if mat:
 		ground.material_override = mat
@@ -357,11 +408,21 @@ func export_visual_layout() -> Dictionary:
 				"district_type": child.get_meta("district")
 			}
 
-	# 2. Capture Road and Intersection Meshes (Recursively finds nodes regardless of parent container)
+	# 2. Capture Road and Intersection Meshes
 	var all_meshes = find_children("*", "MeshInstance3D", true, false)
+	print("[CustomCityCrafter] Total MeshInstance3D nodes found during export: %d" % all_meshes.size())
+
 	for mesh_node in all_meshes:
+		# Districts have block_id, skip them here
+		if mesh_node.has_meta("block_id"):
+			continue
+
+		var is_road: bool = mesh_node.has_meta("is_road")
 		var n_name: String = mesh_node.name.to_lower()
-		if n_name.begins_with("road") or n_name.begins_with("intersection") or n_name.begins_with("subdivisionroad"):
+		var p_name: String = mesh_node.get_parent().name.to_lower() if mesh_node.get_parent() else ""
+		
+		# Match meta flag, road name, or any non-district plane mesh added during generation
+		if is_road or n_name.begins_with("road") or n_name.begins_with("intersection") or p_name.begins_with("road") or p_name.begins_with("intersection"):
 			var sz := [default_street_w, default_street_w]
 			if mesh_node.mesh is PlaneMesh:
 				var pm = mesh_node.mesh as PlaneMesh
@@ -376,7 +437,8 @@ func export_visual_layout() -> Dictionary:
 				"rotation": [mesh_node.rotation.x, mesh_node.rotation.y, mesh_node.rotation.z],
 				"size": sz
 			})
-			
+
+	print("[CustomCityCrafter] Successfully exported %d road segments into layout." % layout["roads"].size())
 	return layout
 
 ## Instantiates ground planes and roads directly from saved layout data
@@ -411,8 +473,9 @@ func load_visual_layout(layout_data: Dictionary) -> void:
 		var plane := PlaneMesh.new()
 		plane.size = Vector2(sz_arr[0], sz_arr[1])
 		road_mesh.mesh = plane
-		road_mesh.position = Vector3(pos_arr[0], pos_arr[1] + 0.02, pos_arr[2])
-		
+		road_mesh.position = Vector3(pos_arr[0], 0.005, pos_arr[2])
+		road_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
 		if r.has("rotation"):
 			var rot_arr = r["rotation"]
 			road_mesh.rotation = Vector3(rot_arr[0], rot_arr[1], rot_arr[2])
@@ -519,7 +582,8 @@ func _init_civic_hierarchy() -> void:
 	assert(_civic_hierarchy.has("civic_institutions"), 
 		"FATAL: civic_hierarchy module is missing 'civic_institutions' root table.")
 
-func _preclaim_spatial_archetypes(radius_val: int, occupied: Dictionary, blocks_data: Array) -> void:
+## Pre-claims any archetype declaring "spatial_rules" based on footprint_sqm / footprint_size in m²
+func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data: Array) -> void:
 	for arch_key in _archetypes_data.keys():
 		if arch_key in ["_meta", "setup"]:
 			continue
@@ -527,13 +591,20 @@ func _preclaim_spatial_archetypes(radius_val: int, occupied: Dictionary, blocks_
 		if not arch.has("spatial_rules"):
 			continue
 
-		var footprint_arr: Array = arch.get("footprint_size", [1, 1])
-		var footprint := Vector2i(int(footprint_arr[0]), int(footprint_arr[1]))
+		# Read footprint in square metres (fallback to 1600.0 if not specified)
+		var sqm: float = float(arch.get("footprint_size", arch.get("footprint_sqm", 1600.0)))
+		
+		# Convert square metres into discrete grid cells (Standard 200m x 200m block = 40,000 m²)
+		var cell_side_m: float = 200.0
+		var cell_area_sqm: float = cell_side_m * cell_side_m # 40,000
+		var side_cells: int = maxi(1, int(round(sqrt(sqm / cell_area_sqm))))
+		var footprint := Vector2i(side_cells, side_cells)
+
 		var rules: Dictionary = arch["spatial_rules"]
 		var dist_range: Array = rules.get("norm_distance_range", [0.0, 1.0])
-		var min_sep: int = int(rules.get("min_separation_blocks", 4))
+		var min_sep: int = int(rules.get("min_sep_m", 600.0) / 200.0)
 
-		var origin: Vector2i = _find_valid_anchor_site(radius_val, footprint, dist_range, min_sep, occupied)
+		var origin: Vector2i = _find_valid_anchor_site(radius, footprint, dist_range, min_sep, occupied)
 		if origin == Vector2i(9999, 9999):
 			continue
 
@@ -553,7 +624,9 @@ func _preclaim_spatial_archetypes(radius_val: int, occupied: Dictionary, blocks_
 			"origin": origin,
 			"footprint": footprint
 		})
-		print("[CustomCityCrafter] Preclaimed '%s' [%d x %d] at %s" % [arch_key, footprint.x, footprint.y, origin])
+		print("[CustomCityCrafter] Preclaimed '%s' [%d x %d cells for %.0f m²] at %s" % [
+			arch_key, footprint.x, footprint.y, sqm, origin
+		])
 
 func _find_valid_anchor_site(
 	radius_val: int, 
@@ -622,3 +695,51 @@ func _find_valid_anchor_site(
 	)
 	
 	return candidates[0]
+
+## Overrides create_road_plane to guarantee unique node names and metadata
+func create_road_plane(center: Vector3, size: Vector2, road_type: String):
+	_road_counter += 1
+	var mesh_instance := MeshInstance3D.new()
+	var plane_mesh := PlaneMesh.new()
+	plane_mesh.size = size
+	mesh_instance.mesh = plane_mesh
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	if road_type == "SubdivisionRoad" and city_configuration.subdivision_road_material:
+		mesh_instance.material_override = city_configuration.subdivision_road_material
+	elif city_configuration.road_material:
+		mesh_instance.material_override = city_configuration.road_material
+	else:
+		mesh_instance.material_override = _resolve_road_material()
+
+	mesh_instance.position = center
+	# Give it a unique, deterministic name so Godot never renames it to @MeshInstance3D@...
+	mesh_instance.name = "Road_Segment_%d" % _road_counter
+	mesh_instance.set_meta("is_road", true)
+	mesh_instance.set_meta("road_type", road_type)
+	add_child(mesh_instance)
+	return mesh_instance
+
+## Overrides create_intersection_plane to guarantee unique node names and metadata
+func create_intersection_plane(center: Vector3, size: Vector2):
+	_intersection_counter += 1
+	var mesh_instance := MeshInstance3D.new()
+	var plane_mesh := PlaneMesh.new()
+	plane_mesh.size = size
+	mesh_instance.mesh = plane_mesh
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	
+	if city_configuration.intersection_material:
+		mesh_instance.material_override = city_configuration.intersection_material
+	elif city_configuration.road_material:
+		mesh_instance.material_override = city_configuration.road_material
+	else:
+		mesh_instance.material_override = _resolve_intersection_material()
+
+	mesh_instance.position = center
+	# Give it a unique, deterministic name
+	mesh_instance.name = "Intersection_Node_%d" % _intersection_counter
+	mesh_instance.set_meta("is_road", true)
+	mesh_instance.set_meta("road_type", "Intersection")
+	add_child(mesh_instance)
+	return mesh_instance

@@ -49,5 +49,11 @@
   "grammar": {
     "format": "{prefix} {suffix}",
     "duplicate_fallback": "{prefix} Common"
-  }
+  },
+    "borough_names": [
+    "Aston", "Edgbaston", "Selly Oak", "Handsworth", "Ladywood",
+    "Erdington", "Moseley", "Kings Heath", "Perry Barr", "Yardley",
+    "Harborne", "Northfield", "Solihull", "Saltley", "Bordesley",
+    "Nechells", "Hockley", "Sparkbrook", "Small Heath", "Bournville"
+    ]
 }

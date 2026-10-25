@@ -130,11 +130,15 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 
 		child.set_meta("display_name", display_name)
 
-## Multi-cell scaling: compares actual discrete cells against authored archetype footprint
+## Multi-cell scaling: compares actual discrete cells against authored archetype footprint in m²
 static func _calculate_district_scale_factor(archetype: Dictionary, block_size: Vector2i) -> float:
 	var allocated_cells: int = block_size.x * block_size.y
-	var native_footprint_arr: Array = archetype.get("footprint_size", [1, 1])
-	var native_cells: int = max(1, int(native_footprint_arr[0]) * int(native_footprint_arr[1]))
+	
+	# Read footprint in square metres (fallback to 1600.0 for standard lot)
+	var sqm: float = float(archetype.get("footprint_size", archetype.get("footprint_sqm", 1600.0)))
+	
+	# Standard block lot is 40,000 m² (200m x 200m)
+	var native_cells: int = maxi(1, int(round(sqm / 40000.0)))
 
 	# Only scale if an archetype was placed on an area larger than its authored footprint
 	var ratio: float = float(allocated_cells) / float(native_cells)

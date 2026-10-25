@@ -96,3 +96,19 @@ static func reset_cache() -> void:
 	_cached_manifest.clear()
 	_cached_modules.clear()
 	_active_manifest_path = ""
+
+## Universal module loader: Dispatches to JSON parser or Engine Resource loader based on extension
+static func load_resource_module(module_key: String) -> Resource:
+	var path: String = get_module_path(module_key)
+	assert(ResourceLoader.exists(path), "FATAL: Engine resource missing on disk: %s" % path)
+	var res = load(path)
+	assert(res != null, "FATAL: Failed to instantiate engine resource at: %s" % path)
+	return res
+
+## Smart loader that detects file extension
+static func load_any(module_key: String) -> Variant:
+	var path: String = get_module_path(module_key)
+	if path.ends_with(".tres") or path.ends_with(".res"):
+		return load_resource_module(module_key)
+	else:
+		return load_module(module_key)

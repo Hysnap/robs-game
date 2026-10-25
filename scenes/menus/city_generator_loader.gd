@@ -14,9 +14,8 @@ func _ready() -> void:
 	city_crafter.name = "CityCrafter"
 	
 	# Load the European configuration resource
-	var config_res = load("res://resources/city/default_european_city.tres")
-	if config_res:
-		city_crafter.city_configuration = config_res.duplicate()
+	var base_config: Resource = _resolve_city_config_resource()
+	city_crafter.city_configuration = base_config.duplicate()
 		
 	add_child(city_crafter)
 	await get_tree().process_frame
@@ -56,6 +55,10 @@ func _on_monitor_progress_updated(percent: float, stage_title: String, detail_te
 	status_label.text = "%s: %s" % [stage_title, detail_text] if detail_text != "" else stage_title
 
 func _start_pipeline(gen_seed: String) -> void:
+	# Load scenario city configuration dynamically
+	var base_config: Resource = _resolve_city_config_resource()
+	city_crafter.city_configuration = base_config.duplicate()
+
 	# Step 1: Spatial Mesh/Grid Generation
 	monitor.begin_stage("STREETS", "Laying street grid...")
 	await city_crafter.generate_city_async(gen_seed)
@@ -101,3 +104,10 @@ func _apply_settings_to_crafter(settings: Dictionary) -> void:
 	for key in settings.keys():
 		if key in configuration:
 			configuration.set(key, settings[key])
+
+func _resolve_city_config_resource() -> Resource:
+	assert(ScenarioManifestManager.has_module("city_configuration"),
+		"FATAL: Active scenario manifest is missing 'city_configuration' registration.")
+
+	# Use the new resource loader helper (or get_module_path + load)
+	return ScenarioManifestManager.load_resource_module("city_configuration")

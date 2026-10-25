@@ -5,20 +5,42 @@
   },
 
   "setup": {
-    "default_fallback_archetype": "suburban_low_density",
-    "default_block_density_estimate": 45,
+    "default_fallback_archetype": "medium_density_victorian_residential",
+    "default_1000m2_pop_density_estimate": 60,
     "concentric_bands": [
       { "weight_key": "core_weight" },
       { "weight_key": "inner_weight" },
       { "weight_key": "mid_weight" },
       { "weight_key": "outer_weight" }
-    ]
+    ],
+    "block_metrics": {
+      "standard_block_width_m": 200.0,
+      "standard_block_height_m": 200.0,
+      "standard_street_width_m": 12.0
+    },
+    "density_profiles": {
+      "default_profile": "balanced",
+      "profiles": {
+        "suburban": {
+          "label": "Predominantly Suburban (Low Density)",
+          "multipliers": { "LOW": 2.5, "MEDIUM": 1.2, "HIGH": 0.25 }
+        },
+        "balanced": {
+          "label": "Balanced Town (Mixed Low/Med/High)",
+          "multipliers": { "LOW": 1.0, "MEDIUM": 1.6, "HIGH": 0.9 }
+        },
+        "dense": {
+          "label": "Dense Urban Core (Terraces & High-Rise)",
+          "multipliers": { "LOW": 0.2, "MEDIUM": 1.0, "HIGH": 2.2 }
+        }
+      }
+    }
   },
 
   "commercial": {
     "display_name": "Commercial Core & Retail Precinct",
     "sector_class": "COMMERCIAL",
-    "footprint_size": [1, 1],
+    "footprint_size": 1600, 
     "buildings": [5, 7],
     "habitable_units_per_building": [1, 3],
     "commercial_units_per_building": [1, 2],
@@ -47,7 +69,8 @@
   "high_density_low_rise": {
     "display_name": "Victorian Residential Terraces",
     "sector_class": "RESIDENTIAL",
-    "footprint_size": [1, 1],
+    "density_tier": "HIGH",
+    "footprint_size": 1600,
     "buildings": [5, 7],
     "habitable_units_per_building": [6, 8],
     "commercial_units_per_building": [0, 1],
@@ -76,12 +99,13 @@
   "high_density_high_rise": {
     "display_name": "Municipal Housing Estate & High-Rise",
     "sector_class": "RESIDENTIAL",
-    "footprint_size": [1, 1],
+    "density_tier": "HIGH",
+    "footprint_size": 1600,
     "buildings": [1, 2],
     "habitable_units_per_building": [40, 120],
     "commercial_units_per_building": [0, 3],
     "industrial_units_per_building": [0, 0],
-    "res_com_ind_perc": [100, 50, 0],
+    "res_com_ind_perc": [100, 20, 0],
     "typical_population_density": 180,
     "housing_profile": {
       "residence_type": "COUNCIL_FLAT",
@@ -105,7 +129,8 @@
   "suburban_low_density": {
     "display_name": "Suburban Commuter Belt",
     "sector_class": "RESIDENTIAL",
-    "footprint_size": [1, 1],
+    "density_tier": "LOW",
+    "footprint_size": 1600,
     "buildings": [1, 3],
     "habitable_units_per_building": [1, 2],
     "commercial_units_per_building": [0, 0],
@@ -131,10 +156,108 @@
     "corruption_tolerance": 0.20
   },
 
+  "victorian_low_density": {
+    "display_name": "Large Victorian Houses",
+    "sector_class": "RESIDENTIAL",
+    "density_tier": "LOW",
+    "footprint_size": 1600,
+    "buildings": [1, 1],
+    "habitable_units_per_building": [1, 1],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 4,
+    "housing_profile": {
+      "residence_type": "LARGE_DETACHED",
+      "wealth_bracket": 5,
+      "tenure_type": "OWNER_OCCUPIER_MORTGAGE"
+    },
+    "visual_profile": { "color": "#15803D", "roughness": 0.95 },
+    "spatial_placement": {
+      "normalized_distance_min": 0.40, "normalized_distance_max": 1.0,
+      "core_weight": 5, "inner_weight": 10, "mid_weight": 10, "outer_weight": 0
+        },
+    "population_range": [1, 5],
+    "unemployment_rate_range": [0.00, 0.01],
+    "avg_disposable_income_range": [240.0, 285.0],
+    "zone_health_index_range": [80.0, 92.0],
+    "consumer_desperation_index": 0.05,
+    "actual_police_heat": 0.05,
+    "corruption_tolerance": 0.40
+  },
+
+  "medium_density_residential": {
+    "display_name": "Interwar Semi-Detached & Maisonettes",
+    "sector_class": "RESIDENTIAL",
+    "density_tier": "MEDIUM",
+    "footprint_size": 1600,
+    "buildings": [3, 5],
+    "habitable_units_per_building": [2, 4],
+    "commercial_units_per_building": [0, 1],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 5, 0],
+    "typical_population_density": 45,
+    "housing_profile": {
+      "residence_type": "MAISONETTE",
+      "wealth_bracket": 3,
+      "tenure_type": "OWNER_OCCUPIER_MORTGAGE"
+    },
+    "visual_profile": { "color": "#EA580C", "roughness": 0.85 },
+    "spatial_placement": {
+      "normalized_distance_min": 0.25,
+      "normalized_distance_max": 0.90,
+      "core_weight": 0,
+      "inner_weight": 40,
+      "mid_weight": 60,
+      "outer_weight": 25
+    },
+    "population_range": [30, 65],
+    "unemployment_rate_range": [0.10, 0.16],
+    "avg_disposable_income_range": [75.0, 105.0],
+    "zone_health_index_range": [65.0, 78.0],
+    "consumer_desperation_index": 0.35,
+    "actual_police_heat": 0.15,
+    "corruption_tolerance": 0.35
+  },
+
+  "medium_density_victorian_residential": {
+    "display_name": "Victorian Semi-Detached",
+    "sector_class": "RESIDENTIAL",
+    "density_tier": "MEDIUM",
+    "footprint_size": 1600,
+    "buildings": [2, 4],
+    "habitable_units_per_building": [2, 2],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [100, 0, 0],
+    "typical_population_density": 20,
+    "housing_profile": {
+      "residence_type": "MAISONETTE",
+      "wealth_bracket": 4,
+      "tenure_type": "OWNER_OCCUPIER_MORTGAGE"
+    },
+    "visual_profile": { "color": "#EA580C", "roughness": 0.85 },
+    "spatial_placement": {
+      "normalized_distance_min": 0.25,
+      "normalized_distance_max": 0.90,
+      "core_weight": 10,
+      "inner_weight": 40,
+      "mid_weight": 40,
+      "outer_weight": 0
+    },
+    "population_range": [30, 65],
+    "unemployment_rate_range": [0.10, 0.16],
+    "avg_disposable_income_range": [75.0, 105.0],
+    "zone_health_index_range": [65.0, 78.0],
+    "consumer_desperation_index": 0.35,
+    "actual_police_heat": 0.15,
+    "corruption_tolerance": 0.35
+  },
+
   "industrial": {
-    "display_name": "Industrial Canal Yard & Rail Depots",
+    "display_name": "Industrial Yards & Depots",
     "sector_class": "INDUSTRIAL",
-    "footprint_size": [1, 1],
+    "footprint_size": 1600,
     "buildings": [1, 6],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 1],
@@ -163,7 +286,7 @@
   "place_of_worship": {
     "display_name": "Parish Church & Grounds",
     "sector_class": "CIVIC",
-    "footprint_size": [1, 1],
+    "footprint_size": 1600,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -172,10 +295,10 @@
     "typical_population_density": 2,
     "spatial_rules": {
       "placement_mode": "CADENCE",
-      "blocks_per_facility": 4,
       "min_city_population": 0,
       "norm_distance_range": [0.10, 0.85],
-      "min_separation_blocks": 3
+      "pop_ratio": 1500.0,
+      "min_sep_m": 600.0
     },
     "institution_profile": {
       "serves_role": "COMMUNITY_PARISH",
@@ -205,7 +328,7 @@
   "primary_school": {
     "display_name": "Junior & Infant School",
     "sector_class": "CIVIC",
-    "footprint_size": [1, 2],
+    "footprint_size": 1600,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -214,10 +337,10 @@
     "typical_population_density": 2,
     "spatial_rules": {
       "placement_mode": "CADENCE",
-      "blocks_per_facility": 7,
       "min_city_population": 0,
-      "norm_distance_range": [0.15, 0.85],
-      "min_separation_blocks": 5
+      "norm_distance_range": [0.10, 0.85],
+      "min_sep_m": 1000,
+      "pop_ratio": 2000
     },
     "institution_profile": {
       "serves_role": "CHILD",
@@ -257,7 +380,7 @@
   "secondary_school": {
     "display_name": "Comprehensive School",
     "sector_class": "CIVIC",
-    "footprint_size": [2, 2],
+    "footprint_size": 6400,
     "buildings": [2, 4],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -266,12 +389,11 @@
     "typical_population_density": 2,
     "spatial_rules": {
       "placement_mode": "CADENCE",
-      "blocks_per_facility": 35,
       "min_city_population": 0,
-      "norm_distance_range": [0.25, 0.80],
-      "min_separation_blocks": 10
+      "norm_distance_range": [0.10, 0.85],
+      "min_sep_m": 2000,
+      "pop_ratio": 10000
     },
-
     "institution_profile": {
       "serves_role": "STUDENT",
       "default_capacity": 800,
@@ -310,7 +432,7 @@
   "jobcentre_block": {
     "display_name": "Borough Jobcentre & DHSS Office",
     "sector_class": "CIVIC",
-    "footprint_size": [1, 1],
+    "footprint_size": 1600,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [0, 0],
@@ -319,10 +441,10 @@
     "typical_population_density": 0,
     "spatial_rules": {
       "placement_mode": "CADENCE",
-      "blocks_per_facility": 90,
       "min_city_population": 0,
-      "norm_distance_range": [0.05, 0.50],
-      "min_separation_blocks": 8
+      "norm_distance_range": [0.10, 0.85],
+      "min_sep_m": 2000,
+      "pop_ratio": 50000
     },
     "institution_profile": {
       "serves_role": "UNEMPLOYED",
@@ -352,7 +474,7 @@
   "local_government": {
     "display_name": "Municipal Administrative Hub & Town Hall",
     "sector_class": "CIVIC",
-    "footprint_size": [1, 1],
+    "footprint_size": 1600,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [0, 2],
@@ -362,9 +484,10 @@
     "spatial_rules": {
       "placement_mode": "EXACT_CORE",
       "min_city_population": 0,
-      "max_per_city": 1,
       "norm_distance_range": [0.0, 0.05],
-      "min_separation_blocks": 0
+      "max_per_city": 1,
+      "min_sep_m": 2000,
+      "pop_ratio": 150000
     },
     "institution_profile": {
       "serves_role": "CIVIC_OFFICIAL",
@@ -395,7 +518,7 @@
     "display_name": "Regional Infirmary & Medical Center",
     "sector_class": "CIVIC",
     "establishment_category": "HOSPITAL",
-    "footprint_size": [4, 5],
+    "footprint_size": 40000,
     "buildings": [4, 8],
     "habitable_units_per_building": [1, 2],
     "commercial_units_per_building": [1, 2],
@@ -406,10 +529,10 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 0,
-      "per_capita_ratio": 30000,
+      "pop_ratio": 30000,
       "max_per_city": 4,
       "norm_distance_range": [0.25, 0.65],
-      "min_separation_blocks": 15,
+      "min_sep_m": 2000,
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["COMMERCIAL", "RESIDENTIAL"]
     },
@@ -436,11 +559,11 @@
     "corruption_tolerance": 0.15
   },
 
-"university_campus": {
+  "university_campus": {
     "display_name": "Polytechnic & Higher Education Campus",
     "sector_class": "CIVIC",
     "establishment_category": "UNIVERSITY_OR_POLYTECHNIC",
-    "footprint_size": [3, 3],
+    "footprint_size": 6000,
     "buildings": [4, 8],
     "habitable_units_per_building": [10, 30],
     "commercial_units_per_building": [1, 2],
@@ -451,10 +574,10 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 50000,
-      "per_capita_ratio": 60000,
+      "pop_ratio": 60000,
       "max_per_city": 2,
       "norm_distance_range": [0.35, 0.70],
-      "min_separation_blocks": 12,
+      "min_sep_m": 2500,
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["RESIDENTIAL", "COMMERCIAL"]
     },
@@ -494,7 +617,7 @@
   "sports_arena": {
     "display_name": "Borough Football Ground",
     "sector_class": "CIVIC",
-    "footprint_size": [4, 4],
+    "footprint_size": 27000,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [1, 1],
@@ -504,10 +627,10 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 25000,
-      "per_capita_ratio": 60000,
+      "pop_ratio": 60000,
       "max_per_city": 1,
       "norm_distance_range": [0.30, 0.65],
-      "min_separation_blocks": 15,
+      "min_sep_m": 3000,
       "repel_sectors": ["HOSPITAL"],
       "prefer_sectors": ["RESIDENTIAL", "INDUSTRIAL"]
     },
@@ -539,7 +662,7 @@
   "municipal_park": {
     "display_name": "Victorian Public Park & Rec Ground",
     "sector_class": "CIVIC",
-    "footprint_size": [2, 3],
+    "footprint_size": 47000,
     "buildings": [0, 1],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -549,10 +672,10 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 0,
-      "per_capita_ratio": 20000,
+      "pop_ratio": 20000,
       "max_per_city": 4,
       "norm_distance_range": [0.20, 0.75],
-      "min_separation_blocks": 8,
+      "min_sep_m": 1600,
       "repel_sectors": [],
       "prefer_sectors": ["RESIDENTIAL"]
     },
@@ -584,7 +707,7 @@
   "civic_penal_block": {
     "display_name": "HM Prison & Remand Gaol",
     "sector_class": "CIVIC",
-    "footprint_size": [3, 3],
+    "footprint_size": 25000,
     "buildings": [1, 1],
     "habitable_units_per_building": [45, 100],
     "commercial_units_per_building": [0, 0],
@@ -596,7 +719,7 @@
       "min_city_population": 50000,
       "max_per_city": 1,
       "norm_distance_range": [0.70, 0.95],
-      "min_separation_blocks": 20,
+      "min_sep_m": 4000,
       "repel_sectors": ["RESIDENTIAL", "COMMERCIAL"],
       "prefer_sectors": ["INDUSTRIAL"]
     },
@@ -635,3 +758,4 @@
     "corruption_tolerance": 0.40
   }
 }
+  
