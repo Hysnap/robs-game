@@ -1,7 +1,9 @@
 # res://systems/catalog_validator.gd
-class_name CatalogValidator extends RefCounted
+class_name CatalogValidator
+extends RefCounted
 
 const COMMODITIES_ROOT = "res://data_modules/core/commodities/"
+const MANIFEST_MGR = preload("res://systems/scenario_manifest_manager.gd")
 
 ## Dynamically discovers valid calculation/condition models from the evaluator
 static func get_discovered_models() -> Array:
@@ -51,6 +53,10 @@ static func get_discovered_categories(root_path: String = COMMODITIES_ROOT) -> A
 	dir.list_dir_end()
 
 	return categories
+
+# =============================================================================
+# 1. COMMODITY & RECIPE VALIDATOR
+# =============================================================================
 
 ## Runs an end-to-end integrity audit across commodities, recipes, and verbs
 static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = true) -> Dictionary:
@@ -283,6 +289,10 @@ static func _write_log_to_disk(report: Dictionary) -> void:
 			file.store_line("- " + err)
 		file.close()
 
+# =============================================================================
+# 2. N-TIER HIERARCHY PROPERTY AUDITOR
+# =============================================================================
+
 ## Audits all N-tier structures and traces property settings to their defining files
 static func audit_hierarchy_properties(
 	root_dir: String = COMMODITIES_ROOT, 
@@ -293,8 +303,8 @@ static func audit_hierarchy_properties(
 		"root_dir": root_dir,
 		"total_files_scanned": 0,
 		"unique_properties_discovered": [],
-		"property_distribution": {}, # key: property_name -> Array of file paths setting it
-		"directory_tree": {}          # nested tree reflecting folder tiers and their keys
+		"property_distribution": {},
+		"directory_tree": {}
 	}
 	
 	if not DirAccess.dir_exists_absolute(root_dir):
@@ -457,6 +467,10 @@ static func _write_hierarchy_log_to_disk(report: Dictionary) -> void:
 
 	file.close()
 
+# =============================================================================
+# 3. CODEBASE PROPERTY USAGE AUDITOR
+# =============================================================================
+
 ## Cross-references defined catalog properties against actual codebase usage
 static func audit_property_usage(
 	catalogs_root: String = COMMODITIES_ROOT, 
@@ -467,7 +481,6 @@ static func audit_property_usage(
 	var catalog_audit = audit_hierarchy_properties(catalogs_root, false)
 	var defined_properties: Array = catalog_audit["unique_properties_discovered"]
 	
-	# Clean property tokens (e.g. "decay_properties.shelf_life_ticks" -> ["decay_properties", "shelf_life_ticks"])
 	var property_tokens: Dictionary = {}
 	for p in defined_properties:
 		var parts = p.split(".")
@@ -476,7 +489,7 @@ static func audit_property_usage(
 			property_tokens[leaf_token] = p
 
 	# 2. Gather all codebase script/scene/data text
-	var code_files: Dictionary = {} # file_path -> file_text
+	var code_files: Dictionary = {}
 	for root_dir in code_scan_roots:
 		_gather_source_files_recursive(root_dir, code_files)
 
@@ -484,23 +497,20 @@ static func audit_property_usage(
 		"timestamp": Time.get_datetime_string_from_system(),
 		"total_defined_properties": property_tokens.size(),
 		"total_source_files_scanned": code_files.size(),
-		"referenced_properties": {}, # token -> Array of { file, line_no, context }
-		"orphaned_properties": []    # tokens defined in JSON but never queried anywhere
+		"referenced_properties": {},
+		"orphaned_properties": []
 	}
 
 	# 3. Search codebase for references to each property token
 	for token in property_tokens.keys():
 		var occurrences: Array = []
 		
-		# Build regex/string patterns:
-		# Matches: .get("token"), ["token"], {token}, or "token":
 		var pattern_get = ".get(\"%s\"" % token
 		var pattern_bracket = "[\"%s\"]" % token
 		var pattern_brace = "{%s}" % token
 		var pattern_json_key = "\"%s\":" % token
 		
 		for file_path in code_files.keys():
-			# Don't match the file that defined itself in the catalog
 			if file_path.begins_with(catalogs_root):
 				continue
 				
@@ -527,7 +537,6 @@ static func audit_property_usage(
 				"defined_in": catalog_audit["property_distribution"].get(property_tokens[token], [])
 			})
 
-	# 4. Print & Log
 	_print_usage_audit_summary(usage_report)
 	if write_to_disk:
 		_write_usage_log_to_disk(usage_report)
@@ -603,3 +612,167 @@ static func _write_usage_log_to_disk(report: Dictionary) -> void:
 		file.store_line("UNUSED: " + orphan["token"] + " | Defined in: " + str(orphan["defined_in"]))
 
 	file.close()
+
+# =============================================================================
+# 4. SOCIETY & MANIFEST CROSS-REFERENCE AUDITOR
+# =============================================================================
+
+## Audits all inter-manifest relationships (jobs, labels, archetypes, tenancies, education)
+static func validate_society_manifests() -> Dictionary:
+	var report: Dictionary = {
+		"timestamp": Time.get_datetime_string_from_system(),
+		"is_clean": true,
+		"errors": [],
+		"warnings": [],
+		"jobs_scanned": 0,
+		"archetypes_scanned": 0,
+		"tenancies_scanned": 0,
+		"labels_scanned": 0
+	}
+
+	# 1. Harvest Core System Labels (db_labels_en_gb.json)
+	var labels_dict: Dictionary = {} # domain -> Set of codes
+	var db_labels_path := "res://data_modules/core/localization/db_labels_en_gb.json"
+	if FileAccess.file_exists(db_labels_path):
+		var raw_labels = MANIFEST_MGR.load_json_file(db_labels_path)
+		for entry in raw_labels.get("labels", []):
+			var d: String = str(entry.get("domain", "")).to_upper()
+			var c: String = str(entry.get("code", "")).to_upper()
+			if not labels_dict.has(d):
+				labels_dict[d] = {}
+			labels_dict[d][c] = true
+			report["labels_scanned"] += 1
+	else:
+		report["errors"].append("Missing core labels baseline at: %s" % db_labels_path)
+		report["is_clean"] = false
+		return report
+
+	var has_label := func(domain: String, code: String) -> bool:
+		return labels_dict.has(domain.to_upper()) and labels_dict[domain.to_upper()].has(code.to_upper())
+
+	# 2. Audit Job Definitions
+	var job_defs: Dictionary = {}
+	if MANIFEST_MGR.has_module("job_definitions"):
+		var raw_jobs = MANIFEST_MGR.load_module("job_definitions")
+		job_defs = raw_jobs.get("roles", {})
+		report["jobs_scanned"] = job_defs.size()
+
+		for job_code in job_defs.keys():
+			var job: Dictionary = job_defs[job_code]
+			
+			if not has_label.call("ROLE_TITLE", job_code):
+				report["errors"].append("job_definitions role '%s' is missing from db_labels under 'ROLE_TITLE'!" % job_code)
+				report["is_clean"] = false
+
+			var c_cls: String = str(job.get("contract_class", "FORMAL_LEGAL"))
+			if not has_label.call("CONTRACT_CLASS", c_cls):
+				report["errors"].append("job_definitions role '%s' references unknown CONTRACT_CLASS '%s'!" % [job_code, c_cls])
+				report["is_clean"] = false
+
+			var edu: String = str(job.get("education_required", "NO_FORMAL"))
+			if not has_label.call("EDUCATION_LEVEL", edu):
+				report["errors"].append("job_definitions role '%s' references unknown EDUCATION_LEVEL '%s'!" % [job_code, edu])
+				report["is_clean"] = false
+
+			if job.has("hourly_rate_range"):
+				var r: Array = job["hourly_rate_range"]
+				if r.size() < 2 or float(r[0]) > float(r[1]) or float(r[0]) <= 0.0:
+					report["errors"].append("job_definitions role '%s' has invalid hourly_rate_range %s!" % [job_code, str(r)])
+					report["is_clean"] = false
+	else:
+		report["errors"].append("Scenario manifest missing 'job_definitions' module declaration!")
+		report["is_clean"] = false
+
+	# 3. Audit Archetypes against Job Definitions & System Labels
+	if MANIFEST_MGR.has_module("archetypes"):
+		var archetypes: Dictionary = MANIFEST_MGR.load_module("archetypes")
+		for arch_key in archetypes.keys():
+			if arch_key in ["_meta", "setup"]:
+				continue
+			report["archetypes_scanned"] += 1
+			var arch: Dictionary = archetypes[arch_key]
+
+			var housing: Dictionary = arch.get("housing_profile", {})
+			var res_type: String = str(housing.get("residence_type", "NONE"))
+			if res_type != "NONE" and not has_label.call("RESIDENCE_TYPE", res_type):
+				report["errors"].append("Archetype '%s' references unknown RESIDENCE_TYPE '%s'!" % [arch_key, res_type])
+				report["is_clean"] = false
+
+			var tenure: String = str(housing.get("tenure_type", "NONE"))
+			if tenure != "NONE" and not has_label.call("TENURE_TYPE", tenure):
+				report["errors"].append("Archetype '%s' references unknown TENURE_TYPE '%s'!" % [arch_key, tenure])
+				report["is_clean"] = false
+
+			if arch.has("institution_profile"):
+				var inst: Dictionary = arch["institution_profile"]
+				for slot in inst.get("staffing_roster", []):
+					var j_id: String = str(slot.get("job_id", ""))
+					if not job_defs.has(j_id):
+						report["errors"].append("Archetype '%s' roster references unknown job_id '%s' (not in job_definitions.json)!" % [arch_key, j_id])
+						report["is_clean"] = false
+
+				var serves: String = str(inst.get("serves_role", ""))
+				if not serves.is_empty() and not has_label.call("ROLE_TITLE", serves):
+					report["warnings"].append("Archetype '%s' serves_role '%s' not explicitly in db_labels ROLE_TITLE." % [arch_key, serves])
+	else:
+		report["errors"].append("Scenario manifest missing 'archetypes' module declaration!")
+		report["is_clean"] = false
+
+	# 4. Audit Building Classes against Job Definitions
+	if MANIFEST_MGR.has_module("building_classes"):
+		var b_classes: Dictionary = MANIFEST_MGR.load_module("building_classes")
+		for group_key in ["commercial_tenants", "industrial_tenants", "civic_tenants"]:
+			var group: Dictionary = b_classes.get(group_key, {})
+			for ten_key in group.keys():
+				report["tenancies_scanned"] += 1
+				var tenancy: Dictionary = group[ten_key]
+
+				if not has_label.call("ESTABLISHMENT_CATEGORY", ten_key):
+					report["warnings"].append("Building tenancy '%s' has no matching ESTABLISHMENT_CATEGORY in db_labels." % ten_key)
+
+				for slot in tenancy.get("staffing_roster", []):
+					var j_id: String = str(slot.get("job_id", ""))
+					if not job_defs.has(j_id):
+						report["errors"].append("Tenancy '%s' roster references unknown job_id '%s'!" % [ten_key, j_id])
+						report["is_clean"] = false
+	else:
+		report["errors"].append("Scenario manifest missing 'building_classes' module declaration!")
+		report["is_clean"] = false
+
+	# 5. Audit Education Model in Demographics
+	if MANIFEST_MGR.has_module("demographics"):
+		var demo: Dictionary = MANIFEST_MGR.load_module("demographics")
+		var edu_model: Dictionary = demo.get("education_attainment_model", {})
+		for tier in edu_model.get("tiers", []):
+			var code: String = str(tier.get("code", ""))
+			if not has_label.call("EDUCATION_LEVEL", code):
+				report["errors"].append("demographics education_attainment_model tier '%s' missing from db_labels!" % code)
+				report["is_clean"] = false
+	else:
+		report["errors"].append("Scenario manifest missing 'demographics' module declaration!")
+		report["is_clean"] = false
+
+	_print_society_summary(report)
+	return report
+
+static func _print_society_summary(report: Dictionary) -> void:
+	print("\n=======================================================")
+	print("     SOCIETY MANIFEST & CROSS-REFERENCE AUDIT         ")
+	print("=======================================================")
+	print("  Labels Baseline Scanned: ", report["labels_scanned"])
+	print("  Job Definitions Scanned: ", report["jobs_scanned"])
+	print("  Archetypes Scanned:      ", report["archetypes_scanned"])
+	print("  Tenancies Scanned:       ", report["tenancies_scanned"])
+	print("  Integrity Status:        ", "100% CLEAN" if report["is_clean"] else "INTEGRITY DEFECTS FOUND")
+
+	if not report["errors"].is_empty():
+		print("\n  [!] CRITICAL DEFECTS (%d):" % report["errors"].size())
+		for err in report["errors"]:
+			print("    ❌ ", err)
+
+	if not report["warnings"].is_empty():
+		print("\n  [*] WARNINGS (%d):" % report["warnings"].size())
+		for warn in report["warnings"]:
+			print("    ⚠️  ", warn)
+
+	print("=======================================================\n")

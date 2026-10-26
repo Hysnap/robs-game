@@ -121,100 +121,80 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 	_init_archetypes()
 	var pos := Vector2i(grid_x, grid_z)
 
-	
-	# 1. Check if claimed by a multi-cell civic anchor
+	# 1. Check if claimed by a unique preclaimed civic anchor
 	if _anchor_claim_map.has(pos):
 		return str(_anchor_claim_map[pos])
 
 	var cfg = city_configuration
-	var radius_val: float = float(cfg.get("city_radius")) if (cfg and 
-									"city_radius" in cfg and 
-									float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
+	var radius_val: float = float(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
 	var norm_dist: float = Vector2(grid_x, grid_z).length() / max(radius_val, 1.0)
-	# Resolved safely on Object/Resource (1 argument):
-	# var density_profile: int = int(cfg.get("residential_density_profile")) if (cfg and "residential_density_profile" in cfg) else 1
 
-	var setup: Dictionary = _archetypes_data.get("setup", {})
-	assert(setup.has("default_fallback_archetype"), "FATAL: 'setup.default_fallback_archetype' is missing in archetypes.json")
-	var fallback_archetype: String = str(setup.get("default_fallback_archetype"))
+	# 2. Extract User Sliders from city_configuration (Default: Balanced)
+	var com_share: float = float(cfg.get("commercial_ratio")) if (cfg and "commercial_ratio" in cfg) else 0.15
+	var ind_share: float = float(cfg.get("industrial_ratio")) if (cfg and "industrial_ratio" in cfg) else 0.30
+	var res_share: float = float(cfg.get("residential_ratio")) if (cfg and "residential_ratio" in cfg) else 0.55
 
-	# 2. Determine normalized ring band key dynamically from user ratios via area integral
-	var bands: Array = _compute_dynamic_concentric_bands(cfg)
-	var band_key: String = str(bands[-1].get("weight_key"))
-	for band in bands:
-		if norm_dist <= float(band.get("max_norm_dist")):
-			band_key = str(band.get("weight_key"))
-			break
-			
-	if band_key.is_empty():
-		band_key = str(bands[-1].get("weight_key"))
+	var total_shares: float = max(0.0001, com_share + ind_share + res_share)
+	com_share /= total_shares
+	ind_share /= total_shares
+	res_share /= total_shares
 
-	# 3. Filter candidate archetypes and modulate weights purely by user-entered sector ratios
-	var candidate_weights: Dictionary = {}
+	# 3. Determine concentric distance ring
+	var band_key := "outer_weight"
+	if norm_dist <= 0.25:
+		band_key = "core_weight"
+	elif norm_dist <= 0.55:
+		band_key = "inner_weight"
+	elif norm_dist <= 0.85:
+		band_key = "mid_weight"
+
+	# 4. Group candidate archetypes strictly by SECTOR
+	var archetypes_by_sector: Dictionary = {
+		"COMMERCIAL": {},
+		"INDUSTRIAL": {},
+		"RESIDENTIAL": {}
+	}
+
 	for arch_key in _archetypes_data.keys():
-		if arch_key in ["_meta", "setup"]: 
+		if arch_key in ["_meta", "setup"]:
 			continue
 		var arch: Dictionary = _archetypes_data[arch_key]
-		if arch.get("is_unique_anchor", false): 
+		if arch.get("is_unique_anchor", false):
 			continue
-		
+
 		var placement: Dictionary = arch.get("spatial_placement", {})
 		var dist_min: float = float(placement.get("normalized_distance_min", 0.0))
 		var dist_max: float = float(placement.get("normalized_distance_max", 1.0))
-		
+
 		if norm_dist >= dist_min and norm_dist <= dist_max:
-			var base_w: float = float(placement.get(band_key, 0))
-			if base_w > 0:
-				var sector_name: String = str(arch.get("sector_class", "")).to_lower()
-				var ratio_prop: String = "%s_ratio" % sector_name
-				
-				var user_weight: float = 1.0
-				if cfg and ratio_prop in cfg:
-					user_weight = float(cfg.get(ratio_prop))
-					
-				var effective_w: float = base_w * user_weight * 100.0
-				
-				# Modulate residential weights based on user choice:
-				if arch.get("sector_class", "") == "RESIDENTIAL":
-					var tier: String = str(arch.get("density_tier", "")).to_upper()
-					if tier.is_empty():
-						if "high_rise" in arch_key or "high_density" in arch_key:
-							tier = "HIGH"
-						elif "suburban" in arch_key or "low_density" in arch_key:
-							tier = "LOW"
-						else:
-							tier = "MEDIUM"
+			var w: int = int(placement.get(band_key, 0))
+			if w > 0:
+				var s_class: String = str(arch.get("sector_class", "RESIDENTIAL")).to_upper()
+				if archetypes_by_sector.has(s_class):
+					archetypes_by_sector[s_class][arch_key] = w
 
-					# Resolve user profile key (default: "balanced")
-					var selected_profile_key: String = "balanced"
-					if cfg and "residential_density_profile" in cfg:
-						selected_profile_key = str(cfg.get("residential_density_profile"))
+	# 5. Build Sector Lottery from User Sliders
+	var sector_lottery: Dictionary = {}
+	if not archetypes_by_sector["COMMERCIAL"].is_empty() and com_share > 0.0:
+		sector_lottery["COMMERCIAL"] = com_share
+	if not archetypes_by_sector["INDUSTRIAL"].is_empty() and ind_share > 0.0:
+		sector_lottery["INDUSTRIAL"] = ind_share
+	if not archetypes_by_sector["RESIDENTIAL"].is_empty() and res_share > 0.0:
+		sector_lottery["RESIDENTIAL"] = res_share
 
-					# Read profile multipliers from archetypes.json "setup"
-					var density_multiplier: float = 1.0
-					var setup_dict: Dictionary = _archetypes_data.get("setup", {})
-					var density_cfg: Dictionary = setup_dict.get("density_profiles", {})
-					var profiles: Dictionary = density_cfg.get("profiles", {})
+	if sector_lottery.is_empty():
+		return "suburban_low_density"
 
-					if profiles.has(selected_profile_key):
-						var multipliers: Dictionary = profiles[selected_profile_key].get("multipliers", {})
-						if multipliers.has(tier):
-							density_multiplier = float(multipliers[tier])
-
-					effective_w *= density_multiplier
-
-				if effective_w > 0.0:
-					candidate_weights[arch_key] = int(round(effective_w))
-
-	if candidate_weights.is_empty():
-		return fallback_archetype
-
-	# 4. Deterministic sample via 2D spatial noise
-	assert(_layout_rules.has("zoning_noise_scale"), "FATAL: zoning_noise_scale missing in business_rules.cfg")
+	# 6. Sample Sector using Spatial Noise
 	var z_noise_scale: float = float(_layout_rules.get("zoning_noise_scale", 8.0))
 	var sample_val: float = (noise.get_noise_2d(float(grid_x) * z_noise_scale, float(grid_z) * z_noise_scale) + 1.0) * 0.5
 	
-	return _sample_weighted_archetype(candidate_weights, sample_val)
+	var chosen_sector: String = _pick_from_normalized_weights(sector_lottery, sample_val)
+	var sector_candidates: Dictionary = archetypes_by_sector[chosen_sector]
+
+	# 7. Sample Archetype within the chosen sector
+	var sub_sample: float = (noise.get_noise_2d(float(grid_x) * 16.0 + 100.0, float(grid_z) * 16.0 + 100.0) + 1.0) * 0.5
+	return _sample_weighted_archetype(sector_candidates, sub_sample)
 
 ## Overrides building generation to respect enable_building_spawning
 func generate_buildings_async() -> void:
@@ -601,8 +581,11 @@ func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data
 		var footprint := Vector2i(side_cells, side_cells)
 
 		var rules: Dictionary = arch["spatial_rules"]
+		var mode: String = str(rules.get("placement_mode", ""))
 		var dist_range: Array = rules.get("norm_distance_range", [0.0, 1.0])
 		var min_sep: int = int(rules.get("min_sep_m", 600.0) / 200.0)
+		if mode == "CADENCE":
+			continue
 
 		var origin: Vector2i = _find_valid_anchor_site(radius, footprint, dist_range, min_sep, occupied)
 		if origin == Vector2i(9999, 9999):
@@ -743,3 +726,15 @@ func create_intersection_plane(center: Vector3, size: Vector2):
 	mesh_instance.set_meta("road_type", "Intersection")
 	add_child(mesh_instance)
 	return mesh_instance
+
+func _pick_from_normalized_weights(weights: Dictionary, sample: float) -> String:
+	var total: float = 0.0
+	for w in weights.values():
+		total += float(w)
+	var roll: float = sample * total
+	var accum: float = 0.0
+	for k in weights.keys():
+		accum += float(weights[k])
+		if roll <= accum:
+			return k
+	return weights.keys()[-1]

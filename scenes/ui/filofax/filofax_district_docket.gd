@@ -248,6 +248,8 @@ func open_establishment_sub_docket(estab_id: int) -> void:
 	else:
 		var market: Dictionary = docket.get("market_catchment", {})
 		var employees: Array = docket.get("employees", [])
+		var raw_income = market.get("avg_neighbor_disposable_income")
+		var income: float = float(str(raw_income)) if raw_income != null else 0.0
 
 		var bbcode := "[b][color=#D4AF37]=== %s ===[/color][/b]\n" % docket.get("name", "Establishment")
 		bbcode += "[b]Class:[/b] %s (%s)\n" % [docket.get("category_title", "Commercial"), docket.get("owning_entity", "Local Enterprise")]
@@ -259,7 +261,7 @@ func open_establishment_sub_docket(estab_id: int) -> void:
 			int(market.get("total_catchment_population", 0)),
 			int(market.get("total_catchment_households", 0))
 		]
-		bbcode += "• Avg. Neighborhood Disposable Income: [b]£%.2f / week[/b]\n\n" % float(market.get("avg_neighbor_disposable_income", 0.0))
+		bbcode += "• Avg. Neighborhood Disposable Income: [b]£%.2f / week[/b]\n\n" % income
 
 		bbcode += "[b][color=#38BDF8]--- ACTIVE PAYROLL (%d on staff) ---[/color][/b]\n" % employees.size()
 		if employees.is_empty():

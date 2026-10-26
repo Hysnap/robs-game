@@ -2,6 +2,19 @@
 class_name SpatialDemandResolver
 extends RefCounted
 
+# Education Tier Hierarchy Map
+const EDU_TIER_RANK: Dictionary = {
+	"NO_FORMAL": 0,
+	"BASIC_SECONDARY": 1,
+	"O_LEVELS_CSE": 1,
+	"ENHANCED_SECONDARY": 2,
+	"A_LEVELS": 2,
+	"PRE_UNI_SECONDARY": 2,
+	"POLYTECHNIC_DIPLOMA": 3,
+	"DEGREE_OR_HIGHER": 4,
+	"UNIVERSITY_DEGREE": 4
+}
+
 ## Evaluates whether an additional facility/tenancy can be supported at 'center_pos'
 static func is_catchment_viable(
 	center_pos: Vector2,
@@ -57,20 +70,26 @@ static func find_best_host_district(
 		var dtype: String = str(d.get("district_type", ""))
 		var sector: String = str(d.get("initial_sector", d.get("sector_class", ""))).to_upper()
 
-		# Filter forbidden types / already repurposed blocks
+		# 1. Immediate skips: already repurposed or forbidden
 		if dtype in forbidden_types or bool(d.get("is_repurposed_civic", false)):
-			continue
-		if not allowed_sectors.is_empty() and not allowed_sectors.has(sector):
 			continue
 		if d.has("embedded_civics") and type_code in d["embedded_civics"]:
 			continue
+
+		# 2. Vacancy check: Vacant plots are universally available regardless of starting sector
+		var is_vacant: bool = bool(d.get("is_initially_vacant", false)) or int(d.get("actual_building_count", 0)) == 0
+
+		# 3. If occupied, enforce sector zoning restrictions; if vacant, permit universally
+		if not is_vacant:
+			if not allowed_sectors.is_empty() and not allowed_sectors.has(sector):
+				continue
 
 		var center: Vector2 = _resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 		var norm_d: float = center.length() / max(1.0, max_city_radius_m)
 		if norm_d < float(dist_range[0]) or norm_d > float(dist_range[1]):
 			continue
 
-		# Physical separation check (if specified)
+		# 4. Physical separation check
 		if min_sep > 0.0:
 			var too_close := false
 			for c in placed_coords_for_this_type:
@@ -80,12 +99,11 @@ static func find_best_host_district(
 			if too_close:
 				continue
 
-		# Catchment Population Check (Unified Demand Rule)
+		# 5. Catchment Population Check
 		if not is_catchment_viable(center, placed_coords_for_this_type, districts, block_estimates, travel_dist, pop_ratio):
 			continue
 
-		# Scoring: Vacant plots get top priority (-1000.0)
-		var is_vacant: bool = bool(d.get("is_initially_vacant", false)) or int(d.get("actual_building_count", 0)) == 0
+		# 6. Scoring: Vacant plots get top priority (-1000.0)
 		var b_count: int = int(d.get("actual_building_count", 0))
 		var est_p: float = float(block_estimates.get(dist_id, 0.0))
 		var dev_score: float = -1000.0 if (is_vacant and prefer_vacant) else (float(b_count * 10) + est_p)
@@ -149,10 +167,11 @@ static func pick_nearest_anchor(by_cat: Dictionary, requested_category: String, 
 static func pick_commute_matched_slot(
 	slots_array: Array,
 	worker_home_pos: Vector2,
+	citizen_edu_code: String,
 	districts: Dictionary,
 	job_defs: Dictionary,
 	rng: RandomNumberGenerator,
-	sample_size: int = 15
+	sample_size: int = 20
 ) -> Dictionary:
 	if slots_array.is_empty():
 		return {}
@@ -161,21 +180,34 @@ static func pick_commute_matched_slot(
 	var candidates: Array[Dictionary] = []
 	var candidate_indices: Array[int] = []
 
-	if slots_array.size() <= sample_size:
+	# Scan for education-eligible slots
+	var attempts := 0
+	var max_scan: int = mini(slots_array.size(), 60)
+	
+	# If small pool, check all; else sample
+	if slots_array.size() <= max_scan:
 		for i in range(slots_array.size()):
-			candidates.append(slots_array[i])
-			candidate_indices.append(i)
+			var s: Dictionary = slots_array[i]
+			var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
+			if is_education_eligible(citizen_edu_code, req_edu):
+				candidates.append(s)
+				candidate_indices.append(i)
 	else:
-		# Sample distinct random candidates
 		var picked_set := {}
-		var attempts := 0
-		while candidates.size() < sample_size and attempts < sample_size * 3:
+		while candidates.size() < sample_size and attempts < max_scan:
 			attempts += 1
 			var idx: int = rng.randi() % slots_array.size()
 			if not picked_set.has(idx):
 				picked_set[idx] = true
-				candidates.append(slots_array[idx])
-				candidate_indices.append(idx)
+				var s: Dictionary = slots_array[idx]
+				var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
+				if is_education_eligible(citizen_edu_code, req_edu):
+					candidates.append(s)
+					candidate_indices.append(idx)
+
+	# If no education-eligible slot was found in the sample, return empty (triggers fallback/unemployment)
+	if candidates.is_empty():
+		return {}
 
 	# Calculate distance weights
 	var weights: Array[float] = []
@@ -186,28 +218,21 @@ static func pick_commute_matched_slot(
 		var master_job: Dictionary = job_defs.get(job_code, {})
 		var max_commute: float = float(master_job.get("max_commute", master_job.get("max_commute_m", 3000.0)))
 		
-		# Resolve employer establishment location
 		var est_dist_id: String = str(slot.get("district_id", ""))
-		var job_pos: Vector2 = worker_home_pos
+		var d: float = 0.0
 		if districts.has(est_dist_id):
-			job_pos = _resolve_vector2(districts[est_dist_id].get("spatial_anchor", Vector2.ZERO))
-
-		var d: float = worker_home_pos.distance_to(job_pos)
+			d = distance_to_district_edge(worker_home_pos, districts[est_dist_id])
 		
-		# Distance decay weight
 		var w: float = 1.0
 		if d <= max_commute:
-			# Normal decay: closer is favored, but not absolute closest
 			w = exp(-1.2 * (d / max(100.0, max_commute)))
 		else:
-			# Rare outlier: steep penalty for exceeding max commute
 			var excess_ratio: float = (d - max_commute) / max(100.0, max_commute)
 			w = 0.02 * exp(-3.0 * excess_ratio)
 
 		weights.append(w)
 		total_weight += w
 
-	# Roulette wheel selection
 	var roll: float = rng.randf() * max(0.0001, total_weight)
 	var accum: float = 0.0
 	var chosen_candidate_idx: int = 0
@@ -221,6 +246,29 @@ static func pick_commute_matched_slot(
 	var chosen_slot_global_idx: int = candidate_indices[chosen_candidate_idx]
 	var chosen_slot: Dictionary = slots_array[chosen_slot_global_idx]
 
-	# Remove the claimed slot from the open ledger
 	slots_array.remove_at(chosen_slot_global_idx)
 	return chosen_slot
+
+static func is_education_eligible(citizen_edu: String, required_edu: String) -> bool:
+	var citizen_rank: int = int(EDU_TIER_RANK.get(citizen_edu, 0))
+	var required_rank: int = int(EDU_TIER_RANK.get(required_edu, 0))
+	return citizen_rank >= required_rank
+
+## Calculates the true minimum distance from a point to the nearest perimeter edge of a district block
+static func distance_to_district_edge(from_pos: Vector2, district_data: Dictionary) -> float:
+	var center: Vector2 = _resolve_vector2(district_data.get("spatial_anchor", district_data.get("center", Vector2.ZERO)))
+	
+	var half_w: float = 100.0
+	var half_h: float = 100.0
+	if district_data.has("size"):
+		var sz = district_data["size"]
+		if sz is Array and sz.size() >= 2:
+			half_w = float(sz[0]) * 0.5
+			half_h = float(sz[1]) * 0.5
+		elif sz is Vector2:
+			half_w = sz.x * 0.5
+			half_h = sz.y * 0.5
+
+	var closest_x: float = clampf(from_pos.x, center.x - half_w, center.x + half_w)
+	var closest_z: float = clampf(from_pos.y, center.y - half_h, center.y + half_h)
+	return from_pos.distance_to(Vector2(closest_x, closest_z))
