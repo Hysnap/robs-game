@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "schema_version": "2.2.0",
+    "schema_version": "2.4.0",
     "description": "Unified definitions for map district archetypes: spatial footprints, building densities, visuals, and demographic targets."
   },
 
@@ -40,7 +40,7 @@
   "commercial": {
     "display_name": "Commercial Core & Retail Precinct",
     "sector_class": "COMMERCIAL",
-    "footprint_size": 1600, 
+    "footprint_size": 1600.0, 
     "buildings": [5, 7],
     "habitable_units_per_building": [1, 3],
     "commercial_units_per_building": [1, 2],
@@ -66,11 +66,62 @@
     "corruption_tolerance": 0.35
   },
 
+  "municipal_allotments": {
+    "display_name": "Municipal Allotments & Green",
+    "sector_class": "RESIDENTIAL",
+    "footprint_size": 1600.0,
+    "buildings": [1, 2],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 0, 0],
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 1, "tenure_type": "NONE" },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [0.0, 0.0],
+    "zone_health_index_range": [70.0, 85.0],
+    "actual_police_heat": 0.05
+  },
+
+  "demolition_cleared_site": {
+    "display_name": "Cleared Site & Open Parking",
+    "sector_class": "COMMERCIAL",
+    "footprint_size": 1600.0,
+    "buildings": [0, 1],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 0, 0],
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 1, "tenure_type": "NONE" },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [0.0, 0.0],
+    "zone_health_index_range": [30.0, 45.0],
+    "actual_police_heat": 0.25
+  },
+
+  "railway_sidings_and_scrap": {
+    "display_name": "Disused Sidings & Scrap Yard",
+    "sector_class": "INDUSTRIAL",
+    "footprint_size": 1600.0,
+    "buildings": [1, 2],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 0],
+    "industrial_units_per_building": [0, 1],
+    "res_com_ind_perc": [0, 0, 100],
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 1, "tenure_type": "NONE" },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.0],
+    "avg_disposable_income_range": [0.0, 0.0],
+    "zone_health_index_range": [25.0, 40.0],
+    "actual_police_heat": 0.15
+  },
+
   "high_density_low_rise": {
     "display_name": "Victorian Residential Terraces",
     "sector_class": "RESIDENTIAL",
     "density_tier": "HIGH",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [5, 7],
     "habitable_units_per_building": [6, 8],
     "commercial_units_per_building": [0, 1],
@@ -100,8 +151,8 @@
     "display_name": "Municipal Housing Estate & High-Rise",
     "sector_class": "RESIDENTIAL",
     "density_tier": "HIGH",
-    "footprint_size": 1600,
-    "buildings": [1, 2],
+    "footprint_size": 4000.0,
+    "buildings": [1, 1],
     "habitable_units_per_building": [40, 120],
     "commercial_units_per_building": [0, 3],
     "industrial_units_per_building": [0, 0],
@@ -130,7 +181,7 @@
     "display_name": "Suburban Commuter Belt",
     "sector_class": "RESIDENTIAL",
     "density_tier": "LOW",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 3],
     "habitable_units_per_building": [1, 2],
     "commercial_units_per_building": [0, 0],
@@ -160,7 +211,7 @@
     "display_name": "Large Victorian Houses",
     "sector_class": "RESIDENTIAL",
     "density_tier": "LOW",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [1, 1],
     "commercial_units_per_building": [0, 0],
@@ -176,7 +227,7 @@
     "spatial_placement": {
       "normalized_distance_min": 0.40, "normalized_distance_max": 1.0,
       "core_weight": 5, "inner_weight": 10, "mid_weight": 10, "outer_weight": 0
-        },
+    },
     "population_range": [1, 5],
     "unemployment_rate_range": [0.00, 0.01],
     "avg_disposable_income_range": [240.0, 285.0],
@@ -190,7 +241,7 @@
     "display_name": "Interwar Semi-Detached & Maisonettes",
     "sector_class": "RESIDENTIAL",
     "density_tier": "MEDIUM",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [3, 5],
     "habitable_units_per_building": [2, 4],
     "commercial_units_per_building": [0, 1],
@@ -224,7 +275,7 @@
     "display_name": "Victorian Semi-Detached",
     "sector_class": "RESIDENTIAL",
     "density_tier": "MEDIUM",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [2, 4],
     "habitable_units_per_building": [2, 2],
     "commercial_units_per_building": [0, 0],
@@ -257,7 +308,7 @@
   "industrial": {
     "display_name": "Industrial Yards & Depots",
     "sector_class": "INDUSTRIAL",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 6],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 1],
@@ -286,7 +337,7 @@
   "place_of_worship": {
     "display_name": "Parish Church & Grounds",
     "sector_class": "CIVIC",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -298,21 +349,14 @@
       "min_city_population": 0,
       "norm_distance_range": [0.10, 0.85],
       "pop_ratio": 1500.0,
-      "min_sep_m": 600.0
+      "travel_dist_m": 750.0
     },
     "institution_profile": {
       "serves_role": "COMMUNITY_PARISH",
       "default_capacity": 300,
-      "staff_profile": {
-        "role_title": "CLERGY_OR_CARETAKER",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "FLEXIBLE_DAYTIME",
-        "weekly_hours": 30.0,
-        "hourly_rate": 3.00,
-        "age_min": 25,
-        "age_max_dynamic": "pension_age",
-        "education_required": "O_LEVELS_CSE"
-      }
+      "staffing_roster": [
+        { "job_id": "CLERGY_OR_CARETAKER", "target_count": [1, 2] }
+      ]
     },
     "housing_profile": { "residence_type": "RECTORY", "wealth_bracket": 3, "tenure_type": "EMPLOYMENT_TIED" },
     "visual_profile": { "color": "#A855F7", "roughness": 0.85 },
@@ -328,7 +372,7 @@
   "primary_school": {
     "display_name": "Junior & Infant School",
     "sector_class": "CIVIC",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -339,8 +383,8 @@
       "placement_mode": "CADENCE",
       "min_city_population": 0,
       "norm_distance_range": [0.10, 0.85],
-      "min_sep_m": 1000,
-      "pop_ratio": 2000
+      "travel_dist_m": 1200.0,
+      "pop_ratio": 2000.0
     },
     "institution_profile": {
       "serves_role": "CHILD",
@@ -355,16 +399,11 @@
         "age_min": 4,
         "age_max": 11
       },
-      "staff_profile": {
-        "role_title": "PRIMARY_TEACHER",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_SCHOOL",
-        "weekly_hours": 35,
-        "hourly_rate": 4.25,
-        "age_min": 21,
-        "age_max_dynamic": "pension_age",
-        "education_required": "DEGREE_OR_HIGHER"
-      }
+      "staffing_roster": [
+        { "job_id": "PRIMARY_TEACHER", "target_count": [8, 14] },
+        { "job_id": "SCHOOL_CARETAKER", "target_count": [1, 1] },
+        { "job_id": "SCHOOL_MEALS_STAFF", "target_count": [3, 6] }
+      ]
     },
     "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 2, "tenure_type": "EMPLOYMENT_TIED" },
     "visual_profile": { "color": "#FBBF24", "roughness": 0.70 },
@@ -380,7 +419,7 @@
   "secondary_school": {
     "display_name": "Comprehensive School",
     "sector_class": "CIVIC",
-    "footprint_size": 6400,
+    "footprint_size": 6400.0,
     "buildings": [2, 4],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -391,8 +430,8 @@
       "placement_mode": "CADENCE",
       "min_city_population": 0,
       "norm_distance_range": [0.10, 0.85],
-      "min_sep_m": 2000,
-      "pop_ratio": 10000
+      "travel_dist_m": 2500.0,
+      "pop_ratio": 8000.0
     },
     "institution_profile": {
       "serves_role": "STUDENT",
@@ -407,16 +446,12 @@
         "age_min": 11,
         "age_max": 18
       },
-      "staff_profile": {
-        "role_title": "TEACHER_OR_STAFF",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_SCHOOL",
-        "weekly_hours": 35,
-        "hourly_rate": 4.50,
-        "age_min": 21,
-        "age_max_dynamic": "pension_age",
-        "education_required": "DEGREE_OR_HIGHER"
-      }
+      "staffing_roster": [
+        { "job_id": "TEACHER_OR_STAFF", "target_count": [35, 55] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [3, 6] },
+        { "job_id": "SCHOOL_CARETAKER", "target_count": [1, 2] },
+        { "job_id": "SCHOOL_MEALS_STAFF", "target_count": [8, 16] }
+      ]
     },
     "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 2, "tenure_type": "EMPLOYMENT_TIED" },
     "visual_profile": { "color": "#F59E0B", "roughness": 0.70 },
@@ -432,7 +467,7 @@
   "jobcentre_block": {
     "display_name": "Borough Jobcentre & DHSS Office",
     "sector_class": "CIVIC",
-    "footprint_size": 1600,
+    "footprint_size": 1600.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [0, 0],
@@ -443,22 +478,16 @@
       "placement_mode": "CADENCE",
       "min_city_population": 0,
       "norm_distance_range": [0.10, 0.85],
-      "min_sep_m": 2000,
-      "pop_ratio": 50000
+      "travel_dist_m": 4000.0,
+      "pop_ratio": 25000.0
     },
     "institution_profile": {
       "serves_role": "UNEMPLOYED",
       "default_capacity": 1500,
-      "staff_profile": {
-        "role_title": "DHSS_OFFICER",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_OFFICE",
-        "weekly_hours": 37.0,
-        "hourly_rate": 3.75,
-        "age_min": 20,
-        "age_max_dynamic": "pension_age",
-        "education_required": "O_LEVELS_CSE"
-      }
+      "staffing_roster": [
+        { "job_id": "DHSS_OFFICER", "target_count": [15, 30] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [2, 4] }
+      ]
     },
     "housing_profile": { "residence_type": "NONE", "wealth_bracket": 1, "tenure_type": "NONE" },
     "visual_profile": { "color": "#64748B", "roughness": 0.50 },
@@ -474,7 +503,7 @@
   "local_government": {
     "display_name": "Municipal Administrative Hub & Town Hall",
     "sector_class": "CIVIC",
-    "footprint_size": 1600,
+    "footprint_size": 40000.0,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [0, 2],
@@ -484,24 +513,21 @@
     "spatial_rules": {
       "placement_mode": "EXACT_CORE",
       "min_city_population": 0,
-      "norm_distance_range": [0.0, 0.05],
+      "norm_distance_range": [0.0, 0.08],
       "max_per_city": 1,
-      "min_sep_m": 2000,
-      "pop_ratio": 150000
+      "travel_dist_m": 5000.0,
+      "pop_ratio": 120000.0
     },
     "institution_profile": {
       "serves_role": "CIVIC_OFFICIAL",
-      "default_capacity": 400,
-      "staff_profile": {
-        "role_title": "CIVIC_CLERK_OR_OFFICIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_OFFICE",
-        "weekly_hours": 37.0,
-        "hourly_rate": 4.10,
-        "age_min": 21,
-        "age_max_dynamic": "pension_age",
-        "education_required": "O_LEVELS_CSE"
-      }
+      "default_capacity": 600,
+      "wage_multiplier": 1.10,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [8, 15] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [25, 45] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [60, 120] },
+        { "job_id": "MUNICIPAL_BUS_DRIVER", "target_count": [40, 80] }
+      ]
     },
     "housing_profile": { "residence_type": "NONE", "wealth_bracket": 3, "tenure_type": "NONE" },
     "visual_profile": { "color": "#4338CA", "roughness": 0.50 },
@@ -518,7 +544,7 @@
     "display_name": "Regional Infirmary & Medical Center",
     "sector_class": "CIVIC",
     "establishment_category": "HOSPITAL",
-    "footprint_size": 40000,
+    "footprint_size": 40000.0,
     "buildings": [4, 8],
     "habitable_units_per_building": [1, 2],
     "commercial_units_per_building": [1, 2],
@@ -529,26 +555,25 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 0,
-      "pop_ratio": 30000,
+      "pop_ratio": 30000.0,
       "max_per_city": 4,
       "norm_distance_range": [0.25, 0.65],
-      "min_sep_m": 2000,
+      "travel_dist_m": 3500.0,
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["COMMERCIAL", "RESIDENTIAL"]
     },
     "institution_profile": {
       "serves_role": "EMERGENCY_HEALTH",
       "default_capacity": 650,
-      "staff_profile": {
-        "role_title": "HOSPITAL_MEDICAL_OR_NURSE",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "SHIFTS_ROTATING",
-        "weekly_hours": 40.0,
-        "hourly_rate": 4.60,
-        "age_min": 20,
-        "age_max_dynamic": "pension_age",
-        "education_required": "DEGREE_OR_HIGHER"
-      }
+      "wage_multiplier": 1.10,
+      "staffing_roster": [
+        { "job_id": "HOSPITAL_DOCTOR", "target_count": [15, 30] },
+        { "job_id": "HOSPITAL_NURSE", "target_count": [45, 90] },
+        { "job_id": "HOSPITAL_SUPPORT_STAFF", "target_count": [50, 100] },
+        { "job_id": "AMBULANCE_CREW", "target_count": [12, 24] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [20, 40] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [4, 10] }
+      ]
     },
     "population_range": [40, 100],
     "unemployment_rate_range": [0.01, 0.03],
@@ -563,7 +588,7 @@
     "display_name": "Polytechnic & Higher Education Campus",
     "sector_class": "CIVIC",
     "establishment_category": "UNIVERSITY_OR_POLYTECHNIC",
-    "footprint_size": 6000,
+    "footprint_size": 40000.0,
     "buildings": [4, 8],
     "habitable_units_per_building": [10, 30],
     "commercial_units_per_building": [1, 2],
@@ -574,10 +599,10 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 50000,
-      "pop_ratio": 60000,
+      "pop_ratio": 60000.0,
       "max_per_city": 2,
       "norm_distance_range": [0.35, 0.70],
-      "min_sep_m": 2500,
+      "travel_dist_m": 4500.0,
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["RESIDENTIAL", "COMMERCIAL"]
     },
@@ -594,16 +619,12 @@
         "age_min": 18,
         "age_max": 24
       },
-      "staff_profile": {
-        "role_title": "LECTURER_OR_ADMIN",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_OFFICE",
-        "weekly_hours": 37.0,
-        "hourly_rate": 5.40,
-        "age_min": 24,
-        "age_max_dynamic": "pension_age",
-        "education_required": "DEGREE_OR_HIGHER"
-      }
+      "staffing_roster": [
+        { "job_id": "LECTURER_OR_ADMIN", "target_count": [40, 80] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [15, 30] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [2, 3] },
+        { "job_id": "GROUNDSMAN_OR_STEWARD", "target_count": [1, 3] }
+      ]
     },
     "population_range": [200, 500],
     "unemployment_rate_range": [0.05, 0.10],
@@ -617,7 +638,7 @@
   "sports_arena": {
     "display_name": "Borough Football Ground",
     "sector_class": "CIVIC",
-    "footprint_size": 27000,
+    "footprint_size": 27000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
     "commercial_units_per_building": [1, 1],
@@ -627,26 +648,23 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 25000,
-      "pop_ratio": 60000,
+      "pop_ratio": 60000.0,
       "max_per_city": 1,
       "norm_distance_range": [0.30, 0.65],
-      "min_sep_m": 3000,
+      "travel_dist_m": 4500.0,
       "repel_sectors": ["HOSPITAL"],
       "prefer_sectors": ["RESIDENTIAL", "INDUSTRIAL"]
     },
     "institution_profile": {
       "serves_role": "COMMUNITY_RECREATION",
       "default_capacity": 15000,
-      "staff_profile": {
-        "role_title": "GROUNDSMAN_OR_STEWARD",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "WEEKEND",
-        "weekly_hours": 16.0,
-        "hourly_rate": 3.20,
-        "age_min": 18,
-        "age_max_dynamic": "pension_age",
-        "education_required": "NO_QUALIFICATIONS"
-      }
+      "staffing_roster": [
+        { "job_id": "GROUNDSMAN_OR_STEWARD", "target_count": [6, 12] },
+        { "job_id": "SPORTSMAN", "target_count": [18, 36] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [6, 10] },
+        { "job_id": "CLERK", "target_count": [3, 10] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 3] }
+      ]
     },
     "housing_profile": { "residence_type": "NONE", "wealth_bracket": 2, "tenure_type": "NONE" },
     "visual_profile": { "color": "#059669", "roughness": 0.80 },
@@ -662,7 +680,7 @@
   "municipal_park": {
     "display_name": "Victorian Public Park & Rec Ground",
     "sector_class": "CIVIC",
-    "footprint_size": 47000,
+    "footprint_size": 47000.0,
     "buildings": [0, 1],
     "habitable_units_per_building": [0, 1],
     "commercial_units_per_building": [0, 0],
@@ -672,26 +690,19 @@
     "spatial_rules": {
       "placement_mode": "CONCENTRIC_RADIAL",
       "min_city_population": 0,
-      "pop_ratio": 20000,
+      "pop_ratio": 20000.0,
       "max_per_city": 4,
       "norm_distance_range": [0.20, 0.75],
-      "min_sep_m": 1600,
+      "travel_dist_m": 2000.0,
       "repel_sectors": [],
       "prefer_sectors": ["RESIDENTIAL"]
     },
     "institution_profile": {
       "serves_role": "COMMUNITY_RECREATION",
       "default_capacity": 500,
-      "staff_profile": {
-        "role_title": "PARK_KEEPER",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "DAYTIME_OUTDOORS",
-        "weekly_hours": 38.0,
-        "hourly_rate": 3.10,
-        "age_min": 21,
-        "age_max_dynamic": "pension_age",
-        "education_required": "NO_QUALIFICATIONS"
-      }
+      "staffing_roster": [
+        { "job_id": "PARK_KEEPER", "target_count": [1, 3] }
+      ]
     },
     "housing_profile": { "residence_type": "CARETAKER_LODGE", "wealth_bracket": 3, "tenure_type": "EMPLOYMENT_TIED" },
     "visual_profile": { "color": "#22C55E", "roughness": 0.95 },
@@ -707,7 +718,7 @@
   "civic_penal_block": {
     "display_name": "HM Prison & Remand Gaol",
     "sector_class": "CIVIC",
-    "footprint_size": 25000,
+    "footprint_size": 25000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [45, 100],
     "commercial_units_per_building": [0, 0],
@@ -719,7 +730,7 @@
       "min_city_population": 50000,
       "max_per_city": 1,
       "norm_distance_range": [0.70, 0.95],
-      "min_sep_m": 4000,
+      "travel_dist_m": 5000.0,
       "repel_sectors": ["RESIDENTIAL", "COMMERCIAL"],
       "prefer_sectors": ["INDUSTRIAL"]
     },
@@ -736,16 +747,11 @@
         "age_min": 17,
         "age_max": 65
       },
-      "staff_profile": {
-        "role_title": "PRISON_OFFICER",
-        "contract_class": "FORMAL_LEGAL",
-        "schedule_window": "SHIFTS_ROTATING",
-        "weekly_hours": 39.0,
-        "hourly_rate": 3.85,
-        "age_min": 21,
-        "age_max_dynamic": "pension_age",
-        "education_required": "O_LEVELS_CSE"
-      }
+      "staffing_roster": [
+        { "job_id": "PRISON_OFFICER", "target_count": [40, 75] },
+        { "job_id": "CLERK", "target_count": [2, 5] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 2] }
+      ]
     },
     "housing_profile": { "residence_type": "CUSTODIAL", "wealth_bracket": 1, "tenure_type": "CUSTODIAL" },
     "visual_profile": { "color": "#374151", "roughness": 0.50 },
@@ -756,6 +762,91 @@
     "consumer_desperation_index": 0.50,
     "actual_police_heat": 0.70,
     "corruption_tolerance": 0.40
+  },
+
+  "police_headquarters": {
+    "display_name": "Police Headquarters",
+    "sector_class": "CIVIC",
+    "footprint_size": 40000.0,
+    "buildings": [1, 1],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 2],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 50, 0],
+    "typical_population_density": 0,
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 0,
+      "pop_ratio": 40000.0,
+      "max_per_city": 1,
+      "norm_distance_range": [0.0, 0.75],
+      "travel_dist_m": 5000.0
+    },
+    "institution_profile": {
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 600,
+      "wage_multiplier": 1.10,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [1, 3] },
+        { "job_id": "POLICE_OFFICER", "target_count": [50, 150] },
+        { "job_id": "DETECTIVE", "target_count": [5, 15] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [25, 45] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [2, 5] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [6, 12] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [4, 8] }
+      ]
+    },
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 3, "tenure_type": "NONE" },
+    "visual_profile": { "color": "#4338CA", "roughness": 0.50 },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.02],
+    "avg_disposable_income_range": [120.0, 160.0],
+    "zone_health_index_range": [85.0, 95.0],
+    "consumer_desperation_index": 0.10,
+    "actual_police_heat": 0.40,
+    "corruption_tolerance": 0.20
+  },
+
+  "police_station": {
+    "display_name": "Section Police Station",
+    "sector_class": "CIVIC",
+    "footprint_size": 20000.0,
+    "buildings": [1, 1],
+    "habitable_units_per_building": [0, 0],
+    "commercial_units_per_building": [0, 2],
+    "industrial_units_per_building": [0, 0],
+    "res_com_ind_perc": [0, 50, 0],
+    "typical_population_density": 0,
+    "spatial_rules": {
+      "placement_mode": "CONCENTRIC_RADIAL",
+      "min_city_population": 60000,
+      "pop_ratio": 40000.0,
+      "max_per_city": 10,
+      "norm_distance_range": [0.0, 0.99],
+      "travel_dist_m": 5000.0
+    },
+    "institution_profile": {
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 600,
+      "wage_multiplier": 1.10,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [1, 1] },
+        { "job_id": "POLICE_OFFICER", "target_count": [25, 75] },
+        { "job_id": "DETECTIVE", "target_count": [2, 10] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [5, 9] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [2, 4] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 2] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [2, 4] }
+      ]
+    },
+    "housing_profile": { "residence_type": "NONE", "wealth_bracket": 3, "tenure_type": "NONE" },
+    "visual_profile": { "color": "#4338CA", "roughness": 0.50 },
+    "population_range": [0, 0],
+    "unemployment_rate_range": [0.0, 0.00],
+    "avg_disposable_income_range": [120.0, 160.0],
+    "zone_health_index_range": [85.0, 95.0],
+    "consumer_desperation_index": 0.10,
+    "actual_police_heat": 0.40,
+    "corruption_tolerance": 0.20
   }
 }
-  

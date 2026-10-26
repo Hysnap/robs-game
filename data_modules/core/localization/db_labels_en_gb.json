@@ -117,10 +117,16 @@
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "TOY_SHOP", "title": "Toy Shop", "description": "Retailer of toys, games, and hobbies." },
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "PET_SHOP", "title": "Pet Shop", "description": "Retail pet supplies and domestic animal care." },
 
+    { "domain": "ESTABLISHMENT_CATEGORY", "code": "MINICAB_FIRM", "title": "Private Hire & Minicab Office", "description": "Commercial passenger dispatch and taxi firm." },
+    { "domain": "ESTABLISHMENT_CATEGORY", "code": "CLEANING_CONTRACTOR", "title": "Contract Cleaning Services", "description": "Commercial premises cleaning and facility maintenance." },
+    { "domain": "ESTABLISHMENT_CATEGORY", "code": "COACH_AND_HAULAGE_DEPOT", "title": "Coach Haulage & Freight Depot", "description": "Depot for charter coaches, lorries, and road transport." },
+    { "domain": "ESTABLISHMENT_CATEGORY", "code": "BUILDING_CONTRACTORS", "title": "Builders Merchants & Contracting Yard", "description": "Civil construction contractor and trade yard." },
+
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "FOUNDRY_CASTINGS", "title": "Metal Foundry & Heavy Engineering", "description": "Heavy metallurgical casting and metalworks." },
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "AUTO_REPAIR_DEPOT", "title": "Motor Repair Works & Body Shop", "description": "Automotive repair garage and commercial transport service." },
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "SCRAP_MERCHANT", "title": "Scrap & Metal Reclamation", "description": "Scrap yard sorting and ferrous metal reclamation." },
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "TEXTILE_OR_JOINERY", "title": "Joinery Works & Timber Yard", "description": "Timber mill, joinery workshop, and textile assembly." },
+
 
     { "domain": "ROLE_TITLE", "code": "CHILD", "title": "Child / Dependent", "description": "Pre-school or primary age dependent." },
     { "domain": "ROLE_TITLE", "code": "PUPIL", "title": "Primary School Pupil", "description": "Enrolled infant and junior school pupil." },
@@ -134,22 +140,48 @@
 
     { "domain": "ROLE_TITLE", "code": "PRIMARY_TEACHER", "title": "Primary School Teacher", "description": "Teacher at junior and infant school." },
     { "domain": "ROLE_TITLE", "code": "TEACHER_OR_STAFF", "title": "Comprehensive Teacher / Staff", "description": "Secondary school educator or academic staff." },
+    { "domain": "ROLE_TITLE", "code": "SCHOOL_CARETAKER", "title": "School Caretaker & Facilities", "description": "Live-in custodian and groundskeeper at school." },
+    { "domain": "ROLE_TITLE", "code": "SCHOOL_MEALS_STAFF", "title": "School Meals Staff / Dinner Lady", "description": "School canteen and lunchtime kitchen assistant." },
+
     { "domain": "ROLE_TITLE", "code": "LECTURER_OR_ADMIN", "title": "Higher Education Lecturer / Admin", "description": "Academic lecturer or campus administrator." },
     { "domain": "ROLE_TITLE", "code": "CLERGY_OR_CARETAKER", "title": "Clergy / Church Caretaker", "description": "Minister, vicar, priest, or parish custodian." },
     { "domain": "ROLE_TITLE", "code": "POSTAL_CLERK", "title": "Postal Clerk", "description": "Counter clerk at sub-post office branch." },
     { "domain": "ROLE_TITLE", "code": "PRACTICE_STAFF", "title": "Practice Staff / Nurse", "description": "Medical assistant, receptionist, or clinic nurse." },
+    
+    { "domain": "ROLE_TITLE", "code": "HOSPITAL_DOCTOR", "title": "Hospital Medical Doctor", "description": "Resident infirmary physician or registrar." },
+    { "domain": "ROLE_TITLE", "code": "HOSPITAL_NURSE", "title": "State Registered Nurse", "description": "Qualified ward nursing sister or staff nurse." },
+    { "domain": "ROLE_TITLE", "code": "HOSPITAL_SUPPORT_STAFF", "title": "Hospital Porter / Orderly / Cleaner", "description": "Hospital domestic services, portering, and laundry staff." },
+    { "domain": "ROLE_TITLE", "code": "AMBULANCE_CREW", "title": "Ambulance Driver / Attendant", "description": "Emergency municipal ambulance driver and attendant." },
     { "domain": "ROLE_TITLE", "code": "HOSPITAL_MEDICAL_OR_NURSE", "title": "Hospital Medical Staff / Nurse", "description": "Infirmary physician, registered nurse, or orderlies." },
+
     { "domain": "ROLE_TITLE", "code": "DHSS_OFFICER", "title": "Jobcentre / DHSS Officer", "description": "Civil servant administering benefits and employment registry." },
     { "domain": "ROLE_TITLE", "code": "GROUNDSMAN_OR_STEWARD", "title": "Groundsman / Match Steward", "description": "Stadium groundskeeper or event safety steward." },
     { "domain": "ROLE_TITLE", "code": "PARK_KEEPER", "title": "Municipal Park Keeper", "description": "Grounds gardener and park custodian." },
     { "domain": "ROLE_TITLE", "code": "PRISON_OFFICER", "title": "HM Prison Officer", "description": "Custodial prison guard and discipline officer." },
     { "domain": "ROLE_TITLE", "code": "PRISON_INMATE", "title": "Custodial Inmate", "description": "Incarcerated remand prisoner or convict." },
+    
+    { "domain": "ROLE_TITLE", "code": "CIVIC_OFFICIAL", "title": "Senior Civic Official", "description": "Senior municipal department head or local administrator." },
     { "domain": "ROLE_TITLE", "code": "CIVIC_CLERK_OR_OFFICIAL", "title": "Civic Clerk / Municipal Official", "description": "Town hall administrator or court clerk." },
+    { "domain": "ROLE_TITLE", "code": "COUNCIL_MANUAL_LABOUR", "title": "Council Direct Labour Worker", "description": "Refuse collector, road repair gang, street sweeper, or municipal repairs." },
+    { "domain": "ROLE_TITLE", "code": "MUNICIPAL_BUS_DRIVER", "title": "Municipal Bus Driver", "description": "Corporation passenger transport bus driver." },
 
-    { "domain": "ROLE_TITLE", "code": "CIVIC_OFFICIAL", "title": "Civic Official Role", "description": "Elected councillor or municipal executive role." },
+    { "domain": "ROLE_TITLE", "code": "DISPATCHER_OR_CONTROLLER", "title": "Minicab Radio Controller", "description": "Office telephone operator and radio dispatcher." },
+    { "domain": "ROLE_TITLE", "code": "CAB_DRIVER", "title": "Private Hire Cab Driver", "description": "Licensed private hire car driver." },
+    { "domain": "ROLE_TITLE", "code": "OFFICE_MANAGER", "title": "Office / Operations Manager", "description": "Contracting firm administrator and supervisor." },
+    { "domain": "ROLE_TITLE", "code": "COMMERCIAL_CLEANER", "title": "Commercial Cleaner", "description": "Night office, shop, and industrial unit cleaning operative." },
+    { "domain": "ROLE_TITLE", "code": "DEPOT_MANAGER", "title": "Transport Depot Manager", "description": "Haulage or coach depot operations superintendent." },
+    { "domain": "ROLE_TITLE", "code": "VEHICLE_MECHANIC", "title": "Commercial Vehicle Mechanic", "description": "Heavy commercial lorry and coach fitter." },
+    { "domain": "ROLE_TITLE", "code": "COACH_OR_LORRY_DRIVER", "title": "Coach / HGV Lorry Driver", "description": "Long-distance coach and heavy freight driver." },
+    { "domain": "ROLE_TITLE", "code": "BUILDING_TRADESMAN", "title": "Building Contractor / Brickie / Joiner", "description": "Skilled building trade operative." },
+
     { "domain": "ROLE_TITLE", "code": "CIVIC_HEALTH", "title": "Civic Health Role", "description": "Community health and outpatient service user role." },
     { "domain": "ROLE_TITLE", "code": "EMERGENCY_HEALTH", "title": "Emergency Health Patient Role", "description": "Inpatient and acute emergency hospital recipient role." },
     { "domain": "ROLE_TITLE", "code": "COMMUNITY_RECREATION", "title": "Civic Recreationalist", "description": "Patron of municipal recreation ground or stadium." },
+    { "domain": "ROLE_TITLE", "code": "CLERK", "title": "Clerical Officer", "description": "Administrative or clerical worker." },
+    { "domain": "ROLE_TITLE", "code": "DETECTIVE", "title": "Detective Officer", "description": "Plain-clothes police investigator." },
+    { "domain": "ROLE_TITLE", "code": "LECTURER", "title": "Higher Education Lecturer", "description": "Academic lecturer at a university or polytechnic." },
+    { "domain": "ROLE_TITLE", "code": "POLICE_OFFICER", "title": "Uniformed Police Officer", "description": "Uniformed officer providing local policing and public safety." },
+    { "domain": "ROLE_TITLE", "code": "SPORTSMAN", "title": "Sports Ground Staff / Athlete", "description": "Sports personnel and supporting ground staff." },
 
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "COMMERCIAL", "title": "Commercial Core & Retail Precinct", "description": "District archetype centred on retail and commercial activity." },
     { "domain": "ESTABLISHMENT_CATEGORY", "code": "HIGH_DENSITY_LOW_RISE", "title": "Victorian Residential Terraces", "description": "High-density, low-rise district of Victorian residential terraces." },

@@ -5,6 +5,7 @@ extends RefCounted
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const MANIFEST_MGR = preload("res://systems/scenario_manifest_manager.gd")
+const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
 
 static var _lexicon: Dictionary = {}
 static var _demographics: Dictionary = {}
@@ -12,16 +13,21 @@ static var _cultural: Dictionary = {}
 static var _civic_hierarchy: Dictionary = {}
 static var _archetypes: Dictionary = {}
 static var _building_classes: Dictionary = {}
+static var _job_definitions: Dictionary = {}
 
 ## Loads all required scenario modules strictly via ScenarioManifestManager
 static func _load_configs() -> void:
-	if not _demographics.is_empty() and not _lexicon.is_empty() and not _cultural.is_empty() and not _civic_hierarchy.is_empty() and not _archetypes.is_empty() and not _building_classes.is_empty():
+	if not _demographics.is_empty() and not _lexicon.is_empty() and not _cultural.is_empty() and not _civic_hierarchy.is_empty() and not _archetypes.is_empty() and not _building_classes.is_empty() and not _job_definitions.is_empty():
 		return
 
 	_demographics = MANIFEST_MGR.load_module("demographics")
 	_lexicon = MANIFEST_MGR.load_module("lexicon")
 	_cultural = MANIFEST_MGR.load_module("cultural_demographics")
 	_civic_hierarchy = MANIFEST_MGR.load_module("civic_hierarchy")
+
+	assert(MANIFEST_MGR.has_module("job_definitions"), "FATAL: Scenario manifest missing 'job_definitions' module.")
+	_job_definitions = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
+	assert(not _job_definitions.is_empty(), "FATAL: 'job_definitions' module contains empty roles dictionary.")
 
 	assert(MANIFEST_MGR.has_module("archetypes"), "FATAL: Scenario manifest missing 'archetypes' module.")
 	_archetypes = MANIFEST_MGR.load_module("archetypes")
@@ -51,7 +57,7 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 	rng.seed = absi(seed_id.hash())
 
 	# -------------------------------------------------------------------------
-	# PASS 0.5: PRECALCULATE DISTRICT M² METRICS & SECTOR BUILDING SLOTS
+	# PASS 0.5: PRECALCULATE DISTRICT M² METRICS, POPULATION & VACANCY
 	# -------------------------------------------------------------------------
 	if on_progress.is_valid():
 		on_progress.call(5.0, 100.0, "Pass 1: Generate Initial Land Parcels..")
@@ -59,7 +65,7 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 	_precalculate_district_metrics(world_state, rng)
 
 	# -------------------------------------------------------------------------
-	# PASS 1: CIVIC CADENCE REALIGNMENT (Macro Parcel Repurposing)
+	# PASS 1: CIVIC CADENCE REALIGNMENT (DRY Spatial Allocation)
 	# -------------------------------------------------------------------------
 	if on_progress.is_valid():
 		on_progress.call(10.0, 100.0, "Pass 2: Realignment of dedicated civic parcels...")
@@ -105,8 +111,9 @@ static func generate_city_society(world_state: Dictionary, seed_id: String, forc
 
 	print("[SocialNetwork] Generation complete across all passes in %d ms." % elapsed)
 
-## Pass 0.5: Calculates exact m² area, building counts, and rolls independent unit quantities
-## per building using res_com_ind_perc, habitable_units_per_building, etc.
+# =============================================================================
+# PASS 0.5: PHYSICAL LAND DENSITY & UNIT ROLL
+# =============================================================================
 static func _precalculate_district_metrics(world_state: Dictionary, rng: RandomNumberGenerator) -> void:
 	var districts: Dictionary = world_state.get("districts", {})
 	if districts.is_empty():
@@ -116,7 +123,7 @@ static func _precalculate_district_metrics(world_state: Dictionary, rng: RandomN
 	var metrics: Dictionary = setup.get("block_metrics", {})
 	var std_w: float = float(metrics.get("standard_block_width_m", 200.0))
 	var std_h: float = float(metrics.get("standard_block_height_m", 200.0))
-	var std_lot_sqm: float = std_w * std_h # Baseline 40,000 m²
+	var std_lot_sqm: float = std_w * std_h
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
@@ -126,7 +133,7 @@ static func _precalculate_district_metrics(world_state: Dictionary, rng: RandomN
 		var area_sqm: float = _get_district_area_sqm(d)
 		d["area_sqm"] = area_sqm
 
-		# Dedicated institutional anchors (e.g. Hospital site, Town Hall, University)
+		# Dedicated institutional anchors preserve authored capacity
 		if arch.get("sector_class", "") == "CIVIC" or arch.get("is_unique_anchor", false):
 			d["actual_building_count"] = 1
 			d["avg_bldg_sqm"] = area_sqm
@@ -135,20 +142,46 @@ static func _precalculate_district_metrics(world_state: Dictionary, rng: RandomN
 			d["total_commercial_units"] = 0
 			d["total_industrial_units"] = 0
 			d["estimated_population"] = int(arch.get("population_range", [0, 0])[0])
+			d["expected_pop_min"] = d["estimated_population"]
+			d["expected_pop_max"] = d["estimated_population"]
+			d["is_initially_vacant"] = false
 			continue
 
-		# 1. Derive average footprint per building from archetype footprint_size and buildings range
+		# 8% to 10% Initial Vacancy Roll for Civic Demand Absorption
+		var is_vacant_roll: bool = (rng.randf() < 0.09)
+		if is_vacant_roll and arch.get("sector_class", "") != "CIVIC" and not arch.get("is_unique_anchor", false):
+			d["is_initially_vacant"] = true
+			d["initial_sector"] = str(arch.get("sector_class", "RESIDENTIAL"))
+			d["actual_building_count"] = 0
+			d["avg_bldg_sqm"] = 800.0
+			d["building_allocations"] = []
+			d["total_habitable_units"] = 0
+			d["total_commercial_units"] = 0
+			d["total_industrial_units"] = 0
+			d["estimated_population"] = 0
+			d["expected_pop_min"] = 0
+			d["expected_pop_max"] = 0
+			continue
+
+		d["is_initially_vacant"] = false
+		d["initial_sector"] = str(arch.get("sector_class", "RESIDENTIAL"))
+
+		var area_ratio: float = area_sqm / std_lot_sqm
+		var base_pop_range: Array = arch.get("population_range", [0, 0])
+		d["expected_pop_min"] = int(round(float(base_pop_range[0]) * area_ratio))
+		d["expected_pop_max"] = int(round(float(base_pop_range[1]) * area_ratio))
+
+		# Building counts derived from archetype base footprint
 		var base_footprint_sqm: float = float(arch.get("footprint_size", 1600.0))
 		var b_range: Array = arch.get("buildings", [2, 4])
 		var rolled_bldgs_for_base: int = rng.randi_range(int(b_range[0]), int(b_range[1]))
 		var avg_bldg_sqm: float = maxf(50.0, base_footprint_sqm / float(maxi(1, rolled_bldgs_for_base)))
 		d["avg_bldg_sqm"] = avg_bldg_sqm
 
-		# 2. Derive total buildings for this district by dividing area by average building footprint
 		var total_buildings: int = maxi(1, int(round(area_sqm / avg_bldg_sqm)))
 		d["actual_building_count"] = total_buildings
 
-		# 3. Independent unit evaluation per building using res_com_ind_perc & unit ranges
+		# Per-building independent tenancy allocation
 		var perc_arr: Array = arch.get("res_com_ind_perc", [100, 0, 0])
 		var r_chance: float = float(perc_arr[0])
 		var c_chance: float = float(perc_arr[1])
@@ -190,231 +223,165 @@ static func _precalculate_district_metrics(world_state: Dictionary, rng: RandomN
 		d["total_habitable_units"] = sum_hab
 		d["total_commercial_units"] = sum_comm
 		d["total_industrial_units"] = sum_ind
-
-		# 4. Calculate estimated population based on total habitable units * 2.6 mean household size
 		d["estimated_population"] = int(round(float(sum_hab) * 2.6))
 
-
-## Pass 1: Uses estimated populations to replace the least-developed blocks with civic cadence facilities.
-## If an exact footprint cannot be found, it merges adjacent low-development blocks.
-## Pass 1: Uses estimated populations to place civic cadence facilities using true m² area.
-## Handles sub-block replacement (reducing building counts) and multi-block neighbor merging.
+# =============================================================================
+# PASS 1: DRY CIVIC CADENCE REALIGNMENT
+# =============================================================================
 static func _run_civic_cadence_pass(world_state: Dictionary, rng: RandomNumberGenerator) -> void:
 	var districts: Dictionary = world_state.get("districts", {})
 	if districts.is_empty():
 		return
 
-	var mean_hh_size: float = float(_demographics.get("household_occupancy_mean", 2.6))
 	var block_estimates: Dictionary = {}
 	var total_city_est_pop: float = 0.0
+	var max_r: float = 1.0
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
-		var dtype: String = str(d.get("district_type", ""))
-		var arch: Dictionary = _archetypes.get(dtype, {})
+		var p = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		max_r = max(max_r, p.length())
 		
-		if arch.get("sector_class", "") == "CIVIC" or arch.get("is_unique_anchor", false):
+		if bool(d.get("is_initially_vacant", false)):
 			block_estimates[dist_id] = 0.0
+		else:
+			var est_p: float = float(d.get("estimated_population", 0.0))
+			block_estimates[dist_id] = est_p
+			total_city_est_pop += est_p
+
+	var cadence_rules: Array[Dictionary] = _harvest_cadence_rules()
+	var placed_by_type: Dictionary = {}
+
+	for spec in cadence_rules:
+		var code: String = spec["code"]
+		placed_by_type[code] = []
+
+		if total_city_est_pop < float(spec.get("min_pop", 0)):
 			continue
 
-		var b_count: int = int(d.get("actual_building_count", 1))
-		var hab_range: Array = arch.get("habitable_units_per_building", [1, 2])
-		var avg_units: float = (float(hab_range[0]) + float(hab_range[1])) * 0.5
-		
-		var est_pop: float = float(b_count) * avg_units * mean_hh_size
-		block_estimates[dist_id] = est_pop
-		total_city_est_pop += est_pop
+		var pop_ratio: float = float(spec["pop_ratio"])
+		var quota: int = maxi(1, int(round((total_city_est_pop / pop_ratio) * rng.randf_range(0.85, 1.15))))
+		var placed := 0
 
-	# Harvest Cadence Facilities directly from archetypes.json
-	var cadence_rules: Array[Dictionary] = []
+		for _attempt in range(quota * 15):
+			if placed >= quota:
+				break
+
+			var chosen: Dictionary = SPATIAL_RESOLVER.find_best_host_district(
+				districts, block_estimates, placed_by_type[code], spec, max_r
+			)
+			if chosen.is_empty():
+				break
+
+			var dist_id: String = chosen["dist_id"]
+			var d: Dictionary = districts[dist_id]
+
+			# Apply Placement: Full-block / Campus or Sub-block Carveout
+			if chosen["is_vacant"] or float(spec["footprint_sqm"]) >= (chosen["area_sqm"] * 0.70):
+				d["district_type"] = code
+				d["is_repurposed_civic"] = true
+				d["is_initially_vacant"] = false
+				d["actual_building_count"] = 1
+				total_city_est_pop = max(0.0, total_city_est_pop - chosen["est_pop"])
+				block_estimates[dist_id] = 0.0
+			else:
+				_apply_sub_block_carveout(d, spec, total_city_est_pop, block_estimates)
+
+			placed_by_type[code].append(chosen["center"])
+			placed += 1
+
+		print("  ✓ Cadence: Placed %d '%s' facilities (Quota: %d)" % [placed, code, quota])
+
+	# Post-Cadence Reclassification for surplus vacant plots
+	_reclassify_surplus_vacant_parcels(districts)
+
+static func _apply_sub_block_carveout(chosen_d: Dictionary, spec: Dictionary, total_city_est_pop: float, block_estimates: Dictionary) -> void:
+	var req_sqm: float = float(spec.get("footprint_sqm", 1600.0))
+	var avg_bldg_sqm: float = float(chosen_d.get("avg_bldg_sqm", 800.0))
+	var cur_bldgs: int = int(chosen_d.get("actual_building_count", 1))
+
+	var bldgs_consumed: int = maxi(1, int(round(req_sqm / avg_bldg_sqm)))
+	bldgs_consumed = mini(bldgs_consumed, maxi(1, int(cur_bldgs * 0.25)))
+
+	var allocations: Array = chosen_d.get("building_allocations", [])
+	var fraction_lost: float = float(bldgs_consumed) / float(maxi(1, cur_bldgs))
+
+	var total_hab: int = int(chosen_d.get("total_habitable_units", 0))
+	var total_comm: int = int(chosen_d.get("total_commercial_units", 0))
+	var total_ind: int = int(chosen_d.get("total_industrial_units", 0))
+
+	var units_lost_hab: int = int(round(float(total_hab) * fraction_lost))
+	var units_lost_comm: int = int(round(float(total_comm) * fraction_lost))
+	var units_lost_ind: int = int(round(float(total_ind) * fraction_lost))
+
+	chosen_d["total_habitable_units"] = maxi(0, total_hab - units_lost_hab)
+	chosen_d["total_commercial_units"] = maxi(0, total_comm - units_lost_comm)
+	chosen_d["total_industrial_units"] = maxi(0, total_ind - units_lost_ind)
+
+	for _k in range(bldgs_consumed):
+		if not allocations.is_empty():
+			allocations.pop_back()
+
+	chosen_d["actual_building_count"] = allocations.size()
+
+	if not chosen_d.has("embedded_civics"):
+		chosen_d["embedded_civics"] = []
+	chosen_d["embedded_civics"].append(spec["code"])
+
+	var pop_lost: float = float(chosen_d.get("estimated_population", 0.0)) * fraction_lost
+	total_city_est_pop = max(0.0, total_city_est_pop - pop_lost)
+	chosen_d["estimated_population"] = max(0.0, float(chosen_d.get("estimated_population", 0.0)) - pop_lost)
+	block_estimates[chosen_d.get("district_id", "")] = chosen_d["estimated_population"]
+
+static func _harvest_cadence_rules() -> Array[Dictionary]:
+	var rules: Array[Dictionary] = []
 	for arch_key in _archetypes.keys():
 		if arch_key in ["_meta", "setup"]:
 			continue
 		var arch: Dictionary = _archetypes[arch_key]
-		var rules: Dictionary = arch.get("spatial_rules", {})
-		if rules.get("placement_mode", "") == "CADENCE":
-			cadence_rules.append({
-				"type": arch_key,
-				"pop_ratio": float(rules.get("pop_ratio", 2000.0)),
-				"min_sep_m": float(rules.get("min_sep_m", 600.0)),
-				"min_pop": int(rules.get("min_city_population", 0)),
-				"footprint_sqm": float(arch.get("footprint_sqm", 40000.0)),
-				"dist_range": rules.get("norm_distance_range", [0.0, 1.0])
+		var sp_rules: Dictionary = arch.get("spatial_rules", {})
+		if sp_rules.get("placement_mode", "") == "CADENCE":
+			rules.append({
+				"code": arch_key,
+				"pop_ratio": float(sp_rules.get("pop_ratio", 1500.0)),
+				"travel_dist_m": float(sp_rules.get("travel_dist_m", sp_rules.get("min_sep_m", 750.0))),
+				"min_sep_m": 0.0,
+				"min_pop": int(sp_rules.get("min_city_population", 0)),
+				"footprint_sqm": float(arch.get("footprint_size", arch.get("footprint_sqm", 40000.0))),
+				"norm_dist_range": sp_rules.get("norm_distance_range", [0.0, 1.0]),
+				"allowed_sectors": ["RESIDENTIAL", "COMMERCIAL"],
+				"forbidden_types": ["municipal_park", "industrial"],
+				"prefer_vacant": true
 			})
+	return rules
 
-	if cadence_rules.is_empty():
-		return
-
-	var placed_civic_coords: Array[Vector2] = []
-	var max_r: float = 1.0
+static func _reclassify_surplus_vacant_parcels(districts: Dictionary) -> void:
+	var count := 0
 	for dist_id in districts.keys():
-		var d = districts[dist_id]
-		var p: Vector2 = _resolve_spatial_vector2(d.get("spatial_anchor", Vector2.ZERO))
-		max_r = max(max_r, p.length())
-		var dtype: String = str(d.get("district_type", ""))
-		if _archetypes.get(dtype, {}).get("sector_class", "") == "CIVIC":
-			placed_civic_coords.append(p)
-
-	var coord_to_dist_id: Dictionary = {}
-	for dist_id in districts.keys():
-		var gc: Vector2i = districts[dist_id].get("grid_coords", Vector2i(0, 0))
-		coord_to_dist_id[gc] = dist_id
-
-	# Evaluate each cadence institution class
-	for fac in cadence_rules:
-		var fac_type: String = str(fac["type"])
-		var pop_ratio: float = float(fac["pop_ratio"])
-		var min_sep_m: float = float(fac["min_sep_m"])
-		var min_pop: int = int(fac["min_pop"])
-		var req_sqm: float = float(fac["footprint_sqm"])
-		var dist_range: Array = fac["dist_range"]
-
-		if total_city_est_pop < float(min_pop):
-			continue
-
-		var demand_jitter := rng.randf_range(0.80, 1.20)
-		var quota := maxi(1, int(round((total_city_est_pop / pop_ratio) * demand_jitter)))
-
-		var placed_count := 0
-		var attempts := 0
-		var max_attempts := quota * 10
-
-		while placed_count < quota and attempts < max_attempts:
-			attempts += 1
+		var d: Dictionary = districts[dist_id]
+		if bool(d.get("is_initially_vacant", false)):
+			var orig_sector: String = str(d.get("initial_sector", "RESIDENTIAL")).to_upper()
+			match orig_sector:
+				"RESIDENTIAL":
+					d["district_type"] = "municipal_allotments"
+				"COMMERCIAL":
+					d["district_type"] = "demolition_cleared_site"
+				"INDUSTRIAL":
+					d["district_type"] = "railway_sidings_and_scrap"
+				_:
+					d["district_type"] = "municipal_allotments"
 			
-			var candidates: Array[Dictionary] = []
-			for dist_id in districts.keys():
-				var d: Dictionary = districts[dist_id]
-				var dtype: String = str(d.get("district_type", ""))
-				var arch: Dictionary = _archetypes.get(dtype, {})
-				
-				if arch.get("sector_class", "") == "CIVIC" or dtype in ["industrial", "municipal_park"]:
-					continue
+			d["is_initially_vacant"] = false
+			d["actual_building_count"] = 1
+			d["total_habitable_units"] = 0
+			d["total_commercial_units"] = 0
+			d["total_industrial_units"] = 0
+			d["estimated_population"] = 0
+			d["building_allocations"] = []
+			count += 1
 
-				var center: Vector2 = _resolve_spatial_vector2(d.get("spatial_anchor", Vector2.ZERO))
-				var norm_d: float = center.length() / max_r
-				if norm_d < float(dist_range[0]) or norm_d > float(dist_range[1]):
-					continue
-
-				var too_close := false
-				for c in placed_civic_coords:
-					if center.distance_to(c) < min_sep_m:
-						too_close = true
-						break
-				if too_close:
-					continue
-
-				var current_area: float = _get_district_area_sqm(d)
-				var b_count: int = int(d.get("actual_building_count", 1))
-				var est_p: float = block_estimates.get(dist_id, 0.0)
-				var dev_score: float = float(b_count * 10) + est_p
-
-				var neighbors_to_absorb: Array[String] = []
-				var combined_area: float = current_area
-
-				# If required area exceeds this block, gather contiguous orthogonal neighbors
-				if combined_area < req_sqm:
-					var gc: Vector2i = d.get("grid_coords", Vector2i(0, 0))
-					var offsets: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]
-					for off in offsets:
-						var check_coord: Vector2i = gc + off
-						if coord_to_dist_id.has(check_coord):
-							var n_id: String = coord_to_dist_id[check_coord]
-							var n_d: Dictionary = districts.get(n_id, {})
-							var n_dtype: String = str(n_d.get("district_type", ""))
-							var n_arch: Dictionary = _archetypes.get(n_dtype, {})
-							if n_arch.get("sector_class", "") != "CIVIC" and n_dtype != "industrial":
-								neighbors_to_absorb.append(n_id)
-								combined_area += _get_district_area_sqm(n_d)
-								dev_score += float(int(n_d.get("actual_building_count", 1)) * 10)
-								if combined_area >= req_sqm:
-									break
-
-				if combined_area >= req_sqm or req_sqm < current_area:
-					candidates.append({
-						"dist_id": dist_id,
-						"dev_score": dev_score,
-						"center": center,
-						"est_pop": est_p,
-						"current_area": current_area,
-						"combined_area": combined_area,
-						"neighbors": neighbors_to_absorb
-					})
-
-			if candidates.is_empty():
-				break
-
-			candidates.sort_custom(func(a, b): return a["dev_score"] < b["dev_score"])
-			var chosen: Dictionary = candidates[0]
-			var chosen_id: String = chosen["dist_id"]
-			var chosen_d: Dictionary = districts[chosen_id]
-			var block_area: float = chosen["current_area"]
-
-			# --- SCENARIO A: Full-Block or Multi-Block Consolidation ---
-			if req_sqm >= (block_area * 0.75):
-				chosen_d["district_type"] = fac_type
-				chosen_d["is_repurposed_civic"] = true
-				total_city_est_pop = max(0.0, total_city_est_pop - chosen["est_pop"])
-				block_estimates[chosen_id] = 0.0
-
-				# Absorb neighbors if multi-block area was required
-				for n_id in chosen["neighbors"]:
-					if districts.has(n_id):
-						var n_d: Dictionary = districts[n_id]
-						total_city_est_pop = max(0.0, total_city_est_pop - block_estimates.get(n_id, 0.0))
-						block_estimates.erase(n_id)
-						coord_to_dist_id.erase(n_d.get("grid_coords", Vector2i(0, 0)))
-						districts.erase(n_id)
-						print("    ↳ Absorbed neighbor '%s' (consolidated area: %.0f m² for '%s')" % [
-							n_id, chosen["combined_area"], fac_type
-						])
-
-		# --- SCENARIO B: Sub-Block Replacement (Proportional Unit Reduction) ---
-			else:
-				var avg_bldg_sqm: float = float(chosen_d.get("avg_bldg_sqm", 800.0))
-				var bldgs_consumed: int = maxi(1, int(round(req_sqm / avg_bldg_sqm)))
-				var cur_bldgs: int = int(chosen_d.get("actual_building_count", 1))
-				var allocations: Array = chosen_d.get("building_allocations", [])
-
-				# Calculate proportion of buildings removed
-				var fraction_lost: float = float(bldgs_consumed) / float(maxi(1, cur_bldgs))
-
-				var total_hab: int = int(chosen_d.get("total_habitable_units", 0))
-				var total_comm: int = int(chosen_d.get("total_commercial_units", 0))
-				var total_ind: int = int(chosen_d.get("total_industrial_units", 0))
-
-				var units_lost_hab: int = int(round(float(total_hab) * fraction_lost))
-				var units_lost_comm: int = int(round(float(total_comm) * fraction_lost))
-				var units_lost_ind: int = int(round(float(total_ind) * fraction_lost))
-
-				chosen_d["total_habitable_units"] = maxi(0, total_hab - units_lost_hab)
-				chosen_d["total_commercial_units"] = maxi(0, total_comm - units_lost_comm)
-				chosen_d["total_industrial_units"] = maxi(0, total_ind - units_lost_ind)
-
-				# Remove the consumed building allocation entries from the district
-				for _k in range(bldgs_consumed):
-					if not allocations.is_empty():
-						allocations.pop_back()
-
-				chosen_d["actual_building_count"] = allocations.size()
-
-				if not chosen_d.has("embedded_civics"):
-					chosen_d["embedded_civics"] = []
-				chosen_d["embedded_civics"].append(fac_type)
-
-				# Depress estimated population proportionally
-				var pop_lost: float = float(chosen_d.get("estimated_population", 0.0)) * fraction_lost
-				total_city_est_pop = max(0.0, total_city_est_pop - pop_lost)
-				chosen_d["estimated_population"] = max(0.0, float(chosen_d.get("estimated_population", 0.0)) - pop_lost)
-
-				print("    ↳ Sub-block placement: '%s' consumed %d of %d buildings on '%s' [Lost -Hab: %d, -Comm: %d, -Ind: %d]" % [
-					fac_type, bldgs_consumed, cur_bldgs, chosen_id, units_lost_hab, units_lost_comm, units_lost_ind
-				])
-
-			placed_civic_coords.append(chosen["center"])
-			placed_count += 1
-
-		print("  ✓ Pass 1 Cadence: Placed %d '%s' parcels (Quota: %d)" % [placed_count, fac_type, quota])
+	if count > 0:
+		print("  ✓ Reassigned %d surplus vacant parcels to allotments/cleared sites/scrap sidings." % count)
 
 # =============================================================================
 # PASS 2: PHYSICAL PREMISES, ESTABLISHMENTS & HOUSEHOLDS
@@ -437,10 +404,15 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 	var commercial_instances_by_type: Dictionary = {}
 	var generated_households: Array[Dictionary] = []
 	var district_residents_map: Dictionary = {}
+	var available_job_slots: Array[Dictionary] = []
 
 	var est_id: int = 1
 	var current_household_id: int = 1
 	var block_idx: int = 0
+
+	var block_estimates: Dictionary = {}
+	for dist_id in districts.keys():
+		block_estimates[dist_id] = float(districts[dist_id].get("estimated_population", 0.0))
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
@@ -452,7 +424,9 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 		var g_size: Vector2i = d.get("grid_size", Vector2i(1, 1))
 		var building_count: int = int(d.get("actual_building_count", 1))
 		var pop_range: Array = arch.get("population_range", [0, 0])
-		var center_vec: Vector2 = _resolve_spatial_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		var exp_min: int = int(d.get("expected_pop_min", pop_range[0]))
+		var exp_max: int = int(d.get("expected_pop_max", pop_range[1]))
+		var center_vec: Vector2 = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 
 		dist_inserts.append("""
 			INSERT INTO districts (
@@ -471,7 +445,7 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 		""" % [
 			dist_id, str(d.get("display_name", dist_id)).replace("'", "''"), district_type,
 			coords.x, coords.y, g_size.x, g_size.y,
-			building_count, pop_range[0], pop_range[1],
+			building_count, exp_min, exp_max,
 			float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
 			float(d.get("zone_health_index", 50.0)), float(d.get("actual_police_heat", 0.20)),
 			sim_start_day, reason_world_gen_id
@@ -479,7 +453,7 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 
 		district_residents_map[dist_id] = []
 
-		# 1. Dedicated Institutional Civic Anchor
+		# 1. Dedicated Institutional Anchor
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
@@ -495,6 +469,7 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 			""" % [est_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			_register_est_cat(by_cat, cat_name, est_id, dist_id)
+			_expand_staffing_slots(available_job_slots, est_id, dist_id, cat_name, inst, rng)
 			est_id += 1
 
 		# 2. Sub-Block Embedded Civics placed in Pass 1
@@ -515,9 +490,10 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 				""" % [est_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
 				_register_est_cat(by_cat, c_cat_name, est_id, dist_id)
+				_expand_staffing_slots(available_job_slots, est_id, dist_id, c_cat_name, c_inst, rng)
 				est_id += 1
 
-		# 3. Instantiate Units strictly from pre-calculated building_allocations
+		# 3. Instantiate Units strictly from precalculated building_allocations
 		var housing_prof: Dictionary = arch.get("housing_profile", {})
 		var res_type_code: String = str(housing_prof.get("residence_type", "NONE"))
 		var wealth_bracket: int = int(housing_prof.get("wealth_bracket", 2))
@@ -586,14 +562,15 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 					var display_title: String = tenancy["display_name"]
 					var cap: int = int(tenancy.get("default_capacity", 20))
 					var travel_dist: float = float(tenancy.get("customer_travel_distance_m", 600.0))
-					var req_threshold: int = int(tenancy.get("required_customer_threshold", 100))
+					var req_threshold: float = float(tenancy.get("required_customer_threshold", 100))
 
-					var existing_in_range: int = _count_in_radius(commercial_instances_by_type, cat_code, center_vec, travel_dist)
-					var req_pop: int = (existing_in_range + 1) * req_threshold
-					var est_local_pop: int = int(d.get("estimated_population", 150))
-					
+					var existing_list: Array = commercial_instances_by_type.get(cat_code, [])
+					var is_viable: bool = SPATIAL_RESOLVER.is_catchment_viable(
+						center_vec, existing_list, districts, block_estimates, travel_dist, req_threshold
+					)
+
 					var is_vacant: int = 0
-					if est_local_pop < req_pop and rng.randf() < 0.50:
+					if not is_viable and rng.randf() < 0.50:
 						is_vacant = 1
 						cap = 0
 
@@ -605,9 +582,16 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 						) VALUES (%d, '%s', %d, 'SHOP', 'PRIVATE', '%s', %d, %d, %d, %d, NULL, %d);
 					""" % [est_id, dist_id, b_idx, display_title.replace("'", "''"), cat_id, cap, is_vacant, sim_start_day, reason_world_gen_id])
 
-					_record_comm_instance(commercial_instances_by_type, cat_code, center_vec)
+					if not commercial_instances_by_type.has(cat_code):
+						commercial_instances_by_type[cat_code] = []
+					commercial_instances_by_type[cat_code].append(center_vec)
+
 					_register_est_cat(by_cat, cat_code, est_id, dist_id)
 					_register_est_cat(by_cat, "COMMERCIAL", est_id, dist_id)
+
+					if is_vacant == 0:
+						_expand_staffing_slots(available_job_slots, est_id, dist_id, "COMMERCIAL", tenancy, rng)
+					
 					est_id += 1
 
 			# C. Industrial Units
@@ -628,9 +612,10 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 
 					_register_est_cat(by_cat, i_code, est_id, dist_id)
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
+					_expand_staffing_slots(available_job_slots, est_id, dist_id, "INDUSTRIAL", ind_tenancy, rng)
 					est_id += 1
 
-		# Batch flush every 25 districts
+		# Batch commit every 25 districts
 		if block_idx > 0 and block_idx % 25 == 0:
 			DB_MANAGER.execute_batch(dist_inserts)
 			DB_MANAGER.execute_batch(estab_inserts)
@@ -653,21 +638,26 @@ static func _generate_all_premises_and_workplaces(world_state: Dictionary, rng: 
 	if not household_inserts.is_empty():
 		DB_MANAGER.execute_batch(household_inserts)
 
-	print("  ✓ Pass 2: Generated %d establishments & %d households." % [est_id - 1, current_household_id - 1])
+	print("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
+		est_id - 1, current_household_id - 1, available_job_slots.size()
+	])
 
 	return {
+		"districts": districts,
 		"by_cat": by_cat,
 		"households": generated_households,
-		"district_residents_map": district_residents_map
+		"district_residents_map": district_residents_map,
+		"available_job_slots": available_job_slots
 	}
-
 # =============================================================================
-# PASS 3: CITIZENS, CONTRACTS & KINSHIP (Child Living Alone Guard)
+# PASS 3: CITIZENS, CONTRACTS & DEMOGRAPHICS (Job Slot Matching)
 # =============================================================================
 static func _generate_citizens_and_demographics(physical_state: Dictionary, rng: RandomNumberGenerator, on_progress: Callable) -> void:
+	var districts: Dictionary = physical_state.get("districts", {})
 	var generated_households: Array[Dictionary] = physical_state["households"]
 	var by_cat: Dictionary = physical_state["by_cat"]
 	var district_residents_map: Dictionary = physical_state["district_residents_map"]
+	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
 
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
@@ -675,6 +665,17 @@ static func _generate_citizens_and_demographics(physical_state: Dictionary, rng:
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
+
+	open_job_slots.shuffle()
+
+	# Create lookup queues by Category
+	var jobs_by_cat: Dictionary = {}
+	for slot in open_job_slots:
+		var c: String = slot["cat"]
+		if not jobs_by_cat.has(c):
+			var arr: Array[Dictionary] = []
+			jobs_by_cat[c] = []
+		jobs_by_cat[c].append(slot)
 
 	var h_scales: Dictionary = _civic_hierarchy.get("hierarchy_scales", {})
 	var fam_min: int = int(h_scales.get("family_size_min", 1))
@@ -709,7 +710,6 @@ static func _generate_citizens_and_demographics(physical_state: Dictionary, rng:
 			var gender_id: int = male_gender_id if is_male else female_gender_id
 			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
 
-			# Head of Household (index 0) is guaranteed to be adult
 			var is_head: bool = (member_idx == 0)
 			var demo_profile: Dictionary = _resolve_citizen_demographics(rng, is_high_dense, is_male, hh["unemp_rate"], 0.70, is_head)
 			var age_years: int = int(demo_profile["age"])
@@ -738,8 +738,48 @@ static func _generate_citizens_and_demographics(physical_state: Dictionary, rng:
 			var contract_class: String = demo_profile["contract_class"]
 			var weekly_hours: float = float(demo_profile["weekly_hours"])
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
+			var assigned_est_id: int = 0
 
-			var assigned_est_id: int = _pick_anchor(by_cat, anchor_cat, hh["district_id"], rng)
+			# 1. Active Formal Workforce: Claim open job slot matching commute
+			if contract_class == "FORMAL_LEGAL":
+				var worker_home_pos: Vector2 = SPATIAL_RESOLVER._resolve_vector2(
+					districts[hh["district_id"]].get("spatial_anchor", Vector2.ZERO)
+				)
+
+				if jobs_by_cat.has(anchor_cat) and not jobs_by_cat[anchor_cat].is_empty():
+					var slot: Dictionary = SPATIAL_RESOLVER.pick_commute_matched_slot(
+						jobs_by_cat[anchor_cat],
+						worker_home_pos,
+						districts,
+						_job_definitions,
+						rng
+					)
+					if not slot.is_empty():
+						assigned_est_id = int(slot["estab_id"])
+						occ_title = slot["role"]
+						weekly_hours = slot["hours"]
+						compensation_rate = slot["rate"]
+					else:
+						assigned_est_id = _pick_anchor(by_cat, anchor_cat, hh["district_id"], rng)
+				else:
+					var unemp_branch: Dictionary = demo_profile.get("unemployed_branch", {})
+					if not unemp_branch.is_empty():
+						occ_title = str(unemp_branch.get("role", "UNEMPLOYED"))
+						anchor_cat = str(unemp_branch.get("anchor_category", "JOBCENTRE"))
+						contract_class = str(unemp_branch.get("contract_class", "INFORMAL_GREY"))
+						weekly_hours = float(unemp_branch.get("weekly_hours", 0.0))
+						compensation_rate = float(unemp_branch.get("compensation_rate", 0.0))
+					else:
+						contract_class = "INFORMAL_GREY"
+						weekly_hours = 0.0
+						compensation_rate = 0.0
+
+					assigned_est_id = _pick_anchor(by_cat, anchor_cat, hh["district_id"], rng)
+
+			# 2. Non-Working Cohorts (Enclaves, Students, Pensioners, Unemployed)
+			else:
+				assigned_est_id = _pick_anchor(by_cat, anchor_cat, hh["district_id"], rng)
+
 			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
 
@@ -786,7 +826,9 @@ static func _generate_citizens_and_demographics(physical_state: Dictionary, rng:
 		DB_MANAGER.execute_batch(contract_inserts)
 		DB_MANAGER.execute_batch(edge_inserts)
 
-	print("  ✓ Pass 3: Created %d citizens with legal guardians." % (current_resident_id - 1))
+	print("  ✓ Pass 3: Created %d citizens with legal guardians and matched jobs." % (current_resident_id - 1))
+
+	_audit_generated_jobs_by_education()
 
 # =============================================================================
 # PASS 4: DUNBAR NETWORK GRAPHS
@@ -827,7 +869,7 @@ static func _generate_social_networks(physical_state: Dictionary, rng: RandomNum
 	_generate_faith_and_cultural_ties(rng, sim_start_day, reason_world_gen_id)
 
 # =============================================================================
-# HELPER ROUTINES (Zero hardcoded values; fully data-driven)
+# HELPER ROUTINES & DEMOGRAPHIC RESOLUTION
 # =============================================================================
 static func _pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionary, secondary_classes: Dictionary, district_type: String) -> Dictionary:
 	var pool: Array[Dictionary] = []
@@ -862,48 +904,34 @@ static func _pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionar
 
 	return pool[0]["data"]
 
-static func _count_in_radius(instances_map: Dictionary, cat_code: String, pos: Vector2, radius_m: float) -> int:
-	var list: Array = instances_map.get(cat_code, [])
-	var count := 0
-	for p in list:
-		if (p as Vector2).distance_to(pos) <= radius_m:
-			count += 1
-	return count
-
-static func _record_comm_instance(instances_map: Dictionary, cat_code: String, pos: Vector2) -> void:
-	if not instances_map.has(cat_code):
-		instances_map[cat_code] = []
-	instances_map[cat_code].append(pos)
-
 static func _register_est_cat(by_cat: Dictionary, cat_name: String, est_id: int, dist_id: String) -> void:
 	if not by_cat.has(cat_name):
 		by_cat[cat_name] = []
 	by_cat[cat_name].append({"id": est_id, "district_id": dist_id})
 
-static func _parse_vector2_string(s: String) -> Vector2:
-	var clean := s.replace("(", "").replace(")", "").strip_edges()
-	var parts := clean.split(",")
-	if parts.size() >= 2:
-		return Vector2(float(parts[0]), float(parts[1]))
-	return Vector2.ZERO
-
 static func _pick_anchor(by_cat: Dictionary, requested_category: String, _dist_id: String, rng: RandomNumberGenerator) -> int:
 	var target_cat: String = requested_category
+	var fallbacks: Dictionary = _demographics.get("anchor_category_fallbacks", {})
+	var visited: Dictionary = {}
+
+	while not by_cat.has(target_cat) or by_cat[target_cat].is_empty():
+		visited[target_cat] = true
+		if fallbacks.has(target_cat) and not visited.has(fallbacks[target_cat]):
+			target_cat = str(fallbacks[target_cat])
+		elif fallbacks.has("DEFAULT") and not visited.has(fallbacks["DEFAULT"]):
+			target_cat = str(fallbacks["DEFAULT"])
+		else:
+			break
+
 	var list: Array = by_cat.get(target_cat, [])
 
 	if list.is_empty():
-		var fallbacks: Dictionary = _demographics.get("anchor_category_fallbacks", {})
-		if fallbacks.has(target_cat):
-			target_cat = str(fallbacks[target_cat])
-			list = by_cat.get(target_cat, [])
-		elif fallbacks.has("DEFAULT"):
-			target_cat = str(fallbacks["DEFAULT"])
-			list = by_cat.get(target_cat, [])
+		for cat_key in by_cat.keys():
+			if not by_cat[cat_key].is_empty():
+				list = by_cat[cat_key]
+				break
 
-	if list.is_empty():
-		list = by_cat.get("COMMERCIAL", [])
-	if list.is_empty():
-		return 1
+	assert(not list.is_empty(), "FATAL: Society generation has zero establishments registered in by_cat.")
 
 	var picked: Dictionary = list[rng.randi() % list.size()]
 	return int(picked["id"])
@@ -920,7 +948,6 @@ static func _resolve_citizen_demographics(rng: RandomNumberGenerator, is_high_de
 	var majority_age: int = int(thresholds.get("majority_head_of_household_age", 18))
 	var density_key := "high_density" if is_high_density else "suburban_low_density"
 
-	# If primary householder, filter out youth cohorts under majority age
 	var eligible_cohorts: Array = []
 	for c in cohorts:
 		if is_head_of_household and int(c.get("age_min", 0)) < majority_age and not c.has("age_min_dynamic"):
@@ -1172,22 +1199,9 @@ static func _resolve_citizen_education(rng: RandomNumberGenerator, age_years: in
 
 	return default_code
 
-## Universal helper to resolve spatial coordinates regardless of whether they are Vector2, Array, or String
-static func _resolve_spatial_vector2(val: Variant) -> Vector2:
-	if val is Vector2:
-		return val
-	elif val is Vector2i:
-		return Vector2(float(val.x), float(val.y))
-	elif val is Array and val.size() >= 2:
-		return Vector2(float(val[0]), float(val[1]))
-	elif val is String:
-		var clean := (val as String).replace("(", "").replace(")", "").strip_edges()
-		var parts := clean.split(",")
-		if parts.size() >= 2:
-			return Vector2(float(parts[0]), float(parts[1]))
-	return Vector2.ZERO
-
-## Pass 2.5: Pluggable Borough Clustering Dispatcher
+# =============================================================================
+# PASS 2.5: BOROUGH CLUSTERING
+# =============================================================================
 static func _cluster_districts_into_boroughs(world_state: Dictionary, rng: RandomNumberGenerator) -> void:
 	var clustering_cfg: Dictionary = _civic_hierarchy.get("borough_clustering", {})
 	var model_type: String = str(clustering_cfg.get("allocation_model", "uk_concentric_organic"))
@@ -1196,10 +1210,9 @@ static func _cluster_districts_into_boroughs(world_state: Dictionary, rng: Rando
 		"uk_concentric_organic":
 			_cluster_boroughs_uk_concentric(world_state, rng, clustering_cfg)
 		_:
-			_cluster_boroughs_uk_concentric(world_state, rng, clustering_cfg) # Default fallback
+			_cluster_boroughs_uk_concentric(world_state, rng, clustering_cfg)
 
-## Realistic UK Municipal Ward Clustering (Concentric Bands, Angular Offsets & Homogeneous Housing Tiers)
-static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: RandomNumberGenerator, cfg: Dictionary) -> void:
+static func _cluster_boroughs_uk_concentric(world_state: Dictionary, _rng: RandomNumberGenerator, cfg: Dictionary) -> void:
 	var districts: Dictionary = world_state.get("districts", {})
 	if districts.is_empty():
 		return
@@ -1219,7 +1232,6 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 	})
 	var target_pop_per_ward: float = float(cfg.get("target_population_per_ward", 25000.0))
 
-	# 1. Define Central Core Borough
 	var borough_defs: Array[Dictionary] = []
 	var core_id: String = str(core_def.get("borough_id", "BOROUGH_CORE"))
 	var core_title: String = str(core_def.get("display_name", "Central Municipal Core"))
@@ -1230,18 +1242,17 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 		"is_core": true
 	})
 
-	# 2. Separate Core districts from Outer growth rings based on distance and sector
 	var core_radius: float = float(cfg.get("core_radius_ratio", 0.22))
 	var max_r := 1.0
 	for d in districts.values():
-		var pos = _resolve_spatial_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		var pos = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 		max_r = max(max_r, pos.length())
 	var core_threshold := max_r * core_radius
 
 	var outer_districts: Array[Dictionary] = []
 	for dist_id in districts.keys():
 		var d = districts[dist_id]
-		var pos = _resolve_spatial_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		var pos = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 		var r := pos.length()
 
 		if r <= core_threshold or str(d.get("district_type", "")) in ["commercial", "local_government"]:
@@ -1249,7 +1260,6 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 		else:
 			outer_districts.append({"id": dist_id, "pos": pos, "data": d})
 
-	# 3. Organic Growth Bands with Angular Offsets (North, South, East, West + Intercardinal overlap)
 	var angle_offset_radians: float = deg_to_rad(float(cfg.get("outer_ring_angle_offset_deg", 60.0)))
 	var num_sectors: int = int(cfg.get("cardinal_sectors", 4))
 	var sector_span: float = TAU / float(num_sectors)
@@ -1264,7 +1274,6 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 		var sector_idx := int(floor((angle + PI) / sector_span)) % num_sectors
 		sector_groups[sector_idx].append(item)
 
-	# 4. Create Wards within sectors, clustering by dominant housing archetype for homogeneity
 	var ward_counter := 0
 	var dist_updates: Dictionary = {core_id: []}
 	for d_id in districts.keys():
@@ -1312,7 +1321,6 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 				districts[d_id]["borough_id"] = b_id
 			ward_counter += 1
 
-	# 5. Commit Boroughs & District Backreferences to SQLite
 	var borough_inserts: Array[String] = []
 	var update_statements: Array[String] = []
 
@@ -1347,14 +1355,11 @@ static func _cluster_boroughs_uk_concentric(world_state: Dictionary, rng: Random
 		num_districts, borough_defs.size()
 	])
 
-
-## Calculates physical district surface area in square metres (geometry-agnostic)
 static func _get_district_area_sqm(district: Dictionary) -> float:
 	var setup: Dictionary = _archetypes.get("setup", {})
 	var metrics: Dictionary = setup.get("block_metrics", {})
 	var std_w: float = float(metrics.get("standard_block_width_m", 200.0))
 	var std_h: float = float(metrics.get("standard_block_height_m", 200.0))
-	var default_sqm: float = std_w * std_h
 
 	if district.has("boundary_polygon"):
 		var poly: PackedVector2Array = district["boundary_polygon"]
@@ -1375,3 +1380,167 @@ static func _get_district_area_sqm(district: Dictionary) -> float:
 
 	var g_size: Vector2i = district.get("grid_size", Vector2i(1, 1))
 	return float(g_size.x) * std_w * float(g_size.y) * std_h
+
+# =============================================================================
+# AUDIT & VERIFICATION REPORT
+# =============================================================================
+static func _audit_generated_jobs_by_education() -> void:
+	print("\n==========================================================================")
+	print("               SOCIETY LABOR & EDUCATION AUDIT REPORT                     ")
+	print("==========================================================================")
+
+	var query := """
+		SELECT 
+			edu.code AS education_level,
+			c_cls.code AS contract_class,
+			role.code AS role_title,
+			COUNT(c.resident_id) AS total_holders,
+			AVG(c.compensation_rate) AS avg_hourly_rate,
+			AVG(c.weekly_hours) AS avg_weekly_hours
+		FROM livelihood_contracts c
+		JOIN residents r ON c.resident_id = r.resident_id
+		JOIN system_labels edu ON r.education_level_id = edu.label_id
+		JOIN system_labels c_cls ON c.contract_class_id = c_cls.label_id
+		JOIN system_labels role ON c.role_title_id = role.label_id
+		GROUP BY edu.code, c_cls.code, role.code
+		ORDER BY edu.code, c_cls.code, total_holders DESC;
+	"""
+
+	var results: Array = DB_MANAGER.query_rows(query)
+	if results.is_empty():
+		print("  [Audit] No contract records found.")
+		print("==========================================================================\n")
+		return
+
+	var current_edu: String = ""
+	var total_city_jobs: int = 0
+
+	for row in results:
+		var edu: String = str(row["education_level"])
+		var cls: String = str(row["contract_class"])
+		var role: String = str(row["role_title"])
+		var count: int = int(row["total_holders"])
+		var rate: float = float(row["avg_hourly_rate"])
+		var hours: float = float(row["avg_weekly_hours"])
+		total_city_jobs += count
+
+		if edu != current_edu:
+			current_edu = edu
+			print("\n▶ [Education Tier: %s]" % current_edu)
+			print("  %-24s | %-16s | %-6s | %-9s | %-8s" % ["Role Title", "Class", "Count", "Avg Rate", "Avg Hrs"])
+			print("  ------------------------------------------------------------------------")
+
+		print("  %-24s | %-16s | %-6d | £%-8.2f | %-5.1f hrs" % [role, cls, count, rate, hours])
+
+	var summary_query := """
+		SELECT 
+			edu.code AS education_level,
+			COUNT(r.resident_id) AS citizen_count,
+			SUM(CASE WHEN c_cls.code = 'FORMAL_LEGAL' THEN 1 ELSE 0 END) AS formal_workers,
+			SUM(CASE WHEN c_cls.code = 'ENCLAVE_STUDENT' THEN 1 ELSE 0 END) AS students_pupils,
+			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code = 'PENSIONER' THEN 1 ELSE 0 END) AS pensioners,
+			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code != 'PENSIONER' THEN 1 ELSE 0 END) AS unemployed_or_informal
+		FROM residents r
+		JOIN system_labels edu ON r.education_level_id = edu.label_id
+		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id
+		LEFT JOIN system_labels c_cls ON c.contract_class_id = c_cls.label_id
+		LEFT JOIN system_labels role ON c.role_title_id = role.label_id
+		GROUP BY edu.code
+		ORDER BY citizen_count DESC;
+	"""
+	var summary_results: Array = DB_MANAGER.query_rows(summary_query)
+
+	print("\n--------------------------------------------------------------------------")
+	print("                     SUMMARY BY EDUCATION LEVEL                           ")
+	print("--------------------------------------------------------------------------")
+	print("  %-20s | %-8s | %-14s | %-10s | %-18s | %-10s" % ["Education Level", "Pop", "Formal Workers", "Students", "Unemployed/Informal", "Pensioners"])
+	print("  ------------------------------------------------------------------------------------------------")
+	for s_row in summary_results:
+		print("  %-20s | %-8d | %-14d | %-10d | %-18d | %-10d" % [
+			str(s_row["education_level"]),
+			int(s_row["citizen_count"]),
+			int(s_row["formal_workers"]),
+			int(s_row["students_pupils"]),
+			int(s_row["unemployed_or_informal"]),
+			int(s_row["pensioners"])
+		])
+
+	print("==========================================================================")
+	print("  Total Contracted Citizens: %d" % total_city_jobs)
+	print("==========================================================================\n")
+
+## Unwraps staffing slots by merging master job definitions with local overrides and uplifts
+static func _expand_staffing_slots(
+	slots_array: Array[Dictionary], 
+	estab_id: int, 
+	dist_id: String, 
+	category_code: String, 
+	host_def: Dictionary, 
+	rng: RandomNumberGenerator
+) -> void:
+	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
+	var estab_bonus: float = float(host_def.get("wage_bonus", 0.0))
+
+	# 1. Multi-role detailed roster
+	if host_def.has("staffing_roster"):
+		for item in host_def["staffing_roster"]:
+			var job_code: String = str(item.get("job_id", item.get("role_title", "COMMERCIAL_SERVICE")))
+			var master_job: Dictionary = _job_definitions.get(job_code, {})
+
+			var contract_class: String = str(item.get("contract_class", master_job.get("contract_class", "FORMAL_LEGAL")))
+			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "NO_FORMAL")))
+			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
+			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
+
+			var resolved_rate: float = 3.50
+			if item.has("hourly_rate"):
+				resolved_rate = float(item["hourly_rate"])
+			elif master_job.has("hourly_rate_range"):
+				var r_range: Array = master_job["hourly_rate_range"]
+				var base_rate: float = rng.randf_range(float(r_range[0]), float(r_range[1]))
+				var role_multiplier: float = float(item.get("wage_multiplier", estab_multiplier))
+				var role_bonus: float = float(item.get("wage_bonus", estab_bonus))
+				resolved_rate = snappedf((base_rate * role_multiplier) + role_bonus, 0.05)
+			elif master_job.has("hourly_rate"):
+				resolved_rate = float(master_job["hourly_rate"])
+
+			var count_range: Array = item.get("target_count", [1, 1])
+			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
+
+			for _i in range(count):
+				slots_array.append({
+					"estab_id": estab_id,
+					"district_id": dist_id,
+					"cat": category_code,
+					"role": job_code,
+					"contract_class": contract_class,
+					"edu_req": edu_req,
+					"rate": resolved_rate,
+					"hours": hours,
+					"is_field_worker": is_field
+				})
+
+	# 2. Fallback for single employee_range
+	else:
+		var emp_range: Array = host_def.get("employee_range", host_def.get("default_employees", [1, 3]))
+		var count: int = rng.randi_range(int(emp_range[0]), int(emp_range[1]))
+		var fallback_job: String = "MANUAL_WORKS" if category_code == "INDUSTRIAL" else "COMMERCIAL_SERVICE"
+		var master: Dictionary = _job_definitions.get(fallback_job, {})
+		
+		var default_edu: String = str(master.get("education_required", "NO_FORMAL"))
+		var default_hours: float = float(master.get("weekly_hours", 37.5))
+		var r_range: Array = master.get("hourly_rate_range", [3.20, 3.80])
+		
+		for _i in range(count):
+			var rate: float = snappedf(rng.randf_range(float(r_range[0]), float(r_range[1])) * estab_multiplier, 0.05)
+			slots_array.append({
+				"estab_id": estab_id,
+				"district_id": dist_id,
+				"cat": category_code,
+				"role": fallback_job,
+				"contract_class": "FORMAL_LEGAL",
+				"edu_req": default_edu,
+				"rate": rate,
+				"hours": default_hours,
+				"is_field_worker": false
+			})

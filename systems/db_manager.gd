@@ -312,8 +312,8 @@ static func _create_society_schema() -> void:
 			r.household_id,
 			e.district_id,
 			d.display_name  as district_name,
-			d.borough_id
-			b.display_name as borough_name
+			d.borough_id,
+			b.display_name as borough_name,
 			r.first_name,
 			r.current_surname,
 			r.birth_surname,

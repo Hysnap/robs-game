@@ -12,6 +12,7 @@
     "cultural_demographics": "res://data_modules/core/spatial/society/cultural_demographics_1980s_midlands.json",
     "civic_hierarchy": "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json",
     "building_classes": "res://data_modules/core/spatial/society/building_classes.json",
-    "city_configuration": "res://resources/city/default_european_city.tres"
+    "city_configuration": "res://resources/city/default_european_city.tres",
+    "job_definitions": "res://data_modules/core/spatial/society/job_definitions.json"
   }
 }

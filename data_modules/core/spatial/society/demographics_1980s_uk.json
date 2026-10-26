@@ -11,8 +11,16 @@
     "simulation_start_tick": 0
   },
   "anchor_category_fallbacks": {
+    "JOBCENTRE": "CIVIC",
+    "PRIMARY_SCHOOL": "CIVIC",
+    "SECONDARY_SCHOOL": "CIVIC",
+    "HOSPITAL": "CIVIC",
     "POST_OFFICE": "COMMERCIAL",
     "GP_PRACTICE": "COMMERCIAL",
+    "MANUAL_WORKS": "INDUSTRIAL",
+    "COMMERCIAL_SERVICE": "COMMERCIAL",
+    "CIVIC": "COMMERCIAL",
+    "INDUSTRIAL": "COMMERCIAL",
     "DEFAULT": "COMMERCIAL"
   },
   "legal_and_pension_thresholds": {
