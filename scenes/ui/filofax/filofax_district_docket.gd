@@ -3,6 +3,7 @@ class_name FilofaxDistrictDocket
 extends VBoxContainer
 
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
+const RETRO_THEME = preload("res://scenes/ui/filofax/retro_theme.gd")
 
 @export_file("*.json") var ui_spec_path: String = "res://data_modules/core/feedback/spatial/district_ui.json"
 
@@ -15,7 +16,6 @@ func _ready() -> void:
 	_load_ui_specification()
 
 func _load_ui_specification() -> void:
-	assert(FileAccess.file_exists(ui_spec_path), "FATAL: district_ui.json missing at: %s" % ui_spec_path)
 	if not _ui_spec.is_empty():
 		return
 	if not FileAccess.file_exists(ui_spec_path):
@@ -27,10 +27,6 @@ func _load_ui_specification() -> void:
 	var parsed = JSON.parse_string(file.get_as_text())
 	file.close()
 	if parsed is Dictionary:
-		assert(parsed is Dictionary, "FATAL: district_ui.json root must be a Dictionary")
-		assert(parsed.has("sections"), "FATAL: district_ui.json must declare 'sections'")
-		assert(parsed.has("establishment_section"), "FATAL: district_ui.json must declare 'establishment_section'")
-		assert(parsed.has("styling"), "FATAL: district_ui.json must declare 'styling'")
 		_ui_spec = parsed
 
 ## Renders the district docket dynamically using the single block_id key
@@ -60,44 +56,52 @@ func display_district(block_id: String) -> void:
 	for sec in sections:
 		_build_section(sec, data, styling)
 
-	# 5. Render Local Establishments
-	# var estab_spec: Dictionary = _ui_spec.get("establishment_section", {})
-	# _build_establishments(estab_spec, data.get("establishments_summary", []), styling)
-
-	# 6. Render Live Clickable Establishments from SQLite
+	# 5. Render Live Clickable Establishments from SQLite
 	_build_establishments_section(block_id, styling)
 
 func _clear_docket() -> void:
 	for child in get_children():
 		child.queue_free()
 
+func _create_ruled_separator() -> HSeparator:
+	var sep := HSeparator.new()
+	var line_style := StyleBoxLine.new()
+	line_style.color = RETRO_THEME.color_ruled_line
+	line_style.thickness = 1
+	sep.add_theme_stylebox_override("separator", line_style)
+	return sep
+
 func _build_header(data: Dictionary) -> void:
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
+
 	var title_lbl := Label.new()
 	title_lbl.text = str(data.get("display_name", _current_block_id)).to_upper()
-	title_lbl.add_theme_font_size_override("font_size", 12)
-	title_lbl.modulate = Color.from_string("#D4AF37", Color.GOLD)
+	title_lbl.add_theme_font_override("font", mono_font)
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
 	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(title_lbl)
 
 	var archetype_lbl := Label.new()
 	archetype_lbl.text = "Classification: %s" % str(data.get("district_type", "")).capitalize().replace("_", " ")
-	archetype_lbl.add_theme_font_size_override("font_size", 10)
-	archetype_lbl.modulate = Color.from_string("#A0A0A0", Color.GRAY)
+	archetype_lbl.add_theme_font_override("font", mono_font)
+	archetype_lbl.add_theme_font_size_override("font_size", 11)
+	archetype_lbl.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
 	archetype_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	archetype_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(archetype_lbl)
 
-	var sep := HSeparator.new()
-	sep.modulate.a = 0.5
-	add_child(sep)
+	add_child(_create_ruled_separator())
 
-## Builds the live establishment list header and clickable items
 func _build_section(section_spec: Dictionary, data: Dictionary, styling: Dictionary) -> void:
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
+
 	var header := Label.new()
 	header.text = "\n[ %s ]" % str(section_spec.get("header_label", "SECTION")).to_upper()
-	header.add_theme_font_size_override("font_size", int(styling.get("header_font_size", 13)))
-	header.modulate = Color.from_string(str(styling.get("header_color", "#D4AF37")), Color.GOLD)
+	header.add_theme_font_override("font", mono_font)
+	header.add_theme_font_size_override("font_size", int(styling.get("header_font_size", 12)))
+	header.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
 	header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(header)
@@ -121,37 +125,46 @@ func _build_section(section_spec: Dictionary, data: Dictionary, styling: Diction
 		lbl_name.text = "• " + str(field.get("label", key)) + ":"
 		lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl_name.modulate = Color.from_string(str(styling.get("label_color", "#B0B0B0")), Color.LIGHT_GRAY)
+		lbl_name.add_theme_font_override("font", mono_font)
+		lbl_name.add_theme_font_size_override("font_size", 11)
+		lbl_name.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
 
 		var lbl_val := Label.new()
 		lbl_val.text = formatted_val
 		lbl_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		lbl_val.modulate = Color.from_string(str(styling.get("value_color", "#FFFFFF")), Color.WHITE)
+		lbl_val.add_theme_font_override("font", mono_font)
+		lbl_val.add_theme_font_size_override("font_size", 11)
+		
+		# Police heat warning indicator check
+		if key == "actual_police_heat" and float(val) >= 0.5:
+			lbl_val.add_theme_color_override("font_color", RETRO_THEME.color_ink_warning)
+		else:
+			lbl_val.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
 
 		grid.add_child(lbl_name)
 		grid.add_child(lbl_val)
 
-	var sep := HSeparator.new()
-	sep.modulate.a = float(styling.get("separator_alpha", 0.25))
-	add_child(sep)
+	add_child(_create_ruled_separator())
 
-## Builds the live establishment list header and clickable items
 func _build_establishments_section(district_id: String, styling: Dictionary) -> void:
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
+
 	var header := Label.new()
 	header.text = "\n[ LOCAL TRADE & CIVIC ESTABLISHMENTS ]"
-	header.add_theme_font_size_override("font_size", int(styling.get("header_font_size", 13)))
-	header.modulate = Color.from_string(str(styling.get("header_color", "#D4AF37")), Color.GOLD)
+	header.add_theme_font_override("font", mono_font)
+	header.add_theme_font_size_override("font_size", int(styling.get("header_font_size", 12)))
+	header.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
 	header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(header)
 
-	# Query live database via SocietyQueries
 	var est_rows: Array = SOCIETY_QUERIES.get_district_establishments(district_id)
 
 	if est_rows.is_empty():
 		var empty_lbl := Label.new()
 		empty_lbl.text = "• Purely Residential / No registered businesses."
-		empty_lbl.modulate = Color.GRAY
+		empty_lbl.add_theme_font_override("font", mono_font)
+		empty_lbl.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
 		empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		add_child(empty_lbl)
 		return
@@ -166,6 +179,10 @@ func _build_establishments_section(district_id: String, styling: Dictionary) -> 
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		btn.add_theme_font_override("font", mono_font)
+		btn.add_theme_font_size_override("font_size", 11)
+		btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+		btn.add_theme_color_override("font_hover_color", RETRO_THEME.color_ink_accent)
 
 		var cat: String = str(row.get("category_code", ""))
 		var e_id: int = int(row["establishment_id"])
@@ -183,27 +200,30 @@ func _build_establishments_section(district_id: String, styling: Dictionary) -> 
 		btn.pressed.connect(open_establishment_sub_docket.bind(e_id))
 		list_box.add_child(btn)
 
-## Displays the sub-docket for the clicked establishment
 func open_establishment_sub_docket(estab_id: int) -> void:
 	var docket: Dictionary = SOCIETY_QUERIES.get_establishment_docket(estab_id)
+	
 	if docket.is_empty():
 		push_error("Failed to load docket for establishment #%d" % estab_id)
 		return
 
-	# Clear district view to display the establishment dossier
 	_clear_docket()
+
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
 
 	# 1. Back Button
 	var back_btn := Button.new()
 	back_btn.text = "⬅ Back to District Dossier"
 	back_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	back_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back_btn.add_theme_font_override("font", mono_font)
+	back_btn.add_theme_font_size_override("font_size", 11)
+	back_btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	back_btn.add_theme_color_override("font_hover_color", RETRO_THEME.color_ink_accent)
 	back_btn.pressed.connect(func(): display_district(_current_block_id))
 	add_child(back_btn)
 
-	var sep := HSeparator.new()
-	sep.modulate.a = 0.5
-	add_child(sep)
+	add_child(_create_ruled_separator())
 
 	# 2. Add RichTextLabel for wrapped, formatted docket text
 	var detail_text := RichTextLabel.new()
@@ -211,6 +231,9 @@ func open_establishment_sub_docket(estab_id: int) -> void:
 	detail_text.fit_content = true
 	detail_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_text.add_theme_font_override("normal_font", mono_font)
+	detail_text.add_theme_font_size_override("normal_font_size", 11)
+	detail_text.add_theme_color_override("default_color", RETRO_THEME.color_ink_body)
 	add_child(detail_text)
 
 	var cat_code: String = docket.get("category_code", "")
@@ -220,20 +243,20 @@ func open_establishment_sub_docket(estab_id: int) -> void:
 		var hh_list: Array = docket.get("household", [])
 		var res_list: Array = docket.get("residents", [])
 
-		var bbcode := "[b][color=#D4AF37]=== RESIDENTIAL TENANCY ===[/color][/b]\n"
+		var bbcode := "[b][color=%s]=== RESIDENTIAL TENANCY ===[/color][/b]\n" % RETRO_THEME.color_ink_accent.to_html()
 		bbcode += "[b]Property:[/b] %s\n" % docket.get("name", "")
 		bbcode += "[b]Door Number:[/b] %s | [b]Ward:[/b] %s\n" % [
 			docket.get("unit_door_number", "1"), docket.get("district_name", "")
 		]
 
 		if hh_list.is_empty() or int(docket.get("is_vacant", 0)) == 1:
-			bbcode += "\n[color=#EF4444]STATUS: VACANT TENANCY[/color]\n"
+			bbcode += "\n[color=%s]STATUS: VACANT TENANCY[/color]\n" % RETRO_THEME.color_ink_warning.to_html()
 		else:
 			var hh: Dictionary = hh_list[0]
 			bbcode += "[b]Tenure Type:[/b] %s\n" % hh.get("residence_type", "Standard")
 			bbcode += "[b]Local Taproom:[/b] %s\n" % hh.get("local_pub_name", "None")
 			bbcode += "[b]Demographic:[/b] %s | %s\n\n" % [hh.get("ethnicity", "Local"), hh.get("religion", "Secular")]
-			bbcode += "[b][color=#D4AF37]--- RESIDENTS IN HOUSEHOLD (%d) ---[/color][/b]\n" % res_list.size()
+			bbcode += "[b][color=%s]--- RESIDENTS IN HOUSEHOLD (%d) ---[/color][/b]\n" %[RETRO_THEME.color_ink_accent.to_html(), res_list.size()]
 
 			for r in res_list:
 				var wage_str: String = "£%.2f/wk" % float(r["weekly_wage"]) if r.get("weekly_wage") != null else "Unwaged"
@@ -251,19 +274,19 @@ func open_establishment_sub_docket(estab_id: int) -> void:
 		var raw_income = market.get("avg_neighbor_disposable_income")
 		var income: float = float(str(raw_income)) if raw_income != null else 0.0
 
-		var bbcode := "[b][color=#D4AF37]=== %s ===[/color][/b]\n" % docket.get("name", "Establishment")
+		var bbcode := "[b][color=%s]=== %s ===[/color][/b]\n" %[ RETRO_THEME.color_ink_accent.to_html(), docket.get("name", "Establishment")]
 		bbcode += "[b]Class:[/b] %s (%s)\n" % [docket.get("category_title", "Commercial"), docket.get("owning_entity", "Local Enterprise")]
 		bbcode += "[b]Ward:[/b] %s (Grid: %d, %d)\n" % [docket.get("district_name", ""), int(docket.get("grid_x", 0)), int(docket.get("grid_z", 0))]
 		bbcode += "[b]Operational Capacity:[/b] %d\n\n" % int(docket.get("capacity", 0))
 
-		bbcode += "[b][color=#38BDF8]--- MARKET CATCHMENT (SURROUNDING 9 BLOCKS) ---[/color][/b]\n"
+		bbcode += "[b][color=%s]--- MARKET CATCHMENT (SURROUNDING 9 BLOCKS) ---[/color][/b]\n" % RETRO_THEME.color_ink_accent.to_html()
 		bbcode += "• Potential Customers: [b]%d residents[/b] across [b]%d households[/b]\n" % [
 			int(market.get("total_catchment_population", 0)),
 			int(market.get("total_catchment_households", 0))
 		]
 		bbcode += "• Avg. Neighborhood Disposable Income: [b]£%.2f / week[/b]\n\n" % income
 
-		bbcode += "[b][color=#38BDF8]--- ACTIVE PAYROLL (%d on staff) ---[/color][/b]\n" % employees.size()
+		bbcode += "[b][color=%s]--- ACTIVE PAYROLL (%d on staff) ---[/color][/b]\n" %[RETRO_THEME.color_ink_accent.to_html(), employees.size()]
 		if employees.is_empty():
 			bbcode += "• No formal livelihood contracts recorded.\n"
 		else:
@@ -296,7 +319,8 @@ func _format_value(val, spec: Dictionary) -> String:
 func _render_empty_state(msg: String) -> void:
 	var lbl := Label.new()
 	lbl.text = msg
-	lbl.modulate = Color.GRAY
+	lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+	lbl.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	add_child(lbl)

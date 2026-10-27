@@ -1,20 +1,53 @@
-keys,en,en_GB,fr_FR
-MENU_GAME_TITLE,"Welcome to Robs Game","Welcome to Robs Game","Ello and welcome"
-MENU_GENERATE_MAP,"New Game","Generate or reload a Map and reset to day1","Where is my map"
-MENU_CONTINUE_GAME,"Contine last game","Continue last game","Something in french"
-MENU_EXIT,"Exit","Exit","Something in french"
-LOADER_TITLE,"ESTABLISHING CITY & SOCIETY","ESTABLISHING CITY & SOCIETY","Something in french"
-LOADER_SUBTITLE,"Generating urban grid and civic infrastructure...","Generating urban grid and civic infrastructure...","Something in french"
-LOADER_STATUS_INIT,"Initializing city grid...","Initializing city grid...","Something in french"
-LOADER_STATUS_STREETS,"Calculating street grid and radial zones...","Calculating street grid and radial zones...","Something in french"
-LOADER_STATUS_DISTRICTS,"Classifying civic archetypes and socioeconomic demographics...","Classifying civic archetypes and socioeconomic demographics...","Something in french"
-LOADER_STATUS_SOCIETY,"Weaving citizens and Dunbar kinship ties...","Weaving citizens and Dunbar kinship ties...","Something in french"
-LOADER_STATUS_PERSIST,"Persisting save package (state.json + society.db)...","Persisting save package (state.json + society.db)...","Something in french"
-LOADER_STATUS_READY,"Simulation ready! Entering city view...","Simulation ready! Entering city view...","Something in french"
-CITY_VIEW_STATUS_READY,"City ready.","City ready.","Something in french"
-CITY_VIEW_STATUS_RENDERING,"Rendering city...","Rendering city...","Something in french"
-CITY_VIEW_BTN_MAIN_MENU,"Return to Main Menu","Return to Main Menu","Something in french"
-UI_WARD_DOSSIER_TITLE,"WARD DOSSIER: {name}","WARD: {name}","Something in french"
-UI_UNSURVEYED_HEADER,"[!] UNSURVEYED TERRITORY","[!] Unsurveyed Area","Something in french"
-UI_UNSURVEYED_SUBTEXT,"Pre-1990: No digital directory or census roll available.","Pre-1990: No digital directory or census roll available.","Something in french"
-UI_STALE_WARNING,"[STALE PENCIL INTELLIGENCE]","[STALE PENCIL INTELLIGENCE]","Something in french"
+keys,en,en_GB,en_US,de_DE,fr_FR,es_ES,es_US
+MENU_GAME_TITLE,Welcome to Robs Game,Welcome to Robs Game,Welcome to Rob's Game,Willkommen bei Robs Spiel,Bienvenue dans le jeu de Rob,Bienvenido al juego de Rob,Bienvenido al juego de Rob
+MENU_GENERATE_MAP,New Game,Generate or reload a Map and reset to day1,Generate or reload a Map and reset to day 1,Karte generieren oder neu laden und auf Tag 1 zurücksetzen,Générer ou recharger une carte et réinitialiser au jour 1,Generar o recargar un mapa y restablecer al día 1,Generar o recargar un mapa y reiniciar al día 1
+MENU_CONTINUE_GAME,Contine last game,Continue last game,Continue last game,Letztes Spiel fortsetzen,Continuer la dernière partie,Continuar última partida,Continuar último juego
+MENU_EXIT,Exit,Exit,Exit,Beenden,Quitter,Salir,Salir
+LOADER_TITLE,ESTABLISHING CITY & SOCIETY,ESTABLISHING CITY & SOCIETY,ESTABLISHING CITY & SOCIETY,STADT & GESELLSCHAFT WERDEN ETABLIERT,ÉTABLISSEMENT DE LA VILLE ET DE LA SOCIÉTÉ,ESTABLECIENDO CIUDAD Y SOCIEDAD,ESTABLECIENDO CIUDAD Y SOCIEDAD
+LOADER_SUBTITLE,Generating urban grid and civic infrastructure...,Generating urban grid and civic infrastructure...,Generating urban grid and civic infrastructure...,Städtisches Raster und zivile Infrastruktur werden generiert...,Génération de la grille urbaine et de l'infrastructure civique...,Generando cuadrícula urbana e infraestructura cívica...,Generando cuadrícula urbana e infraestructura cívica...
+LOADER_STATUS_INIT,Initializing city grid...,Initializing city grid...,Initializing city grid...,Stadtraster wird initialisiert...,Initialisation de la grille de la ville...,Inicializando cuadrícula de la ciudad...,Inicializando cuadrícula de la ciudad...
+LOADER_STATUS_STREETS,Calculating street grid and radial zones...,Calculating street grid and radial zones...,Calculating street grid and radial zones...,Straßenraster und Radialzonen werden berechnet...,Calcul de la grille des rues et des zones radiales...,Calculando cuadrícula de calles y zonas radiales...,Calculando cuadrícula de calles y zonas radiales...
+LOADER_STATUS_DISTRICTS,Classifying civic archetypes and socioeconomic demographics...,Classifying civic archetypes and socioeconomic demographics...,Classifying civic archetypes and socioeconomic demographics...,Zivile Archetypen und sozioökonomische Demografien werden klassifiziert...,Classification des archétypes civiques et démographies socio-économiques...,Clasificando arquetipos cívicos y demografía socioeconómica...,Clasificando arquetipos cívicos y demografía socioeconómica...
+LOADER_STATUS_SOCIETY,Weaving citizens and Dunbar kinship ties...,Weaving citizens and Dunbar kinship ties...,Weaving citizens and Dunbar kinship ties...,Bürger und Dunbar-Verwandtschaftsbeziehungen werden gewoben...,Tissage des citoyens et des liens de parenté de Dunbar...,Tejiendo ciudadanos y vínculos de parentesco de Dunbar...,Tejiendo ciudadanos y vínculos de parentesco de Dunbar...
+LOADER_STATUS_PERSIST,Persisting save package (state.json + society.db)...,Persisting save package (state.json + society.db)...,Persisting save package (state.json + society.db)...,Speicherpaket (state.json + society.db) wird dauerhaft gespeichert...,Persistance du package de sauvegarde (state.json + society.db)...,Persistiendo paquete de guardado (state.json + society.db)...,Persistiendo paquete de guardado (state.json + society.db)...
+LOADER_STATUS_READY,Simulation ready! Entering city view...,Simulation ready! Entering city view...,Simulation ready! Entering city view...,Simulation bereit! Stadtansicht wird geladen...,Simulation prête ! Entrée dans la vue de la ville...,¡Simulación lista! Entrando a la vista de la ciudad...,¡Simulación lista! Entrando a la vista de la ciudad...
+CITY_VIEW_STATUS_READY,City ready.,City ready.,City ready.,Stadt bereit.,Ville prête.,Ciudad lista.,Ciudad lista.
+CITY_VIEW_STATUS_RENDERING,Rendering city...,Rendering city...,Rendering city...,Stadt wird gerendert...,Rendu de la ville...,Renderizando ciudad...,Renderizando ciudad...
+CITY_VIEW_BTN_MAIN_MENU,Return to Main Menu,Return to Main Menu,Return to Main Menu,Zurück zum Hauptmenü,Retour au menu principal,Volver al menú principal,Volver al menú principal
+UI_WARD_DOSSIER_TITLE,WARD DOSSIER: {name},WARD: {name},WARD DOSSIER: {name},BEZIRKSAKTE: {name},DOSSIER DE QUARTIER : {name},DOSIER DE DISTRITO: {name},DOSIER DE DISTRITO: {name}
+UI_UNSURVEYED_HEADER,[!] UNSURVEYED TERRITORY,[!] Unsurveyed Area,[!] UNSURVEYED TERRITORY,[!] UNVERMESSENES GEBIET,[!] TERRITOIRE NON RECONNU,[!] TERRITORIO NO EXPLORADO,[!] TERRITORIO NO EXPLORADO
+UI_UNSURVEYED_SUBTEXT,Pre-1990: No digital directory or census roll available.,Pre-1990: No digital directory or census roll available.,Pre-1990: No digital directory or census roll available.,Vor 1990: Kein digitales Verzeichnis oder Volkszählungsliste verfügbar.,Avant 1990 : Aucun répertoire numérique ni registre de recensement disponible.,Antes de 1990: No hay directorio digital ni censo disponible.,Antes de 1990: No hay directorio digital ni censo disponible.
+UI_STALE_WARNING,[STALE PENCIL INTELLIGENCE],[STALE PENCIL INTELLIGENCE],[STALE PENCIL INTELLIGENCE],[ALTE BLEISTIFT-INFORMATIONEN],[RENSEIGNEMENTS DE CRAYON OBSOLÈTES],[INTELIGENCIA DE LÁPIZ CADUCADA],[INTELIGENCIA DE LÁPIZ CADUCADA]
+UI_TAB_MACRO_DIARY,📅 DIARY,📅 DIARY,📅 DIARY,📅 TAGEBUCH,📅 JOURNAL,📅 DIARIO,📅 DIARIO
+UI_TAB_MACRO_DOSSIER,📁 DOSSIER,📁 DOSSIER,📁 DOSSIER,📁 AKTE,📁 DOSSIER,📁 DOSIER,📁 DOSIER
+UI_TAB_MACRO_ROSTER,👥 ROSTER,👥 ROSTER,👥 ROSTER,👥 PERSONAL,👥 REGISTRE,👥 LISTA,👥 LISTA
+UI_TAB_MACRO_FINANCE,💷 ACCOUNTS,💷 ACCOUNTS,💵 ACCOUNTS,💷 KONTEN,💷 COMPTES,💷 CUENTAS,💵 CUENTAS
+UI_TAB_MACRO_STYLES,🎨 STYLES,🎨 STYLES,🎨 STYLES,🎨 STILE,🎨 STYLES,🎨 ESTILOS,🎨 ESTILOS
+UI_TAB_MACRO_CLOSE,✖ CLOSE,✖ CLOSE,✖ CLOSE,✖ SCHLIESSEN,✖ FERMER,✖ CERRAR,✖ CERRAR
+UI_SUBTAB_CENSUS,1. CENSUS,1. CENSUS,1. CENSUS,1. VOLKSZÄHLUNG,1. RECENSEMENT,1. CENSO,1. CENSO
+UI_SUBTAB_ESTABLISHMENTS,2. TRADE DIRECTORY,2. TRADE DIRECTORY,2. TRADE DIRECTORY,2. GEWERBEVERZEICHNIS,2. ANNUAIRE COMMERCIAL,2. DIRECTORIO COMERCIAL,2. DIRECTORIO COMERCIAL
+UI_SUBTAB_HEAT,3. STREET HEAT,3. STREET HEAT,3. STREET HEAT,3. REVIER-DRUCK,3. PRESSION DE LA RUE,3. PRESIÓN DE LA CALLE,3. PRESIÓN DE LA CALLE
+UI_SUBTAB_SECTION,SECTION,SECTION,SECTION,ABSCHNITT,SECTION,SECCIÓN,SECCIÓN
+UI_SUBTAB_CALENDAR,1. CALENDAR,1. CALENDAR,1. CALENDAR,1. KALENDER,1. CALENDRIER,1. CALENDARIO,1. CALENDARIO
+UI_SUBTAB_FUTURE_EVENTS,2. FUTURE EVENTS,2. FUTURE EVENTS,2. FUTURE EVENTS,2. ZUKÜNFTIGE EREIGNISSE,2. ÉVÉNEMENTS À VENIR,2. EVENTOS FUTUROS,2. EVENTOS FUTUROS
+UI_SUBTAB_APPOINTMENTS,3. APPOINTMENTS,3. APPOINTMENTS,3. APPOINTMENTS,3. TERMINE,3. RENDEZ-VOUS,3. CITAS,3. CITAS
+UI_SUBTAB_ACTIVE_AGENTS,1. ACTIVE AGENTS,1. ACTIVE AGENTS,1. ACTIVE AGENTS,1. AKTIVE AGENTEN,1. AGENTS ACTIFS,1. AGENTES ACTIVOS,1. AGENTES ACTIVOS
+UI_SUBTAB_PAYROLL_CUTS,2. PAYROLL & CUTS,2. PAYROLL & CUTS,2. PAYROLL & CUTS,2. LOHNABRECHNUNG & KÜRZUNGEN,2. PAIE ET RÉDUCTIONS,2. NÓMINAS Y RECORTES,2. NÓMINAS Y RECORTES
+UI_SUBTAB_RECRUITS,3. RECRUITS,3. RECRUITS,3. RECRUITS,3. REKRUTEN,3. RECRUES,3. RECLUTAS,3. RECLUTAS
+UI_SUBTAB_VAULT_LEDGER,1. VAULT LEDGER,1. VAULT LEDGER,1. VAULT LEDGER,1. TRESORBUCH,1. GRAND LIVRE DU COFFRE,1. LIBRO MAYOR DE LA BÓVEDA,1. LIBRO MAYOR DE LA BÓVEDA
+UI_SUBTAB_DEBT_ARREARS,2. DEBT & ARREARS,2. DEBT & ARREARS,2. DEBT & ARREARS,2. SCHULDEN & RÜCKSTÄNDE,2. DETTES ET ARRIÉRÉS,2. DEUDAS Y ATRASOS,2. DEUDAS Y ATRASOS
+UI_SUBTAB_WHOLESALE_TARIFFS,3. WHOLESALE TARIFFS,3. WHOLESALE TARIFFS,3. WHOLESALE TARIFFS,3. GROSSHANDELSTARIFE,3. TARIFS DE GROS,3. TARIFAS MAYORISTAS,3. TARIFAS MAYORISTAS
+UI_FINANCE_VAULT_CASH,VAULT CASH: {currency}{amount},VAULT CASH: {currency}{amount},VAULT CASH: {currency}{amount},TRESORBESTAND: {currency}{amount},LIQUIDE EN COFFRE : {currency}{amount},EFECTIVO EN BÓVEDA: {currency}{amount},EFECTIVO EN BÓVEDA: {currency}{amount}
+UI_ACTION_BUY,BUY,BUY,BUY,KAUF,ACHETER,COMPRAR,COMPRAR
+UI_ACTION_SELL,SELL,SELL,SELL,VERKAUF,VENDRE,VENDER,VENDER
+UI_ACTION_MAKE,MAKE,MAKE,MAKE,HERSTELLEN,FABRIQUER,FABRICAR,FABRICAR
+UI_LOCAL_WORKSHOP_STAFF,Local Workshop Staff,Local Workshop Staff,Local Workshop Staff,Mitarbeiter der lokalen Werkstatt,Personnel de l'atelier local,Personal del taller local,Personal del taller local
+UI_ESTIMATE_YIELD,Yield: {amount} units,Yield: {amount} units,Yield: {amount} units,Ertrag: {amount} Einheiten,Rendement : {amount} unités,Rendimiento: {amount} unidades,Rendimiento: {amount} unidades
+UI_ESTIMATE_CURRENCY,{currency}{amount},{currency}{amount},{currency}{amount},{currency}{amount},{currency}{amount},{currency}{amount},{currency}{amount}
+UI_EXECUTED_ACTION,Executed {verb},Executed {verb},Executed {verb},{verb} ausgeführt,{verb} exécuté,{verb} ejecutado,{verb} ejecutado
+UI_MEMO_WEEK,[Wk {week}]: {text},[Wk {week}]: {text},[Wk {week}]: {text},[Wo. {week}]: {text},[Sem. {week}] : {text},[Sem. {week}]: {text},[Sem. {week}]: {text}
+UI_DIRECTIVE_ENTRY,{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location},{index}. [{verb}] {target} x{amount} @ {location}
+UI_BTN_EXECUTE_TURN,Commit Orders,Commit Orders,Aufträge ausführen
+UI_BTN_EXECUTE_SHIFT,Execute Shift,Execute Shift,Schicht ausführen
+UI_BTN_EXECUTE_DAY,Complete Day,Complete Day,Tag abschließen
+UI_BTN_EXECUTE_WEEK,Advance Week,Advance Week,Woche abschließen

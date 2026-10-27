@@ -220,7 +220,7 @@ func generate_ground_planes_async() -> void:
 	var yield_frame: bool = bool(_layout_rules.get("yield_per_batch", true))
 
 	var cell_size: float = city_configuration.block_size + city_configuration.street_width
-	var half_street: float = city_configuration.street_width * 0.5
+	var _half_street: float = city_configuration.street_width * 0.5
 	
 	if enable_log:
 		emit_progress(10, 100, "Generating ground layout (%d districts)..." % total_blocks)

@@ -11,7 +11,7 @@ static func cluster_districts_into_boroughs(
 	world_state: Dictionary, 
 	civic_hierarchy: Dictionary, 
 	lexicon_data: Dictionary, 
-	rng: RandomNumberGenerator
+	_rng: RandomNumberGenerator
 ) -> void:
 	var districts: Dictionary = world_state.get("districts", {})
 	if districts.is_empty():

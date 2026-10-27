@@ -96,7 +96,7 @@ static func get_establishment_docket(estab_id: int) -> Dictionary:
 				r.first_name || ' ' || r.current_surname AS full_name,
 				l_role.title AS role_title,
 				l_class.title AS contract_class,
-				c.schedule_window,
+				l_sch.title as schedule_window,
 				c.weekly_hours,
 				c.compensation_rate,
 				(c.weekly_hours * c.compensation_rate) AS weekly_pay
@@ -104,6 +104,7 @@ static func get_establishment_docket(estab_id: int) -> Dictionary:
 			JOIN residents r ON c.resident_id = r.resident_id
 			JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 			JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
+			JOIN system_labels l_sch ON c.schedule_window_id = l_sch.label_id
 			WHERE c.employer_entity_id = 'ESTAB_%d' AND c.valid_to IS NULL AND r.dod IS NULL;
 		""" % estab_id)
 

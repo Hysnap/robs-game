@@ -35,3 +35,64 @@ static func process_ambient_heartbeat(world_state: Dictionary) -> void:
 	
 	# Delegate ambient drift, threshold checks, and passive decay to registered sinks
 	IMPACT_ROUTER.dispatch_ambient_tick(world_state)
+
+## Executes a complete operational cycle: resolves directives, advances time, 
+## triggers ambient drift, and returns structured feedback slips for the UI.
+static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Array:
+	var meta: Dictionary = world_state.get("metadata", {})
+	var current_day: int = int(meta.get("current_day_tick", 1))
+	var current_week: int = int(meta.get("current_week_tick", 1))
+	var horizon: String = meta.get("time_horizon", "day").to_lower()
+	var incoming_slips: Array = []
+
+	## 1. Execute Staged Directives
+	if not staged_directives.is_empty():
+		for i in range(staged_directives.size()):
+			var directive: Dictionary = staged_directives[i]
+			var res: Dictionary = execute_directive(world_state, directive)
+			incoming_slips.append({
+				"tick": current_day,
+				"week": current_week,
+				"verb": directive.get("verb", "TASK"),
+				"text": res.get("message", "Task completed."),
+				"author": directive.get("counterparty_id", "Street Runner"),
+				"destination": "team_feedback",
+				"staged_index": int(directive.get("staged_index", i)),
+				"completion_index": i,
+				"directive_snapshot": directive.duplicate(true)
+			})
+	else:
+		incoming_slips.append({
+			"tick": current_day,
+			"week": current_week,
+			"verb": "IDLE",
+			"text": "Cycle complete. Operations quiet; balances and stock held steady.",
+			"author": "Station Log",
+			"destination": "team_feedback"
+		})
+
+	# 2. Advance the Temporal Clock according to the active Horizon
+	match horizon:
+		"day":
+			current_day += 1
+			if current_day > 7:
+				current_day = 1
+				current_week += 1
+				meta["current_week_tick"] = current_week
+				process_ambient_heartbeat(world_state)
+			meta["current_day_tick"] = current_day
+		"week":
+			current_week += 1
+			meta["current_week_tick"] = current_week
+			process_ambient_heartbeat(world_state)
+		_:
+			current_day += 1
+			meta["current_day_tick"] = current_day
+
+	world_state["metadata"] = meta
+
+	# 3. Inform GameState (Observer Pattern)
+	if GameState.has_signal("turn_advanced"):
+		GameState.turn_advanced.emit(current_day)
+
+	return incoming_slips

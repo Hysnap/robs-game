@@ -3,256 +3,340 @@
 [ext_resource type="Script" uid="uid://c2xy7x3xr1bh8" path="res://scenes/ui/filofax/test_filofax_scene.gd" id="1_test_scene"]
 [ext_resource type="Script" uid="uid://ct3ycsrlofjir" path="res://scenes/ui/filofax/filofax_ui.gd" id="2_filofax_ui"]
 [ext_resource type="Script" uid="uid://cf438ffbyqhml" path="res://scenes/ui/filofax/filofax_district_docket.gd" id="3_x0ver"]
+[ext_resource type="PackedScene" uid="uid://dto1tilb5yqgp" path="res://scenes/ui/filofax/filofax_customizer.tscn" id="4_customizer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/feedback/desktop_slip_stack.tscn" id="5_desktop_slip_stack"]
 
-[node name="Organiser" type="Node2D" unique_id=1298381080]
+[node name="Organiser" type="Node2D" unique_id=1677497264]
 script = ExtResource("1_test_scene")
 
-[node name="FilofaxBinder" type="PanelContainer" parent="." unique_id=1485764081]
-custom_minimum_size = Vector2(850, 520)
-offset_right = 850.0
-offset_bottom = 520.0
+[node name="DesktopSlipStack" parent="." unique_id=296499376 instance=ExtResource("5_desktop_slip_stack")]
+visible = false
+z_index = 7
+
+[node name="FilofaxBinder" type="PanelContainer" parent="." unique_id=1088499833]
+custom_minimum_size = Vector2(980, 540)
+offset_left = 240.0
+offset_top = 110.0
+offset_right = 1220.0
+offset_bottom = 650.0
 script = ExtResource("2_filofax_ui")
 
-[node name="Binder Shell" type="VBoxContainer" parent="FilofaxBinder" unique_id=310659577]
+[node name="BinderContent" type="HBoxContainer" parent="FilofaxBinder" unique_id=39956510]
 layout_mode = 2
+theme_override_constants/separation = 0
 
-[node name="HeaderBar" type="HBoxContainer" parent="FilofaxBinder/Binder Shell" unique_id=157947419]
+[node name="LeftDividerTabs" type="VBoxContainer" parent="FilofaxBinder/BinderContent" unique_id=1163800738]
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
-mouse_filter = 0
+theme_override_constants/separation = 4
 
-[node name="CurrentDateLabel" type="Label" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=1466443054]
+[node name="TabDiary" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=1253649881]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "WEEK 1 - 1988"
+focus_mode = 0
+text = "📅 DIARY"
+alignment = 0
 
-[node name="CommsDeviceIcon" type="Label" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=1232903681]
+[node name="TabDossier" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=358106540]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "[DIRECT_DESK]"
+focus_mode = 0
+text = "📁 DOSSIER"
+alignment = 0
 
-[node name="CloseButton" type="Button" parent="FilofaxBinder/Binder Shell/HeaderBar" unique_id=143652179]
+[node name="TabRoster" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=1081544990]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "X"
+focus_mode = 0
+text = "👥 ROSTER"
+alignment = 0
 
-[node name="PageSpread" type="HBoxContainer" parent="FilofaxBinder/Binder Shell" unique_id=4399044]
+[node name="TabFinance" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=1042951117]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+focus_mode = 0
+text = "💷 ACCOUNTS"
+alignment = 0
+
+[node name="TabStyles" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=1103134663]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+focus_mode = 0
+text = "🎨 STYLES"
+alignment = 0
+
+[node name="Spacer" type="Control" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=139653624]
 layout_mode = 2
 size_flags_vertical = 3
-alignment = 1
+mouse_filter = 1
 
-[node name="LeftPage_Ledger" type="PanelContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=1736033513]
+[node name="TabClose" type="Button" parent="FilofaxBinder/BinderContent/LeftDividerTabs" unique_id=385611621]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+focus_mode = 0
+text = "✖ CLOSE"
+alignment = 0
+
+[node name="PageSpread" type="HBoxContainer" parent="FilofaxBinder/BinderContent" unique_id=1658355746]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="LeftPage_Ledger" type="PanelContainer" parent="FilofaxBinder/BinderContent/PageSpread" unique_id=808918020]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TabContainer" type="TabContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger" unique_id=849561583]
-propagate_maximum_size = false
+[node name="PageVBox" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger" unique_id=2120630901]
 layout_mode = 2
-tab_alignment = 1
-current_tab = 0
+theme_override_constants/separation = 4
 
-[node name="TelemetryTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1091723149]
+[node name="SubSectionTabs" type="HBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox" unique_id=1061257850]
 layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LedgerStack" type="TabContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox" unique_id=234963213]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+tabs_visible = false
+
+[node name="TelemetryTab" type="ScrollContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack" unique_id=444748515]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
 metadata/_tab_index = 0
 
-[node name="DocketContent" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/TelemetryTab" unique_id=579887223]
+[node name="DocketContent" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/TelemetryTab" unique_id=2080346324]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("3_x0ver")
 
-[node name="RosterTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=994621366]
+[node name="RosterTab" type="ScrollContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack" unique_id=995171935]
 visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 metadata/_tab_index = 1
 
-[node name="RosterTabText" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/RosterTab" unique_id=1180418853]
+[node name="RosterList" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/RosterTab" unique_id=1827359300]
 layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="FinancialsTab" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer" unique_id=1701325989]
+[node name="FinancialsTab" type="ScrollContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack" unique_id=1378061800]
 visible = false
 layout_mode = 2
 horizontal_scroll_mode = 0
 metadata/_tab_index = 2
 
-[node name="FinancialTabText" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/LeftPage_Ledger/TabContainer/FinancialsTab" unique_id=1847576026]
-layout_mode = 2
-
-[node name="RingSpike_Center" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=1701765863]
-propagate_maximum_size = false
-layout_mode = 2
-
-[node name="Pinned Slips" type="Label" parent="FilofaxBinder/Binder Shell/PageSpread/RingSpike_Center" unique_id=1034366898]
-layout_mode = 2
-text = "Pinned Memos"
-
-[node name="MemoScroll" type="ScrollContainer" parent="FilofaxBinder/Binder Shell/PageSpread/RingSpike_Center" unique_id=1421590355]
-layout_mode = 2
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-scroll_hint_mode = 3
-
-[node name="MemoList" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/RingSpike_Center/MemoScroll" unique_id=223659535]
-propagate_maximum_size = false
-layout_mode = 2
-
-[node name="RightPage_Planner" type="PanelContainer" parent="FilofaxBinder/Binder Shell/PageSpread" unique_id=425500729]
+[node name="FinancialList" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/FinancialsTab" unique_id=1838973453]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Operational" type="VBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner" unique_id=697663524]
+[node name="RingSpike_Center" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread" unique_id=221951723]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="SpineArtHolder" type="Control" parent="FilofaxBinder/BinderContent/PageSpread/RingSpike_Center" unique_id=503082299]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="RingsLabel" type="Label" parent="FilofaxBinder/BinderContent/PageSpread/RingSpike_Center/SpineArtHolder" unique_id=2139803957]
+layout_mode = 1
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -10.0
+offset_right = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "○
+○
+○
+
+
+○
+○
+○"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RightPage_Planner" type="PanelContainer" parent="FilofaxBinder/BinderContent/PageSpread" unique_id=1959352946]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Operational" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner" unique_id=547487812]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Label" type="Label" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=258227701]
+[node name="Label" type="Label" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=738466724]
 layout_mode = 2
 text = "Operational Directives"
 
-[node name="DirectiveQueue" type="ItemList" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=366454535]
+[node name="DirectiveQueue" type="ItemList" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=1112232727]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ActionButtons" type="HBoxContainer" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=1030465091]
+[node name="BtnMoveUp" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons"]
+layout_mode = 2
+text = "▲"
+
+[node name="BtnMoveDown" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons"]
+layout_mode = 2
+text = "▼"
+
+[node name="ActionButtons" type="HBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=1812674455]
 layout_mode = 2
 
-[node name="AddOrderButton" type="Button" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational/ActionButtons" unique_id=1145535524]
+[node name="AddOrderButton" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons" unique_id=323342565]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "+ New Sticky Note Order"
 
-[node name="ExecuteTurnButton" type="Button" parent="FilofaxBinder/Binder Shell/PageSpread/RightPage_Planner/Operational" unique_id=238536953]
+[node name="ExecuteTurnButton" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=2095943297]
 layout_mode = 2
-text = "Commit Orders"
+text = "\"UI_BTN_EXECUTE_TURN\""
 
-[node name="StickyNotePopup" type="PanelContainer" parent="." unique_id=1433765332]
+[node name="StickyNotePopup" type="PanelContainer" parent="." unique_id=1557767200]
 visible = false
+z_index = 5
 custom_minimum_size = Vector2(360, 420)
 offset_left = 550.0
-offset_top = 80.0
+offset_top = 130.0
 offset_right = 910.0
-offset_bottom = 500.0
+offset_bottom = 550.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="StickyNotePopup" unique_id=293816539]
+[node name="VBoxContainer" type="VBoxContainer" parent="StickyNotePopup" unique_id=870536508]
 layout_mode = 2
 
-[node name="StickyHeader" type="HBoxContainer" parent="StickyNotePopup/VBoxContainer" unique_id=699229503]
+[node name="StickyHeader" type="HBoxContainer" parent="StickyNotePopup/VBoxContainer" unique_id=945716251]
 layout_mode = 2
 
-[node name="DragHandle" type="Label" parent="StickyNotePopup/VBoxContainer/StickyHeader" unique_id=891271235]
+[node name="DragHandle" type="Label" parent="StickyNotePopup/VBoxContainer/StickyHeader" unique_id=247914150]
 layout_mode = 2
 size_flags_horizontal = 3
 text = ":: ORDER SLIP PAD (DRAG) ::"
 
-[node name="CloseNoteButton" type="Button" parent="StickyNotePopup/VBoxContainer/StickyHeader" unique_id=354611546]
+[node name="CloseNoteButton" type="Button" parent="StickyNotePopup/VBoxContainer/StickyHeader" unique_id=1964744464]
 layout_mode = 2
 text = " X "
 
-[node name="NotesGrid" type="GridContainer" parent="StickyNotePopup/VBoxContainer" unique_id=896594795]
+[node name="NotesGrid" type="GridContainer" parent="StickyNotePopup/VBoxContainer" unique_id=2088099262]
 layout_mode = 2
 size_flags_vertical = 3
 columns = 2
 
-[node name="StickyNote_Action" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=1803428852]
+[node name="StickyNote_Action" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=2051038800]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action" unique_id=1034556409]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action" unique_id=1760844672]
 layout_mode = 2
 
-[node name="ActionLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox" unique_id=1037770152]
+[node name="ActionLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox" unique_id=2002109399]
 layout_mode = 2
 text = "1. ACTION"
 
-[node name="VerbOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox" unique_id=1673379716]
+[node name="VerbOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Action/VBox" unique_id=101312588]
 layout_mode = 2
 
-[node name="StickyNote_What" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=883092241]
+[node name="StickyNote_What" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=648906318]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What" unique_id=1122314639]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What" unique_id=1217666253]
 layout_mode = 2
 
-[node name="WhatLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox" unique_id=2111888336]
+[node name="WhatLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox" unique_id=1417346387]
 layout_mode = 2
 text = "2. WHAT"
 
-[node name="TargetOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox" unique_id=1432376213]
+[node name="TargetOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_What/VBox" unique_id=209151490]
 layout_mode = 2
 
-[node name="StickyNote_Amount" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=444664745]
+[node name="StickyNote_Amount" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=1707854984]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount" unique_id=1298524829]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount" unique_id=1338164828]
 layout_mode = 2
 
-[node name="AmountLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox" unique_id=382023091]
+[node name="AmountLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox" unique_id=1832646905]
 layout_mode = 2
 text = "3. HOW MANY"
 
-[node name="AmountSpin" type="SpinBox" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox" unique_id=90284458]
+[node name="AmountSpin" type="SpinBox" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Amount/VBox" unique_id=73787830]
 layout_mode = 2
 min_value = 1.0
 max_value = 1000.0
 value = 10.0
 
-[node name="StickyNote_Who" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=455448669]
+[node name="StickyNote_Who" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=708506087]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who" unique_id=34201381]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who" unique_id=1999959443]
 layout_mode = 2
 
-[node name="WhoLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox" unique_id=1642024804]
+[node name="WhoLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox" unique_id=546095743]
 layout_mode = 2
 text = "4. WHO"
 
-[node name="WhoOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox" unique_id=1700899199]
+[node name="WhoOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox" unique_id=1457412869]
 layout_mode = 2
 
-[node name="StickyNote_Where" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=29463905]
+[node name="StickyNote_Where" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=1883388025]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where" unique_id=875217760]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where" unique_id=437697842]
 layout_mode = 2
 
-[node name="WhereLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox" unique_id=796006061]
+[node name="WhereLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox" unique_id=1600677422]
 layout_mode = 2
 text = "5. WHERE"
 
-[node name="WhereOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox" unique_id=1245421804]
+[node name="WhereOption" type="OptionButton" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox" unique_id=436195889]
 layout_mode = 2
 
-[node name="StickyNote_Estimate" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=1590855822]
+[node name="StickyNote_Estimate" type="PanelContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid" unique_id=1411061645]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate" unique_id=178408355]
+[node name="VBox" type="VBoxContainer" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate" unique_id=1464618829]
 layout_mode = 2
 
-[node name="EstLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox" unique_id=47506255]
+[node name="EstLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox" unique_id=1985068716]
 layout_mode = 2
 text = "6. ESTIMATE"
 
-[node name="EstimatedCostLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox" unique_id=992312993]
+[node name="EstimatedCostLabel" type="Label" parent="StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox" unique_id=580457569]
 layout_mode = 2
 text = "£0.00"
 
-[node name="ButtonBox" type="HBoxContainer" parent="StickyNotePopup/VBoxContainer" unique_id=1963017215]
+[node name="ButtonBox" type="HBoxContainer" parent="StickyNotePopup/VBoxContainer" unique_id=105318434]
 layout_mode = 2
 
-[node name="SaveNoteBtn" type="Button" parent="StickyNotePopup/VBoxContainer/ButtonBox" unique_id=2099978245]
+[node name="SaveNoteBtn" type="Button" parent="StickyNotePopup/VBoxContainer/ButtonBox" unique_id=1737296561]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "📌 Pin to Filofax"
 
-[node name="DiscardBtn" type="Button" parent="StickyNotePopup/VBoxContainer/ButtonBox" unique_id=109061566]
+[node name="DiscardBtn" type="Button" parent="StickyNotePopup/VBoxContainer/ButtonBox" unique_id=834153193]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Tear Off"
+
+[node name="FilofaxCustomizer" parent="." unique_id=1344899480 instance=ExtResource("4_customizer")]
+visible = false
+z_index = 6
+

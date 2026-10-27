@@ -28,15 +28,29 @@ static func evaluate(current_val: float, threshold_val: float, operator: String 
 static func has_sufficient(
 	world_state: Dictionary, 
 	actor_id: String, 
-	metric_key: String, 
-	required_qty: float, 
+	metric: String, 
+	target_val: float, 
 	operator: String = ">=", 
 	context: Dictionary = {}
 ) -> bool:
-	var current_val: float = get_state_metric(world_state, actor_id, metric_key, context)
-	if current_val == -INF:
+	# 1. CASH & LIQUIDITY
+	if metric.to_upper() in ["CASH", "LIQUID_CASH"]:
+		if _is_infinite_mode_active(actor_id, "third_party_funds_mode", "INFINITE_FUNDS"):
+			return true
+
+		var current_cash: float = get_state_metric(world_state, actor_id, "CASH", context)
+		if current_cash == -INF:
+			return false
+		return evaluate(current_cash, target_val, operator)
+
+	# 2. PHYSICAL INVENTORY / COMMODITY STOCK
+	if _is_infinite_mode_active(actor_id, "supplier_stock_mode", "INFINITE_SUPPLY"):
+		return true
+
+	var current_stock: float = get_state_metric(world_state, actor_id, metric, context)
+	if current_stock == -INF:
 		return false
-	return evaluate(current_val, required_qty, operator)
+	return evaluate(current_stock, target_val, operator)
 
 ## Evaluates a compound list of condition rules where ALL must pass ("AND" gate / Tolerance Band)
 static func has_all(world_state: Dictionary, actor_id: String, gate_list: Array, context: Dictionary = {}) -> bool:
@@ -116,6 +130,8 @@ static func get_state_metric(world_state: Dictionary, actor_id: String, metric_k
 	
 	# --- A. LIQUID CASH & FINANCES ---
 	if upper_key in ["CASH", "LIQUID_CASH"]:
+		if _is_infinite_mode_active(actor_id, "third_party_funds_mode", "INFINITE_FUNDS"):
+			return INF
 		if actor_id in ["PLAYER", "", "HQ"]:
 			return float(world_state.get("finances", {}).get("liquid_cash", 0.0))
 		var staff_member: Dictionary = world_state.get("staff", {}).get(actor_id, {})
@@ -147,6 +163,8 @@ static func get_state_metric(world_state: Dictionary, actor_id: String, metric_k
 	# --- D. PHYSICAL COMMODITIES (Stock Balance) ---
 	var inventory: Dictionary = get_actor_inventory(world_state, actor_id)
 	if inventory.has(metric_key):
+		if _is_infinite_mode_active(actor_id, "supplier_stock_mode", "INFINITE_SUPPLY"):
+			return INF
 		return float(inventory[metric_key].get("STOCK", 0.0))
 
 	return 0.0
@@ -197,3 +215,15 @@ static func _resolve_relational_metric(world_state: Dictionary, actor_id: String
 			return float(world_state["districts"][target_entity].get("local_influence", 0.0))
 
 	return 0.0
+
+## Universal check: inspects if a third-party actor has infinite capacity for a given rule
+static func _is_infinite_mode_active(actor_id: String, rule_key: String, bypass_value: String) -> bool:
+	if actor_id in ["PLAYER", "", "HQ"]:
+		return false
+
+	var manifest: Dictionary = {}
+	if ClassDB.class_exists("ScenarioManifestManager"):
+		manifest = ScenarioManifestManager.get_manifest()
+
+	var mode: String = manifest.get("market_rules", {}).get(rule_key, "").to_upper()
+	return mode == bypass_value

@@ -6,10 +6,10 @@ uid="uid://dcbqxgi3ltcf"
 
 [deps]
 
-files=["res://data_modules/core/localization/ui_strings.en.translation", "res://data_modules/core/localization/ui_strings.en_GB.translation", "res://data_modules/core/localization/ui_strings.fr_FR.translation"]
+files=["res://data_modules/core/localization/ui_strings.en.translation", "res://data_modules/core/localization/ui_strings.en_GB.translation", "res://data_modules/core/localization/ui_strings.en_US.translation", "res://data_modules/core/localization/ui_strings.de_DE.translation", "res://data_modules/core/localization/ui_strings.fr_FR.translation", "res://data_modules/core/localization/ui_strings.es_ES.translation", "res://data_modules/core/localization/ui_strings.es_US.translation"]
 
 source_file="res://data_modules/core/localization/ui_strings.csv"
-dest_files=["res://data_modules/core/localization/ui_strings.en.translation", "res://data_modules/core/localization/ui_strings.en_GB.translation", "res://data_modules/core/localization/ui_strings.fr_FR.translation"]
+dest_files=["res://data_modules/core/localization/ui_strings.en.translation", "res://data_modules/core/localization/ui_strings.en_GB.translation", "res://data_modules/core/localization/ui_strings.en_US.translation", "res://data_modules/core/localization/ui_strings.de_DE.translation", "res://data_modules/core/localization/ui_strings.fr_FR.translation", "res://data_modules/core/localization/ui_strings.es_ES.translation", "res://data_modules/core/localization/ui_strings.es_US.translation"]
 
 [params]
 

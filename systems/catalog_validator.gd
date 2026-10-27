@@ -41,7 +41,7 @@ static func get_discovered_categories(root_path: String = COMMODITIES_ROOT) -> A
 	dir.list_dir_begin()
 	var entry_name = dir.get_next()
 	while entry_name != "":
-		var full_path = root_path.path_join(entry_name)
+		var _full_path = root_path.path_join(entry_name)
 		if dir.current_is_dir() and not entry_name.begins_with("."):
 			var cat_token = entry_name.to_upper()
 			if cat_token.ends_with("S"):

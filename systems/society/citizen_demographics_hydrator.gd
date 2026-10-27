@@ -21,12 +21,25 @@ static func run(
 	var district_residents_map: Dictionary = physical_state["district_residents_map"]
 	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
 
+	# Load Labor Market Configuration Flags
+	var config := ConfigFile.new()
+	var err := config.load("res://data_modules/core/business_rules.cfg")
+	var enable_archetype_unemployment: bool = true
+	var enable_commute_distances: bool = true
+	var enable_category_restricted_hunting: bool = true
+
+	if err == OK:
+		enable_archetype_unemployment = config.get_value("labor_market", "enable_archetype_unemployment", true)
+		enable_commute_distances = config.get_value("labor_market", "enable_commute_distances", true)
+		enable_category_restricted_hunting = config.get_value("labor_market", "enable_category_restricted_hunting", true)
+
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 	var male_gender_id: int = DB_MANAGER.get_label_id("GENDER", "M")
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
+	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
 	open_job_slots.shuffle()
 
@@ -45,6 +58,7 @@ static func run(
 	var resident_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
+	var slot_update_sqls: Array[String] = []
 
 	var current_resident_id: int = 1
 	var total_hh: int = generated_households.size()
@@ -69,7 +83,10 @@ static func run(
 			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
 
 			var is_head: bool = (member_idx == 0)
-			var demo_profile: Dictionary = resolve_citizen_demographics(demographics, rng, is_high_dense, is_male, hh["unemp_rate"], 0.70, is_head)
+
+			# If archetype unemployment is disabled, pass unemp_rate = 0.0
+			var active_unemp_rate: float = float(hh["unemp_rate"]) if enable_archetype_unemployment else 0.0
+			var demo_profile: Dictionary = resolve_citizen_demographics(demographics, rng, is_high_dense, is_male, active_unemp_rate, 0.70, is_head)
 			var age_years: int = int(demo_profile["age"])
 
 			var days_old: int = int(round(float(age_years) * 365.25)) + rng.randi_range(0, 364)
@@ -94,6 +111,8 @@ static func run(
 			var occ_title: String = demo_profile["occupation"]
 			var anchor_cat: String = demo_profile["anchor_category"]
 			var contract_class: String = demo_profile["contract_class"]
+			var contract_type_id: int = contract_std_id
+			var schedule_id: int = default_daytime_id
 			var weekly_hours: float = float(demo_profile["weekly_hours"])
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
 			var assigned_est_id: int = 0
@@ -104,28 +123,51 @@ static func run(
 					districts[hh["district_id"]].get("spatial_anchor", Vector2.ZERO)
 				)
 
+				var slot: Dictionary = {}
+
+				# A. Primary search within designated category
 				if jobs_by_cat.has(anchor_cat) and not jobs_by_cat[anchor_cat].is_empty():
-					var slot: Dictionary = SPATIAL_RESOLVER.pick_commute_matched_slot(
+					slot = SPATIAL_RESOLVER.pick_commute_matched_slot(
 						jobs_by_cat[anchor_cat],
 						worker_home_pos,
 						edu_code,
 						districts,
 						job_definitions,
-						rng
+						rng,
+						enable_commute_distances
 					)
-					if not slot.is_empty():
-						assigned_est_id = int(slot["estab_id"])
-						occ_title = slot["role"]
-						weekly_hours = slot["hours"]
-						compensation_rate = slot["rate"]
-					else:
-						# Saturated or Unqualified -> Transition to Unemployment
-						assigned_est_id = _transition_to_dole(demo_profile, by_cat, hh["district_id"], rng)
-						occ_title = demo_profile.get("unemployed_branch", {}).get("role", "UNEMPLOYED")
-						contract_class = "INFORMAL_GREY"
-						weekly_hours = 0.0
-						compensation_rate = 0.0
+
+				# B. Fallback search across city-wide open slots if unrestricted job hunting is enabled
+				if slot.is_empty() and not enable_category_restricted_hunting:
+					slot = SPATIAL_RESOLVER.pick_commute_matched_slot(
+						open_job_slots,
+						worker_home_pos,
+						edu_code,
+						districts,
+						job_definitions,
+						rng,
+						enable_commute_distances
+					)
+
+				# C. Assign role or transition to welfare
+				if not slot.is_empty():
+					assigned_est_id = int(slot["estab_id"])
+					occ_title = slot["role"]
+					weekly_hours = slot["hours"]
+					compensation_rate = slot["rate"]
+					contract_type_id = int(slot.get("contract_type_id", contract_std_id))
+					schedule_id = int(slot.get("schedule_window_id", default_daytime_id))
+
+					# Mark slot filled in DB
+					var slot_id: int = int(slot.get("slot_id", 0))
+					if slot_id > 0:
+						slot_update_sqls.append("""
+							UPDATE workplace_job_slots
+							SET is_filled = 1, active_resident_id = %d
+							WHERE slot_id = %d;
+						""" % [r_id, slot_id])
 				else:
+					# Saturated or Unqualified -> Transition to Unemployment
 					assigned_est_id = _transition_to_dole(demo_profile, by_cat, hh["district_id"], rng)
 					occ_title = demo_profile.get("unemployed_branch", {}).get("role", "UNEMPLOYED")
 					contract_class = "INFORMAL_GREY"
@@ -140,13 +182,13 @@ static func run(
 			contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
 					resident_id, employer_entity_id, contract_class_id, role_title_id,
-					contract_type_id, schedule_window, weekly_hours, compensation_rate, 
+					contract_type_id, schedule_window_id, weekly_hours, compensation_rate, 
 					valid_from, valid_to, change_reason_id
 				) VALUES (
-					%d, 'ESTAB_%d', %d, %d, %d, 'DAYTIME', %.1f, %.2f, %d, NULL, %d
+					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, assigned_est_id, class_id, role_id, contract_std_id,
+				r_id, assigned_est_id, class_id, role_id, contract_type_id, schedule_id,
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
@@ -166,6 +208,10 @@ static func run(
 			DB_MANAGER.execute_batch(resident_inserts)
 			DB_MANAGER.execute_batch(contract_inserts)
 			DB_MANAGER.execute_batch(edge_inserts)
+			if not slot_update_sqls.is_empty():
+				DB_MANAGER.execute_batch(slot_update_sqls)
+				slot_update_sqls.clear()
+
 			resident_inserts.clear()
 			contract_inserts.clear()
 			edge_inserts.clear()
@@ -179,6 +225,8 @@ static func run(
 		DB_MANAGER.execute_batch(resident_inserts)
 		DB_MANAGER.execute_batch(contract_inserts)
 		DB_MANAGER.execute_batch(edge_inserts)
+	if not slot_update_sqls.is_empty():
+		DB_MANAGER.execute_batch(slot_update_sqls)
 
 	print("  ✓ Pass 3: Created %d citizens with legal guardians and matched jobs." % (current_resident_id - 1))
 	audit_generated_jobs_by_education()

@@ -673,7 +673,7 @@ static func _generate_citizens_and_demographics(physical_state: Dictionary, rng:
 	for slot in open_job_slots:
 		var c: String = slot["cat"]
 		if not jobs_by_cat.has(c):
-			var arr: Array[Dictionary] = []
+			var _arr: Array[Dictionary] = []
 			jobs_by_cat[c] = []
 		jobs_by_cat[c].append(slot)
 

@@ -28,6 +28,7 @@ static func run(
 	var dist_inserts: Array[String] = []
 	var estab_inserts: Array[String] = []
 	var household_inserts: Array[String] = []
+	var job_slot_inserts: Array[String] = []
 
 	var by_cat: Dictionary = {}
 	var commercial_instances_by_type: Dictionary = {}
@@ -37,6 +38,7 @@ static func run(
 
 	var est_id: int = 1
 	var current_household_id: int = 1
+	var current_slot_id: int = 1
 	var block_idx: int = 0
 
 	var block_estimates: Dictionary = {}
@@ -98,8 +100,13 @@ static func run(
 			""" % [est_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			_register_est_cat(by_cat, cat_name, est_id, dist_id)
-			# Single authoritative expansion (NO duplicate append loop!)
-			expand_staffing_slots(available_job_slots, est_id, dist_id, cat_name, inst, job_definitions, rng)
+			_register_est_cat(by_cat, "CIVIC", est_id, dist_id)
+			
+			current_slot_id = expand_staffing_slots(
+				available_job_slots, job_slot_inserts, current_slot_id,
+				est_id, dist_id, cat_name, cat_id,
+				inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+			)
 			est_id += 1
 
 		# 2. Sub-Block Embedded Civics placed in Pass 1
@@ -120,8 +127,13 @@ static func run(
 				""" % [est_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
 				_register_est_cat(by_cat, c_cat_name, est_id, dist_id)
-				# Single authoritative expansion (NO duplicate append loop!)
-				expand_staffing_slots(available_job_slots, est_id, dist_id, c_cat_name, c_inst, job_definitions, rng)
+				_register_est_cat(by_cat, "CIVIC", est_id, dist_id)
+
+				current_slot_id = expand_staffing_slots(
+					available_job_slots, job_slot_inserts, current_slot_id,
+					est_id, dist_id, c_cat_name, c_cat_id,
+					c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+				)
 				est_id += 1
 
 		# 3. Units from building_allocations
@@ -233,9 +245,12 @@ static func run(
 					_register_est_cat(by_cat, cat_code, est_id, dist_id)
 					_register_est_cat(by_cat, "COMMERCIAL", est_id, dist_id)
 
-					# Single authoritative expansion (NO duplicate loop!)
 					if is_vacant == 0:
-						expand_staffing_slots(available_job_slots, est_id, dist_id, "COMMERCIAL", tenancy, job_definitions, rng)
+						current_slot_id = expand_staffing_slots(
+							available_job_slots, job_slot_inserts, current_slot_id,
+							est_id, dist_id, "COMMERCIAL", cat_id,
+							tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+						)
 
 					est_id += 1
 
@@ -258,8 +273,11 @@ static func run(
 					_register_est_cat(by_cat, i_code, est_id, dist_id)
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
 
-					# Single authoritative expansion (NO duplicate loop!)
-					expand_staffing_slots(available_job_slots, est_id, dist_id, "INDUSTRIAL", ind_tenancy, job_definitions, rng)
+					current_slot_id = expand_staffing_slots(
+						available_job_slots, job_slot_inserts, current_slot_id,
+						est_id, dist_id, "INDUSTRIAL", i_cat_id,
+						ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+					)
 					est_id += 1
 
 		# Batch commit every 25 districts
@@ -267,13 +285,15 @@ static func run(
 			DB_MANAGER.execute_batch(dist_inserts)
 			DB_MANAGER.execute_batch(estab_inserts)
 			DB_MANAGER.execute_batch(household_inserts)
+			DB_MANAGER.execute_batch(job_slot_inserts)
 			dist_inserts.clear()
 			estab_inserts.clear()
 			household_inserts.clear()
+			job_slot_inserts.clear()
 
 			if on_progress.is_valid():
 				var pct: float = 20.0 + ((float(block_idx) / float(districts.size())) * 30.0)
-				on_progress.call(pct, 100.0, "Physical Premises: %d / %d blocks (%d units)" % [block_idx, districts.size(), est_id - 1])
+				on_progress.call(pct, 100.0, "Physical Premises: %d / %d blocks (%d units, %d slots)" % [block_idx, districts.size(), est_id - 1, current_slot_id - 1])
 				await Engine.get_main_loop().process_frame
 
 		block_idx += 1
@@ -284,6 +304,8 @@ static func run(
 		DB_MANAGER.execute_batch(estab_inserts)
 	if not household_inserts.is_empty():
 		DB_MANAGER.execute_batch(household_inserts)
+	if not job_slot_inserts.is_empty():
+		DB_MANAGER.execute_batch(job_slot_inserts)
 
 	print("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
 		est_id - 1, current_household_id - 1, available_job_slots.size()
@@ -297,18 +319,24 @@ static func run(
 		"available_job_slots": available_job_slots
 	}
 
-## Single authoritative staffing generator: unrolls master job definitions with overrides
+## Single authoritative staffing generator: unrolls master job definitions, records DB rows, and queues slot tracking
 static func expand_staffing_slots(
-	slots_array: Array[Dictionary], 
-	estab_id: int, 
-	dist_id: String, 
-	category_code: String, 
-	host_def: Dictionary, 
+	slots_array: Array[Dictionary],
+	sql_inserts: Array[String],
+	starting_slot_id: int,
+	estab_id: int,
+	dist_id: String,
+	category_code: String,
+	cat_label_id: int,
+	host_def: Dictionary,
 	job_definitions: Dictionary,
+	sim_start_day: int,
+	reason_id: int,
 	rng: RandomNumberGenerator
-) -> void:
+) -> int:
 	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
 	var estab_bonus: float = float(host_def.get("wage_bonus", 0.0))
+	var next_slot_id: int = starting_slot_id
 
 	# 1. Multi-role detailed roster
 	if host_def.has("staffing_roster"):
@@ -320,7 +348,12 @@ static func expand_staffing_slots(
 			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "NO_FORMAL")))
 			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
 			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
+			var contract_type_code: String = str(item.get("contract_type", master_job.get("contract_type", "STANDARD")))
+			var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", contract_type_code)
 
+			var schedule_code: String = str(item.get("schedule_window", master_job.get("schedule_window", "DAYTIME")))
+			var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", schedule_code)
+			
 			var resolved_rate: float = 3.50
 			if item.has("hourly_rate"):
 				resolved_rate = float(item["hourly_rate"])
@@ -336,16 +369,51 @@ static func expand_staffing_slots(
 			var count_range: Array = item.get("target_count", [1, 1])
 			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
 
+			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", job_code)
+			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
+			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
+
 			for _i in range(count):
+				var slot_id: int = next_slot_id
+				next_slot_id += 1
+
+				sql_inserts.append("""
+					INSERT INTO workplace_job_slots (
+						slot_id, establishment_id, sector_category_id, role_title_id,
+						contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
+						weekly_hours, hourly_rate, is_field_worker,
+						is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+					) VALUES (
+						%d, %d, %d, %d,
+						%d, %d, %d, %d,
+						%.1f, %.2f, %d,
+						0, NULL, %d, NULL, %d
+					);
+				""" % [
+					slot_id, estab_id, cat_label_id, role_id,
+					class_id, contract_type_id, edu_id, schedule_id,
+					hours, resolved_rate, 1 if is_field else 0,
+					sim_start_day, reason_id
+				])
+
 				slots_array.append({
+					"slot_id": slot_id,
 					"estab_id": estab_id,
 					"district_id": dist_id,
 					"cat": category_code,
+					"cat_id": cat_label_id,
 					"role": job_code,
+					"role_id": role_id,
 					"contract_class": contract_class,
+					"contract_class_id": class_id,
+					"contract_type": contract_type_code,
+					"contract_type_id": contract_type_id,
 					"edu_req": edu_req,
+					"edu_id": edu_id,
 					"rate": resolved_rate,
 					"hours": hours,
+					"schedule_window": schedule_code,
+					"schedule_window_id": schedule_id,
 					"is_field_worker": is_field
 				})
 
@@ -359,20 +427,59 @@ static func expand_staffing_slots(
 		var default_edu: String = str(master.get("education_required", "NO_FORMAL"))
 		var default_hours: float = float(master.get("weekly_hours", 37.5))
 		var r_range: Array = master.get("hourly_rate_range", [3.20, 3.80])
+
+		var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", fallback_job)
+		var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", "FORMAL_LEGAL")
+		var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
+		var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
+		var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 		
 		for _i in range(count):
+			var slot_id: int = next_slot_id
+			next_slot_id += 1
 			var rate: float = snappedf(rng.randf_range(float(r_range[0]), float(r_range[1])) * estab_multiplier, 0.05)
+
+			sql_inserts.append("""
+				INSERT INTO workplace_job_slots (
+					slot_id, establishment_id, sector_category_id, role_title_id,
+					contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
+					weekly_hours, hourly_rate, is_field_worker,
+					is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, %d, %d, %d,
+					%d, %d, %d, %d,
+					%.1f, %.2f, 0,
+					0, NULL, %d, NULL, %d
+				);
+			""" % [
+				slot_id, estab_id, cat_label_id, role_id,
+				class_id, contract_type_id, edu_id, schedule_id,
+				default_hours, rate,
+				sim_start_day, reason_id
+			])
+
 			slots_array.append({
+				"slot_id": slot_id,
 				"estab_id": estab_id,
 				"district_id": dist_id,
 				"cat": category_code,
+				"cat_id": cat_label_id,
 				"role": fallback_job,
+				"role_id": role_id,
 				"contract_class": "FORMAL_LEGAL",
+				"contract_class_id": class_id,
+				"contract_type": "STANDARD",
+				"contract_type_id": contract_type_id,
 				"edu_req": default_edu,
+				"edu_id": edu_id,
 				"rate": rate,
 				"hours": default_hours,
+				"schedule_window": "DAYTIME",
+				"schedule_window_id": schedule_id,
 				"is_field_worker": false
 			})
+
+	return next_slot_id
 
 static func pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionary, secondary_classes: Dictionary, district_type: String) -> Dictionary:
 	var pool: Array[Dictionary] = []

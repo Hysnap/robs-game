@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://cpcanvwixxdbs"]
+
+[ext_resource type="Script" uid="uid://bx2j1vvhp2lof" path="res://scenes/ui/hud/game_hud.gd" id="1_hud_script"]
+
+[node name="GameHUD" type="CanvasLayer" unique_id=1143810237]
+layer = 10
+script = ExtResource("1_hud_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=865129172]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer" unique_id=1567565198]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="HBoxLeft" type="HBoxContainer" parent="MarginContainer/TopBar" unique_id=396753982]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnMainMenu" type="Button" parent="MarginContainer/TopBar/HBoxLeft" unique_id=770246759]
+custom_minimum_size = Vector2(170, 38)
+layout_mode = 2
+text = "CITY_VIEW_BTN_MAIN_MENU"
+
+[node name="BtnFilofax" type="Button" parent="MarginContainer/TopBar/HBoxLeft" unique_id=516733754]
+custom_minimum_size = Vector2(180, 38)
+layout_mode = 2
+text = "📖 FILOFAX (TAB)"
+
+[node name="BtnMessagesAlert" type="Button" parent="MarginContainer/TopBar/HBoxLeft"]
+visible = false
+custom_minimum_size = Vector2(170, 38)
+layout_mode = 2
+text = "📝 INBOX (0)"
+
+[node name="HBoxRight" type="HBoxContainer" parent="MarginContainer/TopBar" unique_id=1368327258]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="LblDateTick" type="Label" parent="MarginContainer/TopBar/HBoxRight" unique_id=1376666574]
+layout_mode = 2
+text = "YR 1984 | WK 01 | DAY 1"
+
+[node name="BottomBar" type="HBoxContainer" parent="MarginContainer" unique_id=1438398346]
+layout_mode = 2
+size_flags_vertical = 8
+mouse_filter = 2
+
+[node name="LblTickerStatus" type="Label" parent="MarginContainer/BottomBar" unique_id=1664278594]
+layout_mode = 2
+text = "DISPATCH: Grid communications operational."

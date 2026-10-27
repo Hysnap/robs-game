@@ -163,7 +163,7 @@ static func pick_nearest_anchor(by_cat: Dictionary, requested_category: String, 
 
 	return best_id
 
-## Samples candidate job slots and picks one using probabilistic distance decay relative to max_commute
+## Samples candidate job slots and picks one using education qualification and optional commute distance decay
 static func pick_commute_matched_slot(
 	slots_array: Array,
 	worker_home_pos: Vector2,
@@ -171,20 +171,19 @@ static func pick_commute_matched_slot(
 	districts: Dictionary,
 	job_defs: Dictionary,
 	rng: RandomNumberGenerator,
+	enable_commute_decay: bool = true,
 	sample_size: int = 20
 ) -> Dictionary:
 	if slots_array.is_empty():
 		return {}
 
-	# If pool is small, evaluate all; otherwise sample a diverse subset for performance
 	var candidates: Array[Dictionary] = []
 	var candidate_indices: Array[int] = []
 
 	# Scan for education-eligible slots
 	var attempts := 0
-	var max_scan: int = mini(slots_array.size(), 60)
-	
-	# If small pool, check all; else sample
+	var max_scan: int = mini(slots_array.size(), 80)
+
 	if slots_array.size() <= max_scan:
 		for i in range(slots_array.size()):
 			var s: Dictionary = slots_array[i]
@@ -205,11 +204,31 @@ static func pick_commute_matched_slot(
 					candidates.append(s)
 					candidate_indices.append(idx)
 
-	# If no education-eligible slot was found in the sample, return empty (triggers fallback/unemployment)
+	# If random sampling didn't find an eligible job, do a linear scan from a random start point
+	if candidates.is_empty():
+		var start_offset: int = rng.randi() % slots_array.size()
+		for offset in range(mini(slots_array.size(), 100)):
+			var i: int = (start_offset + offset) % slots_array.size()
+			var s: Dictionary = slots_array[i]
+			var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
+			if is_education_eligible(citizen_edu_code, req_edu):
+				candidates.append(s)
+				candidate_indices.append(i)
+				if candidates.size() >= sample_size:
+					break
+
 	if candidates.is_empty():
 		return {}
 
-	# Calculate distance weights
+	# If commute distances are disabled, pick uniformly from eligible candidates
+	if not enable_commute_decay:
+		var pick_idx: int = rng.randi() % candidate_indices.size()
+		var chosen_slot_global_idx: int = candidate_indices[pick_idx]
+		var chosen_slot: Dictionary = slots_array[chosen_slot_global_idx]
+		slots_array.remove_at(chosen_slot_global_idx)
+		return chosen_slot
+
+	# Calculate distance decay weights
 	var weights: Array[float] = []
 	var total_weight: float = 0.0
 
@@ -217,12 +236,12 @@ static func pick_commute_matched_slot(
 		var job_code: String = str(slot.get("role", ""))
 		var master_job: Dictionary = job_defs.get(job_code, {})
 		var max_commute: float = float(master_job.get("max_commute", master_job.get("max_commute_m", 3000.0)))
-		
+
 		var est_dist_id: String = str(slot.get("district_id", ""))
 		var d: float = 0.0
 		if districts.has(est_dist_id):
 			d = distance_to_district_edge(worker_home_pos, districts[est_dist_id])
-		
+
 		var w: float = 1.0
 		if d <= max_commute:
 			w = exp(-1.2 * (d / max(100.0, max_commute)))

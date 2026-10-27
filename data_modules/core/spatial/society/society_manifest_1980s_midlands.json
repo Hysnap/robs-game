@@ -5,6 +5,15 @@
     "region": "West Midlands, UK",
     "description": "Master society manifest linking all demographic, cultural, civic, housing, and lexical modules."
   },
+  "inbox_rules": {
+    "presentation_order": "ISSUED_ORDER",
+    "max_visible_stack": 4,
+    "max_rotation_degrees": 45.0
+  },
+  "market_rules": {
+    "supplier_stock_mode": "INFINITE_SUPPLY",
+    "third_party_funds_mode": "FINITE_LIQUIDITY"
+  },
   "modules": {
     "archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
     "demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
