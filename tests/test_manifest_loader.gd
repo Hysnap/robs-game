@@ -39,8 +39,8 @@ func _init() -> void:
 	])
 
 	var civic := MANIFEST_MGR.load_module("civic_hierarchy")
-	assert(civic.has("civic_institutions"), "FAILED: Civic hierarchy missing 'civic_institutions'!")
-	print("  ✓ Civic hierarchy verified: %d institutional profiles loaded." % civic["civic_institutions"].size())
+	assert(civic.has("hierarchy_scales"), "FAILED: Civic hierarchy missing 'hierarchy_scales'!")
+	print("  ✓ Civic hierarchy verified: %d institutional profiles loaded." % civic["hierarchy_scales"].size())
 
 	# 5. Verify In-Memory Caching (Second load must return cached reference)
 	var demo_cached := MANIFEST_MGR.load_module("demographics")

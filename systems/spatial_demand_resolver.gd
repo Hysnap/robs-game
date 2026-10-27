@@ -15,116 +15,7 @@ const EDU_TIER_RANK: Dictionary = {
 	"UNIVERSITY_DEGREE": 4
 }
 
-## Evaluates whether an additional facility/tenancy can be supported at 'center_pos'
-static func is_catchment_viable(
-	center_pos: Vector2,
-	existing_instance_positions: Array,
-	districts: Dictionary,
-	block_estimates: Dictionary,
-	travel_dist_m: float,
-	pop_ratio: float
-) -> bool:
-	# 1. Count how many of THIS same facility exist within travel catchment
-	var existing_count: int = 0
-	for p in existing_instance_positions:
-		if (p as Vector2).distance_to(center_pos) <= travel_dist_m:
-			existing_count += 1
-
-	# If none exist nearby, it is always viable
-	if existing_count == 0:
-		return true
-
-	# 2. Sum resident population living within this catchment radius
-	var local_pop: float = 0.0
-	for d_id in districts.keys():
-		var d_pos = _resolve_vector2(districts[d_id].get("spatial_anchor", Vector2.ZERO))
-		if center_pos.distance_to(d_pos) <= travel_dist_m:
-			local_pop += float(block_estimates.get(d_id, 0.0))
-
-	# 3. Viable if local population supports (N + 1) facilities
-	var required_pop: float = float(existing_count + 1) * pop_ratio
-	return local_pop >= required_pop
-
-
-## Scores and picks the best host district from world_state for a given placement rule
-static func find_best_host_district(
-	districts: Dictionary,
-	block_estimates: Dictionary,
-	placed_coords_for_this_type: Array,
-	spec: Dictionary,
-	max_city_radius_m: float
-) -> Dictionary:
-	var candidates: Array[Dictionary] = []
-	# var req_sqm: float = float(spec.get("footprint_sqm", 1600.0))
-	var travel_dist: float = float(spec.get("travel_dist_m", 750.0))
-	var pop_ratio: float = float(spec.get("pop_ratio", 1500.0))
-	var min_sep: float = float(spec.get("min_sep_m", 0.0))
-	var dist_range: Array = spec.get("norm_dist_range", [0.0, 1.0])
-	var allowed_sectors: Array = spec.get("allowed_sectors", [])
-	var forbidden_types: Array = spec.get("forbidden_types", [])
-	var prefer_vacant: bool = bool(spec.get("prefer_vacant", true))
-	var type_code: String = str(spec.get("code", ""))
-
-	for dist_id in districts.keys():
-		var d: Dictionary = districts[dist_id]
-		var dtype: String = str(d.get("district_type", ""))
-		var sector: String = str(d.get("initial_sector", d.get("sector_class", ""))).to_upper()
-
-		# 1. Immediate skips: already repurposed or forbidden
-		if dtype in forbidden_types or bool(d.get("is_repurposed_civic", false)):
-			continue
-		if d.has("embedded_civics") and type_code in d["embedded_civics"]:
-			continue
-
-		# 2. Vacancy check: Vacant plots are universally available regardless of starting sector
-		var is_vacant: bool = bool(d.get("is_initially_vacant", false)) or int(d.get("actual_building_count", 0)) == 0
-
-		# 3. If occupied, enforce sector zoning restrictions; if vacant, permit universally
-		if not is_vacant:
-			if not allowed_sectors.is_empty() and not allowed_sectors.has(sector):
-				continue
-
-		var center: Vector2 = _resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
-		var norm_d: float = center.length() / max(1.0, max_city_radius_m)
-		if norm_d < float(dist_range[0]) or norm_d > float(dist_range[1]):
-			continue
-
-		# 4. Physical separation check
-		if min_sep > 0.0:
-			var too_close := false
-			for c in placed_coords_for_this_type:
-				if center.distance_to(c) < min_sep:
-					too_close = true
-					break
-			if too_close:
-				continue
-
-		# 5. Catchment Population Check
-		if not is_catchment_viable(center, placed_coords_for_this_type, districts, block_estimates, travel_dist, pop_ratio):
-			continue
-
-		# 6. Scoring: Vacant plots get top priority (-1000.0)
-		var b_count: int = int(d.get("actual_building_count", 0))
-		var est_p: float = float(block_estimates.get(dist_id, 0.0))
-		var dev_score: float = -1000.0 if (is_vacant and prefer_vacant) else (float(b_count * 10) + est_p)
-
-		candidates.append({
-			"dist_id": dist_id,
-			"dev_score": dev_score,
-			"center": center,
-			"is_vacant": is_vacant,
-			"est_pop": est_p,
-			"area_sqm": float(d.get("area_sqm", 40000.0))
-		})
-
-	if candidates.is_empty():
-		return {}
-
-	# Lowest development score wins
-	candidates.sort_custom(func(a, b): return a["dev_score"] < b["dev_score"])
-	return candidates[0]
-
-
+## Universal helper to resolve spatial coordinates regardless of whether they are Vector2, Vector2i, Array, or String
 static func _resolve_vector2(val: Variant) -> Vector2:
 	if val is Vector2:
 		return val
@@ -138,6 +29,130 @@ static func _resolve_vector2(val: Variant) -> Vector2:
 		if parts.size() >= 2:
 			return Vector2(float(parts[0]), float(parts[1]))
 	return Vector2.ZERO
+
+## Evaluates whether an additional facility/tenancy can be supported at 'center_pos'
+static func is_catchment_viable(
+	center_pos: Vector2,
+	existing_instance_positions: Array,
+	districts: Dictionary,
+	block_estimates: Dictionary,
+	travel_dist_m: float,
+	pop_ratio: float
+) -> bool:
+	var existing_count: int = 0
+	for p in existing_instance_positions:
+		if (p as Vector2).distance_to(center_pos) <= travel_dist_m:
+			existing_count += 1
+
+	if existing_count == 0:
+		return true
+
+	var local_pop: float = 0.0
+	for d_id in districts.keys():
+		var d_pos: Vector2 = _resolve_vector2(districts[d_id].get("spatial_anchor", Vector2.ZERO))
+		if center_pos.distance_to(d_pos) <= travel_dist_m:
+			local_pop += float(block_estimates.get(d_id, 0.0))
+
+	var required_pop: float = float(existing_count + 1) * pop_ratio
+	return local_pop >= required_pop
+
+## Scores and picks the best host district from world_state for a given placement rule
+static func find_best_host_district(
+	districts: Dictionary,
+	block_estimates: Dictionary,
+	placed_coords_for_this_type: Array,
+	spec: Dictionary,
+	max_city_radius_m: float
+) -> Dictionary:
+	var candidates: Array[Dictionary] = []
+	var travel_dist: float = float(spec.get("travel_dist_m", 750.0))
+	var pop_ratio: float = float(spec.get("pop_ratio", 1500.0))
+	var min_sep: float = float(spec.get("min_sep_m", 0.0))
+	var dist_range: Array = spec.get("norm_dist_range", [0.0, 1.0])
+	var allowed_sectors: Array = spec.get("allowed_sectors", [])
+	var forbidden_types: Array = spec.get("forbidden_types", [])
+	var prefer_vacant: bool = bool(spec.get("prefer_vacant", true))
+	var type_code: String = str(spec.get("code", ""))
+
+	var cfg = ScenarioManifestManager.get_city_configuration()
+	var default_area: float = 40000.0
+	if cfg and "block_size" in cfg:
+		var bs: float = float(cfg.get("block_size"))
+		default_area = bs * bs
+
+	for dist_id in districts.keys():
+		var d: Dictionary = districts[dist_id]
+		var dtype: String = str(d.get("district_type", ""))
+		var sector: String = str(d.get("initial_sector", d.get("sector_class", ""))).to_upper()
+
+		if dtype in forbidden_types or bool(d.get("is_repurposed_civic", false)):
+			continue
+		if d.has("embedded_civics") and type_code in d["embedded_civics"]:
+			continue
+
+		var is_vacant: bool = bool(d.get("is_initially_vacant", false)) or int(d.get("actual_building_count", 0)) == 0
+
+		if not is_vacant:
+			if not allowed_sectors.is_empty() and not allowed_sectors.has(sector):
+				continue
+
+		var center: Vector2 = _resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		var norm_d: float = center.length() / max(1.0, max_city_radius_m)
+		if norm_d < float(dist_range[0]) or norm_d > float(dist_range[1]):
+			continue
+
+		if min_sep > 0.0:
+			var too_close := false
+			for c in placed_coords_for_this_type:
+				if center.distance_to(c) < min_sep:
+					too_close = true
+					break
+			if too_close:
+				continue
+
+		if not is_catchment_viable(center, placed_coords_for_this_type, districts, block_estimates, travel_dist, pop_ratio):
+			continue
+
+		var b_count: int = int(d.get("actual_building_count", 0))
+		var est_p: float = float(block_estimates.get(dist_id, 0.0))
+		var dev_score: float = -1000.0 if (is_vacant and prefer_vacant) else (float(b_count * 10) + est_p)
+
+		candidates.append({
+			"dist_id": dist_id,
+			"dev_score": dev_score,
+			"center": center,
+			"is_vacant": is_vacant,
+			"est_pop": est_p,
+			"area_sqm": float(d.get("area_sqm", default_area))
+		})
+
+	if candidates.is_empty():
+		return {}
+
+	candidates.sort_custom(func(a, b): return a["dev_score"] < b["dev_score"])
+	return candidates[0]
+
+## Calculates the true minimum distance from a point to the nearest perimeter edge of a district block
+static func distance_to_district_edge(from_pos: Vector2, district_data: Dictionary) -> float:
+	var center: Vector2 = _resolve_vector2(district_data.get("spatial_anchor", district_data.get("center", Vector2.ZERO)))
+	
+	var cfg = ScenarioManifestManager.get_city_configuration()
+	var default_half: float = (float(cfg.get("block_size")) * 0.5) if (cfg and "block_size" in cfg) else 100.0
+	var half_w: float = default_half
+	var half_h: float = default_half
+
+	if district_data.has("size"):
+		var sz = district_data["size"]
+		if sz is Array and sz.size() >= 2:
+			half_w = float(sz[0]) * 0.5
+			half_h = float(sz[1]) * 0.5
+		elif sz is Vector2:
+			half_w = sz.x * 0.5
+			half_h = sz.y * 0.5
+
+	var closest_x: float = clampf(from_pos.x, center.x - half_w, center.x + half_w)
+	var closest_z: float = clampf(from_pos.y, center.y - half_h, center.y + half_h)
+	return from_pos.distance_to(Vector2(closest_x, closest_z))
 
 ## Matches a resident to the nearest available establishment in by_cat[category]
 static func pick_nearest_anchor(by_cat: Dictionary, requested_category: String, resident_pos: Vector2, districts: Dictionary) -> int:
@@ -163,6 +178,11 @@ static func pick_nearest_anchor(by_cat: Dictionary, requested_category: String, 
 
 	return best_id
 
+static func is_education_eligible(citizen_edu: String, required_edu: String) -> bool:
+	var citizen_rank: int = int(EDU_TIER_RANK.get(citizen_edu, 0))
+	var required_rank: int = int(EDU_TIER_RANK.get(required_edu, 0))
+	return citizen_rank >= required_rank
+
 ## Samples candidate job slots and picks one using education qualification and optional commute distance decay
 static func pick_commute_matched_slot(
 	slots_array: Array,
@@ -180,7 +200,6 @@ static func pick_commute_matched_slot(
 	var candidates: Array[Dictionary] = []
 	var candidate_indices: Array[int] = []
 
-	# Scan for education-eligible slots
 	var attempts := 0
 	var max_scan: int = mini(slots_array.size(), 80)
 
@@ -204,7 +223,6 @@ static func pick_commute_matched_slot(
 					candidates.append(s)
 					candidate_indices.append(idx)
 
-	# If random sampling didn't find an eligible job, do a linear scan from a random start point
 	if candidates.is_empty():
 		var start_offset: int = rng.randi() % slots_array.size()
 		for offset in range(mini(slots_array.size(), 100)):
@@ -220,7 +238,6 @@ static func pick_commute_matched_slot(
 	if candidates.is_empty():
 		return {}
 
-	# If commute distances are disabled, pick uniformly from eligible candidates
 	if not enable_commute_decay:
 		var pick_idx: int = rng.randi() % candidate_indices.size()
 		var chosen_slot_global_idx: int = candidate_indices[pick_idx]
@@ -228,7 +245,6 @@ static func pick_commute_matched_slot(
 		slots_array.remove_at(chosen_slot_global_idx)
 		return chosen_slot
 
-	# Calculate distance decay weights
 	var weights: Array[float] = []
 	var total_weight: float = 0.0
 
@@ -267,27 +283,3 @@ static func pick_commute_matched_slot(
 
 	slots_array.remove_at(chosen_slot_global_idx)
 	return chosen_slot
-
-static func is_education_eligible(citizen_edu: String, required_edu: String) -> bool:
-	var citizen_rank: int = int(EDU_TIER_RANK.get(citizen_edu, 0))
-	var required_rank: int = int(EDU_TIER_RANK.get(required_edu, 0))
-	return citizen_rank >= required_rank
-
-## Calculates the true minimum distance from a point to the nearest perimeter edge of a district block
-static func distance_to_district_edge(from_pos: Vector2, district_data: Dictionary) -> float:
-	var center: Vector2 = _resolve_vector2(district_data.get("spatial_anchor", district_data.get("center", Vector2.ZERO)))
-	
-	var half_w: float = 100.0
-	var half_h: float = 100.0
-	if district_data.has("size"):
-		var sz = district_data["size"]
-		if sz is Array and sz.size() >= 2:
-			half_w = float(sz[0]) * 0.5
-			half_h = float(sz[1]) * 0.5
-		elif sz is Vector2:
-			half_w = sz.x * 0.5
-			half_h = sz.y * 0.5
-
-	var closest_x: float = clampf(from_pos.x, center.x - half_w, center.x + half_w)
-	var closest_z: float = clampf(from_pos.y, center.y - half_h, center.y + half_h)
-	return from_pos.distance_to(Vector2(closest_x, closest_z))

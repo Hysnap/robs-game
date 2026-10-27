@@ -15,6 +15,7 @@
     "third_party_funds_mode": "FINITE_LIQUIDITY"
   },
   "modules": {
+    "db_labels": "res://data_modules/core/localization/db_labels_en_gb.json",
     "archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
     "demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
     "lexicon": "res://data_modules/core/spatial/society/names.json",

@@ -1,0 +1,47 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "theme_scope": "FILOFAX_STATIONERY"
+  },
+  "sections": {
+    "DIARY": {
+      "icon": "📅",
+      "token": "UI_TAB_MACRO_DIARY",
+      "target_page_name": "DiaryTab",
+      "sub_tabs": [
+        {"token": "UI_SUBTAB_CALENDAR", "action_key": "view_calendar"},
+        {"token": "UI_SUBTAB_DISPATCH_LOG", "action_key": "view_dispatch_log"},
+        {"token": "UI_SUBTAB_FILED_NOTES", "action_key": "view_filed_notes"}
+      ]
+    },
+    "DOSSIER": {
+      "icon": "📁",
+      "token": "UI_TAB_MACRO_DOSSIER",
+      "target_page_name": "TelemetryTab",
+      "sub_tabs": [
+        {"token": "UI_SUBTAB_CENSUS", "action_key": "view_census"},
+        {"token": "UI_SUBTAB_ESTABLISHMENTS", "action_key": "view_establishments"},
+        {"token": "UI_SUBTAB_HEAT", "action_key": "view_heat"}
+      ]
+    },
+    "ROSTER": {
+      "icon": "👥",
+      "token": "UI_TAB_MACRO_ROSTER",
+      "target_page_name": "RosterTab",
+      "sub_tabs": [
+        {"token": "UI_SUBTAB_ACTIVE_AGENTS", "action_key": "view_agents"},
+        {"token": "UI_SUBTAB_CONDUCT_LOGS", "action_key": "view_conduct"}
+      ]
+    },
+    "FINANCE": {
+      "icon": "💷",
+      "token": "UI_TAB_MACRO_FINANCE",
+      "target_page_name": "FinancialsTab",
+      "sub_tabs": [
+        {"token": "UI_SUBTAB_VAULT_LEDGER", "action_key": "view_vault"},
+        {"token": "UI_SUBTAB_CASHBOOK", "action_key": "view_cashbook"},
+        {"token": "UI_SUBTAB_EXPENSE_RECEIPTS", "action_key": "view_receipts"}
+      ]
+    }
+  }
+}

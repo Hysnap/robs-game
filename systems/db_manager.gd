@@ -8,19 +8,28 @@ const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 const TAXONOMY_HARVESTER = preload("res://systems/taxonomy_harvester.gd")
 
 static var _db = null
+static var active_db_path: String = ""
 static var _label_cache: Dictionary = {} # "DOMAIN:CODE" -> label_id
 
 ## Initializes connection and builds the relational society schema
-static func initialize_database(reset_existing: bool = false) -> bool:
-	if _db != null and not reset_existing:
+static func initialize_database(reset_existing: bool = false, custom_path: String = "") -> bool:
+	var target_path: String = custom_path
+	if target_path.is_empty():
+		target_path = active_db_path if not active_db_path.is_empty() else DB_PATH
+
+	if _db != null and active_db_path == target_path and not reset_existing:
 		return true
+
+	if _db != null:
+		close_database()
 
 	if not ClassDB.class_exists("SQLite"):
 		push_error("[DBManager CRITICAL] 'SQLite' class not found! Is 2shady4u godot-sqlite enabled?")
 		return false
 
+	active_db_path = target_path
 	_db = ClassDB.instantiate("SQLite")
-	var absolute_path: String = ProjectSettings.globalize_path(DB_PATH)
+	var absolute_path: String = ProjectSettings.globalize_path(active_db_path)
 	_db.path = absolute_path
 	_db.foreign_keys = true
 
@@ -42,7 +51,7 @@ static func initialize_database(reset_existing: bool = false) -> bool:
 	# -------------------------------------------------------------
 	# 1. Ingest Core Engine Labels (GENDER, CHANGE_REASON, CONTRACT_CLASS, RELATIONSHIP_TYPE)
 	# -------------------------------------------------------------
-	populate_core_system_labels("res://data_modules/core/localization/db_labels_en_gb.json")
+	populate_core_system_labels()
 
 	# -------------------------------------------------------------
 	# 2. Harvest Scenario Content Labels (RESIDENCE_TYPE, ETHNICITY, RELIGION, EDUCATION, ROLES)
@@ -529,7 +538,20 @@ static func _create_society_schema() -> void:
 	_db.query("CREATE INDEX IF NOT EXISTS idx_slots_cat ON workplace_job_slots(sector_category_id);")
 
 ## 1. Populates core engine labels from external localized JSON dictionary
-static func populate_core_system_labels(labels_file_path: String = "res://data_modules/core/localization/db_labels_en_gb.json") -> void:
+static func populate_core_system_labels(custom_labels_path: String = "") -> void:
+	var labels_file_path: String = custom_labels_path
+	
+	if labels_file_path.is_empty():
+		if MANIFEST_MANAGER.has_module("db_labels"):
+			labels_file_path = MANIFEST_MANAGER.get_module_path("db_labels")
+		else:
+			# Fallback to business_rules.cfg [localization] default_db_labels
+			var cfg := ConfigFile.new()
+			if cfg.load(MANIFEST_MANAGER.BUSINESS_RULES_PATH) == OK:
+				labels_file_path = cfg.get_value("localization", "default_db_labels", "res://data_modules/core/localization/db_labels_en_gb.json")
+			else:
+				labels_file_path = "res://data_modules/core/localization/db_labels_en_gb.json"
+
 	assert(FileAccess.file_exists(labels_file_path), "FATAL: Core system label dictionary missing: %s" % labels_file_path)
 	var file := FileAccess.open(labels_file_path, FileAccess.READ)
 	assert(file != null, "FATAL: Could not read core label dictionary: %s" % labels_file_path)
@@ -687,7 +709,7 @@ static func get_metadata(key: String, default_value: String = "") -> String:
 static func record_active_seed(seed_id: String) -> void:
 	set_metadata("active_seed", seed_id)
 
-## Closes the active database connection cleanly
+## Clean shutdown of the open database channel
 static func close_database() -> void:
 	if _db != null:
 		_db.close_db()

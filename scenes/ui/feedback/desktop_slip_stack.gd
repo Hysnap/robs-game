@@ -1,4 +1,3 @@
-# res://scenes/ui/feedback/desktop_slip_stack.gd
 class_name DesktopSlipStack
 extends PanelContainer
 
@@ -18,7 +17,6 @@ var _pending_slips: Array[Dictionary] = []
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 
-# Manifest configuration defaults
 var _presentation_order: String = "ISSUED_ORDER"
 var _max_visible_stack: int = 4
 var _max_rotation_degrees: float = 45.0
@@ -39,9 +37,7 @@ func _ready() -> void:
 		close_btn.pressed.connect(func(): visible = false)
 	_refresh_display()
 
-## Loads inbox rules from the scenario manifest via ScenarioManifestManager
 func _load_manifest_rules() -> void:
-	# Safe check: ScenarioManifestManager is globally registered
 	if ClassDB.class_exists("ScenarioManifestManager"):
 		var manifest: Dictionary = ScenarioManifestManager.get_manifest()
 		var rules: Dictionary = manifest.get("inbox_rules", {})
@@ -51,10 +47,8 @@ func _load_manifest_rules() -> void:
 
 func push_slips(slips: Array) -> void:
 	_load_manifest_rules()
-	
 	var new_batch: Array = slips.duplicate()
 
-	# 1. Apply Manifest Presentation Order Rule
 	match _presentation_order:
 		"ISSUED_ORDER":
 			new_batch.sort_custom(func(a, b): 
@@ -67,7 +61,6 @@ func push_slips(slips: Array) -> void:
 		"RANDOM":
 			new_batch.shuffle()
 
-	# 2. Assign procedural physical traits (persistent across redraws)
 	for slip in new_batch:
 		if not slip.has("slip_style"):
 			var keys := SLIP_PALETTES.keys()
@@ -104,12 +97,9 @@ func _refresh_display() -> void:
 	empty_lbl.visible = false
 	card_slot.visible = true
 
-	# Render up to _max_visible_stack slips
 	var visible_count: int = mini(_max_visible_stack, _pending_slips.size())
 	
-	# Godot renders lowest child index first.
-	# We render from deepest card (visible_count - 1) down to top card (0),
-	# so that index 0 is rendered last and sits on top of the pile!
+	# Render deepest index first; index 0 renders last on top
 	for i in range(visible_count - 1, -1, -1):
 		var slip: Dictionary = _pending_slips[i]
 		var is_top_card: bool = (i == 0)
@@ -121,24 +111,20 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
 
 	var card := PanelContainer.new()
-	var card_w: float = 260.0
-	var card_h: float = 230.0
+	var card_w: float = 270.0
+	var card_h: float = 240.0
 	card.custom_minimum_size = Vector2(card_w, card_h)
 	card.size = Vector2(card_w, card_h)
-	
-	# Explicit pivot center for clean angular tilt
 	card.pivot_offset = Vector2(card_w * 0.5, card_h * 0.5)
 	
-	# Center inside CardSlot + apply random tilt and spatial jitter
 	var slot_center := card_slot.size * 0.5
 	if slot_center == Vector2.ZERO:
-		slot_center = Vector2(190, 160) # Fallback to halfway across 380x320 area
+		slot_center = Vector2(190, 160)
 		
 	var jitter: Vector2 = slip.get("jitter_offset", Vector2.ZERO)
 	card.position = slot_center - card.pivot_offset + jitter
 	card.rotation_degrees = float(slip.get("tilt_degrees", 0.0))
 
-	# Non-top cards ignore mouse clicks so only top card is triaged
 	if not is_top:
 		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
@@ -148,14 +134,14 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		bg_color = bg_color.darkened(0.05 * (depth_index + 1))
 	sb.bg_color = bg_color
 	sb.set_corner_radius_all(2)
-	sb.set_content_margin_all(10)
+	sb.set_content_margin_all(8)
 	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.20 if not is_top else 0.35)
 	sb.shadow_size = 6
 	sb.shadow_offset = Vector2(2, 3)
 	card.add_theme_stylebox_override("panel", sb)
 
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_theme_constant_override("separation", 3)
 	if not is_top:
 		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(vbox)
@@ -197,38 +183,52 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	ftr.add_theme_color_override("font_color", palette["ink"].lightened(0.2))
 	vbox.add_child(ftr)
 
-	# 4. Triage Buttons on Top Card
+	# 4. Interactive Destination Routing on Top Slip
 	if is_top:
-		var btn_box := HBoxContainer.new()
-		btn_box.add_theme_constant_override("separation", 8)
+		var routing_box := HBoxContainer.new()
+		routing_box.add_theme_constant_override("separation", 4)
+
+		var dest_opt := OptionButton.new()
+		dest_opt.add_theme_font_override("font", mono_font)
+		dest_opt.add_theme_font_size_override("font_size", 9)
+		dest_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		dest_opt.add_item("📅 DIARY", 0)
+		dest_opt.set_item_metadata(0, "DIARY")
+		dest_opt.add_item("📁 DOSSIER", 1)
+		dest_opt.set_item_metadata(1, "DOSSIER")
+		dest_opt.add_item("👥 ROSTER", 2)
+		dest_opt.set_item_metadata(2, "ROSTER")
+		dest_opt.add_item("💷 ACCOUNTS", 3)
+		dest_opt.set_item_metadata(3, "FINANCE")
+		routing_box.add_child(dest_opt)
 
 		var btn_file := Button.new()
-		btn_file.text = "📌 File in Filofax"
-		btn_file.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_file.text = "📌 File"
 		btn_file.focus_mode = Control.FOCUS_NONE
 		btn_file.add_theme_font_override("font", mono_font)
-		btn_file.add_theme_font_size_override("font_size", 10)
-		btn_file.pressed.connect(_on_file_pressed.bind(slip))
-		btn_box.add_child(btn_file)
+		btn_file.add_theme_font_size_override("font_size", 9)
+		btn_file.pressed.connect(func():
+			var chosen_dest: String = dest_opt.get_selected_metadata()
+			_on_file_pressed(slip, chosen_dest)
+		)
+		routing_box.add_child(btn_file)
 
 		var btn_discard := Button.new()
-		btn_discard.text = "🗑 Tear Off"
-		btn_discard.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn_discard.text = "🗑 Discard"
 		btn_discard.focus_mode = Control.FOCUS_NONE
 		btn_discard.add_theme_font_override("font", mono_font)
-		btn_discard.add_theme_font_size_override("font_size", 10)
+		btn_discard.add_theme_font_size_override("font_size", 9)
 		btn_discard.add_theme_color_override("font_color", Color("#8a1c14"))
 		btn_discard.pressed.connect(_on_discard_pressed.bind(slip))
-		btn_box.add_child(btn_discard)
+		routing_box.add_child(btn_discard)
 
-		vbox.add_child(btn_box)
+		vbox.add_child(routing_box)
 
 	card_slot.add_child(card)
 
-func _on_file_pressed(slip: Dictionary) -> void:
+func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
-	var dest: String = str(slip.get("destination", "team_feedback"))
-	slip_filed.emit(slip, dest)
+	slip_filed.emit(slip, destination)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 

@@ -31,6 +31,10 @@ extends CityConfiguration
 func _init() -> void:
 	load_rules_from_config()
 
+## Single-source calculation for cell pitch (block + street)
+func get_cell_pitch() -> float:
+	return block_size + street_width
+
 ## Ingests baseline defaults from business_rules.cfg without hardcoding literals
 func load_rules_from_config(config_path: String = "res://data_modules/core/business_rules.cfg") -> void:
 	if not FileAccess.file_exists(config_path):
@@ -46,7 +50,6 @@ func load_rules_from_config(config_path: String = "res://data_modules/core/busin
 		spawn_hospital = bool(cfg.get_value("map_layout", "spawn_hospital", spawn_hospital))
 		spawn_university = bool(cfg.get_value("map_layout", "spawn_university", spawn_university))
 
-## Validation override: allows generating roads & districts even if building arrays are empty
 func is_valid() -> bool:
 	if not enable_building_spawning:
 		return true

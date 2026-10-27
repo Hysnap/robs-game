@@ -1,10 +1,8 @@
-# res://scenes/ui/filofax/filofax_ui.gd
 extends PanelContainer
 class_name FilofaxUI
 
 const FILOFAX_MGR = preload("res://systems/filofax_manager.gd")
 const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
-const VERB_ROUTER = preload("res://systems/verb_router.gd")
 const RETRO_THEME = preload("res://scenes/ui/filofax/retro_theme.gd")
 
 # --- Left Divider Tabs (Macro Groupings) ---
@@ -15,17 +13,20 @@ const RETRO_THEME = preload("res://scenes/ui/filofax/retro_theme.gd")
 @onready var tab_styles_btn: Button = get_node_or_null("BinderContent/LeftDividerTabs/TabStyles")
 @onready var tab_close_btn: Button = get_node_or_null("BinderContent/LeftDividerTabs/TabClose")
 
-# --- Top Horizontal Tabs (Sub-Sections within active Macro) ---
+# --- Top Horizontal Tabs & Stacks ---
 @onready var sub_section_bar: HBoxContainer = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/SubSectionTabs")
 @onready var ledger_stack: TabContainer = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack")
 
-# --- Content Panes ---
+# --- Content Ledger Panes ---
 @onready var telemetry_tab: Control = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/TelemetryTab")
 @onready var roster_list: Control = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/RosterTab/RosterList")
 @onready var financial_list: Control = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/FinancialsTab/FinancialList")
+@onready var diary_list: Control = get_node_or_null("BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/DiaryTab/DiaryList")
 
-@onready var memo_list: Control = get_node_or_null("BinderContent/PageSpread/RingSpike_Center/MemoScroll/MemoList")
+# --- Operational Queue & Reordering ---
 @onready var directive_queue: ItemList = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/DirectiveQueue")
+@onready var btn_move_up: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons/BtnMoveUp")
+@onready var btn_move_down: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons/BtnMoveDown")
 @onready var add_order_button: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons/AddOrderButton")
 @onready var execute_turn_button: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ExecuteTurnButton")
 
@@ -41,11 +42,8 @@ const RETRO_THEME = preload("res://scenes/ui/filofax/retro_theme.gd")
 @onready var who_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Who/VBox/WhoOption")
 @onready var where_opt: OptionButton = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Where/VBox/WhereOption")
 @onready var est_label: Label = get_node_or_null("../StickyNotePopup/VBoxContainer/NotesGrid/StickyNote_Estimate/VBox/EstimatedCostLabel")
-
 @onready var pin_btn: Button = get_node_or_null("../StickyNotePopup/VBoxContainer/ButtonBox/SaveNoteBtn")
 @onready var discard_btn: Button = get_node_or_null("../StickyNotePopup/VBoxContainer/ButtonBox/DiscardBtn")
-@onready var btn_move_up: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons/BtnMoveUp")
-@onready var btn_move_down: Button = get_node_or_null("BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons/BtnMoveDown")
 
 var _docket_controller: FilofaxDistrictDocket = null
 var _world_state: Dictionary = {}
@@ -53,15 +51,16 @@ var _filofax_cache: Dictionary = {}
 var _staged_directives: Array = []
 var _is_binder_dragging: bool = false
 var _binder_drag_offset: Vector2 = Vector2.ZERO
+
+var _navigation_schema: Dictionary = {}
+var _page_route_cache: Dictionary = {} # Maps target_page_name -> integer TabContainer index
 var _current_macro_domain: String = "DOSSIER"
 var _active_sub_tab_index: int = 0
 
-# --- Two-Tier Hierarchy Definition ---
 const SUB_SECTIONS: Dictionary = {
 	"DIARY": [
-		{"token": "UI_SUBTAB_CALENDAR", "page_index": 0},
-		{"token": "UI_SUBTAB_FUTURE_EVENTS", "page_index": 0},
-		{"token": "UI_SUBTAB_APPOINTMENTS", "page_index": 0}
+		{"token": "UI_SUBTAB_CALENDAR", "page_index": 3},
+		{"token": "UI_SUBTAB_FILED_NOTES", "page_index": 3}
 	],
 	"DOSSIER": [
 		{"token": "UI_SUBTAB_CENSUS", "page_index": 0},
@@ -70,32 +69,69 @@ const SUB_SECTIONS: Dictionary = {
 	],
 	"ROSTER": [
 		{"token": "UI_SUBTAB_ACTIVE_AGENTS", "page_index": 1},
-		{"token": "UI_SUBTAB_PAYROLL_CUTS", "page_index": 1},
-		{"token": "UI_SUBTAB_RECRUITS", "page_index": 1}
+		{"token": "UI_SUBTAB_CONDUCT_LOGS", "page_index": 1}
 	],
 	"FINANCE": [
 		{"token": "UI_SUBTAB_VAULT_LEDGER", "page_index": 2},
-		{"token": "UI_SUBTAB_DEBT_ARREARS", "page_index": 2},
-		{"token": "UI_SUBTAB_WHOLESALE_TARIFFS", "page_index": 2}
+		{"token": "UI_SUBTAB_EXPENSE_RECEIPTS", "page_index": 2}
 	]
 }
 
 func _ready() -> void:
 	RETRO_THEME.load_all_profiles()
+	_load_navigation_schema()
+	_rebuild_page_route_cache()
 	_setup_binder_dragging()
 	_setup_docket_controller()
 	_setup_macro_tabs()
 	_setup_sticky_note_buttons()
+	_setup_directive_queue_reordering()
 	_setup_drag_and_theming()
 	_apply_filofax_stationery_theme()
-	_setup_directive_queue_reordering()
+	_connect_desktop_slip_stack()
 	
-	# Initial navigation state
 	select_macro_domain("DOSSIER")
+
+## 1. Load navigation structure from JSON (or fallback safely)
+func _load_navigation_schema() -> void:
+	var path := "res://data_modules/core/feedback/filofax_navigation.json"
+	if FileAccess.file_exists(path):
+		var file := FileAccess.open(path, FileAccess.READ)
+		var json := JSON.new()
+		if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
+			_navigation_schema = json.data.get("sections", {})
+			return
+			
+	# Safe built-in fallback if file is missing
+	push_warning("[FilofaxUI] filofax_navigation.json missing; using internal fallback.")
+	_navigation_schema = {
+		"DIARY": {"token": "UI_TAB_MACRO_DIARY", "target_page_name": "DiaryTab", "sub_tabs": [{"token": "UI_SUBTAB_CALENDAR", "action_key": "view_calendar"}]},
+		"DOSSIER": {"token": "UI_TAB_MACRO_DOSSIER", "target_page_name": "TelemetryTab", "sub_tabs": [{"token": "UI_SUBTAB_CENSUS", "action_key": "view_census"}]},
+		"ROSTER": {"token": "UI_TAB_MACRO_ROSTER", "target_page_name": "RosterTab", "sub_tabs": [{"token": "UI_SUBTAB_ACTIVE_AGENTS", "action_key": "view_agents"}]},
+		"FINANCE": {"token": "UI_TAB_MACRO_FINANCE", "target_page_name": "FinancialsTab", "sub_tabs": [{"token": "UI_SUBTAB_VAULT_LEDGER", "action_key": "view_vault"}]}
+	}
+
+## 2. Dynamic Route Cache: Scans whatever pages actually exist in the scene tree
+func _rebuild_page_route_cache() -> void:
+	_page_route_cache.clear()
+	if ledger_stack == null:
+		return
+		
+	# Dynamically index all children present in ledger_stack
+	for i in range(ledger_stack.get_child_count()):
+		var page_node := ledger_stack.get_child(i)
+		_page_route_cache[page_node.name] = i
 
 func initialize(world_state: Dictionary, filofax_cache: Dictionary) -> void:
 	_world_state = world_state
 	_filofax_cache = filofax_cache
+	if not _filofax_cache.has("filed_records"):
+		_filofax_cache["filed_records"] = {
+			"DIARY": [],
+			"DOSSIER": [],
+			"ROSTER": [],
+			"FINANCE": []
+		}
 	update_display(_filofax_cache)
 
 func _setup_binder_dragging() -> void:
@@ -127,32 +163,49 @@ func _setup_macro_tabs() -> void:
 	if customizer_popup:
 		customizer_popup.colors_updated.connect(_on_colors_live_updated)
 
-## Selects a left-hand macro divider and rebuilds the top sub-section tabs
+## 3. Select Macro Domain via Semantic Key
 func select_macro_domain(domain_key: String) -> void:
+	if not _navigation_schema.has(domain_key):
+		push_warning("[FilofaxUI] Unknown macro domain: %s" % domain_key)
+		return
+
 	_current_macro_domain = domain_key
+	
+	# Lookup physical tab index from cache
+	var section_data: Dictionary = _navigation_schema[domain_key]
+	var page_name: String = str(section_data.get("target_page_name", ""))
+	
+	if _page_route_cache.has(page_name):
+		var target_idx: int = _page_route_cache[page_name]
+		if ledger_stack and target_idx >= 0 and target_idx < ledger_stack.get_tab_count():
+			ledger_stack.current_tab = target_idx
+	else:
+		push_warning("[FilofaxUI] No container page found named '%s' for domain '%s'!" % [page_name, domain_key])
+
 	_rebuild_top_sub_section_tabs()
 	_update_macro_tab_visual_selection()
 
+## 4. Rebuild Sub-Tabs Dynamically (Pure Token & Action-Key Driven)
 func _rebuild_top_sub_section_tabs() -> void:
 	if sub_section_bar == null:
 		return
 
-	# Clear previous sub-tabs
 	for child in sub_section_bar.get_children():
 		child.queue_free()
 
-	var sections: Array = SUB_SECTIONS.get(_current_macro_domain, [])
+	var section_data: Dictionary = _navigation_schema.get(_current_macro_domain, {})
+	var sub_tabs: Array = section_data.get("sub_tabs", [])
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
 
-	for i in range(sections.size()):
-		var sec_data: Dictionary = sections[i]
+	for i in range(sub_tabs.size()):
+		var sub_data: Dictionary = sub_tabs[i]
 		var sub_btn := Button.new()
-		sub_btn.text = tr(sec_data.get("token", "UI_SUBTAB_SECTION"))
+		sub_btn.text = tr(sub_data.get("token", "UI_SUBTAB_SECTION"))
 		sub_btn.focus_mode = Control.FOCUS_NONE
 		sub_btn.add_theme_font_override("font", mono_font)
 		sub_btn.add_theme_font_size_override("font_size", 10)
-		
-		# Top-rounded tab styling
+
+		# Paper tab styling
 		var style := StyleBoxFlat.new()
 		style.bg_color = RETRO_THEME.color_page_bg
 		style.set_corner_radius_all(0)
@@ -166,34 +219,45 @@ func _rebuild_top_sub_section_tabs() -> void:
 		style.border_width_top = 1
 		style.border_width_right = 1
 		style.border_width_bottom = 0
-		
+
 		sub_btn.add_theme_stylebox_override("normal", style)
 		sub_btn.add_theme_stylebox_override("hover", style)
 		sub_btn.add_theme_stylebox_override("pressed", style)
 		sub_btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
 
-		var page_target: int = int(sec_data.get("page_index", 0))
-		sub_btn.pressed.connect(_on_sub_tab_selected.bind(i, page_target))
+		var action_key: String = str(sub_data.get("action_key", ""))
+		sub_btn.pressed.connect(_on_sub_tab_selected.bind(i, action_key))
 		sub_section_bar.add_child(sub_btn)
 
-	# Auto-select the first sub-section
-	if not sections.is_empty():
-		_on_sub_tab_selected(0, int(sections[0].get("page_index", 0)))
+	if not sub_tabs.is_empty():
+		_highlight_sub_tab_button(0)
 
-func _on_sub_tab_selected(sub_tab_idx: int, target_page: int) -> void:
+## 5. Sub-Tab Selection (Invokes action_key instead of blindly poking ledger_stack)
+func _on_sub_tab_selected(sub_tab_idx: int, action_key: String) -> void:
 	_active_sub_tab_index = sub_tab_idx
-	if ledger_stack:
-		ledger_stack.current_tab = target_page
+	_highlight_sub_tab_button(sub_tab_idx)
+	
+	# Execute sub-view filtering cleanly
+	match action_key:
+		"view_calendar":
+			pass # In the future: toggle calendar sheet view
+		"view_dispatch_log":
+			pass # In the future: filter diary to dispatches only
+		"view_cashbook":
+			pass # In the future: toggle cashbook daily balance sheet
+		_:
+			pass # Default: active ledger page remains displayed
 
-	# Highlight active sub-tab
-	if sub_section_bar != null:
-		for i in range(sub_section_bar.get_child_count()):
-			var btn := sub_section_bar.get_child(i) as Button
-			if btn:
-				if i == sub_tab_idx:
-					btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
-				else:
-					btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
+func _highlight_sub_tab_button(active_idx: int) -> void:
+	if sub_section_bar == null:
+		return
+	for i in range(sub_section_bar.get_child_count()):
+		var btn := sub_section_bar.get_child(i) as Button
+		if btn:
+			if i == active_idx:
+				btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+			else:
+				btn.add_theme_color_override("font_color", RETRO_THEME.color_ink_muted)
 
 func _update_macro_tab_visual_selection() -> void:
 	var map := {
@@ -219,7 +283,6 @@ func _setup_docket_controller() -> void:
 		_docket_controller.name = "DocketContent"
 		telemetry_tab.add_child(_docket_controller)
 
-## Public API: External district raycast selection
 func display_district_docket(block_id: String) -> void:
 	select_macro_domain("DOSSIER")
 	if _docket_controller != null:
@@ -245,11 +308,8 @@ func _toggle_customizer() -> void:
 		customizer_popup.visible = not customizer_popup.visible
 		if customizer_popup.visible:
 			customizer_popup.move_to_front()
-			# If spawned off-screen or too far left, snap to default visible coordinates
 			if customizer_popup.global_position.x < 100:
 				customizer_popup.global_position = Vector2(520, 100)
-	else:
-		push_error("[FilofaxUI] Could not find FilofaxCustomizer node in tree!")
 
 func _on_colors_live_updated() -> void:
 	_apply_filofax_stationery_theme()
@@ -259,11 +319,6 @@ func _on_colors_live_updated() -> void:
 
 func _on_close_button_pressed() -> void:
 	visible = false
-	var canvas := get_parent()
-	while canvas != null and not (canvas is CanvasLayer):
-		canvas = canvas.get_parent()
-	if canvas is CanvasLayer:
-		canvas.visible = false
 
 func _apply_filofax_stationery_theme() -> void:
 	var binder_style := RETRO_THEME.create_paper_page_style(
@@ -315,44 +370,74 @@ func _style_vertical_divider_tabs() -> void:
 
 func _setup_sticky_note_buttons() -> void:
 	if execute_turn_button:
+		if execute_turn_button.pressed.is_connected(_on_execute_turn_pressed):
+			execute_turn_button.pressed.disconnect(_on_execute_turn_pressed)
 		execute_turn_button.pressed.connect(_on_execute_turn_pressed)
 		_refresh_turn_button_label()
-	if add_order_button:    add_order_button.pressed.connect(_open_sticky_pad)
-	if close_note_btn:       close_note_btn.pressed.connect(func(): sticky_popup.visible = false)
-	if discard_btn:          discard_btn.pressed.connect(func(): sticky_popup.visible = false)
-	if pin_btn:              pin_btn.pressed.connect(_on_pin_directive)
 
-	if verb_opt:     verb_opt.item_selected.connect(_on_verb_changed)
-	if target_opt:   target_opt.item_selected.connect(_recalculate_estimate)
-	if amount_spin:  amount_spin.value_changed.connect(_recalculate_estimate)
+	if add_order_button: add_order_button.pressed.connect(_open_sticky_pad)
+	if close_note_btn:    close_note_btn.pressed.connect(func(): sticky_popup.visible = false)
+	if discard_btn:       discard_btn.pressed.connect(func(): sticky_popup.visible = false)
+	if pin_btn:           pin_btn.pressed.connect(_on_pin_directive)
+
+	if verb_opt:    verb_opt.item_selected.connect(_on_verb_changed)
+	if target_opt:  target_opt.item_selected.connect(_recalculate_estimate)
+	if amount_spin: amount_spin.value_changed.connect(_recalculate_estimate)
+
+func _setup_directive_queue_reordering() -> void:
+	if directive_queue:
+		directive_queue.select_mode = ItemList.SELECT_SINGLE
 
 	if btn_move_up:
 		btn_move_up.pressed.connect(func():
-			var selected = directive_queue.get_selected_items()
-			if selected.size() > 0 and selected[0] > 0:
-				move_directive(selected[0], selected[0] - 1)
+			if directive_queue == null: return
+			var sel := directive_queue.get_selected_items()
+			if sel.size() > 0 and sel[0] > 0:
+				move_directive(sel[0], sel[0] - 1)
 		)
 	if btn_move_down:
 		btn_move_down.pressed.connect(func():
-			var selected = directive_queue.get_selected_items()
-			if selected.size() > 0 and selected[0] < _staged_directives.size() - 1:
-				move_directive(selected[0], selected[0] + 1)
+			if directive_queue == null: return
+			var sel := directive_queue.get_selected_items()
+			if sel.size() > 0 and sel[0] < _staged_directives.size() - 1:
+				move_directive(sel[0], sel[0] + 1)
 		)
 
+func move_directive(from_idx: int, to_idx: int) -> void:
+	if from_idx < 0 or from_idx >= _staged_directives.size(): return
+	if to_idx < 0 or to_idx >= _staged_directives.size(): return
+	if from_idx == to_idx: return
+
+	var item: Dictionary = _staged_directives.pop_at(from_idx)
+	_staged_directives.insert(to_idx, item)
+	
+	# Strict Top-to-Bottom execution indexing (Index 0 executes first)
+	for i in range(_staged_directives.size()):
+		_staged_directives[i]["staged_index"] = i
+		_staged_directives[i]["priority"] = _staged_directives.size() - i
+
+	_refresh_directive_list()
+	directive_queue.select(to_idx)
+
 func _on_execute_turn_pressed() -> void:
-	# 1. Delegate entire turn progression and execution to the simulation engine
+	# 1. SimController executes strictly in linear array order (Row 0 downwards)
 	var incoming_slips: Array = SIM_CONTROLLER.process_turn_cycle(_world_state, _staged_directives)
 
-	# 2. Reset the staged UI queue
+	# 2. Clear staged queue
 	_staged_directives.clear()
 	_refresh_directive_list()
 
-	# 3. Synchronize Perceptions & Redraw View
+	# 3. Synchronize GameState singleton if active
+	if Engine.has_singleton("GameState") or ClassDB.class_exists("GameState"):
+		if GameState != null and GameState.world_state != null:
+			GameState.world_state["metadata"] = _world_state.get("metadata", {}).duplicate(true)
+
+	# 4. Refresh perceptions and UI
 	FILOFAX_MGR.refresh_cache_instant(_world_state, _filofax_cache)
 	update_display(_filofax_cache)
 	_refresh_turn_button_label()
 
-	# 4. Route Physical Slips to Desktop Workspace
+	# 5. Push incoming feedback slips to DesktopSlipStack
 	var desktop_inbox: DesktopSlipStack = get_tree().current_scene.find_child("DesktopSlipStack", true, false) as DesktopSlipStack
 	if desktop_inbox != null and not incoming_slips.is_empty():
 		desktop_inbox.push_slips(incoming_slips)
@@ -362,23 +447,35 @@ func _on_execute_turn_pressed() -> void:
 	if execute_turn_button:
 		execute_turn_button.set_pressed_no_signal(false)
 
-## Updates the button text dynamically according to the operational horizon
+func _connect_desktop_slip_stack() -> void:
+	var desktop_inbox: DesktopSlipStack = get_tree().current_scene.find_child("DesktopSlipStack", true, false) as DesktopSlipStack
+	if desktop_inbox != null:
+		if not desktop_inbox.slip_filed.is_connected(_on_slip_filed_to_filofax):
+			desktop_inbox.slip_filed.connect(_on_slip_filed_to_filofax)
+		if not desktop_inbox.slip_discarded.is_connected(_on_slip_discarded):
+			desktop_inbox.slip_discarded.connect(_on_slip_discarded)
+
+func _on_slip_filed_to_filofax(slip: Dictionary, destination: String) -> void:
+	if not _filofax_cache.has("filed_records"):
+		_filofax_cache["filed_records"] = {}
+	if not _filofax_cache["filed_records"].has(destination):
+		_filofax_cache["filed_records"][destination] = []
+
+	_filofax_cache["filed_records"][destination].append(slip)
+	update_display(_filofax_cache)
+
+func _on_slip_discarded(slip: Dictionary) -> void:
+	print("[FilofaxUI] Discarded receipt/note: %s" % slip.get("text", ""))
+
 func _refresh_turn_button_label() -> void:
 	if not execute_turn_button:
 		return
-		
-	# Determine temporal horizon: defaults to "day" at Tier 1, can be "shift", "week", etc.
 	var horizon: String = _world_state.get("metadata", {}).get("time_horizon", "day").to_lower()
 	match horizon:
-		"shift":
-			execute_turn_button.text = tr("UI_BTN_EXECUTE_SHIFT")
-		"day":
-			execute_turn_button.text = tr("UI_BTN_EXECUTE_DAY")
-		"week":
-			execute_turn_button.text = tr("UI_BTN_EXECUTE_WEEK")
-		_:
-			execute_turn_button.text = tr("UI_BTN_EXECUTE_TURN")
-
+		"shift": execute_turn_button.text = tr("UI_BTN_EXECUTE_SHIFT")
+		"day":   execute_turn_button.text = tr("UI_BTN_EXECUTE_DAY")
+		"week":  execute_turn_button.text = tr("UI_BTN_EXECUTE_WEEK")
+		_:       execute_turn_button.text = tr("UI_BTN_EXECUTE_TURN")
 
 func _setup_drag_and_theming() -> void:
 	if not sticky_popup:
@@ -424,7 +521,6 @@ func _on_drag_handle_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.is_pressed():
 			_is_binder_dragging = false
-			_staged_directives = _staged_directives # no-op guard
 			accept_event()
 		else:
 			accept_event()
@@ -508,7 +604,8 @@ func _on_pin_directive() -> void:
 		"target_item": target_id,
 		"amount": qty,
 		"target_node_id": where_id,
-		"staged_index": _staged_directives.size() # Tracks creation order (0, 1, 2...)
+		"staged_index": _staged_directives.size(),
+		"priority": _staged_directives.size()
 	}
 
 	if verb != "MAKE":
@@ -526,6 +623,8 @@ func _on_pin_directive() -> void:
 	sticky_popup.visible = false
 
 func _refresh_directive_list() -> void:
+	if not directive_queue:
+		return
 	directive_queue.clear()
 	for i in range(_staged_directives.size()):
 		var cmd: Dictionary = _staged_directives[i]
@@ -535,108 +634,62 @@ func _refresh_directive_list() -> void:
 			"{amount}", "%.0f" % float(cmd.get("amount", 1))
 		).replace("{location}", str(cmd.get("target_node_id", ""))))
 
-func _on_commit_orders_pressed() -> void:
-	if _staged_directives.is_empty():
-		return
-
-	var incoming_slips: Array = []
-	var cur_tick: int = _world_state.get("metadata", {}).get("current_week_tick", 1)
-
-	for directive in _staged_directives:
-		# 1. Execute reality in the backend
-		var res: Dictionary = SIM_CONTROLLER.execute_directive(_world_state, directive)
-
-		# 2. Generate a tactile slip representation
-		var slip := {
-			"tick": cur_tick,
-			"verb": directive.get("verb", "TASK"),
-			"text": res.get("message", "Task completed."),
-			"author": directive.get("counterparty_id", "Street Runner"),
-			"destination": "team_feedback", # Modular destination
-			"directive_snapshot": directive.duplicate(true)
-		}
-		incoming_slips.append(slip)
-
-	_staged_directives.clear()
-	_refresh_directive_list()
-
-	# 3. Advance simulation world state
-	SIM_CONTROLLER.process_ambient_heartbeat(_world_state)
-	FILOFAX_MGR.refresh_cache_instant(_world_state, _filofax_cache)
-	update_display(_filofax_cache)
-
-	execute_turn_button.set_pressed_no_signal(false)
-
 func update_display(cache: Dictionary) -> void:
 	_filofax_cache = cache
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
+	var filed_records: Dictionary = cache.get("filed_records", {})
 
+	# 1. Accounts Tab Inking
 	if financial_list:
 		for child in financial_list.get_children():
 			child.queue_free()
 		var c_lbl := Label.new()
+		c_lbl.add_theme_font_override("font", mono_font)
 		c_lbl.text = tr("UI_FINANCE_VAULT_CASH").replace("{currency}", "£").replace(
 			"{amount}", "%.2f" % cache.get("finances", {}).get("reported_cash", 0.0)
 		)
 		financial_list.add_child(c_lbl)
 
-	if memo_list:
-		for child in memo_list.get_children():
+		# Render Receipts filed under FINANCE
+		for slip in filed_records.get("FINANCE", []):
+			_render_ledger_slip_entry(financial_list, slip, "RECEIPT")
+
+	# 2. Roster Tab Inking
+	if roster_list:
+		for child in roster_list.get_children():
 			child.queue_free()
-		for memo in cache.get("pinned_memos", []):
-			var slip := Label.new()
-			slip.text = tr("UI_MEMO_WEEK").replace("{week}", str(memo.get("tick", 0))).replace(
-				"{text}", str(memo.get("text", ""))
-			)
-			memo_list.add_child(slip)
+		for slip in filed_records.get("ROSTER", []):
+			_render_ledger_slip_entry(roster_list, slip, "PERSONNEL LOG")
 
-## Called when the player chooses to permanently record the slip into their binder
-func _on_slip_filed_to_filofax(slip: Dictionary, destination: String) -> void:
-	if not _filofax_cache.has("filed_records"):
-		_filofax_cache["filed_records"] = {}
-	if not _filofax_cache["filed_records"].has(destination):
-		_filofax_cache["filed_records"][destination] = []
+	# 3. Diary Tab Inking
+	if diary_list:
+		for child in diary_list.get_children():
+			child.queue_free()
+		for slip in filed_records.get("DIARY", []):
+			_render_ledger_slip_entry(diary_list, slip, "DIARY ENTRY")
 
-	# Ingest into the organizer ledger under the chosen category
-	_filofax_cache["filed_records"][destination].append(slip)
-	print("[Filofax] Filed slip under '%s': %s" % [destination, slip.get("text", "")])
+func _render_ledger_slip_entry(container: Control, slip: Dictionary, title_tag: String) -> void:
+	var mono_font: Font = RETRO_THEME.get_monospace_font()
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
 
-## Called when the player throws the slip away
-func _on_slip_discarded(slip: Dictionary) -> void:
-	# The event already happened in simulation reality, but the player has no record of it
-	print("[Filofax] Discarded slip into wastebasket: %s" % slip.get("text", ""))
+	var header := Label.new()
+	header.text = "[ %s • WK %02d ] - %s" % [title_tag, int(slip.get("tick", 1)), str(slip.get("author", "Runner"))]
+	header.add_theme_font_override("font", mono_font)
+	header.add_theme_font_size_override("font_size", 10)
+	header.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
+	row.add_child(header)
 
-func _setup_directive_queue_reordering() -> void:
-	if directive_queue == null:
-		return
-		
-	# Allow selecting and dragging items within the queue
-	directive_queue.select_mode = ItemList.SELECT_SINGLE
-	
-	# Connect drag-and-drop or reorder helpers
-	directive_queue.item_activated.connect(_on_directive_item_double_clicked)
+	var body := Label.new()
+	body.text = "   %s" % str(slip.get("text", ""))
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_font_override("font", mono_font)
+	body.add_theme_font_size_override("font_size", 10)
+	body.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	row.add_child(body)
 
-## Moving directives in memory
-func move_directive(from_idx: int, to_idx: int) -> void:
-	if from_idx < 0 or from_idx >= _staged_directives.size():
-		return
-	if to_idx < 0 or to_idx >= _staged_directives.size():
-		return
-	if from_idx == to_idx:
-		return
+	var sep := HSeparator.new()
+	sep.modulate = RETRO_THEME.color_ruled_line
+	row.add_child(sep)
 
-	var moved_item: Dictionary = _staged_directives.pop_at(from_idx)
-	_staged_directives.insert(to_idx, moved_item)
-	
-	# Update staged priority/index markers
-	for i in range(_staged_directives.size()):
-		_staged_directives[i]["staged_index"] = i
-		_staged_directives[i]["priority"] = _staged_directives.size() - i # Top = Highest Priority
-		
-	_refresh_directive_list()
-	directive_queue.select(to_idx)
-
-## Double-clicking an item in the queue allows removing or promoting it
-func _on_directive_item_double_clicked(index: int) -> void:
-	# For convenience, double-clicking the top item can swap with the one below, 
-	# or prompt removal
-	pass
+	container.add_child(row)

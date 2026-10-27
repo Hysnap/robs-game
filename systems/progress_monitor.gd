@@ -11,9 +11,10 @@ var _total_weight: float = 0.0
 var _accumulated_weight: float = 0.0
 var _start_time_ms: int = 0
 var _last_emit_time_ms: int = 0
-var _throttle_ms: int = 50 # Throttle UI updates to max 20Hz
+var _throttle_ms: int = 30 # Throttle UI updates to max 20Hz
+var _last_yield_time_ms: int = 0
 
-## Define stages with proportional weights (e.g. weights [30, 20, 40, 10])
+## Configure stages with weights: [{ "id": "mesh", "title": "Building 3D Mesh", "weight": 40.0 }, ...]
 func configure_stages(stage_definitions: Array[Dictionary]) -> void:
 	_stages.clear()
 	_total_weight = 0.0
@@ -30,6 +31,7 @@ func configure_stages(stage_definitions: Array[Dictionary]) -> void:
 		_total_weight += weight
 
 	_start_time_ms = Time.get_ticks_msec()
+	_last_yield_time_ms = _start_time_ms
 	_last_emit_time_ms = 0
 
 ## Advance to a specific stage by ID or index
@@ -43,7 +45,8 @@ func begin_stage(stage_id: String, initial_detail: String = "") -> void:
 		_accumulated_weight += _stages[i]["weight"]
 
 	var stage_title: String = _stages[_current_stage_idx]["title"]
-	_emit_progress(0.0, stage_title, initial_detail, true)
+	var stage_pct: float = (_accumulated_weight / maxf(_total_weight, 1.0)) * 100.0
+	_emit_progress(0.0, stage_title, initial_detail)
 
 ## Update sub-progress within the active stage (0.0 to 1.0 or current/total)
 func update_sub_progress(current: float, total: float, detail_text: String = "", force: bool = false) -> void:
@@ -61,7 +64,15 @@ func update_sub_progress(current: float, total: float, detail_text: String = "",
 	var overall_percent: float = clampf((overall_weight_done / _total_weight) * 100.0, 0.0, 100.0)
 
 	var stage_title: String = _stages[_current_stage_idx]["title"]
-	_emit_progress(overall_percent, stage_title, detail_text, false)
+	_emit_progress(overall_percent, stage_title, detail_text)
+
+## Yields process frame if time slice (budget_ms) exceeded to keep UI responsive
+func maybe_yield(budget_ms: int = 16) -> void:
+	var now: int = Time.get_ticks_msec()
+	if now - _last_yield_time_ms >= budget_ms:
+		_last_yield_time_ms = now
+		if Engine.get_main_loop() and Engine.get_main_loop() is SceneTree:
+			await (Engine.get_main_loop() as SceneTree).process_frame
 
 ## Mark pipeline finished
 func complete(final_message: String = "Complete") -> void:
@@ -69,5 +80,5 @@ func complete(final_message: String = "Complete") -> void:
 	progress_updated.emit(100.0, final_message, "Took %d ms" % elapsed)
 	pipeline_completed.emit(elapsed)
 
-func _emit_progress(pct: float, stage_title: String, detail: String, force: bool) -> void:
+func _emit_progress(pct: float, stage_title: String, detail: String) -> void:
 	progress_updated.emit(pct, stage_title, detail)

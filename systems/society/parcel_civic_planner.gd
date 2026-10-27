@@ -10,10 +10,9 @@ static func precalculate_district_metrics(world_state: Dictionary, archetypes: D
 	if districts.is_empty():
 		return
 
-	var setup: Dictionary = archetypes.get("setup", {})
-	var metrics: Dictionary = setup.get("block_metrics", {})
-	var std_w: float = float(metrics.get("standard_block_width_m", 200.0))
-	var std_h: float = float(metrics.get("standard_block_height_m", 200.0))
+	var cfg = ScenarioManifestManager.get_city_configuration()
+	var std_w: float = float(cfg.get("block_size")) if (cfg and "block_size" in cfg) else 200.0
+	var std_h: float = std_w
 	var std_lot_sqm: float = std_w * std_h
 
 	for dist_id in districts.keys():
@@ -128,7 +127,7 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
-		var p = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
+		var p: Vector2 = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 		max_r = max(max_r, p.length())
 		
 		if bool(d.get("is_initially_vacant", false)):
@@ -266,11 +265,10 @@ static func _reclassify_surplus_vacant_parcels(districts: Dictionary) -> void:
 	if count > 0:
 		print("  ✓ Reassigned %d surplus vacant parcels to allotments/cleared sites/scrap sidings." % count)
 
-static func get_district_area_sqm(district: Dictionary, archetypes: Dictionary) -> float:
-	var setup: Dictionary = archetypes.get("setup", {})
-	var metrics: Dictionary = setup.get("block_metrics", {})
-	var std_w: float = float(metrics.get("standard_block_width_m", 200.0))
-	var std_h: float = float(metrics.get("standard_block_height_m", 200.0))
+static func get_district_area_sqm(district: Dictionary, _archetypes: Dictionary) -> float:
+	var cfg = ScenarioManifestManager.get_city_configuration()
+	var std_w: float = float(cfg.get("block_size")) if (cfg and "block_size" in cfg) else 200.0
+	var std_h: float = std_w
 
 	if district.has("boundary_polygon"):
 		var poly: PackedVector2Array = district["boundary_polygon"]

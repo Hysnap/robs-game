@@ -57,8 +57,9 @@ static func generate_city_society(
 	# -------------------------------------------------------------------------
 	# PASS 0.5: LAND PARCEL DENSITY & INITIAL VACANCY
 	# -------------------------------------------------------------------------
+	# Example in SocialNetworkGenerator.generate_city_society:
 	if on_progress.is_valid():
-		on_progress.call(5.0, 100.0, "Pass 1: Generate Initial Land Parcels...")
+		on_progress.call(0.05, 1.0, "Pass 1: Generate Initial Land Parcels...")
 		await Engine.get_main_loop().process_frame
 	PARCEL_PLANNER.precalculate_district_metrics(world_state, _archetypes, rng)
 
@@ -66,7 +67,7 @@ static func generate_city_society(
 	# PASS 1: CIVIC CADENCE REALIGNMENT (Universal Vacancy Absorption)
 	# -------------------------------------------------------------------------
 	if on_progress.is_valid():
-		on_progress.call(10.0, 100.0, "Pass 2: Realignment of dedicated civic parcels...")
+		on_progress.call(0.15, 1.0, "Pass 2: Realignment of dedicated civic parcels...")
 		await Engine.get_main_loop().process_frame
 	PARCEL_PLANNER.run_civic_cadence_pass(world_state, _archetypes, rng)
 
@@ -77,7 +78,12 @@ static func generate_city_society(
 		on_progress.call(20.0, 100.0, "Pass 3: Populating physical premises & tenancies...")
 		await Engine.get_main_loop().process_frame
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
-		world_state, _archetypes, _building_classes, _job_definitions, _cultural, rng, on_progress
+		world_state, _archetypes, _building_classes, _job_definitions, _cultural, rng, 
+		func(c, t, d): 
+			if on_progress.is_valid(): 
+				# Normalize sub-pass into 0.20 -> 0.50 range
+				var normalized = 0.20 + (c / maxf(t, 1.0)) * 0.30
+				on_progress.call(normalized, 1.0, d)
 	)
 
 	# -------------------------------------------------------------------------

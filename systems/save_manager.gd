@@ -24,49 +24,51 @@ static func ensure_slot_dir(slot_id: String) -> bool:
 		
 	return true
 
+## Prepares a slot for a new game: ensures folder exists and opens fresh SQLite DB inside it
+static func prepare_new_slot(slot_id: String) -> bool:
+	if not ensure_slot_dir(slot_id):
+		return false
+	var slot_db_path := "%s/society.db" % get_slot_dir(slot_id)
+	return DBManager.initialize_database(true, slot_db_path)
+
+## Safely resolves world_state dictionary across both runtime and headless test runners
+static func _resolve_world_state(explicit_state: Dictionary = {}) -> Dictionary:
+	if not explicit_state.is_empty():
+		return explicit_state
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
+		var gs = main_loop.root.get_node("GameState")
+		return gs.world_state
+	return {}
+
 ## Packages current GameState and SQLite database into the slot directory
-static func save_game(slot_id: String, city_crafter_node: Node3D = null) -> bool:
+static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_world_state: Dictionary = {}) -> bool:
 	if not ensure_slot_dir(slot_id):
 		push_error("[SaveManager] Failed to create slot directory: %s" % slot_id)
 		return false
 
 	var slot_dir := get_slot_dir(slot_id)
-	
-	# 1. Close active DB connection cleanly before file copy
-	DBManager.close_database()
-	
-	# 2. Copy the active SQLite database file to the slot directory
-	var active_db_global: String = ProjectSettings.globalize_path(DBManager.DB_PATH)
-	var target_db_global: String = ProjectSettings.globalize_path("%s/society.db" % slot_dir)
-	
-	if FileAccess.file_exists(DBManager.DB_PATH):
-		var copy_err := DirAccess.copy_absolute(active_db_global, target_db_global)
-		if copy_err != OK:
-			push_error("[SaveManager] Failed to copy SQLite database into slot: %d" % copy_err)
-			return false
-	
-	# Re-open active DB
-	DBManager.initialize_database(false)
+	var state_to_save := _resolve_world_state(custom_world_state)
 
-	# 3. Save GameState (districts, finances, inventory, ticks)
+	# 1. Save GameState JSON
 	var state_file := FileAccess.open("%s/game_state.json" % slot_dir, FileAccess.WRITE)
 	if state_file:
-		state_file.store_string(JSON.stringify(GameState.world_state, "\t"))
+		state_file.store_string(JSON.stringify(state_to_save, "\t"))
 		state_file.close()
 
-	# 4. Save metadata header for load menus
+	# 2. Save metadata header for load menus
 	var meta := {
 		"slot_id": slot_id,
-		"seed_id": GameState.world_state.get("metadata", {}).get("active_seed", "default"),
+		"seed_id": state_to_save.get("metadata", {}).get("active_seed", "default"),
 		"timestamp": Time.get_datetime_string_from_system(),
-		"district_count": GameState.world_state.get("districts", {}).size()
+		"district_count": state_to_save.get("districts", {}).size()
 	}
 	var meta_file := FileAccess.open("%s/meta.json" % slot_dir, FileAccess.WRITE)
 	if meta_file:
 		meta_file.store_string(JSON.stringify(meta, "\t"))
 		meta_file.close()
 	
-	# Save City Visual Layout
+	# 3. Save City Visual Layout
 	if city_crafter_node != null and city_crafter_node.has_method("export_visual_layout"):
 		var layout = city_crafter_node.export_visual_layout()
 		var layout_file := FileAccess.open("%s/city_layout.json" % slot_dir, FileAccess.WRITE)
@@ -77,7 +79,7 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null) -> bool
 	print("[SaveManager] Game saved successfully to: %s" % slot_dir)
 	return true
 
-## Loads an existing save slot into GameState and SQLite
+## Loads an existing save slot into GameState and mounts SQLite DB directly
 static func load_game(slot_id: String) -> bool:
 	var slot_dir := get_slot_dir(slot_id)
 	var state_path := "%s/game_state.json" % slot_dir
@@ -94,30 +96,36 @@ static func load_game(slot_id: String) -> bool:
 	if not parsed is Dictionary:
 		push_error("[SaveManager] Corrupted game_state.json in slot: %s" % slot_id)
 		return false
-	GameState.world_state = parsed
 
-	# 2. Swap and mount SQLite DB from slot
-	DBManager.close_database()
-	var active_db_global: String = ProjectSettings.globalize_path(DBManager.DB_PATH)
-	var slot_db_global: String = ProjectSettings.globalize_path(db_path)
-	
-	var err := DirAccess.copy_absolute(slot_db_global, active_db_global)
-	if err != OK:
-		push_error("[SaveManager] Failed to restore SQLite database from slot: %d" % err)
-		return false
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
+		var gs = main_loop.root.get_node("GameState")
+		gs.world_state = parsed
 
-	# Ingest city_layout.json into GameState cache
+	# 2. Ingest visual layout if present
 	var layout_path := "%s/city_layout.json" % slot_dir
 	if FileAccess.file_exists(layout_path):
 		var l_file := FileAccess.open(layout_path, FileAccess.READ)
 		var parsed_layout = JSON.parse_string(l_file.get_as_text())
 		l_file.close()
-		if parsed_layout is Dictionary:
-			GameState.world_state["city_layout"] = parsed_layout
+		if parsed_layout is Dictionary and main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
+			var gs = main_loop.root.get_node("GameState")
+			gs.world_state["city_layout"] = parsed_layout
 
-	DBManager.initialize_database(false)
+	# 3. Mount SQLite database directly in place
+	if not DBManager.initialize_database(false, db_path):
+		push_error("[SaveManager] Failed to mount database from: %s" % db_path)
+		return false
+
 	print("[SaveManager] Loaded game slot: %s" % slot_id)
 	return true
+
+## Helper to find the next available auto-numbered slot (e.g. slot_01, slot_02)
+static func get_next_available_slot() -> String:
+	var idx := 1
+	while DirAccess.dir_exists_absolute("user://saves/slot_%02d" % idx):
+		idx += 1
+	return "slot_%02d" % idx
 
 ## Returns the slot_id of the most recently modified save folder, or "" if none exist
 static func get_latest_save_slot() -> String:

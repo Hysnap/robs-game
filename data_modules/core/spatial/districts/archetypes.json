@@ -5,7 +5,7 @@
   },
 
   "setup": {
-	"default_fallback_archetype": "medium_density_victorian_residential",
+	"default_fallback_archetype": "medium_density_residential",
 	"default_1000m2_pop_density_estimate": 60,
 	"concentric_bands": [
 	  { "weight_key": "core_weight" },
@@ -13,11 +13,6 @@
 	  { "weight_key": "mid_weight" },
 	  { "weight_key": "outer_weight" }
 	],
-	"block_metrics": {
-	  "standard_block_width_m": 200.0,
-	  "standard_block_height_m": 200.0,
-	  "standard_street_width_m": 12.0
-	},
 	"density_profiles": {
 	  "default_profile": "balanced",
 	  "profiles": {
@@ -558,7 +553,7 @@
 	"spatial_rules": {
 	  "placement_mode": "EXACT_CORE",
 	  "min_city_population": 0,
-	  "norm_distance_range": [0.0, 0.08],
+	  "norm_distance_range": [0.0, 0.05],
 	  "max_per_city": 1,
 	  "travel_dist_m": 15000.0,
 	  "pop_ratio": 120000.0

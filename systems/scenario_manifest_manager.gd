@@ -112,3 +112,11 @@ static func load_any(module_key: String) -> Variant:
 		return load_resource_module(module_key)
 	else:
 		return load_module(module_key)
+
+## Typed accessor returning the manifest-selected CustomCityConfiguration / CityConfiguration resource
+static func get_city_configuration() -> Resource:
+	assert(has_module("city_configuration"), 
+		"FATAL: Scenario manifest missing 'city_configuration' registration: %s" % _active_manifest_path)
+	var res = load_resource_module("city_configuration")
+	assert(res != null, "FATAL: Failed to resolve city_configuration resource.")
+	return res

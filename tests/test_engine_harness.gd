@@ -1,10 +1,10 @@
 # res://tests/test_engine_harness.gd
 extends SceneTree
 
-const VERB_ROUTER = preload("res://systems/verb_router.gd")
-const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
-const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
-const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
+const VerbRouterScript = preload("res://systems/verb_router.gd")
+const SimControllerScript = preload("res://systems/sim_controller.gd")
+const CommodityManagerScript = preload("res://systems/commodity_manager.gd")
+const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 
 func _init() -> void:
 	print("\n=======================================================")
@@ -13,12 +13,12 @@ func _init() -> void:
 
 	# 1. MOUNT ENGINE
 	print("\n[STEP 1] Initializing Routers and Sinks...")
-	VERB_ROUTER.initialize()
-	IMPACT_ROUTER.autoload_sinks("res://data_modules/core/impacts/")
+	VerbRouterScript.initialize()
+	ImpactRouterScript.autoload_sinks("res://data_modules/core/impacts/")
 
 	# 2. INGEST COMMODITIES
 	print("\n[STEP 2] Testing Hierarchical Commodity Loader...")
-	var commodities = COMMODITY_MANAGER.load_hierarchical_commodities("res://data_modules/core/commodities/")
+	var commodities = CommodityManagerScript.load_hierarchical_commodities("res://data_modules/core/commodities/")
 	assert(commodities.has("BEER_STRONG_LAGER"), "ERROR: BEER_STRONG_LAGER missing from catalog!")
 
 	# 3. EXPLICIT ENTITY INITIALIZATION (No Ghost Fallbacks)
@@ -72,7 +72,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01",
 		"config": {"unit_cost": 1.20}
 	}
-	var buy_res = SIM_CONTROLLER.execute_directive(world_state, buy_cmd)
+	var buy_res = SimControllerScript.execute_directive(world_state, buy_cmd)
 	print("  ✓ Buy Result: ", buy_res["message"])
 	print("  ✓ Cash Remaining: £%.2f" % world_state["finances"]["liquid_cash"])
 	print("  ✓ Stock In Vault: ", world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"])
@@ -93,7 +93,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01",
 		"config": {"unit_price": 3.50, "exposure_modifier": 1.0}
 	}
-	var sell_res = SIM_CONTROLLER.execute_directive(world_state, sell_cmd)
+	var sell_res = SimControllerScript.execute_directive(world_state, sell_cmd)
 	print("  ✓ Sell Result: ", sell_res["message"])
 	print("  ✓ Cash After Sale: £%.2f" % world_state["finances"]["liquid_cash"])
 	print("  ✓ Stock Remaining: ", world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"])
@@ -109,15 +109,11 @@ func _init() -> void:
 
 	# 6. STEP 4: AMBIENT DRIFT
 	print("\n[STEP 4] Executing Ambient Heartbeat Pulse...")
-	SIM_CONTROLLER.process_ambient_heartbeat(world_state)
+	SimControllerScript.process_ambient_heartbeat(world_state)
 	print("  ✓ Advanced Week Tick to: ", world_state["metadata"]["current_week_tick"])
 	print("  ✓ Aston Police Heat (Post-Passive Drift): ", aston["actual_police_heat"])
 
-
-	
-	# -------------------------------------------------------------
-	# STEP 5: TEST RECIPE TRANSFORMATION (MAKE)
-	# -------------------------------------------------------------
+	# 7. STEP 5: TEST RECIPE TRANSFORMATION (MAKE)
 	print("\n[STEP 5] Testing MAKE: Roll 10 Hand-Rolled Cigarettes...")
 
 	# Seed raw materials into inventory
@@ -126,7 +122,7 @@ func _init() -> void:
 	world_state["inventory_registry"]["ROLLUP"] = {"STOCK": 0.0, "PREPPED": 0.0}
 
 	# Ingest recipes
-	var recipes = COMMODITY_MANAGER.load_hierarchical_commodities("res://data_modules/core/recipes/")
+	var recipes = CommodityManagerScript.load_hierarchical_commodities("res://data_modules/core/recipes/")
 	print("  ✓ Recipes mounted: ", recipes.keys())
 	world_state["recipe_registry"] = recipes
 
@@ -137,7 +133,7 @@ func _init() -> void:
 		"target_node_id": "DIST_ASTON_01"
 	}
 
-	var make_res = SIM_CONTROLLER.execute_directive(world_state, make_cmd)
+	var make_res = SimControllerScript.execute_directive(world_state, make_cmd)
 	print("  ✓ Make Result: ", make_res["message"])
 	print("  ✓ Consumed Tobacco (Remaining): ", world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"], "g")
 	print("  ✓ Consumed Papers (Remaining): ", world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"])

@@ -3,6 +3,10 @@
 class_name CustomCityCrafter
 extends "res://addons/citycrafter/citycrafter.gd"
 
+# Hardcoded absolute baseline geometry fallbacks (owned here, isolating original addon values)
+const DEFAULT_FALLBACK_BLOCK_SIZE: float = 200.0
+const DEFAULT_FALLBACK_STREET_WIDTH: float = 25.0
+
 # Cached layout rules from business_rules.cfg
 var _layout_rules: Dictionary = {}
 var _archetypes_data: Dictionary = {}
@@ -13,12 +17,36 @@ var _placed_facilities: Array = [] # Array of { "type": String, "origin": Vector
 var _road_counter: int = 0
 var _intersection_counter: int = 0
 
+## Resolves the active configuration, pulling from ScenarioManifestManager if not set
+func get_active_configuration() -> Resource:
+	if city_configuration == null:
+		city_configuration = ScenarioManifestManager.get_city_configuration()
+	return city_configuration
+
+func get_block_size() -> float:
+	var cfg = get_active_configuration()
+	return float(cfg.get("block_size")) if (cfg and "block_size" in cfg) else DEFAULT_FALLBACK_BLOCK_SIZE
+
+func get_street_width() -> float:
+	var cfg = get_active_configuration()
+	return float(cfg.get("street_width")) if (cfg and "street_width" in cfg) else DEFAULT_FALLBACK_STREET_WIDTH
+
+func get_cell_pitch() -> float:
+	if city_configuration and city_configuration.has_method("get_cell_pitch"):
+		return city_configuration.get_cell_pitch()
+	return get_block_size() + get_street_width()
+
+func get_cell_area_sqm() -> float:
+	if city_configuration and city_configuration.has_method("get_standard_lot_area_sqm"):
+		return city_configuration.get_standard_lot_area_sqm()
+	var b_sz := get_block_size()
+	return b_sz * b_sz
+
 ## Loads business rules with a strict HARD FAIL if the file does not exist
 func _init_layout_rules() -> void:
 	if not _layout_rules.is_empty():
 		return
 
-	# 1. Use the canonical path constant owned by ScenarioManifestManager
 	var path: String = ScenarioManifestManager.BUSINESS_RULES_PATH
 	assert(FileAccess.file_exists(path), "FATAL: business_rules.cfg missing at: %s" % path)
 
@@ -26,7 +54,6 @@ func _init_layout_rules() -> void:
 	var err := cfg.load(path)
 	assert(err == OK, "FATAL: Could not parse %s (Error code: %d)" % [path, err])
 
-	# 2. Ingest operational map layout and engine diagnostic rules
 	if cfg.has_section("map_layout"):
 		for key in cfg.get_section_keys("map_layout"):
 			_layout_rules[key] = cfg.get_value("map_layout", key)
@@ -66,7 +93,7 @@ func generate_base_grid_with_sizes() -> Array:
 	active_blocks.clear()
 	block_sizes.clear()
 
-	var cfg = city_configuration
+	var cfg = get_active_configuration()
 	var radius_val: int = int(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and int(cfg.get("city_radius")) > 0) else int(_layout_rules.get("default_city_radius", 14))
 	var jitter: float = float(cfg.get("radial_jitter")) if (cfg and "radial_jitter" in cfg) else float(_layout_rules.get("default_radial_jitter", 0.35))
 	var noise_scale: float = float(_layout_rules.get("boundary_noise_scale", 15.0))
@@ -104,7 +131,6 @@ func generate_base_grid_with_sizes() -> Array:
 				"size": block_size
 			})
 
-			# CRITICAL: Register into parent active_blocks & block_sizes for road generation!
 			active_blocks.append(pos)
 			block_sizes[pos] = block_size
 			
@@ -112,7 +138,6 @@ func generate_base_grid_with_sizes() -> Array:
 				for bz in range(block_size.y):
 					occupied_positions[Vector2i(x + bx, z + bz)] = true
 					
-	print("[CustomCityCrafter] Base grid generated: %d blocks registered in active_blocks." % active_blocks.size())
 	return blocks_data
 
 ## 100% Data-Driven Zoning Selection
@@ -616,12 +641,15 @@ func _find_valid_anchor_site(
 	footprint: Vector2i, 
 	dist_range: Array, 
 	min_sep: int, 
-	occupied: Dictionary
+	occupied: Dictionary,
+	placement_mode: String = ""
 ) -> Vector2i:
 	var r_min: float = float(dist_range[0])
 	var r_max: float = float(dist_range[1])
+	var core_tolerance: float = float(_layout_rules.get("core_distance_tolerance", 0.08))
 
-	if r_max <= 0.05:
+	# Core Anchor Check: triggered by semantic mode or configured map_layout tolerance
+	if placement_mode == "EXACT_CORE" or (r_min == 0.0 and r_max <= core_tolerance):
 		var core_fits := true
 		for bx in range(footprint.x):
 			for bz in range(footprint.y):

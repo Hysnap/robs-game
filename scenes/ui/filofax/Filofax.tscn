@@ -100,6 +100,18 @@ size_flags_vertical = 3
 current_tab = 0
 tabs_visible = false
 
+[node name="DiaryTab" type="ScrollContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack" unique_id=2081544991]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+metadata/_tab_index = 3
+
+[node name="DiaryList" type="VBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack/DiaryTab" unique_id=2081544992]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="TelemetryTab" type="ScrollContainer" parent="FilofaxBinder/BinderContent/PageSpread/LeftPage_Ledger/PageVBox/LedgerStack" unique_id=444748515]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -180,6 +192,9 @@ text = "Operational Directives"
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="ActionButtons" type="HBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=1812674455]
+layout_mode = 2
+
 [node name="BtnMoveUp" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons"]
 layout_mode = 2
 text = "▲"
@@ -187,9 +202,6 @@ text = "▲"
 [node name="BtnMoveDown" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons"]
 layout_mode = 2
 text = "▼"
-
-[node name="ActionButtons" type="HBoxContainer" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational" unique_id=1812674455]
-layout_mode = 2
 
 [node name="AddOrderButton" type="Button" parent="FilofaxBinder/BinderContent/PageSpread/RightPage_Planner/Operational/ActionButtons" unique_id=323342565]
 layout_mode = 2
