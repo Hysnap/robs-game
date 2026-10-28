@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "entity_type": "STATIONERY_DEFINITION",
+    "id": "TORN_RECEIPT"
+  },
+  "dimensions": [260.0, 160.0],
+  "corner_radius": 1,
+  "padding": 10,
+  "shadow": {
+    "size": 6,
+    "offset": [2.0, 4.0],
+    "alpha": 0.32
+  },
+  "header_template": "EXPENSE RECEIPT // {week}",
+  "palettes": {
+    "PAPER_SCRAP": { "bg": "#f0ede6", "ink": "#1f2421", "title": "TORN RECEIPT" },
+    "CARBON_SLIP": { "bg": "#e8ecf0", "ink": "#0d1b2a", "title": "CARBON COPY" }
+  }
+}

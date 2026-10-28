@@ -3,6 +3,7 @@ class_name StaggeredCardStack
 extends Control
 
 signal top_card_action(action_id, card_payload)
+signal stack_count_changed(unread_count: int)
 
 @export var max_visible_cards: int = 4
 @export var max_tilt_degrees: float = 45.0
@@ -11,7 +12,6 @@ signal top_card_action(action_id, card_payload)
 var _pending_payloads: Array[Dictionary] = []
 var _card_tilts: Array[float] = []
 var _card_offsets: Array[Vector2] = []
-
 var _container: Control = null
 
 func _init() -> void:

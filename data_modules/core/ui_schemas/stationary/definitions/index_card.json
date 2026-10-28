@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "entity_type": "STATIONERY_DEFINITION",
+    "id": "INDEX_CARD"
+  },
+  "dimensions": [300.0, 200.0],
+  "corner_radius": 0,
+  "padding": 12,
+  "shadow": {
+    "size": 7,
+    "offset": [3.0, 4.0],
+    "alpha": 0.35
+  },
+  "header_template": "[ DOSSIER TRANSCRIPT • {week} ]",
+  "palettes": {
+    "BUFF": { "bg": "#f5f0e1", "ink": "#1c1917", "title": "RECORD CARD" }
+  }
+}

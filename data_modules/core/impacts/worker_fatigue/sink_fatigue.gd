@@ -5,6 +5,9 @@ class_name SinkFatigue
 static func get_metric_key() -> String:
 	return "WORKER_FATIGUE"
 
+static func get_target_scope() -> String:
+	return "ACTOR"
+
 static func apply_delta(world_state: Dictionary, _target_id: String, delta: float) -> void:
 	if not world_state.has("operations"):
 		world_state["operations"] = {"fatigue": 0.0}

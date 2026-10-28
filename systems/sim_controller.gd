@@ -4,6 +4,7 @@ extends RefCounted
 
 const _VerbRouter = preload("res://systems/verb_router.gd")
 const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
+const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -16,64 +17,106 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 		
 		for metric_key in deltas.keys():
 			var delta_val: float = float(deltas[metric_key])
-			
-			# Scope Routing:
-			# Personal/Actor metrics route to the initiator.
+			var scope: String = _ImpactRouter.get_metric_scope(metric_key)
+			# Scope Routing:# Personal/Actor metrics route to the initiator.
 			# Environmental/Spatial metrics route to the target location.
 			var recipient_id: String = target_node_id
-			if metric_key in ["CASH", "WORKER_FATIGUE", "OPERATIONAL_TIME", "INTOXICATION"]:
+			if scope == "ACTOR":
 				recipient_id = initiator_id
 				
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_key, delta_val)
 		
 	return result
 
-## Executes a turn cycle, advancing time and returning abstract event triggers
-static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Array:
+## Processes complete operational cycle: resolves directives, advances time via CalendarHelper,
+## triggers ambient drift, and returns structured cycle report.
+static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	var meta: Dictionary = world_state.get("metadata", {})
-	var current_day: int = int(meta.get("current_day_tick", 1))
-	var current_week: int = int(meta.get("current_week_tick", 1))
+	# Current time is anchored by a single monotonic day offset
+	var current_day: int = int(meta.get("current_sim_day", _CalendarHelper.get_simulation_start_day()))
+	var current_week: int = _CalendarHelper.day_to_week(current_day)
 	var horizon: String = meta.get("time_horizon", "day").to_lower()
-	
-	# Pure simulation telemetry event triggers (NO UI SLIP FORMATTING)
-	var event_triggers: Array = []
+	var executed_events: Array = []
+	var diary_memos: Array[String] = []
 
-	# 1. Execute Staged Directives
-	for directive in staged_directives:
-		var result: Dictionary = execute_directive(world_state, directive)
-		event_triggers.append({
-			"trigger_type": "ACTION_RESOLUTION",
-			"tick": current_day,
+	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)
+	if not staged_directives.is_empty():
+		for i in range(staged_directives.size()):
+			var directive: Dictionary = staged_directives[i]
+			var res: Dictionary = execute_directive(world_state, directive)
+			
+			var event_record := {
+				"trigger_type": "ACTION_RESOLUTION",
+				"day_offset": current_day,
+				"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
+				"week": current_week,
+				"day_of_week": _CalendarHelper.day_of_week(current_day),
+				"verb": directive.get("verb", "TASK"),
+				"target_item": directive.get("target_item", ""),
+				"success": res.get("success", false),
+				"message": res.get("message", "Task completed."),
+				"author": directive.get("counterparty_id", "Street Runner"),
+				"target_node_id": directive.get("target_node_id", ""),
+				"staged_index": i,
+				"directive_snapshot": directive.duplicate(true)
+			}
+			executed_events.append(event_record)
+			diary_memos.append(res.get("message", "Task completed."))
+	else:
+		executed_events.append({
+			"trigger_type": "IDLE",
+			"day_offset": current_day,
+			"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 			"week": current_week,
-			"verb": directive.get("verb", "TASK"),
-			"target_item": directive.get("target_item", ""),
-			"success": result.get("success", false),
-			"error_code": result.get("error_code", 0),
-			"impact_deltas": result.get("impact_deltas", {}),
-			"context": result.get("context", {})
+			"day_of_week": _CalendarHelper.day_of_week(current_day),
+			"verb": "IDLE",
+			"message": "Operations quiet; stock and balances steady.",
+			"author": "Station Log",
+			"success": true
 		})
+		diary_memos.append("Quiet shift on the patch.")
 
-	# 2. Advance Time & Run Ambient Drift
+	# 2. Advance Temporal Offset via CalendarHelper
+	var days_to_advance := 1
 	match horizon:
-		"day":
-			current_day += 1
-			if current_day > 7:
-				current_day = 1
-				current_week += 1
-				meta["current_week_tick"] = current_week
-				process_ambient_heartbeat(world_state)
-			meta["current_day_tick"] = current_day
+		"day", "shift":
+			days_to_advance = 1
 		"week":
-			current_week += 1
-			meta["current_week_tick"] = current_week
-			process_ambient_heartbeat(world_state)
-		_:
-			current_day += 1
-			meta["current_day_tick"] = current_day
+			days_to_advance = _CalendarHelper.get_days_per_tick()
 
+	# Check if this step crosses a full cycle boundary
+	var crossed_boundary := _CalendarHelper.crosses_week_boundary(current_day, days_to_advance)
+	current_day += days_to_advance
+
+	if crossed_boundary:
+		_ImpactRouter.dispatch_ambient_tick(world_state)
+
+	# Store the single canonical time offset
+	meta["current_sim_day"] = current_day
+	meta["current_calendar_date"] = _CalendarHelper.day_to_calendar_date(current_day)
+	meta["current_week_tick"] = _CalendarHelper.day_to_week(current_day)
+	meta["current_day_of_week"] = _CalendarHelper.day_of_week(current_day)
+	meta["current_day_tick"] = _CalendarHelper.day_of_week(current_day)
 	world_state["metadata"] = meta
 
-	return event_triggers
+	# 3. Inform GameState (Observer Pattern)
+	var main_loop = Engine.get_main_loop()
+	if main_loop is SceneTree:
+		var root = (main_loop as SceneTree).root
+		if root:
+			var gs_node = root.get_node_or_null("GameState")
+			if gs_node and gs_node.has_signal("turn_advanced"):
+				gs_node.emit_signal("turn_advanced", current_day)
+
+	return {
+		"current_sim_day": current_day,
+		"calendar_date": meta["current_calendar_date"],
+		"week": meta["current_week_tick"],
+		"day_of_week": meta["current_day_of_week"],
+		"week_rollover": crossed_boundary,
+		"executed_events": executed_events,
+		"diary_memos": diary_memos
+	}
 
 ## Global Weekly/Tick Heartbeat
 static func process_ambient_heartbeat(world_state: Dictionary) -> void:

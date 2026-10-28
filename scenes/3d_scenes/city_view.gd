@@ -4,18 +4,23 @@ extends Node3D
 @onready var city_crafter: Node3D = $CityCrafter
 @onready var rts_camera: RTSCamera3D = $RTSCamera3D
 @onready var game_hud: GameHUD = $GameHUD
-@onready var filofax_canvas: CanvasLayer = $FilofaxCanvas
+@onready var workspace_canvas: CanvasLayer = $FilofaxCanvas
 @onready var outer_shell: OuterShell = $FilofaxCanvas/OuterShell
 
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
+const SimControllerScript = preload("res://systems/sim_controller.gd")
+const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
+const FeedbackShellScene = preload("res://scenes/ui/shell_host/feedback_shell.tscn")
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
+var feedback_shell: FeedbackShell = null
+var directive_modal: Control = null
 
 func _ready() -> void:
-	# 1. Mount ViewHost Presenter & Era Shell inside OuterShell
+	# 1. Mount Presenter Host inside OuterShell
 	if outer_shell != null:
 		view_host = ViewHostScript.new()
 		view_host.shell_node = outer_shell
@@ -24,22 +29,21 @@ func _ready() -> void:
 		_setup_compiled_shell_host_views()
 		_setup_shell_customizer()
 
-		# Hook OuterShell close button
 		if outer_shell.has_signal("close_requested"):
-			outer_shell.connect("close_requested", func(): filofax_canvas.visible = false)
+			outer_shell.connect("close_requested", func(): workspace_canvas.visible = false)
 		elif outer_shell.close_btn != null:
-			outer_shell.close_btn.pressed.connect(func(): filofax_canvas.visible = false)
+			outer_shell.close_btn.pressed.connect(func(): workspace_canvas.visible = false)
 
-	# 2. Wire Camera Raycast to District Selection
+	# 2. Camera & 3D Picking
 	if rts_camera != null:
 		rts_camera.district_clicked.connect(_on_district_clicked)
 		rts_camera.focus_on(city_crafter.global_position)
 
-	# 3. Connect HUD Toggle Button
+	# 3. HUD wiring
 	if game_hud != null:
-		game_hud.toggle_filofax_requested.connect(_toggle_filofax_visibility)
+		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
 
-	# 4. Synchronize Seed & Render Saved Visual Layout
+	# 4. Synchronize Seed & Visual Layout
 	var active_seed: String = str(GameState.world_state.get("metadata", {}).get("active_seed", "default-city"))
 	if "seed_id" in city_crafter:
 		city_crafter.seed_id = active_seed
@@ -48,19 +52,8 @@ func _ready() -> void:
 	if not saved_layout.is_empty() and city_crafter.has_method("load_visual_layout"):
 		city_crafter.load_visual_layout(saved_layout)
 
-func _get_configured_shell_type() -> String:
-	var rules_path := "res://data_modules/core/business_rules.cfg"
-	var shell_type := "filofax"
-	
-	if FileAccess.file_exists(rules_path):
-		var cfg := ConfigFile.new()
-		if cfg.load(rules_path) == OK:
-			shell_type = str(cfg.get_value("workspace_device", "active_shell", "filofax")).to_lower()
-			
-	return shell_type
-
 func _setup_compiled_shell_host_views() -> void:
-# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
+	# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
 	var spread_instance := ShellRegistryScript.instantiate_active_spread()
 	if spread_instance and outer_shell:
 		outer_shell.set_spread_wrapper(spread_instance)
@@ -83,17 +76,32 @@ func _setup_compiled_shell_host_views() -> void:
 	if diary_class:
 		view_host.register_view("DIARY", diary_class.new())
 
-	# D. Mount Action Planner into Right Slot
+	# D. Mount Interactive Action Planner into ACTION slot
+	var action_planner_view: Control = null
 	var planner_class = load("res://generated/ui/gen_action_planner.gd")
-	if planner_class:
-		outer_shell.mount_view("ACTION", planner_class.new())
+	if planner_class and outer_shell:
+		action_planner_view = planner_class.new()
+		outer_shell.mount_view("ACTION", action_planner_view)
 
-	# Default to DOSSIER
+	# E. Mount Feedback Inbox Shell onto Canvas
+	if workspace_canvas and feedback_shell == null:
+		feedback_shell = FeedbackShellScene.instantiate() as FeedbackShell
+		feedback_shell.visible = false
+		feedback_shell.z_index = 15
+		workspace_canvas.add_child(feedback_shell)
+
+	# F. Query active spread for its era-specific composer modal (duck-typed)
+	var era_modal: Control = outer_shell.get_slot("MODAL")
+
+	# G. Connect all three systems to ViewHost
+	if view_host and action_planner_view:
+		view_host.attach_action_system(action_planner_view, feedback_shell, era_modal)
+
 	view_host.switch_to_domain("DOSSIER")
 
 func _setup_shell_customizer() -> void:
 	var customizer_res = load("res://scenes/ui/shell_host/shell_customizer.tscn")
-	if customizer_res and filofax_canvas:
+	if customizer_res and workspace_canvas:
 		shell_customizer = customizer_res.instantiate()
 		
 		# Set filter directly from registry without hardcoded checks
@@ -103,7 +111,7 @@ func _setup_shell_customizer() -> void:
 			
 		shell_customizer.visible = false
 		shell_customizer.z_index = 20
-		filofax_canvas.add_child(shell_customizer)
+		workspace_canvas.add_child(shell_customizer)
 
 		view_host.route_changed.connect(func(domain_key: String):
 			if domain_key == "STYLES":
@@ -111,10 +119,11 @@ func _setup_shell_customizer() -> void:
 				if shell_customizer.visible:
 					shell_customizer.move_to_front()
 		)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
-			_toggle_filofax_visibility()
+			_toggle_workspace_visibility()
 			get_viewport().set_input_as_handled()
 
 func _on_district_clicked(block_id: String) -> void:
@@ -129,17 +138,17 @@ func _on_district_clicked(block_id: String) -> void:
 	var district_data: Dictionary = GameState.get_district_view(block_id)
 
 	# Reveal Filofax and present Docket
-	if filofax_canvas != null and view_host != null:
-		filofax_canvas.visible = true
+	if workspace_canvas != null and view_host != null:
+		workspace_canvas.visible = true
 		view_host.switch_to_domain("DOSSIER")
 		view_host.update_active_view_data(district_data)
 
-func _toggle_filofax_visibility() -> void:
-	if filofax_canvas == null:
+func _toggle_workspace_visibility() -> void:
+	if workspace_canvas == null:
 		return
 
-	filofax_canvas.visible = not filofax_canvas.visible
-	if filofax_canvas.visible and view_host != null:
+	workspace_canvas.visible = not workspace_canvas.visible
+	if workspace_canvas.visible and view_host != null:
 		var active_id: String = str(GameState.world_state.get("selected_district_id", ""))
 		if not active_id.is_empty():
 			var district_data: Dictionary = GameState.get_district_view(active_id)

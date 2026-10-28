@@ -5,6 +5,9 @@ class_name SinkIntoxication
 static func get_metric_key() -> String:
 	return "INTOXICATION"
 
+static func get_target_scope() -> String:
+	return "ACTOR"
+
 static func apply_delta(world_state: Dictionary, target_id: String, delta: float) -> void:
 	if target_id != "" and target_id != "PLAYER" and world_state.get("staff", {}).has(target_id):
 		var worker = world_state["staff"][target_id]

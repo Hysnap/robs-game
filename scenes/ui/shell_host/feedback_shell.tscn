@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/shell_host/feedback_shell.gd" id="1_feedback_shell"]
+[ext_resource type="Script" path="res://scenes/ui/components/staggered_card_stack.gd" id="2_card_stack"]
+
+[node name="FeedbackShell" type="PanelContainer"]
+custom_minimum_size = Vector2(360, 360)
+offset_left = 680.0
+offset_top = 180.0
+offset_right = 1040.0
+offset_bottom = 540.0
+script = ExtResource("1_feedback_shell")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="DragHandle" type="Label" parent="VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 13
+text = ":: DESK INBOX (DRAG) ::"
+
+[node name="CountLabel" type="Label" parent="VBox/Header"]
+layout_mode = 2
+text = "[ 0 UNREAD ]"
+
+[node name="BtnClose" type="Button" parent="VBox/Header"]
+layout_mode = 2
+text = " _ "
+
+[node name="StackSlot" type="Control" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CardStack" type="Control" parent="VBox/StackSlot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_card_stack")

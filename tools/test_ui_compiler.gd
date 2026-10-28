@@ -96,7 +96,7 @@ func test_outer_shell_mounting() -> void:
 	var shell = shell_scene.instantiate()
 	root.add_child(shell)
 
-	# Mount default Filofax wrapper
+	# Mount default Filofax wrapper so generic slots are available
 	var filo_spread_scene: PackedScene = load("res://scenes/ui/shells/filofax/filofax_spread.tscn")
 	assert(filo_spread_scene != null, "filofax_spread.tscn failed to load!")
 	shell.set_spread_wrapper(filo_spread_scene.instantiate())
@@ -109,9 +109,9 @@ func test_outer_shell_mounting() -> void:
 	shell.mount_view("CONTENT", dummy_content)
 	shell.mount_view("ACTION", dummy_action)
 
-	assert(shell.get_slot("NAV").get_child_count() == 1, "NAV slot failed mount")
-	assert(shell.get_slot("CONTENT").get_child_count() == 1, "CONTENT slot failed mount")
-	assert(shell.get_slot("ACTION").get_child_count() == 1, "ACTION slot failed mount")
+	assert(shell.get_slot("NAV") != null and shell.get_slot("NAV").get_child_count() == 1, "NAV slot failed mount")
+	assert(shell.get_slot("CONTENT") != null and shell.get_slot("CONTENT").get_child_count() == 1, "CONTENT slot failed mount")
+	assert(shell.get_slot("ACTION") != null and shell.get_slot("ACTION").get_child_count() == 1, "ACTION slot failed mount")
 
 	root.remove_child(shell)
 	shell.free()

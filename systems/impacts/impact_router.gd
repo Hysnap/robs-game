@@ -40,3 +40,10 @@ static func autoload_sinks(impacts_root_dir: String) -> void:
 					register_sink(script)
 			entry = dir.get_next()
 		dir.list_dir_end()
+
+static func get_metric_scope(metric_key: String) -> String:
+	if _registered_sinks.has(metric_key):
+		var sink = _registered_sinks[metric_key]
+		if sink.has_method("get_target_scope"):
+			return sink.get_target_scope()
+	return "SPATIAL"

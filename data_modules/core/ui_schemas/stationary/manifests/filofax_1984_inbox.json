@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "manifest_type": "INBOX_INTERFACE_MANIFEST",
+    "shell_id": "filofax",
+    "description": "Loose paper slips and adhesive notes compatible with the 1984 Filofax desk."
+  },
+  "stack_rules": {
+    "max_visible_cards": 4,
+    "max_tilt_degrees": 35.0,
+    "jitter_offset_px": 10.0,
+    "presentation_order": "ISSUED_ORDER"
+  },
+  "allowed_stationery": [
+    "res://data_modules/core/ui_schemas/stationery/definitions/sticky_note.json",
+    "res://data_modules/core/ui_schemas/stationery/definitions/torn_receipt.json",
+    "res://data_modules/core/ui_schemas/stationery/definitions/index_card.json"
+  ],
+  "verb_bindings": {
+    "BUY": {
+      "default_definition": "TORN_RECEIPT",
+      "default_filing_domain": "FINANCE"
+    },
+    "SELL": {
+      "default_definition": "TORN_RECEIPT",
+      "default_filing_domain": "FINANCE"
+    },
+    "MAKE": {
+      "default_definition": "STICKY_NOTE",
+      "default_filing_domain": "DIARY"
+    },
+    "SCOUT": {
+      "default_definition": "INDEX_CARD",
+      "default_filing_domain": "DOSSIER"
+    }
+  }
+}

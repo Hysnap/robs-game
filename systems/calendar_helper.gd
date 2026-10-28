@@ -46,6 +46,25 @@ static func tick_to_day(tick: int) -> int:
 	assert(_initialized, "FATAL: CalendarHelper used before initialization")
 	return _start_day_offset + (tick * _days_per_tick)
 
+## Returns the current elapsed simulation week (1-indexed) based on day offset
+static func day_to_week(day_offset: int) -> int:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var elapsed_days := day_offset - _start_day_offset
+	return (elapsed_days / _days_per_tick) + 1
+
+## Returns the current day of the week (1 to 7) based on day offset
+static func day_of_week(day_offset: int) -> int:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var elapsed_days := day_offset - _start_day_offset
+	return (elapsed_days % _days_per_tick) + 1
+
+## Determines if advancing by days crosses a week boundary
+static func crosses_week_boundary(current_day: int, advance_days: int) -> bool:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var old_week := day_to_week(current_day)
+	var new_week := day_to_week(current_day + advance_days)
+	return new_week > old_week
+
 ## Formats any day offset into a localized UK date (e.g., "14 Apr 1984")
 static func day_to_calendar_date(day_offset: int) -> String:
 	assert(_initialized, "FATAL: CalendarHelper used before initialization")

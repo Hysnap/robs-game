@@ -5,6 +5,9 @@ class_name SinkCash
 static func get_metric_key() -> String:
 	return "CASH"
 
+static func get_target_scope() -> String:
+	return "ACTOR"
+
 static func apply_delta(world_state: Dictionary, target_id: String, delta: float) -> void:
 	if delta == 0.0:
 		return

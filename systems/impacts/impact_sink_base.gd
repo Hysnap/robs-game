@@ -1,5 +1,6 @@
 # res://systems/impacts/impact_sink_base.gd
-class_name ImpactSinkBase extends RefCounted
+class_name ImpactSinkBase 
+extends RefCounted
 
 ## 1. IDENTITY
 ## Returns the string token that matches the metric in commodity impact activations
@@ -7,6 +8,10 @@ class_name ImpactSinkBase extends RefCounted
 static func get_metric_key() -> String:
 	push_error("get_metric_key() must be overridden by concrete metric sink.")
 	return ""
+
+## Returns the routing target scope: "ACTOR", "SPATIAL", or "GLOBAL"
+static func get_target_scope() -> String:
+	return "SPATIAL" # Default fallback for environmental/district sinks
 
 ## 2. ACTION IMPULSE CONTRACT
 ## Called when a Verb + Commodity calculation produces a delta.

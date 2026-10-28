@@ -1,18 +1,77 @@
 {
   "_meta": {
+    "module_type": "ACTION_PLANNER",
     "target_class": "GenActionPlanner",
     "extends": "VBoxContainer",
-    "signals": ["order_pad_requested", "turn_commit_requested"]
+    "signals": [
+      "directive_staged(directive)",
+      "execute_shift_requested(staged_directives)",
+      "action_clicked(action_code)"
+    ]
   },
   "sections": [
     {
-      "id": "planner_body",
-      "header_token": "UI_SEC_DIRECTIVES",
-      "header_default": "OPERATIONAL DIRECTIVES QUEUE",
+      "id": "operational_docket",
+      "header_token": "UI_HDR_OPERATIONS",
+      "default_text": "OPERATIONAL SHIFT DISPATCH",
       "rows": [
-        { "id": "queue_list", "type": "ITEM_LIST" },
-        { "id": "btn_add", "type": "BUTTON", "token": "UI_BTN_NEW_ORDER", "default_text": "+ New Order Note", "action_signal": "order_pad_requested" },
-        { "id": "btn_commit", "type": "BUTTON", "token": "UI_BTN_EXECUTE_TURN", "default_text": "Commit Directives", "action_signal": "turn_commit_requested" }
+        {
+          "id": "verb_selector",
+          "type": "OPTION_DROPDOWN",
+          "token": "UI_LBL_ACTION",
+          "default_text": "Directive:",
+          "field": "selected_verb",
+          "options": ["BUY", "SELL", "MAKE", "SCOUT"]
+        },
+        {
+          "id": "item_selector",
+          "type": "OPTION_DROPDOWN",
+          "token": "UI_LBL_COMMODITY",
+          "default_text": "Target Item:",
+          "field": "selected_item",
+          "options": ["BEER_STRONG_LAGER", "CIGARETTES_SMUGGLED"]
+        },
+        {
+          "id": "quantity_spinner",
+          "type": "SPIN_INPUT",
+          "token": "UI_LBL_QTY",
+          "default_text": "Quantity:",
+          "field": "quantity",
+          "min": 1,
+          "max": 100,
+          "step": 1,
+          "default_value": 10
+        },
+        {
+          "id": "btn_stage_order",
+          "type": "BUTTON",
+          "token": "UI_BTN_STAGE_ORDER",
+          "default_text": "📝 Stage Directive",
+          "action_signal": "action_clicked",
+          "emit_args": "\"STAGE\""
+        }
+      ]
+    },
+    {
+      "id": "staging_ledger",
+      "header_token": "UI_HDR_STAGED_QUEUE",
+      "default_text": "STAGED SHIFT ORDERS",
+      "rows": [
+        {
+          "id": "queue_list",
+          "type": "ITEM_LIST",
+          "token": "UI_LBL_QUEUED",
+          "default_text": "Queued Directives",
+          "field": "staged_queue"
+        },
+        {
+          "id": "btn_execute_shift",
+          "type": "BUTTON",
+          "token": "UI_BTN_EXECUTE_SHIFT",
+          "default_text": "📅 Complete Day Shift (End Day)",
+          "action_signal": "action_clicked",
+          "emit_args": "\"COMMIT_SHIFT\""
+        }
       ]
     }
   ]

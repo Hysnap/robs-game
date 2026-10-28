@@ -21,16 +21,29 @@ func _ready() -> void:
 
 ## Mounts an era presentation shell (e.g. FilofaxSpread or Apple2CrtSpread)
 func set_spread_wrapper(spread_node: Node) -> void:
-	if spread_holder == null:
+	var holder: MarginContainer = spread_holder
+	if holder == null:
+		holder = get_node_or_null("Layout/SpreadHolder")
+	
+	if holder == null:
+		push_error("[OuterShell] SpreadHolder not found in Layout!")
 		return
-	for child in spread_holder.get_children():
-		spread_holder.remove_child(child)
+
+	for child in holder.get_children():
+		holder.remove_child(child)
 		child.queue_free()
+
 	_active_spread = spread_node
-	spread_holder.add_child(spread_node)
+	holder.add_child(spread_node)
 
 ## Resolves slot node from the active spread wrapper
 func get_slot(slot_name: String) -> Control:
+	if _active_spread == null:
+		# Fallback: check if SpreadHolder has a child wrapper already
+		var holder: MarginContainer = spread_holder if spread_holder else get_node_or_null("Layout/SpreadHolder")
+		if holder and holder.get_child_count() > 0:
+			_active_spread = holder.get_child(0)
+
 	if _active_spread != null and _active_spread.has_method("get_slot"):
 		return _active_spread.get_slot(slot_name)
 	return null
@@ -50,7 +63,7 @@ func mount_view(slot_name: String, view_node: Control) -> void:
 
 	for child in target_slot.get_children():
 		target_slot.remove_child(child)
-		child.queue_free()
+		 # child.queue_free()
 
 	target_slot.add_child(view_node)
 

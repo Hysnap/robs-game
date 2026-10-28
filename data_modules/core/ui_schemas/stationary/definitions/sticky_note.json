@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "entity_type": "STATIONERY_DEFINITION",
+    "id": "STICKY_NOTE"
+  },
+  "dimensions": [250.0, 190.0],
+  "corner_radius": 2,
+  "padding": 8,
+  "shadow": {
+    "size": 5,
+    "offset": [2.0, 3.0],
+    "alpha": 0.28
+  },
+  "header_template": "{title} • WK {week}",
+  "palettes": {
+    "YELLOW": { "bg": "#fff9a6", "ink": "#1a1a1a", "title": "MEMO NOTE" },
+    "MINT":   { "bg": "#d4fcd6", "ink": "#102413", "title": "FIELD NOTE" },
+    "ROSE":   { "bg": "#ffd1d5", "ink": "#2b1114", "title": "URGENT DISPATCH" }
+  }
+}

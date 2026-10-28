@@ -1,0 +1,139 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/shells/filofax/sticky_order_pad.gd" id="1_order_pad"]
+
+[node name="StickyOrderPad" type="PanelContainer"]
+z_index = 25
+custom_minimum_size = Vector2(380, 430)
+offset_left = 550.0
+offset_top = 130.0
+offset_right = 930.0
+offset_bottom = 560.0
+script = ExtResource("1_order_pad")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="DragHandle" type="Label" parent="VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ":: ORDER SLIP PAD (DRAG) ::"
+
+[node name="BtnClose" type="Button" parent="VBox/Header"]
+layout_mode = 2
+text = " X "
+
+[node name="NotesGrid" type="GridContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+
+[node name="StickyNote_Action" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Action"]
+layout_mode = 2
+
+[node name="ActionLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Action/VBox"]
+layout_mode = 2
+text = "1. ACTION"
+
+[node name="VerbOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Action/VBox"]
+layout_mode = 2
+
+[node name="StickyNote_What" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_What"]
+layout_mode = 2
+
+[node name="WhatLabel" type="Label" parent="VBox/NotesGrid/StickyNote_What/VBox"]
+layout_mode = 2
+text = "2. WHAT"
+
+[node name="TargetOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_What/VBox"]
+layout_mode = 2
+
+[node name="StickyNote_Amount" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Amount"]
+layout_mode = 2
+
+[node name="AmountLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Amount/VBox"]
+layout_mode = 2
+text = "3. HOW MANY"
+
+[node name="AmountSpin" type="SpinBox" parent="VBox/NotesGrid/StickyNote_Amount/VBox"]
+layout_mode = 2
+min_value = 1.0
+max_value = 1000.0
+value = 10.0
+
+[node name="StickyNote_Who" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Who"]
+layout_mode = 2
+
+[node name="WhoLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Who/VBox"]
+layout_mode = 2
+text = "4. WHO"
+
+[node name="WhoOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Who/VBox"]
+layout_mode = 2
+
+[node name="StickyNote_Where" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Where"]
+layout_mode = 2
+
+[node name="WhereLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
+layout_mode = 2
+text = "5. WHERE"
+
+[node name="WhereOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
+layout_mode = 2
+
+[node name="StickyNote_Estimate" type="PanelContainer" parent="VBox/NotesGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Estimate"]
+layout_mode = 2
+
+[node name="EstLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Estimate/VBox"]
+layout_mode = 2
+text = "6. ESTIMATE"
+
+[node name="EstimatedCostLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Estimate/VBox"]
+layout_mode = 2
+text = "£0.00"
+
+[node name="ButtonBox" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="SaveNoteBtn" type="Button" parent="VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "📌 Pin to Filofax"
+
+[node name="DiscardBtn" type="Button" parent="VBox/ButtonBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tear Off"
