@@ -1,0 +1,7 @@
+{
+  "id": "apple2",
+  "display_name": "Apple //e CRT Monitor ///",
+  "spread_scene": "res://scenes/ui/shells/apple2/apple2_crt_spread.tscn",
+  "default_theme_profile": "apple2_phosphor_green",
+  "supports_customizer": true
+}

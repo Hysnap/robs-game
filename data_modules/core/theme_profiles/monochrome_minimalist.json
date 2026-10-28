@@ -1,0 +1,15 @@
+{
+  "id": "monochrome_minimalist",
+  "shell": "filofax",
+  "display_name": "Monochrome Minimalist",
+  "colors": {
+    "binder_cover": "#1a1a1a",
+    "binder_trim": "#333333",
+    "page_bg": "#f8f8f8",
+    "ruled_line": "#dcdcdc",
+    "ink_body": "#0a0a0a",
+    "ink_accent": "#4a4a4a",
+    "ink_warning": "#d32f2f",
+    "ink_muted": "#757575"
+  }
+}

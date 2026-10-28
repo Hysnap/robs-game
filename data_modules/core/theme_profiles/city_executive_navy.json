@@ -1,0 +1,15 @@
+{
+  "id": "city_executive_navy",
+  "shell": "filofax",
+  "display_name": "City Executive Navy",
+  "colors": {
+    "binder_cover": "#121b2b",
+    "binder_trim": "#212f45",
+    "page_bg": "#eef3f7",
+    "ruled_line": "#cbdaf0",
+    "ink_body": "#111a24",
+    "ink_accent": "#1e4f8a",
+    "ink_warning": "#a6231b",
+    "ink_muted": "#596677"
+  }
+}

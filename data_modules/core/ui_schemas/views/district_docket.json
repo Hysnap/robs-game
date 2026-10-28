@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "target_class": "GenDistrictDocket",
+    "extends": "VBoxContainer",
+    "description": "Pre-compiled municipal district inspector view"
+  },
+  "sections": [
+    {
+      "id": "demographics",
+      "header_token": "UI_SEC_MUNICIPAL_CENSUS",
+      "header_default": "MUNICIPAL CENSUS & RESIDENCY",
+      "rows": [
+        { "id": "pop", "field": "active_population", "token": "UI_LBL_POPULATION", "default_text": "Total Residents", "format": "INT", "suffix": " citizens" },
+        { "id": "households", "field": "total_households", "token": "UI_LBL_HOUSEHOLDS", "default_text": "Registered Households", "format": "INT", "suffix": " homes" },
+        { "id": "employed", "field": "formally_employed_count", "token": "UI_LBL_EMPLOYED", "default_text": "Formally Employed", "format": "INT", "suffix": " workers" },
+        { "id": "informal", "field": "street_informal_count", "token": "UI_LBL_INFORMAL", "default_text": "Informal Economy", "format": "INT", "suffix": " claimants" }
+      ]
+    },
+    {
+      "id": "telemetry",
+      "header_token": "UI_SEC_WARD_TELEMETRY",
+      "header_default": "WARD TELEMETRY & PUBLIC ORDER",
+      "rows": [
+        { "id": "income", "field": "avg_disposable_income", "token": "UI_LBL_DISPOSABLE_INCOME", "default_text": "Disposable Income", "format": "CURRENCY", "suffix": " / wk" },
+        { "id": "zhi", "field": "zone_health_index", "token": "UI_LBL_ZHI", "default_text": "Zone Health Index", "format": "FLOAT", "suffix": " / 100" },
+        { "id": "heat", "field": "actual_police_heat", "token": "UI_LBL_POLICE_HEAT", "default_text": "Observed Police Heat", "format": "PERCENT" },
+        { "id": "unemployment", "field": "unemployment_rate", "token": "UI_LBL_UNEMPLOYMENT", "default_text": "Unemployment Ratio", "format": "PERCENT" }
+      ]
+    }
+  ]
+}

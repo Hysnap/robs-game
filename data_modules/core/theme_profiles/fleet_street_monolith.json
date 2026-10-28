@@ -1,0 +1,15 @@
+{
+  "id": "fleet_street_monolith",
+  "shell": "filofax",
+  "display_name": "Fleet Street Monolith",
+  "colors": {
+    "binder_cover": "#1a1a1a",
+    "binder_trim": "#333333",
+    "page_bg": "#f5f5f5",
+    "ruled_line": "#d8d8d8",
+    "ink_body": "#0c0c0c",
+    "ink_accent": "#4a4a4a",
+    "ink_warning": "#b31b1b",
+    "ink_muted": "#e9aaaa"
+  }
+}

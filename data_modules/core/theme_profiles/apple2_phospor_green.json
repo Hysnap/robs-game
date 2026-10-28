@@ -1,0 +1,15 @@
+{
+  "id": "apple2_phosphor_green",
+  "shell": "apple2",
+  "display_name": "Apple //e Monitor /// (P31 Phosphor)",
+  "colors": {
+    "binder_cover": "#141712",
+    "binder_trim": "#2B3324",
+    "page_bg": "#0A0D08",
+    "ruled_line": "#1B331E",
+    "ink_body": "#33FF33",
+    "ink_accent": "#66FF66",
+    "ink_warning": "#FFB000",
+    "ink_muted": "#1E7A2A"
+  }
+}

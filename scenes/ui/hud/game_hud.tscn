@@ -37,7 +37,7 @@ custom_minimum_size = Vector2(180, 38)
 layout_mode = 2
 text = "📖 FILOFAX (TAB)"
 
-[node name="BtnMessagesAlert" type="Button" parent="MarginContainer/TopBar/HBoxLeft"]
+[node name="BtnMessagesAlert" type="Button" parent="MarginContainer/TopBar/HBoxLeft" unique_id=617615223]
 visible = false
 custom_minimum_size = Vector2(170, 38)
 layout_mode = 2

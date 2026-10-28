@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "target_class": "GenCashbookLedger",
+    "extends": "VBoxContainer",
+    "has_inscriptions": true,
+    "inscriptions_header_token": "UI_SEC_FILED_RECEIPTS",
+    "inscriptions_header_default": "VOUCHED RECEIPTS & EXPENSE SLIPS"
+  },
+  "sections": [
+    {
+      "id": "vault_summary",
+      "header_token": "UI_SEC_VAULT_RESERVES",
+      "header_default": "COMMERCIAL VAULT & CASH RESERVES",
+      "rows": [
+        { "id": "liquid_cash", "field": "reported_cash", "token": "UI_LBL_LIQUID_CASH", "default_text": "Liquid Cash Balance", "format": "CURRENCY", "suffix": "" },
+        { "id": "filed_receipts_total", "field": "total_filed_expenses", "token": "UI_LBL_EXPENSE_TOTAL", "default_text": "Vouched Expenditures", "format": "CURRENCY", "suffix": "" }
+      ]
+    }
+  ]
+}

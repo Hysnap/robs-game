@@ -1,0 +1,135 @@
+[gd_scene format=3 uid="uid://dto1tilb5yqgp"]
+
+[ext_resource type="Script" uid="uid://eyyihcgx4c0v" path="res://scenes/ui/shell_host/shell_customizer.gd" id="1_customizer_script"]
+
+[node name="FilofaxCustomizer" type="PanelContainer" unique_id=972021067]
+custom_minimum_size = Vector2(400, 460)
+offset_left = 520.0
+offset_top = 120.0
+offset_right = 920.0
+offset_bottom = 580.0
+script = ExtResource("1_customizer_script")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=449060011]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=1728918973]
+layout_mode = 2
+text = "[ FILOFAX PERSONALISATION DESK ]"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer" unique_id=791692308]
+layout_mode = 2
+
+[node name="ProfileRow" type="HBoxContainer" parent="VBoxContainer" unique_id=2135805353]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/ProfileRow" unique_id=912572335]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Load Profile / Preset:"
+
+[node name="ProfileOption" type="OptionButton" parent="VBoxContainer/ProfileRow" unique_id=2016373588]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+
+[node name="SaveRow" type="HBoxContainer" parent="VBoxContainer" unique_id=2002071246]
+layout_mode = 2
+
+[node name="ProfileNameInput" type="LineEdit" parent="VBoxContainer/SaveRow" unique_id=235640079]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter profile name..."
+
+[node name="BtnSaveProfile" type="Button" parent="VBoxContainer/SaveRow" unique_id=541767090]
+layout_mode = 2
+text = "💾 Save Profile"
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer" unique_id=2103461168]
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="VBoxContainer" unique_id=1437771725]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+
+[node name="L1" type="Label" parent="VBoxContainer/Grid" unique_id=963765930]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Leather Cover:"
+
+[node name="CP_Binder" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=41694993]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L2" type="Label" parent="VBoxContainer/Grid" unique_id=203866226]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Edge Trim / Stitch:"
+
+[node name="CP_Trim" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=1426475198]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L3" type="Label" parent="VBoxContainer/Grid" unique_id=1331106338]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Page Background:"
+
+[node name="CP_Page" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=2014047783]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L4" type="Label" parent="VBoxContainer/Grid" unique_id=1202834319]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ruled Ledger Lines:"
+
+[node name="CP_Line" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=591365115]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L5" type="Label" parent="VBoxContainer/Grid" unique_id=1654961646]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Typewriter Ink:"
+
+[node name="CP_Ink" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=800982987]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L6" type="Label" parent="VBoxContainer/Grid" unique_id=727870352]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Accent / Biro Blue:"
+
+[node name="CP_Accent" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=56078723]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L7" type="Label" parent="VBoxContainer/Grid" unique_id=1018350263]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Warning Red / Heat:"
+
+[node name="CP_Warn" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=1299084920]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="L8" type="Label" parent="VBoxContainer/Grid" unique_id=748139439]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Muted Text / Notes:"
+
+[node name="CP_Muted" type="ColorPickerButton" parent="VBoxContainer/Grid" unique_id=155521633]
+custom_minimum_size = Vector2(50, 24)
+layout_mode = 2
+
+[node name="BottomButtons" type="HBoxContainer" parent="VBoxContainer" unique_id=346387538]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="VBoxContainer/BottomButtons" unique_id=592171493]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Done"

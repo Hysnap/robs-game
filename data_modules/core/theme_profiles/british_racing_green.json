@@ -1,0 +1,15 @@
+{
+  "id": "british_racing_green",
+  "shell": "filofax",
+  "display_name": "British Racing Green",
+  "colors": {
+    "binder_cover": "#112918",
+    "binder_trim": "#224d2d",
+    "page_bg": "#f2ede1",
+    "ruled_line": "#d5cfbe",
+    "ink_body": "#101b12",
+    "ink_accent": "#205b38",
+    "ink_warning": "#96241a4",
+    "ink_muted": "#5a6358"
+}
+}

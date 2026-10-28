@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://c8n1m4q7y8v2a"]
+
+[ext_resource type="Script" path="res://scenes/ui/shell_host/outer_shell.gd" id="1_outer_shell"]
+
+[node name="OuterShell" type="PanelContainer"]
+custom_minimum_size = Vector2(980, 560)
+offset_left = 200.0
+offset_top = 80.0
+offset_right = 1180.0
+offset_bottom = 640.0
+script = ExtResource("1_outer_shell")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="HeaderBar" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DragHandle" type="Label" parent="Layout/HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 0
+mouse_default_cursor_shape = 13
+text = ":: EXECUTIVE WORKSPACE (DRAG) ::"
+
+[node name="BtnClose" type="Button" parent="Layout/HeaderBar"]
+custom_minimum_size = Vector2(28, 24)
+layout_mode = 2
+focus_mode = 0
+text = " X "
+
+[node name="HSeparator" type="HSeparator" parent="Layout"]
+layout_mode = 2
+
+[node name="SpreadHolder" type="MarginContainer" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 1

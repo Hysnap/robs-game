@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "target_class": "GenActionPlanner",
+    "extends": "VBoxContainer",
+    "signals": ["order_pad_requested", "turn_commit_requested"]
+  },
+  "sections": [
+    {
+      "id": "planner_body",
+      "header_token": "UI_SEC_DIRECTIVES",
+      "header_default": "OPERATIONAL DIRECTIVES QUEUE",
+      "rows": [
+        { "id": "queue_list", "type": "ITEM_LIST" },
+        { "id": "btn_add", "type": "BUTTON", "token": "UI_BTN_NEW_ORDER", "default_text": "+ New Order Note", "action_signal": "order_pad_requested" },
+        { "id": "btn_commit", "type": "BUTTON", "token": "UI_BTN_EXECUTE_TURN", "default_text": "Commit Directives", "action_signal": "turn_commit_requested" }
+      ]
+    }
+  ]
+}

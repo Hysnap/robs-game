@@ -28,44 +28,32 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 		
 	return result
 
-## Processes complete operational cycle: resolves directives, advances time, 
-## triggers ambient drift, and returns structured feedback slips for the UI.
+## Executes a turn cycle, advancing time and returning abstract event triggers
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Array:
 	var meta: Dictionary = world_state.get("metadata", {})
 	var current_day: int = int(meta.get("current_day_tick", 1))
 	var current_week: int = int(meta.get("current_week_tick", 1))
 	var horizon: String = meta.get("time_horizon", "day").to_lower()
-	var incoming_slips: Array = []
+	
+	# Pure simulation telemetry event triggers (NO UI SLIP FORMATTING)
+	var event_triggers: Array = []
 
-	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)
-	if not staged_directives.is_empty():
-		for i in range(staged_directives.size()):
-			var directive: Dictionary = staged_directives[i]
-			var res: Dictionary = execute_directive(world_state, directive)
-			incoming_slips.append({
-				"tick": current_day,
-				"week": current_week,
-				"verb": directive.get("verb", "TASK"),
-				"text": res.get("message", "Task completed."),
-				"author": directive.get("counterparty_id", "Street Runner"),
-				"destination": "DIARY",
-				"staged_index": int(directive.get("staged_index", i)),
-				"completion_index": i,
-				"directive_snapshot": directive.duplicate(true)
-			})
-	else:
-		incoming_slips.append({
+	# 1. Execute Staged Directives
+	for directive in staged_directives:
+		var result: Dictionary = execute_directive(world_state, directive)
+		event_triggers.append({
+			"trigger_type": "ACTION_RESOLUTION",
 			"tick": current_day,
 			"week": current_week,
-			"verb": "IDLE",
-			"text": "Cycle complete. Operations quiet; balances and stock held steady.",
-			"author": "Station Log",
-			"destination": "DIARY",
-			"staged_index": 0,
-			"completion_index": 0
+			"verb": directive.get("verb", "TASK"),
+			"target_item": directive.get("target_item", ""),
+			"success": result.get("success", false),
+			"error_code": result.get("error_code", 0),
+			"impact_deltas": result.get("impact_deltas", {}),
+			"context": result.get("context", {})
 		})
 
-	# 2. Advance Temporal Horizon Clock
+	# 2. Advance Time & Run Ambient Drift
 	match horizon:
 		"day":
 			current_day += 1
@@ -85,16 +73,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	world_state["metadata"] = meta
 
-	# 3. Inform GameState safely if running inside tree (No raw GameState identifier reference)
-	var main_loop = Engine.get_main_loop()
-	if main_loop is SceneTree:
-		var root = (main_loop as SceneTree).root
-		if root:
-			var gs_node = root.get_node_or_null("GameState")
-			if gs_node and gs_node.has_signal("turn_advanced"):
-				gs_node.emit_signal("turn_advanced", current_day)
-
-	return incoming_slips
+	return event_triggers
 
 ## Global Weekly/Tick Heartbeat
 static func process_ambient_heartbeat(world_state: Dictionary) -> void:

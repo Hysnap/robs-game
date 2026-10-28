@@ -1,0 +1,15 @@
+{
+  "id": "classic_1984_oxblood",
+  "shell": "filofax",
+  "display_name": "1984 Oxblood (Classic)",
+  "colors": {
+    "binder_cover": "#2B1D14",
+    "binder_trim": "#422B1F",
+    "page_bg": "#F4EEDB",
+    "ruled_line": "#DCD3BC",
+    "ink_body": "#1C1C1C",
+    "ink_accent": "#1B325F",
+    "ink_warning": "#8A1C14",
+    "ink_muted": "#5A5751"
+  }
+}

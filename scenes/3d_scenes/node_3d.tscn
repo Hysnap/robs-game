@@ -1,10 +1,11 @@
 [gd_scene format=3 uid="uid://c3edoot4bljng"]
 
-[ext_resource type="Script" path="res://scenes/3d_scenes/city_view.gd" id="1_city_view"]
-[ext_resource type="Script" path="res://scripts/world/custom_city_crafter.gd" id="2_city_crafter"]
-[ext_resource type="PackedScene" path="res://scenes/ui/filofax/Filofax.tscn" id="3_filofax"]
-[ext_resource type="Script" path="res://scripts/world/camera/rts_camera.gd" id="4_rts_camera"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud/game_hud.tscn" id="5_hud"]
+[ext_resource type="Script" uid="uid://cqo17xkl4eq5h" path="res://scenes/3d_scenes/city_view.gd" id="1_city_view"]
+[ext_resource type="Script" uid="uid://bxjjmypitb8yf" path="res://scripts/world/custom_city_crafter.gd" id="2_city_crafter"]
+[ext_resource type="Script" uid="uid://bdjvc6rbjwwvg" path="res://addons/citycrafter/city_configuration.gd" id="3_i46bo"]
+[ext_resource type="PackedScene" uid="uid://c8n1m4q7y8v2a" path="res://scenes/ui/shell_host/outer_shell.tscn" id="3_shell"]
+[ext_resource type="Script" uid="uid://dro7lvs2xaob" path="res://scripts/world/camera/rts_camera.gd" id="4_rts_camera"]
+[ext_resource type="PackedScene" uid="uid://cpcanvwixxdbs" path="res://scenes/ui/hud/game_hud.tscn" id="5_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_s5x6w"]
 
@@ -20,29 +21,46 @@ ambient_light_color = Color(0.54901963, 0.61960787, 0.7490196, 1)
 ambient_light_energy = 0.7
 tonemap_mode = 2
 
-[node name="Node3D" type="Node3D"]
+[sub_resource type="Resource" id="Resource_73l34"]
+script = ExtResource("3_i46bo")
+
+[node name="Node3D" type="Node3D" unique_id=2015446412]
 script = ExtResource("1_city_view")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=845590071]
 environment = SubResource("Environment_f7jhf")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1954962763]
 transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
 light_color = Color(1, 0.9490196, 0.8509804, 1)
 light_energy = 1.2
 shadow_enabled = true
 
-[node name="CityCrafter" type="Node3D" parent="."]
+[node name="CityCrafter" type="Node3D" parent="." unique_id=787142187]
 script = ExtResource("2_city_crafter")
+city_configuration = SubResource("Resource_73l34")
 
-[node name="RTSCamera3D" type="Node3D" parent="."]
+[node name="RTSCamera3D" type="Node3D" parent="." unique_id=863915797]
 script = ExtResource("4_rts_camera")
 
-[node name="Camera3D" type="Camera3D" parent="RTSCamera3D"]
+[node name="Camera3D" type="Camera3D" parent="RTSCamera3D" unique_id=1565091157]
 current = true
 
-[node name="GameHUD" parent="." instance=ExtResource("5_hud")]
+[node name="GameHUD" parent="." unique_id=1536561943 instance=ExtResource("5_hud")]
 
-[node name="FilofaxCanvas" type="CanvasLayer" parent="."]
+[node name="FilofaxCanvas" type="CanvasLayer" parent="." unique_id=366699477]
+layer = 5
+visible = false
 
-[node name="Organiser" parent="FilofaxCanvas" instance=ExtResource("3_filofax")]
+[node name="OuterShell" parent="FilofaxCanvas" unique_id=1500608857 instance=ExtResource("3_shell")]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -490.0
+offset_top = -280.0
+offset_right = 490.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2

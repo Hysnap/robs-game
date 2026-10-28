@@ -1,0 +1,7 @@
+{
+  "id": "filofax",
+  "display_name": "1984 Personal Organiser",
+  "spread_scene": "res://scenes/ui/shells/filofax/filofax_spread.tscn",
+  "default_theme_profile": "classic_1984_oxblood",
+  "supports_customizer": true
+}

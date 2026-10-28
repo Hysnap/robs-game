@@ -54,7 +54,12 @@ horizontal_alignment = 1
 [node name="MapMenu" parent="." unique_id=304661838 instance=ExtResource("1_nfmt1")]
 visible = false
 layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
 offset_left = 282.0
 offset_top = 45.0
 offset_right = 880.0
 offset_bottom = 587.0
+grow_horizontal = 1
+grow_vertical = 1

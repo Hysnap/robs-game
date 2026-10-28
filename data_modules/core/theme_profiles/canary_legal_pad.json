@@ -1,0 +1,15 @@
+{
+  "id": "canary_legal_pad",
+  "shell": "filofax",
+  "display_name": "Canary Legal Pad",
+  "colors": {
+    "binder_cover": "#33241d",
+    "binder_trim": "#4a372d",
+    "page_bg": "#fff4a3",
+    "ruled_line": "#ead977",
+    "ink_body": "#141414",
+    "ink_accent": "#8a2be2",
+    "ink_warning": "#c41e14",
+    "ink_muted": "#736c4b"
+  }
+}
