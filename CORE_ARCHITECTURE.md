@@ -221,3 +221,13 @@ sequenceDiagram
    an already-open database and `world_state`, performs no gameplay or schema
    mutations, and writes only a Markdown inspection report. Its SQL is kept in
    `systems/city_auditor_queries.sql` for reuse or independent inspection.
+
+## Modular Filofax UI
+
+The Filofax presentation layer is documented in
+[MODULAR_UI_HOW_TO.md](MODULAR_UI_HOW_TO.md). Its key invariant is that
+`ViewHost` orchestrates generated views and feedback modules through generic
+contracts: `bind_data`, `inscribe_entry`, `action_clicked`, `push_cards`, and
+`top_card_action`. The desktop inbox is implemented at
+`scenes/ui/shells/filofax/desktop_slip_stack.tscn` and consumes the normalized
+simulation feedback payload.

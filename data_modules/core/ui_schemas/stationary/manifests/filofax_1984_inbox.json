@@ -11,9 +11,9 @@
     "presentation_order": "ISSUED_ORDER"
   },
   "allowed_stationery": [
-    "res://data_modules/core/ui_schemas/stationery/definitions/sticky_note.json",
-    "res://data_modules/core/ui_schemas/stationery/definitions/torn_receipt.json",
-    "res://data_modules/core/ui_schemas/stationery/definitions/index_card.json"
+    "res://data_modules/core/ui_schemas/stationary/definitions/sticky_note.json",
+    "res://data_modules/core/ui_schemas/stationary/definitions/torn_receipt.json",
+    "res://data_modules/core/ui_schemas/stationary/definitions/index_card.json"
   ],
   "verb_bindings": {
     "BUY": {

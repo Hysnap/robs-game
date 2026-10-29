@@ -12,11 +12,11 @@ const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const SimControllerScript = preload("res://systems/sim_controller.gd")
 const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
-const FeedbackShellScene = preload("res://scenes/ui/shell_host/feedback_shell.tscn")
+const DesktopSlipStackScene = preload("res://scenes/ui/shells/filofax/desktop_slip_stack.tscn")
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
-var feedback_shell: FeedbackShell = null
+var feedback_inbox: Control = null
 var directive_modal: Control = null
 
 func _ready() -> void:
@@ -84,18 +84,18 @@ func _setup_compiled_shell_host_views() -> void:
 		outer_shell.mount_view("ACTION", action_planner_view)
 
 	# E. Mount Feedback Inbox Shell onto Canvas
-	if workspace_canvas and feedback_shell == null:
-		feedback_shell = FeedbackShellScene.instantiate() as FeedbackShell
-		feedback_shell.visible = false
-		feedback_shell.z_index = 15
-		workspace_canvas.add_child(feedback_shell)
+	if workspace_canvas and feedback_inbox == null:
+		feedback_inbox = DesktopSlipStackScene.instantiate() as Control
+		feedback_inbox.visible = false
+		feedback_inbox.z_index = 15
+		workspace_canvas.add_child(feedback_inbox)
 
 	# F. Query active spread for its era-specific composer modal (duck-typed)
 	var era_modal: Control = outer_shell.get_slot("MODAL")
 
 	# G. Connect all three systems to ViewHost
 	if view_host and action_planner_view:
-		view_host.attach_action_system(action_planner_view, feedback_shell, era_modal)
+		view_host.attach_action_system(action_planner_view, feedback_inbox, era_modal)
 
 	view_host.switch_to_domain("DOSSIER")
 

@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "target_class": "GenNavBar",
+    "extends": "VBoxContainer",
+    "signals": ["route_requested(domain_token: String, target_page_name: String)"]
+  },
+  "sections": [
+    {
+      "id": "macro_tabs",
+      "rows": [
+        { "id": "diary", "type": "BUTTON", "token": "UI_TAB_MACRO_DIARY", "default_text": "📅 DIARY", "action_signal": "route_requested", "emit_args": "\"DIARY\", \"DiaryTab\"" },
+        { "id": "dossier", "type": "BUTTON", "token": "UI_TAB_MACRO_DOSSIER", "default_text": "📁 DOSSIER", "action_signal": "route_requested", "emit_args": "\"DOSSIER\", \"TelemetryTab\"" },
+        { "id": "roster", "type": "BUTTON", "token": "UI_TAB_MACRO_ROSTER", "default_text": "👥 ROSTER", "action_signal": "route_requested", "emit_args": "\"ROSTER\", \"RosterTab\"" },
+        { "id": "finance", "type": "BUTTON", "token": "UI_TAB_MACRO_FINANCE", "default_text": "💷 ACCOUNTS", "action_signal": "route_requested", "emit_args": "\"FINANCE\", \"FinancialsTab\"" }
+      ]
+    }
+  ]
+}

@@ -6,7 +6,7 @@ static var _cached_definitions: Dictionary = {} # "STICKY_NOTE" -> Dictionary
 static var _active_manifest: Dictionary = {}
 static var _initialized: bool = false
 
-static func initialize(manifest_path: String = "res://data_modules/core/ui_schemas/stationery/manifests/filofax_1984_inbox.json") -> void:
+static func initialize(manifest_path: String = "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_inbox.json") -> void:
 	if _initialized:
 		return
 

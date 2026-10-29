@@ -28,60 +28,12 @@ func build_ui() -> void:
 	hdr_operational_docket.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
 	add_child(hdr_operational_docket)
 
-	var row_verb_selector := HBoxContainer.new()
-	var lbl_verb_selector := Label.new()
-	lbl_verb_selector.text = tr("UI_LBL_ACTION")
-	lbl_verb_selector.add_theme_font_override("font", mono_font)
-	lbl_verb_selector.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
-	row_verb_selector.add_child(lbl_verb_selector)
-	var opt_verb_selector := OptionButton.new()
-	opt_verb_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	opt_verb_selector.add_theme_font_override("font", mono_font)
-	opt_verb_selector.add_item("BUY")
-	opt_verb_selector.add_item("SELL")
-	opt_verb_selector.add_item("MAKE")
-	opt_verb_selector.add_item("SCOUT")
-	row_verb_selector.add_child(opt_verb_selector)
-	_value_labels["verb_selector"] = opt_verb_selector
-	add_child(row_verb_selector)
-
-	var row_item_selector := HBoxContainer.new()
-	var lbl_item_selector := Label.new()
-	lbl_item_selector.text = tr("UI_LBL_COMMODITY")
-	lbl_item_selector.add_theme_font_override("font", mono_font)
-	lbl_item_selector.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
-	row_item_selector.add_child(lbl_item_selector)
-	var opt_item_selector := OptionButton.new()
-	opt_item_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	opt_item_selector.add_theme_font_override("font", mono_font)
-	opt_item_selector.add_item("BEER_STRONG_LAGER")
-	opt_item_selector.add_item("CIGARETTES_SMUGGLED")
-	row_item_selector.add_child(opt_item_selector)
-	_value_labels["item_selector"] = opt_item_selector
-	add_child(row_item_selector)
-
-	var row_quantity_spinner := HBoxContainer.new()
-	var lbl_quantity_spinner := Label.new()
-	lbl_quantity_spinner.text = tr("UI_LBL_QTY")
-	lbl_quantity_spinner.add_theme_font_override("font", mono_font)
-	lbl_quantity_spinner.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
-	row_quantity_spinner.add_child(lbl_quantity_spinner)
-	var spin_quantity_spinner := SpinBox.new()
-	spin_quantity_spinner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spin_quantity_spinner.min_value = 1.0
-	spin_quantity_spinner.max_value = 100.0
-	spin_quantity_spinner.step = 1.0
-	spin_quantity_spinner.value = 10.0
-	row_quantity_spinner.add_child(spin_quantity_spinner)
-	_value_labels["quantity_spinner"] = spin_quantity_spinner
-	add_child(row_quantity_spinner)
-
-	var btn_btn_stage_order := Button.new()
-	btn_btn_stage_order.text = tr("UI_BTN_STAGE_ORDER")
-	btn_btn_stage_order.add_theme_font_override("font", mono_font)
-	btn_btn_stage_order.pressed.connect(func(): action_clicked.emit("STAGE"))
-	_value_labels["btn_stage_order"] = btn_btn_stage_order
-	add_child(btn_btn_stage_order)
+	var btn_btn_open_order_pad := Button.new()
+	btn_btn_open_order_pad.text = tr("UI_BTN_OPEN_ORDER_PAD")
+	btn_btn_open_order_pad.add_theme_font_override("font", mono_font)
+	btn_btn_open_order_pad.pressed.connect(func(): action_clicked.emit("OPEN_PAD"))
+	_value_labels["btn_open_order_pad"] = btn_btn_open_order_pad
+	add_child(btn_btn_open_order_pad)
 
 	# --- Section: UI_HDR_STAGED_QUEUE ---
 	var hdr_staging_ledger := Label.new()
@@ -105,12 +57,6 @@ func build_ui() -> void:
 
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("verb_selector") and data.has("selected_verb"):
-		_value_labels["verb_selector"].text = str(data["selected_verb"]) + ""
-	if _value_labels.has("item_selector") and data.has("selected_item"):
-		_value_labels["item_selector"].text = str(data["selected_item"]) + ""
-	if _value_labels.has("quantity_spinner") and data.has("quantity"):
-		_value_labels["quantity_spinner"].text = str(data["quantity"]) + ""
 	if _value_labels.has("queue_list") and data.has("staged_queue"):
 		_value_labels["queue_list"].text = str(data["staged_queue"]) + ""
 

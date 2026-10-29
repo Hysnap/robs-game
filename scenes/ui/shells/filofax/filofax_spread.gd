@@ -24,10 +24,9 @@ func _exit_tree() -> void:
 
 func _setup_era_modal() -> void:
 	if _directive_modal == null:
-		_directive_modal = StickyOrderPadScene.instantiate()
+		_directive_modal = StickyOrderPadScene.instantiate() as Control
 		_directive_modal.visible = false
 		_directive_modal.z_index = 25
-		# Mount onto the Canvas layer or outer shell workspace
 		add_child(_directive_modal)
 
 ## Contract method for ViewHost to retrieve whatever input composer this era uses
@@ -46,6 +45,8 @@ func apply_visual_skin() -> void:
 
 func get_slot(slot_name: String) -> Control:
 	match slot_name.to_upper():
+		"MODAL", "COMPOSER", "DIRECTIVE_MODAL":
+			return get_directive_modal()
 		"NAV":
 			if nav_slot != null:
 				return nav_slot

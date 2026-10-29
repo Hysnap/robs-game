@@ -3,9 +3,11 @@ extends PanelContainer
 
 signal slip_filed(slip_data: Dictionary, destination: String)
 signal slip_discarded(slip_data: Dictionary)
+signal top_card_action(action_id: String, slip_data: Dictionary)
 signal stack_count_changed(unread_count: int)
 
-const RETRO_THEME = preload("res://scenes/ui/filofax/retro_theme.gd")
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+const STATIONERY_REGISTRY = preload("res://scenes/ui/feedback/stationery_registry.gd")
 
 @onready var drag_handle: Label = $VBoxContainer/Header/DragHandle
 @onready var close_btn: Button = $VBoxContainer/Header/BtnMinimize
@@ -19,7 +21,8 @@ var _drag_offset: Vector2 = Vector2.ZERO
 
 var _presentation_order: String = "ISSUED_ORDER"
 var _max_visible_stack: int = 4
-var _max_rotation_degrees: float = 45.0
+var _max_rotation_degrees: float = 12.0
+var _jitter_px: float = 12.0
 
 const SLIP_PALETTES: Dictionary = {
 	"STICKY_YELLOW": {"bg": Color("#fff9a6"), "ink": Color("#1a1a1a"), "title": "MEMO NOTE"},
@@ -38,16 +41,18 @@ func _ready() -> void:
 	_refresh_display()
 
 func _load_manifest_rules() -> void:
-	if ClassDB.class_exists("ScenarioManifestManager"):
-		var manifest: Dictionary = ScenarioManifestManager.get_manifest()
-		var rules: Dictionary = manifest.get("inbox_rules", {})
-		_presentation_order = str(rules.get("presentation_order", "ISSUED_ORDER")).to_upper()
-		_max_visible_stack = int(rules.get("max_visible_stack", 4))
-		_max_rotation_degrees = float(rules.get("max_rotation_degrees", 45.0))
+	STATIONERY_REGISTRY.initialize()
+	var rules: Dictionary = STATIONERY_REGISTRY.get_stack_rules()
+	_presentation_order = str(rules.get("presentation_order", "ISSUED_ORDER")).to_upper()
+	_max_visible_stack = int(rules.get("max_visible_cards", rules.get("max_visible_stack", 4)))
+	_max_rotation_degrees = float(rules.get("max_tilt_degrees", rules.get("max_rotation_degrees", 12.0)))
+	_jitter_px = float(rules.get("jitter_offset_px", _jitter_px))
 
-func push_slips(slips: Array) -> void:
+func push_cards(cards: Array) -> void:
 	_load_manifest_rules()
-	var new_batch: Array = slips.duplicate()
+	var new_batch: Array = []
+	for card in cards:
+		new_batch.append(_normalize_card_payload(card))
 
 	match _presentation_order:
 		"ISSUED_ORDER":
@@ -63,20 +68,31 @@ func push_slips(slips: Array) -> void:
 
 	for slip in new_batch:
 		if not slip.has("slip_style"):
-			var keys := SLIP_PALETTES.keys()
-			slip["slip_style"] = keys[randi() % keys.size()]
+			slip["slip_style"] = _style_for_stationery(str(slip.get("stationery_profile", "")))
 		if not slip.has("tilt_degrees"):
 			slip["tilt_degrees"] = randf_range(-_max_rotation_degrees, _max_rotation_degrees)
 		if not slip.has("jitter_offset"):
-			slip["jitter_offset"] = Vector2(randf_range(-14, 14), randf_range(-10, 10))
+			slip["jitter_offset"] = Vector2(randf_range(-_jitter_px, _jitter_px), randf_range(-_jitter_px, _jitter_px))
 
 		_pending_slips.append(slip)
 		
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 
+func push_slips(slips: Array) -> void:
+	push_cards(slips)
+
 func get_unread_count() -> int:
 	return _pending_slips.size()
+
+func get_card_count() -> int:
+	return _pending_slips.size()
+
+func is_empty() -> bool:
+	return _pending_slips.is_empty()
+
+func get_top_card() -> Dictionary:
+	return _pending_slips[0] if not _pending_slips.is_empty() else {}
 
 func _refresh_display() -> void:
 	if card_slot == null:
@@ -162,7 +178,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	# 2. Body
 	var body := RichTextLabel.new()
 	body.bbcode_enabled = true
-	body.text = str(slip.get("text", "Shift completed."))
+	body.text = str(slip.get("display_text", slip.get("text", "Shift completed.")))
 	body.fit_content = true
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -200,6 +216,11 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		dest_opt.set_item_metadata(2, "ROSTER")
 		dest_opt.add_item("💷 ACCOUNTS", 3)
 		dest_opt.set_item_metadata(3, "FINANCE")
+		var requested_destination := str(slip.get("destination", "DIARY")).to_upper()
+		for option_index in range(dest_opt.item_count):
+			if str(dest_opt.get_item_metadata(option_index)).to_upper() == requested_destination:
+				dest_opt.select(option_index)
+				break
 		routing_box.add_child(dest_opt)
 
 		var btn_file := Button.new()
@@ -229,14 +250,37 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
 	slip_filed.emit(slip, destination)
+	top_card_action.emit("FILE", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 
 func _on_discard_pressed(slip: Dictionary) -> void:
 	_pending_slips.pop_front()
 	slip_discarded.emit(slip)
+	top_card_action.emit("DISCARD", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
+
+func _normalize_card_payload(raw_card: Variant) -> Dictionary:
+	var card: Dictionary = raw_card.duplicate(true) if raw_card is Dictionary else {}
+	if not card.has("display_text"):
+		card["display_text"] = card.get("text", "Shift completed.")
+	if not card.has("stationery_profile"):
+		card["stationery_profile"] = card.get("slip_style", "STICKY_NOTE")
+	if not card.has("destination"):
+		card["destination"] = "DIARY"
+	return card
+
+func _style_for_stationery(profile_id: String) -> String:
+	match profile_id.to_upper():
+		"URGENT_DISPATCH":
+			return "STICKY_ROSE"
+		"FIELD_NOTE":
+			return "STICKY_MINT"
+		"TORN_RECEIPT", "PAPER_SCRAP":
+			return "PAPER_SCRAP"
+		_:
+			return "STICKY_YELLOW"
 
 func _on_drag_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

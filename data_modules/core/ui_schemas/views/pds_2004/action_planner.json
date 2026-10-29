@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "module_type": "ACTION_PLANNER",
+    "target_class": "GenActionPlanner",
+    "extends": "VBoxContainer",
+    "signals": [
+      "directive_staged(directive)",
+      "execute_shift_requested(staged_directives)",
+      "action_clicked(action_code)"
+    ]
+  },
+  "sections": [
+    {
+      "id": "operational_docket",
+      "header_token": "UI_HDR_OPERATIONS",
+      "default_text": "OPERATIONAL SHIFT DISPATCH",
+      "rows": [
+        {
+          "id": "btn_open_order_pad",
+          "type": "BUTTON",
+          "token": "UI_BTN_OPEN_ORDER_PAD",
+          "default_text": "📝 Open Sticky Order Pad",
+          "action_signal": "action_clicked",
+          "emit_args": "\"OPEN_PAD\""
+        }
+      ]
+    },
+    {
+      "id": "staging_ledger",
+      "header_token": "UI_HDR_STAGED_QUEUE",
+      "default_text": "STAGED SHIFT ORDERS",
+      "rows": [
+        {
+          "id": "queue_list",
+          "type": "ITEM_LIST",
+          "token": "UI_LBL_QUEUED",
+          "default_text": "Queued Directives",
+          "field": "staged_queue"
+        },
+        {
+          "id": "btn_execute_shift",
+          "type": "BUTTON",
+          "token": "UI_BTN_EXECUTE_SHIFT",
+          "default_text": "📅 Complete Day Shift (End Day)",
+          "action_signal": "action_clicked",
+          "emit_args": "\"COMMIT_SHIFT\""
+        }
+      ]
+    }
+  ]
+}

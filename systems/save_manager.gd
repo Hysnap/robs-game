@@ -8,6 +8,10 @@ const SAVES_BASE_DIR := "user://saves"
 static func get_slot_dir(slot_id: String) -> String:
 	return "%s/%s" % [SAVES_BASE_DIR, slot_id]
 
+## Returns the snapshots directory for a specific slot
+static func get_snapshots_dir(slot_id: String) -> String:
+	return "%s/%s/snapshots" % [SAVES_BASE_DIR, slot_id]
+
 ## Ensures the base saves directory and slot directory exist
 static func ensure_slot_dir(slot_id: String) -> bool:
 	var base_da := DirAccess.open("user://")
@@ -119,6 +123,82 @@ static func load_game(slot_id: String) -> bool:
 
 	print("[SaveManager] Loaded game slot: %s" % slot_id)
 	return true
+
+# ==============================================================================
+# NON-IRONMAN PER-TURN SNAPSHOTS (Developer & Debugging State History)
+# ==============================================================================
+
+## Serializes the active turn's world state into an indented, human-readable snapshot JSON
+static func save_turn_snapshot(slot_id: String, turn_index: int, state: Dictionary) -> String:
+	var snap_dir := get_snapshots_dir(slot_id)
+	var dir_err := DirAccess.make_dir_recursive_absolute(snap_dir)
+	if dir_err != OK and dir_err != ERR_ALREADY_EXISTS:
+		push_error("[SaveManager] Failed to create snapshots directory: %s" % snap_dir)
+		return ""
+
+	var file_name := "turn_%03d.json" % turn_index
+	var file_path := snap_dir.path_join(file_name)
+
+	var file := FileAccess.open(file_path, FileAccess.WRITE)
+	if not file:
+		var err := FileAccess.get_open_error()
+		push_error("[SaveManager] Failed writing snapshot at: %s (Error: %d)" % [file_path, err])
+		return ""
+
+	file.store_string(JSON.stringify(state, "\t"))
+	file.close()
+
+	print("[SaveManager] Turn %d snapshot written: %s" % [turn_index, file_path])
+	return file_path
+
+## Loads a specific turn snapshot back into GameState memory
+static func load_turn_snapshot(slot_id: String, turn_index: int) -> Dictionary:
+	var file_path := get_snapshots_dir(slot_id).path_join("turn_%03d.json" % turn_index)
+	if not FileAccess.file_exists(file_path):
+		push_error("[SaveManager] Snapshot not found: %s" % file_path)
+		return {}
+
+	var file := FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		return {}
+
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+
+	if not (parsed is Dictionary):
+		push_error("[SaveManager] Corrupted snapshot JSON: %s" % file_path)
+		return {}
+
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
+		var gs = main_loop.root.get_node("GameState")
+		gs.world_state = parsed
+
+	print("[SaveManager] Restored turn %d snapshot from: %s" % [turn_index, file_path])
+	return parsed
+
+## Lists all snapshot paths in a given slot in chronological turn order
+static func list_turn_snapshots(slot_id: String) -> Array[String]:
+	var snapshots: Array[String] = []
+	var snap_dir := get_snapshots_dir(slot_id)
+	var dir := DirAccess.open(snap_dir)
+	if not dir:
+		return snapshots
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.begins_with("turn_") and file_name.ends_with(".json"):
+			snapshots.append(snap_dir.path_join(file_name))
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+	snapshots.sort()
+	return snapshots
+
+# ==============================================================================
+# SLOT DISCOVERY UTILITIES
+# ==============================================================================
 
 ## Helper to find the next available auto-numbered slot (e.g. slot_01, slot_02)
 static func get_next_available_slot() -> String:

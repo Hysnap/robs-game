@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://ct3ycsrlofjir" path="res://scenes/ui/filofax/filofax_ui.gd" id="2_filofax_ui"]
 [ext_resource type="Script" uid="uid://cf438ffbyqhml" path="res://scenes/ui/filofax/filofax_district_docket.gd" id="3_x0ver"]
 [ext_resource type="PackedScene" uid="uid://dto1tilb5yqgp" path="res://scenes/ui/filofax/filofax_customizer.tscn" id="4_customizer"]
-[ext_resource type="PackedScene" path="res://scenes/ui/feedback/desktop_slip_stack.tscn" id="5_desktop_slip_stack"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shells/filofax/desktop_slip_stack.tscn" id="5_desktop_slip_stack"]
 
 [node name="Organiser" type="Node2D" unique_id=1677497264]
 script = ExtResource("1_test_scene")
@@ -351,4 +351,3 @@ text = "Tear Off"
 [node name="FilofaxCustomizer" parent="." unique_id=1344899480 instance=ExtResource("4_customizer")]
 visible = false
 z_index = 6
-

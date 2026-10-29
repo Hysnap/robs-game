@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d5nv3nm8eaco"]
 
-[ext_resource type="Script" uid="uid://coniklyy35qg5" path="res://scenes/ui/feedback/desktop_slip_stack.gd" id="1_stack_script"]
+[ext_resource type="Script" path="res://scenes/ui/shells/filofax/desktop_slip_stack.gd" id="1_stack_script"]
 
 [node name="DesktopSlipStack" type="PanelContainer" unique_id=41809325]
 custom_minimum_size = Vector2(360, 360)

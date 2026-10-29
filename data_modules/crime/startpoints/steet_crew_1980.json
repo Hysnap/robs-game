@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "scenario_id": "CRIME_STREET_CREW_1980",
+    "theme": "crime",
+    "era": "1980",
+    "description": "Baseline 3-man street-level distribution operation starting January 1980."
+  },
+  "starting_metadata": {
+    "calendar_year": 1980,
+    "calendar_month": 1,
+    "current_week_tick": 1,
+    "current_day_tick": 1
+  },
+  "starting_finances": {
+    "liquid_cash": 100.00,
+    "clean_bank_balance": 0.00,
+    "debt_balance": 0.00
+  },
+  "starting_operations": {
+    "fatigue": 0.0,
+    "active_device": "LANDLINE_BOOTH"
+  },
+  "starting_knowledge": {
+    "eligible_home_archetypes": [
+      "high_density_low_rise",
+      "high_density_high_rise",
+      "residential",
+      "suburban_low_density"
+    ],
+    "known_districts": [],
+    "known_outlets": []
+  },
+  "debug_rules": {
+    "all_items_in_all_stores": false,
+    "infinite_stock": true,
+    "infinite_funds": true,
+    "crew_cognition": false
+  },
+  "starting_staff": {
+    "PLAYER": {
+      "id": "PLAYER",
+      "name": "Player",
+      "role": "LEADER",
+      "tier": "TIER_1_COORDINATOR",
+      "stress": 0.0,
+      "fatigue": 0.0,
+      "loyalty": 1.0,
+      "pocket_cash": 20.00
+    },
+    "STAFF_BILLY": {
+      "id": "STAFF_BILLY",
+      "name": "Billy",
+      "role": "RUNNER",
+      "tier": "TIER_1_STREET",
+      "stress": 0.0,
+      "fatigue": 0.0,
+      "loyalty": 0.85,
+      "pocket_cash": 5.00
+    },
+    "STAFF_MALCOLM": {
+      "id": "STAFF_MALCOLM",
+      "name": "Malcolm",
+      "role": "HANDLER",
+      "tier": "TIER_2_SENIOR",
+      "stress": 0.0,
+      "fatigue": 0.0,
+      "loyalty": 0.90,
+      "pocket_cash": 15.00
+    }
+  }
+}

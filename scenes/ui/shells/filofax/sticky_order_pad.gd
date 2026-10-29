@@ -3,6 +3,7 @@ class_name StickyOrderPad
 extends PanelContainer
 
 signal order_pinned(directive: Dictionary)
+signal directive_committed(directive: Dictionary)
 signal pad_closed
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
@@ -46,6 +47,9 @@ func open_for_district(district_id: String) -> void:
 	move_to_front()
 	_sync_where_location(district_id)
 	_recalculate_estimate()
+
+func open_for_context(context: Dictionary) -> void:
+	open_for_district(str(context.get("target_district_id", "")))
 
 func _populate_default_options() -> void:
 	if opt_verb and opt_verb.item_count == 0:
@@ -99,6 +103,7 @@ func _on_pin_pressed() -> void:
 	}
 
 	order_pinned.emit(directive)
+	directive_committed.emit(directive)
 	visible = false
 
 func _on_close_pressed() -> void:

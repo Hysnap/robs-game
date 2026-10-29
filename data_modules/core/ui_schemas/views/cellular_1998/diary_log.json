@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "target_class": "GenDiaryLog",
+    "extends": "VBoxContainer",
+    "description": "Pre-compiled operational dispatch diary",
+    "has_inscriptions": true,
+    "inscriptions_header_token": "UI_SEC_DISPATCH_INSCRIPTIONS",
+    "inscriptions_header_default": "DISPATCHED ORDERS & RETURNED FIELD REPORTS"
+  },
+  "sections": [
+    {
+      "id": "diary_header",
+      "header_token": "UI_SEC_DISPATCH_DIARY",
+      "header_default": "OPERATIONAL DISPATCH JOURNAL",
+      "rows": [
+        { "id": "current_week", "field": "current_week_tick", "token": "UI_LBL_CURRENT_WEEK", "default_text": "Operating Week", "format": "INT", "suffix": "" },
+        { "id": "dispatched_count", "field": "total_dispatched_orders", "token": "UI_LBL_DISPATCH_COUNT", "default_text": "Orders Inscribed", "format": "INT", "suffix": " directives" }
+      ]
+    }
+  ]
+}
