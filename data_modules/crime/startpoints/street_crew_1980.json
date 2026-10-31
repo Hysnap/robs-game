@@ -21,11 +21,14 @@
     "active_device": "LANDLINE_BOOTH"
   },
   "starting_knowledge": {
-    "eligible_home_archetypes": [
+"eligible_home_archetypes": [
       "high_density_low_rise",
       "high_density_high_rise",
       "residential",
-      "suburban_low_density"
+      "suburban_low_density",
+      "medium_density_residential",
+      "medium_density_victorian_residential",
+      "victorian_low_density"
     ],
     "known_districts": [],
     "known_outlets": []
@@ -42,6 +45,7 @@
       "name": "Player",
       "role": "LEADER",
       "tier": "TIER_1_COORDINATOR",
+      "current_district_id": "",
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 1.0,
@@ -52,6 +56,7 @@
       "name": "Billy",
       "role": "RUNNER",
       "tier": "TIER_1_STREET",
+      "current_district_id": "",
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 0.85,
@@ -62,6 +67,7 @@
       "name": "Malcolm",
       "role": "HANDLER",
       "tier": "TIER_2_SENIOR",
+      "current_district_id": "",
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 0.90,

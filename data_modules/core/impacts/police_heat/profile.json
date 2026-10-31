@@ -1,17 +1,38 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "scope": "IMPACT_METRIC_PROFILE"
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Constabulary scrutiny, surveillance intensity, and raid probability across a district"
   },
   "metric_id": "POLICE_HEAT",
-  "label_token": "UI_METRIC_PATROL_DENSITY",
-  "display_name": "Observed Patrol Density",
+  "label_token": "UI_LBL_POLICE_HEAT",
   "format": "PERCENT",
-  "telemetry_source": {
-    "type": "WORLD_STATE",
-    "state_path": "actual_police_heat"
-  },
   "decimals": 0,
   "min_value": 0.0,
-  "max_value": 1.0
+  "max_value": 1.0,
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "districts.{id}.actual_police_heat"
+  },
+  "tuning": {
+    "passive_cooling_per_week": 0.03,
+    "patrol_increased_threshold": 0.35,
+    "raid_mobilisation_threshold": 0.80
+  },
+  "perception": {
+    "target_field": "police_heat_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.10,
+    "fuzz_jitter_max": 0.10,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 0.15, "token": "UI_HEAT_COLD" },
+      { "max": 0.35, "token": "UI_HEAT_NORMAL" },
+      { "max": 0.60, "token": "UI_HEAT_HEIGHTENED" },
+      { "max": 0.80, "token": "UI_HEAT_ACUTE" },
+      { "token": "UI_HEAT_CRITICAL" }
+    ]
+  }
 }

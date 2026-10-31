@@ -1,7 +1,33 @@
 {
+  "_meta": {
+    "version": "1.1.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
   "metric_id": "ZONE_HEALTH",
-  "display_name": "Zone Health Index (ZHI)",
+  "label_token": "UI_LBL_ZONE_HEALTH",
   "format": "FLOAT",
   "decimals": 1,
-  "suffix": " / 100"
+  "min_value": 0.0,
+  "max_value": 100.0,
+  "suffix": " / 100",
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "actual_zone_health"
+  },
+  "perception": {
+    "target_field": "zone_health_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.08,
+    "fuzz_jitter_max": 0.08,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 20.0, "token": "UI_ZHI_COLLAPSED" },
+      { "max": 50.0, "token": "UI_ZHI_DECAYING" },
+      { "max": 70.0, "token": "UI_ZHI_STABLE" },
+      { "max": 85.0, "token": "UI_ZHI_HEALTHY" },
+      { "token": "UI_ZHI_PRISTINE" }
+    ]
+  }
 }

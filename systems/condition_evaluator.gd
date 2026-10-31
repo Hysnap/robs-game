@@ -169,6 +169,10 @@ static func get_state_metric(world_state: Dictionary, actor_id: String, metric_k
 
 	return 0.0
 
+# =====================================================================
+# 5. UNIVERSAL INVENTORY CALCULATIONS
+# =====================================================================
+
 ## Universal inventory accessor (internal & external tool)
 static func get_actor_inventory(world_state: Dictionary, actor_id: String) -> Dictionary:
 	if actor_id in ["PLAYER", "", "HQ"]:
@@ -227,3 +231,132 @@ static func _is_infinite_mode_active(actor_id: String, rule_key: String, bypass_
 
 	var mode: String = manifest.get("market_rules", {}).get(rule_key, "").to_upper()
 	return mode == bypass_value
+
+# =====================================================================
+# 6. PERCEPTION, FUZZINESS & SCALED ROUNDING ENGINE
+# =====================================================================
+
+## Categorizes a normalized or continuous ratio into an ordered N-bucket configuration
+## `buckets` is an Array of Dictionaries formatted as:
+## [
+##   {"max": 0.04, "token": "UI_UNEMP_NEGLIGIBLE"},
+##   {"max": 0.09, "token": "UI_UNEMP_LOW"},
+##   ...
+##   {"token": "UI_UNEMP_CRITICAL"} ; Final terminal bucket without max
+## ]
+static func evaluate_n_bucket(val: float, buckets: Array, fallback_token: String = "") -> String:
+	if buckets.is_empty():
+		return fallback_token
+
+	for bucket in buckets:
+		if bucket.has("max"):
+			var upper_bound: float = float(bucket["max"])
+			if val <= upper_bound:
+				return str(bucket.get("token", fallback_token))
+		else:
+			# Terminal catch-all bucket
+			return str(bucket.get("token", fallback_token))
+
+	return fallback_token
+
+## Calculates a fuzzed ratio with an additive home-turf modifier and clamped minimum error floor
+static func calculate_fuzzed_ratio(
+	base_val: float, 
+	is_home_turf: bool, 
+	jitter_min: float = -0.15, 
+	jitter_max: float = 0.15, 
+	home_fuzz_modifier: float = 0.10, 
+	min_floor: float = 0.03
+) -> float:
+	var span_half: float = (absf(jitter_max) + absf(jitter_min)) * 0.5
+	
+	# Additive modifier narrows the fuzz span on home turf
+	if is_home_turf:
+		span_half = maxf(min_floor, span_half - absf(home_fuzz_modifier))
+	else:
+		span_half = maxf(min_floor, span_half)
+
+	# Generate deterministic or ambient variance within the computed window
+	var noise: float = randf_range(-span_half, span_half)
+	return maxf(0.0, base_val * (1.0 + noise))
+
+## Scaled adaptive rounding for headcounts (small shops remain granular, large works round coarser)
+## `tiers` is an Array of Dictionaries sorted ascending by `threshold`:
+## [
+##   {"threshold": 10, "round_to": 1},
+##   {"threshold": 50, "round_to": 5},
+##   {"threshold": 250, "round_to": 25},
+##   {"threshold": 1000, "round_to": 100}
+## ]
+static func round_headcount_adaptive(raw_count: int, tiers: Array = [], default_step: int = 1) -> int:
+	if raw_count <= 0:
+		return 0
+
+	var chosen_step: int = default_step
+
+	for tier in tiers:
+		var thresh: int = int(tier.get("threshold", 0))
+		if raw_count <= thresh:
+			chosen_step = int(tier.get("round_to", default_step))
+			break
+		# If past the threshold, update candidate step to the highest encountered bracket
+		chosen_step = int(tier.get("round_to", chosen_step))
+
+	if chosen_step <= 1:
+		return raw_count
+
+	var step_f: float = float(chosen_step)
+	return int(roundf(float(raw_count) / step_f) * step_f)
+
+## Universal Transformation Pipeline for Continuous Numeric Measures
+## Passes any numeric measure through configured noise fuzzing and maps it
+## to either an N-Bucket semantic token, an adaptively rounded value, or a raw clamped float.
+static func transform_measure(
+	raw_val: float, 
+	spec: Dictionary, 
+	is_home_turf: bool = false
+) -> Variant:
+	if spec.is_empty():
+		return raw_val
+
+	# 1. Bounded Fuzz Stage (if noise parameters exist in spec)
+	var j_min: float = float(spec.get("fuzz_jitter_min", 0.0))
+	var j_max: float = float(spec.get("fuzz_jitter_max", 0.0))
+	var h_mod: float = float(spec.get("home_modifier", 0.0))
+	var floor_val: float = float(spec.get("error_floor", 0.0))
+
+	var evaluated_val: float = raw_val
+	if j_min != 0.0 or j_max != 0.0:
+		evaluated_val = calculate_fuzzed_ratio(raw_val, is_home_turf, j_min, j_max, h_mod, floor_val)
+
+	# 2. Discretization Engine Dispatch
+	var mode: String = str(spec.get("mode", "DIRECT")).to_upper()
+	match mode:
+		"N_BUCKET":
+			var buckets: Array = spec.get("buckets", [])
+			var fallback: String = str(spec.get("fallback_token", "UI_INTEL_MASKED_BLANK"))
+			return evaluate_n_bucket(evaluated_val, buckets, fallback)
+			
+		"STEPPED_ROUNDING":
+			var tiers: Array = spec.get("tiers", [])
+			var default_step: int = int(spec.get("default_step", 1))
+			return round_headcount_adaptive(int(evaluated_val), tiers, default_step)
+			
+		"DIRECT":
+			return evaluated_val
+			
+		_:
+			push_error("[ConditionEvaluator] Unknown transformation mode: %s" % mode)
+			return evaluated_val
+
+## Pure Mathematical Calculation: Calculates the sum of (quantity * weight) pairs
+## Completely agnostic to whether this represents cubic meters, currency value, weight, or labor hours.
+static func evaluate_weighted_sum(quantities: Dictionary, weights: Dictionary, default_weight: float = 1.0) -> float:
+	var total: float = 0.0
+	for key in quantities.keys():
+		var qty: float = float(quantities[key])
+		if qty <= 0.0:
+			continue
+		var weight: float = float(weights.get(key, default_weight))
+		total += qty * weight
+	return total

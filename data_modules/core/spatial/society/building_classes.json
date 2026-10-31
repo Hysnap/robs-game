@@ -9,6 +9,7 @@
     "CORNER_SHOP": {
       "display_name": "Corner Shop & Newsagent",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -19,7 +20,8 @@
                                 "victorian_low_density",
                                 "local_government",
                                 "hospital_site",
-                                "university_campus"
+                                "university_campus",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 4,
       "customer_travel_distance_m": 900.0,
@@ -33,6 +35,7 @@
     "OFF_LICENCE": {
       "display_name": "Off-Licence & Wine Merchant",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -57,6 +60,7 @@
     "LOCAL_PUB": {
       "display_name": "Public House & Taproom",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -66,7 +70,8 @@
                                 "suburban_low_density",
                                 "local_government",
                                 "hospital_site",
-                                "university_campus"
+                                "university_campus",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 60,
       "customer_travel_distance_m": 1500.0,
@@ -81,6 +86,7 @@
     "MINICAB_FIRM": {
       "display_name": "Private Hire & Minicab Office",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -103,11 +109,14 @@
     "CLEANING_CONTRACTOR": {
       "display_name": "Commercial Cleaning & Maintenance Services",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial", "industrial",
                                 "high_density_low_rise",
                                 "high_density_high_rise",
                                 "medium_density_residential",
-                                "medium_density_victorian_residential"],
+                                "medium_density_victorian_residential",
+                                "industrial_automotive_works"
+                              ],
       "default_capacity": 8,
       "customer_travel_distance_m": 6000.0,
       "required_customer_threshold": 350,
@@ -121,6 +130,7 @@
     "FISH_AND_CHIP_SHOP": {
       "display_name": "Fish and Chip Shop",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -141,6 +151,7 @@
     "CHINESE_TAKEAWAY": {
       "display_name": "Chinese Take Away",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "high_density_low_rise",
                                 "high_density_high_rise",
@@ -161,6 +172,7 @@
     "INDIAN_TAKEAWAY": {
       "display_name": "Indian Take Away",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "high_density_low_rise",
                                 "high_density_high_rise",
@@ -179,6 +191,7 @@
     "INDIAN_RESTAURANT": {
       "display_name": "Indian Restaurant",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -199,6 +212,7 @@
     "BETTING_SHOP": {
       "display_name": "Turf Accountant & Bookmakers",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -219,6 +233,7 @@
     "BUTCHER": {
       "display_name": "Family Butcher",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -238,6 +253,7 @@
     "BAKERY": {
       "display_name": "Family Bakery",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -257,6 +273,7 @@
     "PET_SHOP": {
       "display_name": "Pet Shop",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -276,6 +293,7 @@
     "TOY_SHOP": {
       "display_name": "Toy Shop",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -295,6 +313,7 @@
     "HARDWARE_STORE": {
       "display_name": "Ironmonger & DIY Supplies",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -316,12 +335,14 @@
     "COACH_AND_HAULAGE_DEPOT": {
       "display_name": "Charter Coach & Road Haulage Depot",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 15,
       "customer_travel_distance_m": 8000.0,
@@ -336,6 +357,7 @@
     "BUILDING_CONTRACTORS": {
       "display_name": "Builders Yard & Civil Contracting",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -358,12 +380,14 @@
     "FOUNDRY_CASTINGS": {
       "display_name": "Metal Foundry & Heavy Engineering",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 50,
       "weight": 20,
@@ -378,12 +402,14 @@
     "AUTO_REPAIR_DEPOT": {
       "display_name": "Motor Repair Works & Body Shop",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 12,
       "customer_travel_distance_m": 3000.0,
@@ -399,12 +425,14 @@
     "SCRAP_MERCHANT": {
       "display_name": "Scrap & Metal Reclamation",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 10,
       "weight": 15,
@@ -416,12 +444,14 @@
     "JOINERY": {
       "display_name": "Joinery Works & Timber Yard",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 25,
       "weight": 20,
@@ -434,12 +464,14 @@
     "TEXTILES": {
       "display_name": "Textiles and Cloth",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
-                                "suburban_low_density"
+                                "suburban_low_density",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 25,
       "weight": 20,
@@ -453,6 +485,7 @@
     "CLOTHS_MANUFACTURER": {
       "display_name": "Clothes Manufacturers",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -472,6 +505,7 @@
     "INDURSTRIAL_PRINTERS": {
       "display_name": "Printers",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -491,6 +525,7 @@
     "MAILHOUSE": {
       "display_name": "Mail house",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -510,6 +545,7 @@
     "FURNITURE_MANUFACTURER": {
       "display_name": "Furniture Manufacturer",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["industrial",
                                 "high_density_low_rise",
                                 "medium_density_victorian_residential"
@@ -527,6 +563,7 @@
     "BREWERY": {
       "display_name": "Brewery",
       "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -549,6 +586,7 @@
     "GP_SURGERY": {
       "display_name": "Medical Practice & Surgery",
       "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -556,7 +594,8 @@
                                 "medium_density_residential",
                                 "medium_density_victorian_residential",
                                 "suburban_low_density",
-                                "university_campus"
+                                "university_campus",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 20,
       "customer_travel_distance_m": 1300.0,
@@ -572,6 +611,7 @@
     "DENTAL_PRACTICE": {
       "display_name": "Dental Surgery",
       "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -594,6 +634,7 @@
     "CHIROPODIST": {
       "display_name": "Chiropodist Surgery",
       "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -616,6 +657,7 @@
     "SUB_POST_OFFICE": {
       "display_name": "Sub-Post Office & Newsagent",
       "sector": "COMMERCIAL",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -626,7 +668,8 @@
                                 "victorian_low_density",
                                 "local_government",
                                 "hospital_site",
-                                "university_campus"
+                                "university_campus",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 12,
       "customer_travel_distance_m": 1000.0,
@@ -641,6 +684,7 @@
     "LOCAL_POLICE_POST": {
       "display_name": "Section Police Station",
       "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
       "spawns_in_archetypes": ["commercial",
                                 "industrial",
                                 "high_density_low_rise",
@@ -649,7 +693,8 @@
                                 "medium_density_victorian_residential",
                                 "suburban_low_density",
                                 "victorian_low_density",
-                                "local_government"
+                                "local_government",
+                                "industrial_automotive_works"
                               ],
       "default_capacity": 25,
       "customer_travel_distance_m": 2400.0,

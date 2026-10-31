@@ -10,16 +10,26 @@ extends Node3D
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
-const SimControllerScript = preload("res://systems/sim_controller.gd")
-const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
+const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/shells/filofax/desktop_slip_stack.tscn")
+const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
 var feedback_inbox: Control = null
 var directive_modal: Control = null
 
+# Spatial indicators state
+var _district_ground_nodes: Dictionary = {} # block_id -> MeshInstance3D
+var _district_indicators: Dictionary = {}   # block_id -> Node3D (holder)
+var _color_verified: Color
+var _color_stale: Color
+var _marker_elevation: float = 1.5
+var _landmark_elevation: float = 4.0
+
 func _ready() -> void:
+	_load_spatial_indicator_rules()
+
 	# 1. Mount Presenter Host inside OuterShell
 	if outer_shell != null:
 		view_host = ViewHostScript.new()
@@ -44,13 +54,77 @@ func _ready() -> void:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
 
 	# 4. Synchronize Seed & Visual Layout
-	var active_seed: String = str(GameState.world_state.get("metadata", {}).get("active_seed", "default-city"))
+	var gs = ScenarioManifestManager.get_game_state()
+	var active_seed: String = "default-city"
+	var saved_layout: Dictionary = {}
+	if gs != null and "world_state" in gs:
+		active_seed = str(gs.world_state.get("metadata", {}).get("active_seed", "default-city"))
+		saved_layout = gs.world_state.get("city_layout", {})
+
+		# Listen reactively for turn completion to update 3D ground markers
+		if gs.has_signal("turn_advanced"):
+			gs.turn_advanced.connect(func(_week: int, _day: int):
+				refresh_all_district_indicators()
+			)
+
 	if "seed_id" in city_crafter:
 		city_crafter.seed_id = active_seed
 
-	var saved_layout: Dictionary = GameState.world_state.get("city_layout", {})
 	if not saved_layout.is_empty() and city_crafter.has_method("load_visual_layout"):
 		city_crafter.load_visual_layout(saved_layout)
+	
+	# 5. Index District Nodes and Mount Visual Indicators
+	call_deferred("_initialize_spatial_ground_indicators")
+
+func _load_spatial_indicator_rules() -> void:
+	assert(ScenarioManifestManager.has_module("fog_of_war"),
+		"FATAL: [CityView] Active scenario manifest missing 'fog_of_war' registration.")
+
+	var fow_rules: Dictionary = ScenarioManifestManager.load_module("fog_of_war")
+	assert(not fow_rules.is_empty(), "FATAL: [CityView] Loaded 'fog_of_war' module is empty.")
+	assert(fow_rules.has("spatial_indicators"), "FATAL: [CityView] Missing 'spatial_indicators' in fog_of_war rules.")
+
+	var spatial_cfg: Dictionary = fow_rules["spatial_indicators"]
+	var hex_v: String = str(spatial_cfg.get("color_verified", "#2ecc71"))
+	var hex_s: String = str(spatial_cfg.get("color_stale", "#e67e22"))
+	_color_verified = Color.from_string(hex_v, Color.GREEN)
+	_color_stale = Color.from_string(hex_s, Color.ORANGE)
+	_marker_elevation = float(spatial_cfg.get("marker_elevation", 1.5))
+	_landmark_elevation = float(spatial_cfg.get("landmark_elevation", 4.0))
+
+func _initialize_spatial_ground_indicators() -> void:
+	_district_ground_nodes.clear()
+	for child in city_crafter.get_children():
+		if child is MeshInstance3D and child.has_meta("block_id"):
+			var b_id: String = child.get_meta("block_id")
+			_district_ground_nodes[b_id] = child
+
+	refresh_all_district_indicators()
+
+## Refreshes ground ticks and landmark billboards based on current perception
+func refresh_all_district_indicators() -> void:
+	for b_id in _district_ground_nodes.keys():
+		refresh_district_indicator(b_id)
+
+func refresh_district_indicator(block_id: String) -> void:
+	if not _district_ground_nodes.has(block_id):
+		return
+
+	var ground_mesh: MeshInstance3D = _district_ground_nodes[block_id]
+	var gs = ScenarioManifestManager.get_game_state()
+	var view_data: Dictionary = {}
+	if gs != null and gs.has_method("get_district_view"):
+		view_data = gs.get_district_view(block_id)
+
+	# Fetch or instantiate the component
+	var indicator: DistrictIndicator = _district_indicators.get(block_id, null)
+	if indicator == null or not is_instance_valid(indicator):
+		indicator = IndicatorScene.instantiate() as DistrictIndicator
+		indicator.position = ground_mesh.position
+		city_crafter.add_child(indicator)
+		_district_indicators[block_id] = indicator
+
+	indicator.update_from_view_data(view_data)
 
 func _setup_compiled_shell_host_views() -> void:
 	# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
@@ -96,6 +170,8 @@ func _setup_compiled_shell_host_views() -> void:
 	# G. Connect all three systems to ViewHost
 	if view_host and action_planner_view:
 		view_host.attach_action_system(action_planner_view, feedback_inbox, era_modal)
+		view_host.action_requested.connect(_on_view_host_action_requested)
+		view_host.triage_slip_action.connect(_on_view_host_slip_triage)
 
 	view_host.switch_to_domain("DOSSIER")
 
@@ -120,6 +196,25 @@ func _setup_shell_customizer() -> void:
 					shell_customizer.move_to_front()
 		)
 
+func _on_view_host_action_requested(action_code: String, _payload: Dictionary) -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	var target_district: String = ""
+	if gs != null and "world_state" in gs:
+		target_district = str(gs.world_state.get("selected_district_id", ""))
+
+	match action_code:
+		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
+			view_host.open_composer({"target_district_id": target_district})
+		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
+			var staged = view_host.get_staged_directives()
+			OperationsControllerScript.execute_staged_cycle(staged, view_host)
+
+func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> void:
+	if action_id == "FILE":
+		OperationsControllerScript.file_card_slip(card_payload, view_host)
+	else:
+		print("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_TAB:
@@ -129,15 +224,17 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_district_clicked(block_id: String) -> void:
 	print("[CityView] District clicked on 3D map: %s" % block_id)
 	
-	if GameState.has_method("set_selected_district"):
-		GameState.set_selected_district(block_id)
-	else:
-		GameState.world_state["selected_district_id"] = block_id
+	var gs = ScenarioManifestManager.get_game_state()
+	var district_data: Dictionary = {}
+	if gs != null:
+		if gs.has_method("set_selected_district"):
+			gs.set_selected_district(block_id)
+		elif "world_state" in gs:
+			gs.world_state["selected_district_id"] = block_id
 
-	# Fetch ground-truth SQLite and in-memory district telemetry
-	var district_data: Dictionary = GameState.get_district_view(block_id)
+		if gs.has_method("get_district_view"):
+			district_data = gs.get_district_view(block_id)
 
-	# Reveal Filofax and present Docket
 	if workspace_canvas != null and view_host != null:
 		workspace_canvas.visible = true
 		view_host.switch_to_domain("DOSSIER")
@@ -149,7 +246,11 @@ func _toggle_workspace_visibility() -> void:
 
 	workspace_canvas.visible = not workspace_canvas.visible
 	if workspace_canvas.visible and view_host != null:
-		var active_id: String = str(GameState.world_state.get("selected_district_id", ""))
-		if not active_id.is_empty():
-			var district_data: Dictionary = GameState.get_district_view(active_id)
+		var gs = ScenarioManifestManager.get_game_state()
+		var active_id: String = ""
+		if gs != null and "world_state" in gs:
+			active_id = str(gs.world_state.get("selected_district_id", ""))
+
+		if not active_id.is_empty() and gs != null and gs.has_method("get_district_view"):
+			var district_data: Dictionary = gs.get_district_view(active_id)
 			view_host.update_active_view_data(district_data)

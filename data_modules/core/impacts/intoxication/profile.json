@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Acute physiological impairment and motor/cognitive intoxication level"
+  },
+  "metric_id": "INTOXICATION",
+  "label_token": "UI_METRIC_INTOXICATION",
+  "format": "PERCENT",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 100.0,
+  "suffix": "%",
+  "telemetry_source": {
+    "type": "ACTOR_STATE",
+    "state_path": "staff.{id}.intoxication"
+  },
+  "tuning": {
+    "ambient_sober_rate": 15.0,
+    "min_intoxication": 0.0,
+    "max_intoxication": 100.0
+  },
+  "perception": {
+    "target_field": "perceived_intoxication",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -5.0,
+    "fuzz_jitter_max": 5.0,
+    "home_modifier": 2.0,
+    "error_floor": 1.0,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 10.0, "token": "UI_INTOX_SOBER" },
+      { "max": 35.0, "token": "UI_INTOX_TIPSY" },
+      { "max": 70.0, "token": "UI_INTOX_INEBRIATED" },
+      { "token": "UI_INTOX_INCAPACITATED" }
+    ]
+  }
+}

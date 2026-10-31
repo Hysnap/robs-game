@@ -24,9 +24,10 @@ func _ready() -> void:
 	if btn_messages_alert:
 		btn_messages_alert.pressed.connect(func(): toggle_messages_inbox_requested.emit())
 
-	# Bind reactive timeline updates from GameState
-	if GameState.has_signal("turn_advanced"):
-		GameState.turn_advanced.connect(_on_turn_advanced)
+	# Bind reactive timeline updates from GameState safely
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs != null and gs.has_signal("turn_advanced"):
+		gs.turn_advanced.connect(_on_turn_advanced)
 		
 	_refresh_timeline_display()
 
@@ -39,13 +40,24 @@ func _on_turn_advanced(_current_tick: int) -> void:
 	_refresh_timeline_display()
 
 func _refresh_timeline_display() -> void:
-	var meta: Dictionary = GameState.world_state.get("metadata", {})
-	var year: int = int(meta.get("calendar_year", 1984))
-	var week: int = int(meta.get("current_week_tick", 1))
-	var day: int = int(meta.get("current_day_tick", 1))
+	if lbl_date_tick == null:
+		return
+
+	var gs = ScenarioManifestManager.get_game_state()
+	var meta: Dictionary = gs.world_state.get("metadata", {}) if (gs != null and "world_state" in gs) else {}
+	var year_val: int = int(meta.get("calendar_year", 1984))
+	var week_val: int = int(meta.get("current_week_tick", 1))
+	var day_val: int = int(meta.get("current_day_tick", 1))
 	
-	if lbl_date_tick:
-		lbl_date_tick.text = "YR %d | WK %02d | DAY %d" % [year, week, day]
+	# Format week as zero-padded 2 digits
+	var wk_str: String = "%02d" % week_val
+
+	# Resolve localized timeline pattern template via TranslationServer
+	var pattern: String = TranslationServer.translate("UI_HUD_TIMELINE_TICK")
+	if pattern == "UI_HUD_TIMELINE_TICK" or pattern.is_empty():
+		pattern = "YR {year} | WK {week} | DAY {day}"
+
+	lbl_date_tick.text = pattern.replace("{year}", str(year_val)).replace("{week}", wk_str).replace("{day}", str(day_val))
 
 ## Updates the bottom dispatch and interdiction ticker
 func set_status_message(message: String) -> void:

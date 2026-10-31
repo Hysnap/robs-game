@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://bkj8bl81pp0w3"]
+
+[ext_resource type="Script" path="res://scenes/3d_scenes/indicators/district_indicator.gd" id="1_indicator"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_f7jhf"]
+size = Vector3(24, 1.2, 24)
+
+[node name="DistrictIndicator" type="Node3D" unique_id=306367907]
+script = ExtResource("1_indicator")
+
+[node name="SurveyTick" type="MeshInstance3D" parent="." unique_id=823168708]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0)
+mesh = SubResource("BoxMesh_f7jhf")
+
+[node name="CivicBillboard" type="Label3D" parent="." unique_id=1943433267]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20.0, 0)
+pixel_size = 0.6
+billboard = 1
+no_depth_test = true
+fixed_size = false
+font_size = 64
+outline_size = 12
+outline_modulate = Color(0, 0, 0, 1)

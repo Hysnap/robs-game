@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "ESTABLISHMENT_HEADCOUNT",
+  "label_token": "UI_LBL_WORKFORCE_COUNT",
+  "format": "INTEGER",
+  "target_scope": "SPATIAL",
+  "telemetry_source": {
+    "type": "SQLITE_LIVE",
+    "sink_class": "SinkEmployment"
+  },
+  "perception": {
+    "target_field": "worker_count",
+    "mode": "STEPPED_ROUNDING",
+    "default_step": 1,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "tiers": [
+      { "threshold": 10, "round_to": 1 },
+      { "threshold": 50, "round_to": 5 },
+      { "threshold": 250, "round_to": 25 },
+      { "threshold": 1000, "round_to": 100 }
+    ]
+  }
+}

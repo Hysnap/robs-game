@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "WORKER_FATIGUE",
+  "label_token": "UI_METRIC_WORKER_FATIGUE",
+  "format": "FLOAT",
+  "decimals": 1,
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "operations.fatigue"
+  },
+  "perception": {
+    "target_field": "worker_fatigue_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.10,
+    "fuzz_jitter_max": 0.10,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 15, "token": "UI_WORKER_FATIGUE_COLD" },
+      { "max": 35, "token": "UI_WORKER_FATIGUE_NORMAL" },
+      { "max": 60, "token": "UI_WORKER_FATIGUE_HEIGHTENED" },
+      { "max": 80, "token": "UI_WORKER_FATIGUE_ACUTE" },
+      { "token": "UI_WORKER_FATIGUE_CRITICAL" }
+    ]
+  }
+}

@@ -3,6 +3,8 @@ extends Node
 
 ## Signals for reactive UI (Filofax, HUD, Map highlights)
 signal district_selected(district_id: String)
+signal district_updated(district_id: String)
+signal turn_advanced(current_week: int, current_day: int)
 signal world_state_reset
 
 ## Path to active configuration (can be switched by scenario loaders)
@@ -11,10 +13,11 @@ signal world_state_reset
 ## The Canonical World State (Single Source of Truth)
 var world_state: Dictionary = {}
 
-## Active UI Selection Pointer
+## Active UI Selection Pointer (kept in sync with world_state["selected_district_id"])
 var selected_district_id: String = ""
 
-const DB_MGR = preload("res://systems/db_manager.gd")
+const DISTRICT_PERCEPTION_FILTER = preload("res://systems/multilayer_info_loop/district_perception_filter.gd")
+const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -37,7 +40,8 @@ func initialize_fresh_state() -> void:
 		"player_knowledge": {
 			"home_district_id": "",
 			"known_districts": [],
-			"known_outlets": []
+			"known_outlets": [],
+			"district_survey_ticks": {}
 		},
 		"staff": scenario.get("starting_staff", {}).duplicate(true),
 		"inventory_registry": {},
@@ -45,28 +49,10 @@ func initialize_fresh_state() -> void:
 		"recipe_registry": {},
 		"pending_orders": {},
 		"districts": {},
-		"counterparties": {}
+		"counterparties": {},
+		"selected_district_id": ""
 	}
 
-	# 2. Store scenario constraints for dynamic spatial resolution
-	var starting_knowledge: Dictionary = scenario.get("starting_knowledge", {})
-	world_state["_startpoint_rules"] = {
-		"eligible_home_archetypes": starting_knowledge.get("eligible_home_archetypes", [
-			"high_density_low_rise",
-			"high_density_high_rise",
-			"residential",
-			"suburban_low_density"
-		])
-	}
-
-	# If districts are already populated in world_state, resolve immediately;
-	# otherwise resolve_starting_home_district() is called after map generation completes.
-	if not world_state["districts"].is_empty():
-		resolve_starting_home_district()
-
-	print("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
-	world_state_reset.emit()
-	
 	# 2. Ingest starting definitions dynamically from business_rules.cfg
 	var config := ConfigFile.new()
 	var err := config.load(active_rules_path)
@@ -77,113 +63,97 @@ func initialize_fresh_state() -> void:
 		print("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
 	else:
 		push_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
-		# Minimal fallback to prevent crash if file is missing
-		world_state["metadata"] = {"calendar_year": 1984, "current_week_tick": 1, "active_seed": "default-city"}
+		world_state["metadata"] = {"calendar_year": 1980, "current_week_tick": 1, "current_day_tick": 1, "active_seed": "default-city"}
 		world_state["finances"] = {"liquid_cash": 0.0, "clean_bank_balance": 0.0}
 		world_state["operations"] = {"fatigue": 0.0}
 
+	print("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()
 
-## Dynamically resolves an anchor district based on eligible archetypes and places crew
-func resolve_starting_home_district() -> String:
-	var districts: Dictionary = world_state.get("districts", {})
-	if districts.is_empty():
-		return ""
+## Pure State Setter: Records the confirmed home district resolved by CitySpatialAdapter
+func set_home_district(district_id: String) -> void:
+	assert(not district_id.is_empty(), "FATAL: [GAME_STATE] Cannot set empty home district.")
+	if not world_state.has("player_knowledge"):
+		world_state["player_knowledge"] = {"home_district_id": "", "known_districts": [], "known_outlets": [], "district_survey_ticks": {}}
+	if not world_state.has("operations"):
+		world_state["operations"] = {}
 
-	var eligible_archetypes: Array = world_state.get("_startpoint_rules", {}).get("eligible_home_archetypes", [])
-	var candidate_district_ids: Array[String] = []
+	world_state["player_knowledge"]["home_district_id"] = district_id
+	world_state["operations"]["home_district_id"] = district_id
 
-	# Find all districts matching eligible housing/urban archetypes
-	for d_id in districts.keys():
-		var district_data: Dictionary = districts[d_id]
-		var arch: String = str(district_data.get("archetype", district_data.get("district_type", "")))
-		if eligible_archetypes.has(arch):
-			candidate_district_ids.append(str(d_id))
+	var known: Array = world_state["player_knowledge"].get("known_districts", [])
+	if not district_id in known:
+		known.append(district_id)
+	world_state["player_knowledge"]["known_districts"] = known
 
-	# Fallback: take any district with an active population
-	if candidate_district_ids.is_empty():
-		for d_id in districts.keys():
-			if int(districts[d_id].get("active_population", 0)) > 0:
-				candidate_district_ids.append(str(d_id))
+	set_selected_district(district_id)
 
-	# Absolute fallback: first available district key
-	if candidate_district_ids.is_empty():
-		candidate_district_ids.append(str(districts.keys()[0]))
-
-	candidate_district_ids.sort()
-	var selected_home := candidate_district_ids[0]
-
-	# Stamp home district into operations & player knowledge
-	world_state["operations"]["home_district_id"] = selected_home
-	world_state["player_knowledge"]["home_district_id"] = selected_home
-	if not world_state["player_knowledge"]["known_districts"].has(selected_home):
-		world_state["player_knowledge"]["known_districts"].append(selected_home)
-
-	# Anchor starting crew to the resolved district
+	# Anchor starting crew roster to this district
 	var staff_dict: Dictionary = world_state.get("staff", {})
 	for staff_id in staff_dict.keys():
-		staff_dict[staff_id]["current_district_id"] = selected_home
+		if staff_dict[staff_id] is Dictionary:
+			staff_dict[staff_id]["current_district_id"] = district_id
 
-	print("[GAME_STATE] Anchored home district to: %s (Staff placed: %s)" % [selected_home, str(staff_dict.keys())])
-	return selected_home
+	district_updated.emit(district_id)
 
 ## Helper to dynamically map all keys in a config section without hardcoding property names
 func _load_section_into_state(config: ConfigFile, section_name: String, target_dict_key: String) -> void:
 	if not config.has_section(section_name):
 		return
+	if not world_state.has(target_dict_key):
+		world_state[target_dict_key] = {}
 	for key in config.get_section_keys(section_name):
-		var val = config.get_value(section_name, key)
-		world_state[target_dict_key][key] = val
+		world_state[target_dict_key][key] = config.get_value(section_name, key)
 
 ## Query and mutation helpers
 func get_district(district_id: String) -> Dictionary:
 	return world_state.get("districts", {}).get(district_id, {})
 
-## Sets the currently clicked/inspected district and notifies the Filofax
+func set_district(district_id: String, data: Dictionary) -> void:
+	if not world_state.has("districts"):
+		world_state["districts"] = {}
+	world_state["districts"][district_id] = data
+	district_updated.emit(district_id)
+
+func get_district_truth(district_id: String) -> Dictionary:
+	return get_district(district_id)
+
+## Sets the currently clicked/inspected district and synchronizes world_state
 func set_selected_district(district_id: String) -> void:
 	selected_district_id = district_id
+	world_state["selected_district_id"] = district_id
 	district_selected.emit(district_id)
 
-func get_district_view(block_id: String) -> Dictionary:
-	var view_data: Dictionary = {}
-	
-	# 1. Base spatial/macro state from memory
+## Returns district telemetry filtered through the player's perception and fog-of-war
+func get_district_view(district_id: String) -> Dictionary:
+	assert(not district_id.is_empty(), "FATAL: [GAME_STATE] district_id cannot be empty.")
+
+	# 1. Base spatial entity state
 	var districts: Dictionary = world_state.get("districts", {})
-	if districts.has(block_id):
-		view_data = districts[block_id].duplicate(true)
+	var raw_data: Dictionary = {}
+	if districts.has(district_id):
+		raw_data = districts[district_id].duplicate(true)
 	else:
-		view_data["district_id"] = block_id
-		view_data["display_name"] = block_id.capitalize().replace("_", " ")
+		raw_data["district_id"] = district_id
+		raw_data["display_name"] = district_id.capitalize().replace("_", " ")
 
-	# 2. Augment with SQLite census ground truth (if society database is initialized)
-	var census_rows = DB_MGR.query_rows("""
-		SELECT total_households, total_residents, active_living_population, 
-				formally_employed_count, street_informal_count, incarcerated_count 
-		FROM v_district_census 
-		WHERE district_id = '%s';
-	""" % block_id)
+	# 2. Enrich with archetype landmark metadata if available
+	if ScenarioManifestManager.has_module("archetypes"):
+		var archetypes: Dictionary = ScenarioManifestManager.load_module("archetypes")
+		var d_type: String = str(raw_data.get("district_type", ""))
+		var arch: Dictionary = archetypes.get(d_type, {})
+		raw_data["is_public_landmark"] = bool(arch.get("is_public_landmark", false))
+		raw_data["type_title"] = str(arch.get("display_name", d_type.capitalize()))
 
-	if not census_rows.is_empty():
-		var row: Dictionary = census_rows[0]
-		view_data["active_population"] = int(row.get("active_living_population", 0))
-		view_data["total_households"] = int(row.get("total_households", 0))
-		view_data["formally_employed_count"] = int(row.get("formally_employed_count", 0))
-		view_data["street_informal_count"] = int(row.get("street_informal_count", 0))
-		view_data["incarcerated_count"] = int(row.get("incarcerated_count", 0))
-	else:
-		view_data["active_population"] = view_data.get("population", 0)
-		view_data["total_households"] = int(round(float(view_data["active_population"]) / 2.6))
-		view_data["formally_employed_count"] = 0
-		view_data["street_informal_count"] = 0
-		view_data["incarcerated_count"] = 0
+	# 3. Enrich with SQLite census ground truth and establishments
+	var census_data: Dictionary = SOCIETY_QUERIES.get_district_census(district_id)
+	for k in census_data.keys():
+		raw_data[k] = census_data[k]
+	raw_data["establishments_summary"] = SOCIETY_QUERIES.get_district_establishments(district_id)
 
-	# 3. Augment with normalized establishments in this district
-	var estab_rows = DB_MGR.query_rows("""
-		SELECT name, category_title, capacity 
-		FROM v_establishments_overview 
-		WHERE district_id = '%s'
-		ORDER BY category_title ASC, name ASC;
-	""" % block_id)
+	# 4. Assemble player knowledge context
+	var pk: Dictionary = world_state.get("player_knowledge", {}).duplicate(true)
+	pk["current_sim_day"] = int(world_state.get("metadata", {}).get("current_sim_day", 1))
 
-	view_data["establishments_summary"] = estab_rows
-	return view_data
+	# 5. Apply pure in-memory perception transformation
+	return DISTRICT_PERCEPTION_FILTER.filter_district_view(raw_data, pk)

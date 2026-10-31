@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "schema_version": "2.0.0",
+    "description": "Baseline information perception, obfuscation, masking, and spatial indicator rules"
+  },
+  "general": {
+    "mask_unexplored_establishments": true,
+    "mask_unexplored_census": true,
+    "unexplored_intel_token": "INTEL_STATUS_UNEXPLORED",
+    "verified_intel_token": "INTEL_STATUS_VERIFIED",
+    "stale_intel_token": "INTEL_STATUS_STALE",
+    "stale_decay_threshold_days": 28,
+    "enable_temporal_decay": true,
+    "public_landmark_intel_status": "INTEL_STATUS_VERIFIED",
+    "unexplored_placeholder_text": "UI_LBL_UNEXPLORED_TERRITORY"
+  },
+  "field_access": {
+    "universally_known_fields": [
+      "district_id",
+      "display_name",
+      "district_type",
+      "initial_sector",
+      "grid_coords",
+      "grid_size",
+      "spatial_anchor",
+      "spatial_radius",
+      "civic_features_list"
+    ],
+    "engine_metadata_fields": [
+      "is_known",
+      "is_home_turf",
+      "is_public_landmark",
+      "type_title",
+      "intel_status",
+      "intel_status_token",
+      "is_surveyed"
+    ],
+    "unexplored_masked_defaults": {
+      "active_population": null,
+      "total_households": null,
+      "formally_employed_count": null,
+      "street_informal_count": null,
+      "incarcerated_count": null,
+      "avg_disposable_income": null,
+      "establishments_summary": [],
+      "is_surveyed": false
+    }
+  },
+  "demographics": {
+    "household_occupancy_mean": 2.6,
+    "rounding": {
+      "general_population_round_to": 5000,
+      "home_population_round_to": 1000,
+      "general_households_round_to": 2000,
+      "home_households_round_to": 500
+    }
+  },
+  "spatial_indicators": {
+    "color_verified": "#2ecc71",
+    "color_stale": "#e67e22",
+    "marker_elevation": 1.5,
+    "landmark_elevation": 4.0
+  }
+}

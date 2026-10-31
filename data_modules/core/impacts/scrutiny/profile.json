@@ -1,7 +1,37 @@
 {
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Statutory oversight pressure from Customs & Excise, Weights & Measures, and Trading Standards"
+  },
   "metric_id": "REGULATORY_SCRUTINY",
-  "display_name": "Regulatory Interest",
-  "format": "FLOAT",
-  "decimals": 1,
-  "suffix": " / 100"
+  "label_token": "UI_METRIC_REGULATORY_SCRUTINY",
+  "format": "PERCENT",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 1.0,
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "districts.{id}.regulatory_scrutiny"
+  },
+  "tuning": {
+    "ambient_decay_step": 0.02,
+    "min_scrutiny_floor": 0.0
+  },
+  "perception": {
+    "target_field": "regulatory_scrutiny_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.10,
+    "fuzz_jitter_max": 0.10,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 0.15, "token": "UI_SCRUTINY_DORMANT" },
+      { "max": 0.35, "token": "UI_SCRUTINY_ROUTINE" },
+      { "max": 0.60, "token": "UI_SCRUTINY_ELEVATED" },
+      { "max": 0.80, "token": "UI_SCRUTINY_ACUTE" },
+      { "token": "UI_SCRUTINY_SEIZURE" }
+    ]
+  }
 }

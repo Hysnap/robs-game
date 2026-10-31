@@ -2,29 +2,117 @@
   "_meta": {
     "target_class": "GenDistrictDocket",
     "extends": "VBoxContainer",
-    "description": "Pre-compiled municipal district inspector view"
+    "has_inscriptions": true,
+    "inscriptions_header_token": "UI_SEC_FIELD_OBSERVATIONS",
+    "inscriptions_header_default": "INSCRIBED FIELD OBSERVATIONS"
   },
   "sections": [
     {
-      "id": "demographics",
-      "header_token": "UI_SEC_MUNICIPAL_CENSUS",
-      "header_default": "MUNICIPAL CENSUS & RESIDENCY",
+      "id": "ward_identity",
       "rows": [
-        { "id": "pop", "field": "active_population", "token": "UI_LBL_POPULATION", "default_text": "Total Residents", "format": "INT", "suffix": " citizens" },
-        { "id": "households", "field": "total_households", "token": "UI_LBL_HOUSEHOLDS", "default_text": "Registered Households", "format": "INT", "suffix": " homes" },
-        { "id": "employed", "field": "formally_employed_count", "token": "UI_LBL_EMPLOYED", "default_text": "Formally Employed", "format": "INT", "suffix": " workers" },
-        { "id": "informal", "field": "street_informal_count", "token": "UI_LBL_INFORMAL", "default_text": "Informal Economy", "format": "INT", "suffix": " claimants" }
+        {
+          "id": "docket_header",
+          "type": "HEADER_BLOCK",
+          "field": "display_name",
+          "subtitle_field": "type_title",
+          "title_font_size": 18,
+          "subtitle_font_size": 12,
+          "show_separator": true
+        }
       ]
     },
     {
-      "id": "telemetry",
-      "header_token": "UI_SEC_WARD_TELEMETRY",
-      "header_default": "WARD TELEMETRY & PUBLIC ORDER",
+      "id": "intel_status_header",
+      "header_token": "UI_HDR_SURVEY_INTELLIGENCE",
+      "header_default": "WARD SURVEY & INTELLIGENCE AUDIT",
       "rows": [
-        { "id": "income", "field": "avg_disposable_income", "token": "UI_LBL_DISPOSABLE_INCOME", "default_text": "Disposable Income", "format": "CURRENCY", "suffix": " / wk" },
-        { "id": "zhi", "field": "zone_health_index", "token": "UI_LBL_ZHI", "default_text": "Zone Health Index", "format": "FLOAT", "suffix": " / 100" },
-        { "id": "heat", "field": "actual_police_heat", "token": "UI_LBL_POLICE_HEAT", "default_text": "Observed Police Heat", "format": "PERCENT" },
-        { "id": "unemployment", "field": "unemployment_rate", "token": "UI_LBL_UNEMPLOYMENT", "default_text": "Unemployment Ratio", "format": "PERCENT" }
+        {
+          "id": "survey_badge",
+          "field": "intel_status_token",
+          "type": "BADGE_STATUS",
+          "format": "TOKEN",
+          "token": "UI_LBL_INTEL_STATUS",
+          "default_text": "INTELLIGENCE STATUS"
+        }
+      ]
+    },
+    {
+      "id": "demographics_overview",
+      "header_token": "UI_HDR_WARD_DEMOGRAPHICS",
+      "header_default": "DISTRICT DEMOGRAPHICS & CENSUS",
+      "rows": [
+        {
+          "id": "pop",
+          "field": "active_population",
+          "type": "TEXT_METRIC",
+          "format": "INT",
+          "suffix": " citizens",
+          "token": "UI_LBL_ACTIVE_POPULATION",
+          "default_text": "Estimated Population"
+        },
+        {
+          "id": "households",
+          "field": "total_households",
+          "type": "TEXT_METRIC",
+          "format": "INT",
+          "suffix": " households",
+          "token": "UI_LBL_TOTAL_HOUSEHOLDS",
+          "default_text": "Recorded Households"
+        },
+        {
+          "id": "unemployment_tier",
+          "field": "unemployment_bucket_token",
+          "type": "TEXT_METRIC",
+          "format": "TOKEN",
+          "token": "UI_LBL_UNEMPLOYMENT_TIER",
+          "default_text": "Workforce Tension"
+        },
+        {
+          "id": "income_tier",
+          "field": "income_bucket_token",
+          "type": "TEXT_METRIC",
+          "format": "TOKEN",
+          "token": "UI_LBL_DISPOSABLE_INCOME",
+          "default_text": "Household Prosperity"
+        }
+      ]
+    },
+    {
+      "id": "civic_infrastructure",
+      "header_token": "UI_HDR_CIVIC_FEATURES",
+      "header_default": "CIVIC LANDMARKS & NOTABLE VENUES",
+      "rows": [
+        {
+          "id": "civic_features",
+          "field": "civic_features_list",
+          "type": "CIVIC_SUMMARY",
+          "token": "UI_LBL_CIVIC_SUMMARY",
+          "default_text": "Key Establishments"
+        }
+      ]
+    },
+    {
+      "id": "security_environment",
+      "header_token": "UI_HDR_SECURITY_ENVIRONMENT",
+      "header_default": "CIVIL ORDER & POLICE SCRUTINY",
+      "rows": [
+        {
+          "id": "zhi",
+          "field": "zone_health_index",
+          "type": "TEXT_METRIC",
+          "format": "FLOAT",
+          "suffix": " / 100",
+          "token": "UI_LBL_ZONE_HEALTH",
+          "default_text": "Zone Health Index"
+        },
+        {
+          "id": "heat",
+          "field": "actual_police_heat",
+          "type": "TEXT_METRIC",
+          "format": "PERCENT",
+          "token": "UI_LBL_POLICE_HEAT",
+          "default_text": "Constabulary Scrutiny"
+        }
       ]
     }
   ]

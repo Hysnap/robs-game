@@ -119,6 +119,79 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 
 		child.set_meta("display_name", display_name)
 
+## Evaluates finalized districts to find a valid, populated residential neighborhood.
+## Also auto-seeds all 'is_public_landmark' districts into known_districts.
+static func resolve_verified_home_district(world_state: Dictionary, seed_id: String) -> String:
+	load_archetypes()
+	var districts: Dictionary = world_state.get("districts", {})
+	if districts.is_empty():
+		return ""
+
+	if not world_state.has("player_knowledge"):
+		world_state["player_knowledge"] = {"home_district_id": "", "known_districts": [], "known_outlets": []}
+
+	var pk: Dictionary = world_state["player_knowledge"]
+	var known: Array = pk.get("known_districts", [])
+
+	var candidates: Array[String] = []
+
+	# Check each district for residential eligibility, housing, and active population
+	for d_id in districts.keys():
+		var d: Dictionary = districts[d_id]
+		var d_type: String = str(d.get("district_type", ""))
+		var arch: Dictionary = _archetypes.get(d_type, {})
+		
+		# Auto-seed public landmarks as universally known
+		if bool(arch.get("is_public_landmark", false)):
+			if not d_id in known:
+				known.append(d_id)
+
+		# Exclude non-residential civil anchors or heavy industrial sites
+		if d_type in ["place_of_worship", "primary_school", "secondary_school", "hospital_site", "civic_penal_block", "local_government", "industrial_automotive_works", "police_station", "police_headquarters"]:
+			continue
+
+		var is_eligible: bool = bool(arch.get("is_eligible_home", false))
+		var is_res_sector: bool = str(arch.get("sector_class", d.get("initial_sector", ""))).to_upper() == "RESIDENTIAL"
+		var units: int = int(d.get("total_habitable_units", 0))
+		var pop: int = int(d.get("population", 0))
+
+		if (is_eligible or is_res_sector) and units > 0 and pop > 0:
+			candidates.append(str(d_id))
+
+	# Fallback: any residential sector with citizens
+	if candidates.is_empty():
+		for d_id in districts.keys():
+			var d: Dictionary = districts[d_id]
+			var d_type: String = str(d.get("district_type", ""))
+			var arch: Dictionary = _archetypes.get(d_type, {})
+			var is_res: bool = str(arch.get("sector_class", d.get("initial_sector", ""))).to_upper() == "RESIDENTIAL"
+			if is_res and int(d.get("population", 0)) > 0:
+				candidates.append(str(d_id))
+
+	# Absolute fallback: any district with active population
+	if candidates.is_empty():
+		for d_id in districts.keys():
+			if int(districts[d_id].get("population", 0)) > 0:
+				candidates.append(str(d_id))
+
+	assert(not candidates.is_empty(), "FATAL: [CitySpatialAdapter] No populated districts found on generated map.")
+
+	# Deterministic selection using seed hash
+	candidates.sort_custom(func(a, b):
+		var ha = abs(("%s:%s" % [seed_id, a]).hash())
+		var hb = abs(("%s:%s" % [seed_id, b]).hash())
+		return ha < hb
+	)
+
+	var selected_home_id: String = candidates[0]
+
+	# Ensure selected home district is in known_districts
+	if not selected_home_id in known:
+		known.append(selected_home_id)
+
+	pk["known_districts"] = known
+	return selected_home_id
+
 static func _calculate_district_scale_factor(archetype: Dictionary, block_size: Vector2i, standard_lot_sqm: float) -> float:
 	var allocated_cells: int = block_size.x * block_size.y
 	var sqm: float = float(archetype.get("footprint_size", archetype.get("footprint_sqm", 1600.0)))

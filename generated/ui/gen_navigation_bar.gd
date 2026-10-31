@@ -3,21 +3,26 @@
 class_name GenNavBar
 extends VBoxContainer
 
-const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
-
 signal route_requested(domain_token: String, target_page_name: String)
 
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+
 var _value_labels: Dictionary = {}
-var _inscribed_entries_container: VBoxContainer = null
 
 func _init() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	build_ui()
 
 func build_ui() -> void:
 	for child in get_children():
-		remove_child(child)
 		child.queue_free()
+	_value_labels.clear()
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
+	assert(mono_font != null, "[UI FATAL] retro_theme.gd failed to supply monospace font.")
+	var clr_blue: Color = RETRO_THEME.get_ink_color("accent")
+	var clr_muted: Color = RETRO_THEME.get_ink_color("muted")
+	var clr_black: Color = RETRO_THEME.get_ink_color("body")
 
 	var btn_diary := Button.new()
 	btn_diary.text = tr("UI_TAB_MACRO_DIARY")
@@ -46,7 +51,6 @@ func build_ui() -> void:
 	btn_finance.pressed.connect(func(): route_requested.emit("FINANCE", "FinancialsTab"))
 	_value_labels["finance"] = btn_finance
 	add_child(btn_finance)
-
 
 func bind_data(data: Dictionary) -> void:
 	pass

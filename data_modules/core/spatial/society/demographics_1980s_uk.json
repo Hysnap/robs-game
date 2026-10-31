@@ -20,7 +20,7 @@
     "MANUAL_WORKS": "INDUSTRIAL",
     "COMMERCIAL_SERVICE": "COMMERCIAL",
     "CIVIC": "COMMERCIAL",
-    "INDUSTRIAL": "COMMERCIAL",
+    "INDUSTRIAL": "INDUSTRIAL",
     "DEFAULT": "COMMERCIAL"
   },
   "legal_and_pension_thresholds": {

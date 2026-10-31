@@ -50,7 +50,7 @@ static func tick_to_day(tick: int) -> int:
 static func day_to_week(day_offset: int) -> int:
 	assert(_initialized, "FATAL: CalendarHelper used before initialization")
 	var elapsed_days := day_offset - _start_day_offset
-	return (elapsed_days / _days_per_tick) + 1
+	return floori(float(elapsed_days) / float(_days_per_tick)) + 1
 
 ## Returns the current day of the week (1 to 7) based on day offset
 static func day_of_week(day_offset: int) -> int:
@@ -85,3 +85,31 @@ static func day_to_calendar_date(day_offset: int) -> String:
 	var month_str = months[month_idx] if month_idx < months.size() else parts[1]
 	
 	return "%s %s %s" % [day, month_str, year]
+
+## Formats an epoch day integer using the localized date pattern from ui_strings.csv
+static func format_day_localized(day_offset: int) -> String:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var sql := "SELECT date('%s', '+%d days') as d;" % [_epoch_date, day_offset]
+	var res = DBManager.query_rows(sql)
+	if res.is_empty():
+		return "Unknown Date"
+	
+	var raw_iso: String = res[0]["d"]
+	var parts: PackedStringArray = raw_iso.split("-")
+	if parts.size() < 3:
+		return raw_iso
+		
+	var year := parts[0]
+	var month := parts[1]
+	var day := parts[2]
+	
+	var months_short := ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+	var month_idx := int(month)
+	var month_name = months_short[month_idx] if month_idx < months_short.size() else month
+	
+	# Fetch format pattern directly from translation server (e.g. "{day} {month} {year}" or "{month} {day}, {year}")
+	var pattern := TranslationServer.translate("FMT_DATE_SHORT")
+	if pattern == "FMT_DATE_SHORT":
+		pattern = "{day} {month} {year}"
+		
+	return pattern.replace("{day}", day).replace("{month}", month_name).replace("{year}", year)

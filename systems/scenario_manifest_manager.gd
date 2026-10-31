@@ -120,3 +120,11 @@ static func get_city_configuration() -> Resource:
 	var res = load_resource_module("city_configuration")
 	assert(res != null, "FATAL: Failed to resolve city_configuration resource.")
 	return res
+
+## Centralized system accessor: safely resolves the active GameState node
+## Works across editor runtime, live play, and headless test harnesses without compile errors
+static func get_game_state() -> Node:
+	var main_loop = Engine.get_main_loop()
+	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
+		return main_loop.root.get_node("GameState")
+	return null

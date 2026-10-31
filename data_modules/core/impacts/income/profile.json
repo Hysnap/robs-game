@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_METRIC_PROFILE"
+  },
+  "metric_id": "DISPOSABLE_INCOME",
+  "label_token": "UI_METRIC_DISPOSABLE_INCOME",
+  "format": "FLOAT",
+  "decimals": 2,
+  "telemetry_source": {
+    "type": "SQLITE_LIVE",
+    "sink_class": "SinkDisposableIncome"
+  },
+  "perception": {
+  "target_field": "income_bucket_token",
+  "mode": "N_BUCKET",
+  "fuzz_jitter_min": -0.10,
+  "fuzz_jitter_max": 0.10,
+  "home_modifier": 0.05,
+  "error_floor": 0.02,
+  "fallback_token": "UI_INTEL_MASKED_BLANK",
+  "buckets": [
+    { "max": 40.0, "token": "UI_INCOME_DESTITUTE" },
+    { "max": 75.0, "token": "UI_INCOME_MEAGRE" },
+    { "max": 120.0, "token": "UI_INCOME_MODEST" },
+    { "max": 180.0, "token": "UI_INCOME_COMFORTABLE" },
+    { "token": "UI_INCOME_PROSPEROUS" }
+  ]
+}
+}

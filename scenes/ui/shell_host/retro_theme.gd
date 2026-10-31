@@ -170,3 +170,20 @@ static func create_page_style() -> StyleBoxFlat:
 	sb.set_corner_radius_all(2)
 	sb.set_content_margin_all(12)
 	return sb
+
+## Queries an ink color token by semantic key, asserting on missing or invalid configurations
+static func get_ink_color(token: String) -> Color:
+	var c = null
+	match token.to_lower():
+		"accent", "blue", "color_ink_accent", "color_ink_blue":
+			c = color_ink_accent
+		"muted", "gray", "color_ink_muted":
+			c = color_ink_muted
+		"body", "black", "color_ink_body", "color_ink_black", "text":
+			c = color_ink_body
+		_:
+			assert(false, "[RetroTheme FATAL] Unknown ink color token requested: " + token)
+			return Color.MAGENTA
+
+	assert(c is Color, "[RetroTheme FATAL] Color token '%s' is not configured as a valid Color." % token)
+	return c

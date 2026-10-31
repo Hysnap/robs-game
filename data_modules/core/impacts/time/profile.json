@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Shift duration and task execution runway spent by player or assigned operative"
+  },
+  "metric_id": "OPERATIONAL_TIME",
+  "label_token": "UI_METRIC_OPERATIONAL_TIME",
+  "format": "INTEGER",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 720.0,
+  "suffix": " mins",
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "operations.shift_time_spent"
+  },
+  "perception": {
+    "target_field": "perceived_shift_time",
+    "mode": "STEPPED_ROUNDING",
+    "default_step": 1,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "tiers": [
+      { "threshold": 720, "round_to": 1 }
+    ]
+  }
+}

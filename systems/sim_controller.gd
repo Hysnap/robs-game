@@ -5,6 +5,7 @@ extends RefCounted
 const _VerbRouter = preload("res://systems/verb_router.gd")
 const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
+const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -40,10 +41,18 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	var diary_memos: Array[String] = []
 
 	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)
+	var strict_halt := false
+	if FileAccess.file_exists(BUSINESS_RULES_PATH):
+		var cfg := ConfigFile.new()
+		if cfg.load(BUSINESS_RULES_PATH) == OK:
+			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
+
+	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)		
 	if not staged_directives.is_empty():
 		for i in range(staged_directives.size()):
 			var directive: Dictionary = staged_directives[i]
 			var res: Dictionary = execute_directive(world_state, directive)
+			var success: bool = res.get("success", false)
 			# Resolve author cleanly: counterparty -> initiator -> localized role fallback
 			var author_str: String = str(directive.get("counterparty_id", directive.get("initiator_id", "")))
 			if author_str.is_empty():
@@ -57,7 +66,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 				"day_of_week": _CalendarHelper.day_of_week(current_day),
 				"verb": directive.get("verb", TranslationServer.translate("DEFAULT_VERB_TOKEN")),
 				"target_item": directive.get("target_item", ""),
-				"success": res.get("success", false),
+				"success": success,
 				"message": res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")),
 				"author": author_str,
 				"target_node_id": directive.get("target_node_id", ""),
@@ -66,6 +75,32 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			}
 			executed_events.append(event_record)
 			diary_memos.append(res.get("message", TranslationServer.translate("DIARY_TASK_GENERIC_SUCCESS_MESSAGE")))
+
+			# Strict FIFO Failure Halting
+			if not success and strict_halt:
+				for j in range(i + 1, staged_directives.size()):
+					var blocked_directive: Dictionary = staged_directives[j]
+					var blocked_author: String = str(blocked_directive.get("counterparty_id", blocked_directive.get("initiator_id", "")))
+					if blocked_author.is_empty():
+						blocked_author = TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")
+
+					executed_events.append({
+						"trigger_type": "ACTION_ABORTED",
+						"day_offset": current_day,
+						"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
+						"week": current_week,
+						"day_of_week": _CalendarHelper.day_of_week(current_day),
+						"verb": blocked_directive.get("verb", TranslationServer.translate("DEFAULT_VERB_TOKEN")),
+						"target_item": blocked_directive.get("target_item", ""),
+						"success": false,
+						"message": TranslationServer.translate("FEEDBACK_TASK_ABORTED_PIPELINE_HALTED"),
+						"author": blocked_author,
+						"target_node_id": blocked_directive.get("target_node_id", ""),
+						"staged_index": j,
+						"directive_snapshot": blocked_directive.duplicate(true)
+					})
+					diary_memos.append(TranslationServer.translate("DIARY_TASK_ABORTED_PIPELINE_HALTED"))
+				break
 	else:
 		executed_events.append({
 			"trigger_type": "IDLE",

@@ -2,6 +2,35 @@
 class_name SocietyQueries
 extends RefCounted
 
+## Fetches raw, unfiltered census totals and labor market breakdown from SQLite for a district
+static func get_district_census(district_id: String) -> Dictionary:
+	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
+
+	var rows = DBManager.query_rows("""
+		SELECT 
+			total_households, 
+			total_residents, 
+			active_living_population, 
+			formally_employed_count, 
+			street_informal_count, 
+			incarcerated_count 
+		FROM v_district_census 
+		WHERE district_id = '%s';
+	""" % district_id)
+
+	if rows.is_empty():
+		return {}
+
+	var row: Dictionary = rows[0]
+	return {
+		"active_population": int(row.get("active_living_population", 0)),
+		"total_residents": int(row.get("total_residents", 0)),
+		"total_households": int(row.get("total_households", 0)),
+		"formally_employed_count": int(row.get("formally_employed_count", 0)),
+		"street_informal_count": int(row.get("street_informal_count", 0)),
+		"incarcerated_count": int(row.get("incarcerated_count", 0))
+	}
+
 ## Fetches all establishments located in a given district for list views
 static func get_district_establishments(district_id: String) -> Array:
 	return DBManager.query_rows("""

@@ -4,6 +4,10 @@ RobsGame is a Godot 4.7, data-driven, turn-based economic and society
 simulation. GDScript in `systems/` performs generic operations; JSON and CFG
 files under `data_modules/` provide the scenario, catalog, and narrative data.
 
+For repository-wide development, planning, MVC boundaries, directory
+ownership, and change-review rules, see
+[DEVELOPMENT_ARCHITECTURE_GUIDE.md](DEVELOPMENT_ARCHITECTURE_GUIDE.md).
+
 ## Project layout
 
 ```text

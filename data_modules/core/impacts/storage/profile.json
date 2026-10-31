@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Volumetric physical storage utilization across workshop racks and safehouse bins"
+  },
+  "metric_id": "MATERIAL_STORAGE",
+  "label_token": "UI_METRIC_MATERIAL_STORAGE",
+  "format": "INTEGER",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 1000.0,
+  "suffix": " units",
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "operations.material_storage_accumulated"
+  },
+  "perception": {
+    "target_field": "perceived_material_storage",
+    "mode": "STEPPED_ROUNDING",
+    "default_step": 1,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "tiers": [
+      { "threshold": 1000, "round_to": 1 }
+    ]
+  }
+}

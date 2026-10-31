@@ -5,59 +5,90 @@ extends VBoxContainer
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
-
 var _value_labels: Dictionary = {}
-var _inscribed_entries_container: VBoxContainer = null
 
 func _init() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	build_ui()
 
 func build_ui() -> void:
 	for child in get_children():
-		remove_child(child)
 		child.queue_free()
+	_value_labels.clear()
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
+	assert(mono_font != null, "[UI FATAL] retro_theme.gd failed to supply monospace font.")
+	var clr_blue: Color = RETRO_THEME.get_ink_color("accent")
+	var clr_muted: Color = RETRO_THEME.get_ink_color("muted")
+	var clr_black: Color = RETRO_THEME.get_ink_color("body")
 
-	# --- Section: UI_SEC_VAULT_RESERVES ---
+	# --- Section: vault_summary ---
+	var sec_vault_summary := VBoxContainer.new()
+	sec_vault_summary.add_theme_constant_override("separation", 2)
 	var hdr_vault_summary := Label.new()
-	hdr_vault_summary.text = tr("UI_SEC_VAULT_RESERVES")
+	hdr_vault_summary.text = "[ " + tr("UI_SEC_VAULT_RESERVES").to_upper() + " ]"
 	hdr_vault_summary.add_theme_font_override("font", mono_font)
-	hdr_vault_summary.add_theme_color_override("font_color", RETRO_THEME.color_ink_accent)
-	add_child(hdr_vault_summary)
+	hdr_vault_summary.add_theme_color_override("font_color", clr_blue)
+	sec_vault_summary.add_child(hdr_vault_summary)
+	var sep_vault_summary := HSeparator.new()
+	sec_vault_summary.add_child(sep_vault_summary)
+	add_child(sec_vault_summary)
 
 	var row_liquid_cash := HBoxContainer.new()
+	row_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_liquid_cash := Label.new()
 	lbl_liquid_cash.text = tr("UI_LBL_LIQUID_CASH")
+	lbl_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_liquid_cash.add_theme_font_override("font", mono_font)
-	lbl_liquid_cash.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	lbl_liquid_cash.add_theme_color_override("font_color", clr_muted)
 	row_liquid_cash.add_child(lbl_liquid_cash)
 	var val_liquid_cash := Label.new()
-	val_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_liquid_cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_liquid_cash.add_theme_font_override("font", mono_font)
-	val_liquid_cash.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	val_liquid_cash.add_theme_color_override("font_color", clr_black)
 	row_liquid_cash.add_child(val_liquid_cash)
 	_value_labels["liquid_cash"] = val_liquid_cash
 	add_child(row_liquid_cash)
 
 	var row_filed_receipts_total := HBoxContainer.new()
+	row_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_filed_receipts_total := Label.new()
 	lbl_filed_receipts_total.text = tr("UI_LBL_EXPENSE_TOTAL")
+	lbl_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_filed_receipts_total.add_theme_font_override("font", mono_font)
-	lbl_filed_receipts_total.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	lbl_filed_receipts_total.add_theme_color_override("font_color", clr_muted)
 	row_filed_receipts_total.add_child(lbl_filed_receipts_total)
 	var val_filed_receipts_total := Label.new()
-	val_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_filed_receipts_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_filed_receipts_total.add_theme_font_override("font", mono_font)
-	val_filed_receipts_total.add_theme_color_override("font_color", RETRO_THEME.color_ink_body)
+	val_filed_receipts_total.add_theme_color_override("font_color", clr_black)
 	row_filed_receipts_total.add_child(val_filed_receipts_total)
 	_value_labels["filed_receipts_total"] = val_filed_receipts_total
 	add_child(row_filed_receipts_total)
 
+	# --- Inscriptions Container ---
+	var hdr_insc := Label.new()
+	hdr_insc.text = "[ " + tr("UI_SEC_FILED_RECEIPTS").to_upper() + " ]"
+	hdr_insc.add_theme_font_override("font", mono_font)
+	hdr_insc.add_theme_color_override("font_color", clr_blue)
+	add_child(hdr_insc)
+	var insc_list := VBoxContainer.new()
+	insc_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list
+	add_child(insc_list)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("liquid_cash") and data.has("reported_cash"):
-		_value_labels["liquid_cash"].text = "£" + str("%.2f" % float(data["reported_cash"])) + ""
+		var ctrl = _value_labels["liquid_cash"]
+		if data["reported_cash"] == null:
+			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
+		else:
+			var num_str := String.num(float(data["reported_cash"]), 2)
+			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + ""
 	if _value_labels.has("filed_receipts_total") and data.has("total_filed_expenses"):
-		_value_labels["filed_receipts_total"].text = "£" + str("%.2f" % float(data["total_filed_expenses"])) + ""
+		var ctrl = _value_labels["filed_receipts_total"]
+		if data["total_filed_expenses"] == null:
+			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
+		else:
+			var num_str := String.num(float(data["total_filed_expenses"]), 2)
+			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + ""

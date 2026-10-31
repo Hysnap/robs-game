@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Physical unit counts of raw materials, prepped batches, and packaged retail commodities"
+  },
+  "metric_id": "INVENTORY",
+  "label_token": "UI_METRIC_INVENTORY",
+  "format": "INTEGER",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 999999.0,
+  "suffix": " units",
+  "telemetry_source": {
+    "type": "ACTOR_STATE",
+    "state_path": "inventory_registry.{item_id}.STOCK"
+  },
+  "tuning": {
+    "allow_negative_stock": false,
+    "default_lane": "STOCK"
+  },
+  "perception": {
+    "target_field": "perceived_inventory_count",
+    "mode": "STEPPED_ROUNDING",
+    "default_step": 1,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "tiers": [
+      { "threshold": 999999, "round_to": 1 }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Opportunistic cash or inventory diversion rate by assigned operative or counterparty"
+  },
+  "metric_id": "STAFF_SKIM",
+  "label_token": "UI_METRIC_STAFF_SKIM",
+  "format": "PERCENT",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 1.0,
+  "telemetry_source": {
+    "type": "ACTOR_STATE",
+    "state_path": "staff.{id}.actual_skim"
+  },
+  "tuning": {
+    "loyalty_skim_threshold": 0.60,
+    "loyalty_operator": "<",
+    "ambient_skim_increment": 0.01,
+    "max_ambient_skim": 0.40,
+    "audit_loyalty_penalty": 0.15
+  },
+  "perception": {
+    "target_field": "perceived_staff_skim",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.08,
+    "fuzz_jitter_max": 0.08,
+    "home_modifier": 0.04,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 0.05, "token": "UI_SKIM_HONEST" },
+      { "max": 0.15, "token": "UI_SKIM_MINOR_LEAK" },
+      { "max": 0.30, "token": "UI_SKIM_SUBSTANTIAL" },
+      { "token": "UI_SKIM_FLAGRANT" }
+    ]
+  }
+}
