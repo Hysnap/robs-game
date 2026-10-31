@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Liquid transactional capital held by actors, ledgers, or organizational vaults"
+  },
+  "metric_id": "CASH",
+  "label_token": "UI_METRIC_CASH",
+  "format": "CURRENCY",
+  "decimals": 2,
+  "target_scope": "ACTOR",
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "finances.liquid_cash"
+  },
+  "tuning": {
+    "default_baseline_float": 0.0,
+    "allow_negative_balance": false
+  },
+  "perception": {
+    "target_field": "cash_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.05,
+    "fuzz_jitter_max": 0.05,
+    "home_modifier": 0.05,
+    "error_floor": 0.01,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 10.0, "token": "UI_CASH_BROKE" },
+      { "max": 50.0, "token": "UI_CASH_MEAGER" },
+      { "max": 250.0, "token": "UI_CASH_SOLVENT" },
+      { "max": 1000.0, "token": "UI_CASH_PROSPEROUS" },
+      { "token": "UI_CASH_WEALTHY" }
+    ]
+  }
+}

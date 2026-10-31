@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Net household movement into or out of a spatial catchment"
+  },
+  "metric_id": "MIGRATION",
+  "label_token": "UI_METRIC_MIGRATION",
+  "format": "INTEGER",
+  "decimals": 0,
+  "telemetry_source": {
+    "type": "SQLITE_DYNAMIC",
+    "query_field": "net_migration_flow"
+  },
+  "tuning": {
+    "default_baseline_migration": 0,
+    "decay_rate_per_tick": 0.10
+  },
+  "perception": {
+    "target_field": "migration_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.05,
+    "fuzz_jitter_max": 0.05,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": -20.0, "token": "UI_MIGRATION_RAPID_EXODUS" },
+      { "max": -5.0, "token": "UI_MIGRATION_GRADUAL_DECLINE" },
+      { "max": 5.0, "token": "UI_MIGRATION_STABLE" },
+      { "max": 20.0, "token": "UI_MIGRATION_MODERATE_INFLUX" },
+      { "token": "UI_MIGRATION_HEAVY_INFLUX" }
+    ]
+  }
+}

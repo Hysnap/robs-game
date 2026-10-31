@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Labor market employment ratio and formal economic activity partition across a spatial catchment"
+  },
+  "metric_id": "EMPLOYMENT",
+  "label_token": "UI_METRIC_EMPLOYMENT",
+  "format": "PERCENT",
+  "decimals": 1,
+  "telemetry_source": {
+    "type": "SQLITE_DYNAMIC",
+    "query_field": "employment_rate"
+  },
+  "tuning": {
+    "default_baseline_employment_rate": 0.88,
+    "min_labor_age": 16
+  },
+  "perception": {
+    "id": "unemployment",
+    "source_field": "unemployment_rate",
+    "target_field": "unemployment_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.15,
+    "fuzz_jitter_max": 0.15,
+    "home_modifier": 0.10,
+    "error_floor": 0.03,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 0.04, "token": "UI_UNEMP_NEGLIGIBLE" },
+      { "max": 0.09, "token": "UI_UNEMP_LOW" },
+      { "max": 0.16, "token": "UI_UNEMP_ELEVATED" },
+      { "max": 0.25, "token": "UI_UNEMP_ACUTE" },
+      { "token": "UI_UNEMP_CRITICAL" }
+    ]
+  }
+}

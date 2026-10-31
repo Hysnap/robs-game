@@ -360,3 +360,122 @@ static func evaluate_weighted_sum(quantities: Dictionary, weights: Dictionary, d
 		var weight: float = float(weights.get(key, default_weight))
 		total += qty * weight
 	return total
+
+# =====================================================================
+# STATISTICAL & AGGREGATE OPERATORS
+# =====================================================================
+
+## Calculates the arithmetic mean of an array of numbers
+static func evaluate_mean(values: Array, fallback: float = 0.0) -> float:
+	if values.is_empty():
+		return fallback
+	var sum: float = 0.0
+	var count: int = 0
+	for val in values:
+		if val != null:
+			sum += float(val)
+			count += 1
+	if count == 0:
+		return fallback
+	return sum / float(count)
+
+## Computes the median (50th percentile) value from an array of numbers
+static func evaluate_median(values: Array, fallback: float = 0.0) -> float:
+	var clean: Array[float] = []
+	for v in values:
+		if v != null:
+			clean.append(float(v))
+	if clean.is_empty():
+		return fallback
+
+	clean.sort()
+	var n: int = clean.size()
+	var mid: int = n / 2
+	if n % 2 == 1:
+		return clean[mid]
+	else:
+		return (clean[mid - 1] + clean[mid]) * 0.5
+
+## Computes the modal (most frequent) value from an array of numbers.
+## rounding_precision: -1 preserves raw values; >= 0 rounds values prior to counting.
+static func evaluate_mode(values: Array, fallback: float = 0.0, rounding_precision: int = -1) -> float:
+	if values.is_empty():
+		return fallback
+
+	var frequency_map: Dictionary = {}
+	var max_frequency: int = 0
+	var modal_val: float = fallback
+
+	for raw_v in values:
+		if raw_v == null:
+			continue
+		var val: float = float(raw_v)
+		if rounding_precision >= 0:
+			var scale: float = pow(10.0, rounding_precision)
+			val = roundf(val * scale) / scale
+
+		var count: int = int(frequency_map.get(val, 0)) + 1
+		frequency_map[val] = count
+
+		if count > max_frequency:
+			max_frequency = count
+			modal_val = val
+
+	return modal_val
+
+## Calculates (num_buckets - 1) boundary thresholds that divide a population into N equal-count groups (quantiles).
+## Example: For 100 values and 5 buckets (quintiles), returns 4 cutoff values [Q1, Q2, Q3, Q4].
+static func calculate_quantile_thresholds(values: Array, num_buckets: int) -> Array[float]:
+	var thresholds: Array[float] = []
+	if num_buckets <= 1 or values.is_empty():
+		return thresholds
+
+	var clean: Array[float] = []
+	for v in values:
+		if v != null:
+			clean.append(float(v))
+	if clean.is_empty():
+		return thresholds
+
+	clean.sort()
+	var m: float = float(clean.size())
+	var n: float = float(num_buckets)
+
+	for k in range(1, num_buckets):
+		var target_idx: int = mini(clean.size() - 1, floori((float(k) * m) / n) - 1)
+		target_idx = maxi(0, target_idx)
+		thresholds.append(clean[target_idx])
+
+	return thresholds
+
+## Evaluates which quantile bucket index a value belongs to, given sorted quantile boundary thresholds.
+## Returns index k in [0, thresholds.size()].
+static func evaluate_quantile_bucket(val: float, thresholds: Array[float]) -> int:
+	for i in range(thresholds.size()):
+		if val <= thresholds[i]:
+			return i
+	return thresholds.size()
+
+## Partitions an array of values into N sub-arrays, each containing an equal count of items (+/- 1).
+static func partition_into_equal_frequency_buckets(values: Array, num_buckets: int) -> Array:
+	var result: Array = []
+	if num_buckets <= 0:
+		return result
+
+	for _i in range(num_buckets):
+		result.append([])
+
+	if values.is_empty():
+		return result
+
+	var sorted_items: Array = values.duplicate()
+	sorted_items.sort()
+
+	var total_items: float = float(sorted_items.size())
+	var n_buckets_f: float = float(num_buckets)
+
+	for idx in range(sorted_items.size()):
+		var bucket_idx: int = mini(num_buckets - 1, floori((float(idx) * n_buckets_f) / total_items))
+		result[bucket_idx].append(sorted_items[idx])
+
+	return result

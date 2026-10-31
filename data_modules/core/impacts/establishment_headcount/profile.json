@@ -1,15 +1,20 @@
 {
   "_meta": {
-    "version": "1.1.0",
-    "scope": "IMPACT_METRIC_PROFILE"
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Active contracted workforce staffing headcount at an individual establishment"
   },
   "metric_id": "ESTABLISHMENT_HEADCOUNT",
   "label_token": "UI_LBL_WORKFORCE_COUNT",
   "format": "INTEGER",
-  "target_scope": "SPATIAL",
+  "decimals": 0,
   "telemetry_source": {
-    "type": "SQLITE_LIVE",
-    "sink_class": "SinkEmployment"
+    "type": "SQLITE_DYNAMIC",
+    "query_field": "active_workforce_count"
+  },
+  "tuning": {
+    "default_baseline_headcount": 0,
+    "allow_overstaffing": false
   },
   "perception": {
     "target_field": "worker_count",

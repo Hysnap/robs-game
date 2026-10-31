@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Active living resident headcount across a spatial container or district"
+  },
+  "metric_id": "POPULATION",
+  "label_token": "UI_METRIC_POPULATION",
+  "format": "INTEGER",
+  "decimals": 0,
+  "telemetry_source": {
+    "type": "SQLITE_DYNAMIC",
+    "query_field": "active_living_population"
+  },
+  "tuning": {
+    "default_baseline_population": 0,
+    "track_dependents": true
+  },
+  "perception": {
+    "target_field": "population_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.08,
+    "fuzz_jitter_max": 0.08,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 150.0, "token": "UI_POP_SPARSE" },
+      { "max": 400.0, "token": "UI_POP_MODERATE" },
+      { "max": 800.0, "token": "UI_POP_DENSE" },
+      { "token": "UI_POP_TEEMING" }
+    ]
+  }
+}

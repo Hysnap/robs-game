@@ -157,3 +157,20 @@ static func get_establishment_docket(estab_id: int) -> Dictionary:
 		docket["market_catchment"] = catchment[0] if not catchment.is_empty() else {}
 
 	return docket
+
+## Queries the active living contracted workforce headcount for an establishment
+static func get_establishment_headcount(estab_id: int) -> int:
+	assert(estab_id > 0, "FATAL: [SocietyQueries] estab_id must be a positive integer.")
+
+	var rows = DBManager.query_rows("""
+		SELECT COUNT(*) AS staff_count
+		FROM livelihood_contracts c
+		JOIN residents r ON c.resident_id = r.resident_id
+		WHERE c.employer_entity_id = 'ESTAB_%d'
+		  AND c.valid_to IS NULL
+		  AND r.dod IS NULL;
+	""" % estab_id)
+
+	if rows.is_empty():
+		return 0
+	return int(rows[0].get("staff_count", 0))
