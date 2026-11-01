@@ -68,6 +68,29 @@ static func _get_perceived_metric_profiles() -> Array:
 	_metric_profiles_cache = _discover_metric_profiles("res://data_modules/")
 	return _metric_profiles_cache
 
+## Normalizes perception blocks into an Array of channel spec dictionaries
+static func _extract_channel_specs(perception_block: Dictionary) -> Array:
+	var specs: Array = []
+	if perception_block.is_empty():
+		return specs
+
+	# Case 1: Flat single-spec block
+	if perception_block.has("mode"):
+		specs.append(perception_block)
+		return specs
+
+	# Case 2: Named channel dictionaries (Option 1) or outputs array
+	if perception_block.has("outputs") and perception_block["outputs"] is Array:
+		specs.append_array(perception_block["outputs"])
+		return specs
+
+	for channel_key in perception_block.keys():
+		var child = perception_block[channel_key]
+		if child is Dictionary and child.has("mode"):
+			specs.append(child)
+
+	return specs
+
 ## Pure in-memory transformation: maps raw input data against player context and config rules
 static func filter_district_view(raw_data: Dictionary, player_context: Dictionary) -> Dictionary:
 	var district_id: String = str(raw_data.get("district_id", ""))
@@ -107,12 +130,14 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 		view_data["intel_status"] = general_cfg.get("unexplored_intel_token", "INTEL_STATUS_UNEXPLORED")
 		view_data["intel_status_token"] = general_cfg.get("unexplored_intel_token", "INTEL_STATUS_UNEXPLORED")
 
-		# Agnostically mask all discovered perception metrics
+		# Agnostically mask all discovered perception channels
 		for profile in metric_profiles:
-			var spec: Dictionary = profile.get("perception", {})
-			var target_key: String = spec.get("target_field", "")
-			if not target_key.is_empty():
-				view_data[target_key] = spec.get("fallback_token", "UI_INTEL_MASKED_BLANK")
+			var p_block: Dictionary = profile.get("perception", {})
+			var specs := _extract_channel_specs(p_block)
+			for spec in specs:
+				var target_key: String = spec.get("target_field", "")
+				if not target_key.is_empty():
+					view_data[target_key] = spec.get("fallback_token", "UI_INTEL_MASKED_BLANK")
 
 		return view_data
 
@@ -132,46 +157,60 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 	view_data["is_surveyed"] = true
 
 	# 3. Dynamic Measure Transformations via ConditionEvaluator
-	var headcount_profile: Dictionary = {}
+	var establishment_profiles: Array = []
 
 	for profile in metric_profiles:
-		var spec: Dictionary = profile.get("perception", {})
-		var t_field: String = spec.get("target_field", "")
-		if t_field.is_empty():
+		var p_block: Dictionary = profile.get("perception", {})
+		var specs := _extract_channel_specs(p_block)
+		if specs.is_empty():
 			continue
 
-		if profile.get("metric_id") == "ESTABLISHMENT_HEADCOUNT":
-			headcount_profile = profile
+		# Group micro-level profiles applied to individual establishments
+		if profile.get("target_scope", "") == "SPATIAL_MICRO" or profile.get("telemetry_source", {}).get("scope", "") == "ESTABLISHMENT":
+			establishment_profiles.append(profile)
+			continue
 
-		var raw_val: float = 0.0
 		var telemetry: Dictionary = profile.get("telemetry_source", {})
 		var t_type: String = str(telemetry.get("type", ""))
 
-		if t_type == "WORLD_STATE":
-			var state_path: String = str(telemetry.get("state_path", ""))
-			if state_path.begins_with("districts."):
-				var key: String = state_path.get_slice(".", 2)
-				raw_val = float(view_data.get(key, 0.0))
+		for spec in specs:
+			var t_field: String = spec.get("target_field", "")
+			if t_field.is_empty():
+				continue
+
+			var raw_val: float = 0.0
+			var s_field: String = str(spec.get("source_field", ""))
+
+			if not s_field.is_empty() and view_data.has(s_field):
+				raw_val = float(view_data[s_field])
+			elif t_type == "WORLD_STATE":
+				var state_path: String = str(telemetry.get("state_path", ""))
+				if state_path.begins_with("districts."):
+					var key: String = state_path.get_slice(".", 2)
+					raw_val = float(view_data.get(key, 0.0))
+				else:
+					raw_val = float(view_data.get(state_path, 0.0))
+			elif t_type == "SQLITE_DYNAMIC" or t_type == "SQLITE_LIVE":
+				var q_field: String = str(telemetry.get("query_field", t_field))
+				raw_val = float(view_data.get(q_field, 0.0))
 			else:
-				raw_val = float(view_data.get(state_path, 0.0))
-		elif t_type == "SQLITE_LIVE":
-			var q_field: String = str(telemetry.get("query_field", t_field))
-			raw_val = float(view_data.get(q_field, 0.0))
-		else:
-			raw_val = float(view_data.get(t_field, 0.0))
+				raw_val = float(view_data.get(t_field, 0.0))
 
-		view_data[t_field] = CONDITION_EVALUATOR.transform_measure(raw_val, spec, is_home_turf)
+			view_data[t_field] = CONDITION_EVALUATOR.transform_measure(raw_val, spec, is_home_turf)
 
-	# 4. Adaptively Round Establishment Workforces
+	# 4. Transform Sub-Entity Records Agnostically
 	var raw_estabs: Array = view_data.get("establishments_summary", [])
 	var perceived_estabs: Array = []
-	var headcount_spec: Dictionary = headcount_profile.get("perception", {})
 
 	for estab in raw_estabs:
 		var e_copy: Dictionary = estab.duplicate(true)
-		var true_workers: int = int(e_copy.get("worker_count", 0))
-		if not headcount_spec.is_empty():
-			e_copy["worker_count"] = CONDITION_EVALUATOR.transform_measure(float(true_workers), headcount_spec, is_home_turf)
+		for e_prof in establishment_profiles:
+			var e_specs := _extract_channel_specs(e_prof.get("perception", {}))
+			for e_spec in e_specs:
+				var source_prop: String = str(e_spec.get("source_field", e_prof.get("telemetry_source", {}).get("query_field", "worker_count")))
+				var target_prop: String = str(e_spec.get("target_field", source_prop))
+				var raw_count: float = float(e_copy.get(source_prop, 0.0))
+				e_copy[target_prop] = CONDITION_EVALUATOR.transform_measure(raw_count, e_spec, is_home_turf)
 		perceived_estabs.append(e_copy)
 
 	view_data["establishments_summary"] = perceived_estabs

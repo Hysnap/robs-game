@@ -92,3 +92,20 @@ func bind_data(data: Dictionary) -> void:
 		else:
 			var num_str := String.num(float(data["total_filed_expenses"]), 2)
 			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + ""
+
+func inscribe_entry(entry: Dictionary) -> void:
+	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
+		return
+	var target_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+	if not target_box is Container:
+		return
+	var author: String = str(entry.get("author", ""))
+	var text_content: String = str(entry.get("text", ""))
+	var note_lbl := Label.new()
+	if not author.is_empty():
+		note_lbl.text = "[" + author + "] " + text_content
+	else:
+		note_lbl.text = text_content
+	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	target_box.add_child(note_lbl)

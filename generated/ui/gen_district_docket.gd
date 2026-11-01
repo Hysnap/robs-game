@@ -22,6 +22,24 @@ func build_ui() -> void:
 	var clr_muted: Color = RETRO_THEME.get_ink_color("muted")
 	var clr_black: Color = RETRO_THEME.get_ink_color("body")
 
+	# --- Header Block ---
+	var box_docket_header := VBoxContainer.new()
+	box_docket_header.add_theme_constant_override("separation", 0)
+	var title_docket_header := Label.new()
+	title_docket_header.add_theme_font_override("font", mono_font)
+	title_docket_header.add_theme_font_size_override("font_size", 18)
+	title_docket_header.add_theme_color_override("font_color", clr_blue)
+	box_docket_header.add_child(title_docket_header)
+	_value_labels["docket_header_title"] = title_docket_header
+	var sub_docket_header := Label.new()
+	sub_docket_header.add_theme_font_override("font", mono_font)
+	sub_docket_header.add_theme_font_size_override("font_size", 12)
+	sub_docket_header.add_theme_color_override("font_color", clr_muted)
+	box_docket_header.add_child(sub_docket_header)
+	_value_labels["docket_header_subtitle"] = sub_docket_header
+	box_docket_header.add_child(HSeparator.new())
+	add_child(box_docket_header)
+
 	# --- Section: intel_status_header ---
 	var sec_intel_status_header := VBoxContainer.new()
 	sec_intel_status_header.add_theme_constant_override("separation", 2)
@@ -182,18 +200,41 @@ func build_ui() -> void:
 	_value_labels["heat"] = val_heat
 	add_child(row_heat)
 
-	# --- Inscriptions Container ---
-	var hdr_insc := Label.new()
-	hdr_insc.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
-	hdr_insc.add_theme_font_override("font", mono_font)
-	hdr_insc.add_theme_color_override("font_color", clr_blue)
-	add_child(hdr_insc)
-	var insc_list := VBoxContainer.new()
-	insc_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_value_labels["__inscriptions__"] = insc_list
-	add_child(insc_list)
+	# --- Section: field_observations ---
+	var sec_field_observations := VBoxContainer.new()
+	sec_field_observations.add_theme_constant_override("separation", 2)
+	var hdr_field_observations := Label.new()
+	hdr_field_observations.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
+	hdr_field_observations.add_theme_font_override("font", mono_font)
+	hdr_field_observations.add_theme_color_override("font_color", clr_blue)
+	sec_field_observations.add_child(hdr_field_observations)
+	var sep_field_observations := HSeparator.new()
+	sec_field_observations.add_child(sep_field_observations)
+	add_child(sec_field_observations)
+
+	var row_observations_box := HBoxContainer.new()
+	row_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var lbl_observations_box := Label.new()
+	lbl_observations_box.text = tr("")
+	lbl_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_observations_box.add_theme_font_override("font", mono_font)
+	lbl_observations_box.add_theme_color_override("font_color", clr_muted)
+	row_observations_box.add_child(lbl_observations_box)
+	var val_observations_box := Label.new()
+	val_observations_box.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_observations_box.add_theme_font_override("font", mono_font)
+	val_observations_box.add_theme_color_override("font_color", clr_black)
+	row_observations_box.add_child(val_observations_box)
+	_value_labels["observations_box"] = val_observations_box
+	add_child(row_observations_box)
 
 func bind_data(data: Dictionary) -> void:
+	if _value_labels.has("docket_header") and data.has("display_name"):
+		var ctrl = _value_labels["docket_header"]
+	if _value_labels.has("docket_header_title") and data.has("display_name"):
+		_value_labels["docket_header_title"].text = str(data.get("display_name", "--- UNNAMED ---")).to_upper()
+	if _value_labels.has("docket_header_subtitle") and data.has("type_title"):
+		_value_labels["docket_header_subtitle"].text = str(data.get("type_title", "")).to_upper()
 	if _value_labels.has("survey_badge") and data.has("intel_status_token"):
 		var ctrl = _value_labels["survey_badge"]
 		if data["intel_status_token"] == null:
@@ -212,27 +253,26 @@ func bind_data(data: Dictionary) -> void:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = str(int(data["total_households"])) + " households"
-	if _value_labels.has("unemployment_tier") and data.has("unemployment_semantic_token"):
+	if _value_labels.has("unemployment_tier") and data.has("unemployment_bucket_token"):
 		var ctrl = _value_labels["unemployment_tier"]
-		if data["unemployment_semantic_token"] == null:
+		if data["unemployment_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = tr(str(data["unemployment_semantic_token"])) + ""
-	if _value_labels.has("income") and data.has("avg_disposable_income"):
+			ctrl.text = tr(str(data["unemployment_bucket_token"])) + ""
+	if _value_labels.has("income") and data.has("income_bucket_token"):
 		var ctrl = _value_labels["income"]
-		if data["avg_disposable_income"] == null:
+		if data["income_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			var num_str := String.num(float(data["avg_disposable_income"]), 2)
-			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + " / wk"
-	if _value_labels.has("civic_features") and data.has("civic_features_list"):
+			ctrl.text = tr(str(data["income_bucket_token"])) + ""
+	if _value_labels.has("civic_features") and data.has("establishments_summary"):
 		var ctrl = _value_labels["civic_features"]
 		if ctrl is Container:
 			for c in ctrl.get_children():
 				c.queue_free()
 			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
 			var clr_b: Color = RETRO_THEME.get_ink_color("body")
-			var features: Array = data.get("civic_features_list", [])
+			var features: Array = data.get("establishments_summary", [])
 			if features.is_empty():
 				var empty_lbl := Label.new()
 				empty_lbl.text = tr("UI_INTEL_MASKED_BLANK")
@@ -242,20 +282,44 @@ func bind_data(data: Dictionary) -> void:
 			else:
 				for f in features:
 					var f_lbl := Label.new()
-					f_lbl.text = "• " + str(f)
+					if f is Dictionary:
+						var fn: String = str(f.get("name", ""))
+						var fc: String = str(f.get("category_title", f.get("category_code", "")))
+						if not fc.is_empty():
+							f_lbl.text = "• " + fn + " (" + fc + ")"
+						else:
+							f_lbl.text = "• " + fn
+					else:
+						f_lbl.text = "• " + str(f)
 					f_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
 					f_lbl.add_theme_color_override("font_color", clr_b)
 					ctrl.add_child(f_lbl)
-	if _value_labels.has("zhi") and data.has("zone_health_index"):
+	if _value_labels.has("zhi") and data.has("zone_health_bucket_token"):
 		var ctrl = _value_labels["zhi"]
-		if data["zone_health_index"] == null:
+		if data["zone_health_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = String.num(float(data["zone_health_index"]), 1) + " / 100"
-	if _value_labels.has("heat") and data.has("actual_police_heat"):
+			ctrl.text = tr(str(data["zone_health_bucket_token"])) + ""
+	if _value_labels.has("heat") and data.has("heat_bucket_token"):
 		var ctrl = _value_labels["heat"]
-		if data["actual_police_heat"] == null:
+		if data["heat_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			var pct_str := String.num(float(data["actual_police_heat"]) * 100.0, 1)
-			ctrl.text = tr("FMT_PERCENT").replace("{val}", pct_str) + ""
+			ctrl.text = tr(str(data["heat_bucket_token"])) + ""
+
+func inscribe_entry(entry: Dictionary) -> void:
+	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
+		return
+	var target_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+	if not target_box is Container:
+		return
+	var author: String = str(entry.get("author", ""))
+	var text_content: String = str(entry.get("text", ""))
+	var note_lbl := Label.new()
+	if not author.is_empty():
+		note_lbl.text = "[" + author + "] " + text_content
+	else:
+		note_lbl.text = text_content
+	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	target_box.add_child(note_lbl)

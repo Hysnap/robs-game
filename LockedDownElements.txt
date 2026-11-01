@@ -1,0 +1,8 @@
+Locked down contollers
+
+res://systems/multilayer_info_loop/district_perception_filter.gd
+res://systems/condition_evaluator.gd
+res://systems/society_queries.gd
+res://systems/db_manager.gd
+res://systems/save_manager.gd
+res://systems/scenario_manifest_manager.gd

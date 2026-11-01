@@ -183,7 +183,7 @@ static func is_education_eligible(citizen_edu: String, required_edu: String) -> 
 	var required_rank: int = int(EDU_TIER_RANK.get(required_edu, 0))
 	return citizen_rank >= required_rank
 
-## Samples candidate job slots and picks one using education qualification and optional commute distance decay
+## Fast sampling from pre-partitioned candidate slots with swap-and-pop O(1) removal
 static func pick_commute_matched_slot(
 	slots_array: Array,
 	worker_home_pos: Vector2,
@@ -192,94 +192,86 @@ static func pick_commute_matched_slot(
 	job_defs: Dictionary,
 	rng: RandomNumberGenerator,
 	enable_commute_decay: bool = true,
-	sample_size: int = 20
+	sample_size: int = 12
 ) -> Dictionary:
-	if slots_array.is_empty():
+	var total_slots: int = slots_array.size()
+	if total_slots == 0:
 		return {}
 
-	var candidates: Array[Dictionary] = []
+	var citizen_rank: int = int(EDU_TIER_RANK.get(citizen_edu_code, 0))
 	var candidate_indices: Array[int] = []
 
-	var attempts := 0
-	var max_scan: int = mini(slots_array.size(), 80)
+	# Direct stride sampling: samples evenly through the array to avoid hash-set overhead
+	var max_checks: int = mini(total_slots, 32)
+	var step: int = maxi(1, total_slots / max_checks)
+	var offset: int = rng.randi() % step
 
-	if slots_array.size() <= max_scan:
-		for i in range(slots_array.size()):
-			var s: Dictionary = slots_array[i]
+	for i in range(max_checks):
+		var idx: int = (offset + (i * step)) % total_slots
+		var s: Dictionary = slots_array[idx]
+		var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
+		var req_rank: int = int(EDU_TIER_RANK.get(req_edu, 0))
+		if citizen_rank >= req_rank:
+			candidate_indices.append(idx)
+			if candidate_indices.size() >= sample_size:
+				break
+
+	# Fast linear fallback if stride sampling found nothing
+	if candidate_indices.is_empty():
+		var linear_scan_limit: int = mini(total_slots, 40)
+		var start_idx: int = rng.randi() % total_slots
+		for j in range(linear_scan_limit):
+			var idx: int = (start_idx + j) % total_slots
+			var s: Dictionary = slots_array[idx]
 			var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
-			if is_education_eligible(citizen_edu_code, req_edu):
-				candidates.append(s)
-				candidate_indices.append(i)
-	else:
-		var picked_set := {}
-		while candidates.size() < sample_size and attempts < max_scan:
-			attempts += 1
-			var idx: int = rng.randi() % slots_array.size()
-			if not picked_set.has(idx):
-				picked_set[idx] = true
-				var s: Dictionary = slots_array[idx]
-				var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
-				if is_education_eligible(citizen_edu_code, req_edu):
-					candidates.append(s)
-					candidate_indices.append(idx)
+			var req_rank: int = int(EDU_TIER_RANK.get(req_edu, 0))
+			if citizen_rank >= req_rank:
+				candidate_indices.append(idx)
+				break
 
-	if candidates.is_empty():
-		var start_offset: int = rng.randi() % slots_array.size()
-		for offset in range(mini(slots_array.size(), 100)):
-			var i: int = (start_offset + offset) % slots_array.size()
-			var s: Dictionary = slots_array[i]
-			var req_edu: String = str(s.get("edu_req", "NO_FORMAL"))
-			if is_education_eligible(citizen_edu_code, req_edu):
-				candidates.append(s)
-				candidate_indices.append(i)
-				if candidates.size() >= sample_size:
-					break
-
-	if candidates.is_empty():
+	if candidate_indices.is_empty():
 		return {}
 
-	if not enable_commute_decay:
-		var pick_idx: int = rng.randi() % candidate_indices.size()
-		var chosen_slot_global_idx: int = candidate_indices[pick_idx]
-		var chosen_slot: Dictionary = slots_array[chosen_slot_global_idx]
-		slots_array.remove_at(chosen_slot_global_idx)
-		return chosen_slot
+	var target_slot_idx: int = -1
 
-	var weights: Array[float] = []
-	var total_weight: float = 0.0
+	if not enable_commute_decay or candidate_indices.size() == 1:
+		target_slot_idx = candidate_indices[rng.randi() % candidate_indices.size()]
+	else:
+		var weights: Array[float] = []
+		var total_weight: float = 0.0
 
-	for slot in candidates:
-		var job_code: String = str(slot.get("role", ""))
-		var master_job: Dictionary = job_defs.get(job_code, {})
-		var max_commute: float = float(master_job.get("max_commute", master_job.get("max_commute_m", 3000.0)))
+		for idx in candidate_indices:
+			var slot: Dictionary = slots_array[idx]
+			var job_code: String = str(slot.get("role", ""))
+			var master_job: Dictionary = job_defs.get(job_code, {})
+			var max_commute: float = float(master_job.get("max_commute", master_job.get("max_commute_m", 3000.0)))
 
-		var est_dist_id: String = str(slot.get("district_id", ""))
-		var d: float = 0.0
-		if districts.has(est_dist_id):
-			d = distance_to_district_edge(worker_home_pos, districts[est_dist_id])
+			var est_dist_id: String = str(slot.get("district_id", ""))
+			var d: float = 0.0
+			if districts.has(est_dist_id):
+				var center: Vector2 = _resolve_vector2(districts[est_dist_id].get("spatial_anchor", Vector2.ZERO))
+				d = worker_home_pos.distance_to(center)
 
-		var w: float = 1.0
-		if d <= max_commute:
-			w = exp(-1.2 * (d / max(100.0, max_commute)))
-		else:
-			var excess_ratio: float = (d - max_commute) / max(100.0, max_commute)
-			w = 0.02 * exp(-3.0 * excess_ratio)
+			var inv_dist: float = max_commute / max(100.0, d)
+			var w: float = clampf(inv_dist, 0.05, 5.0)
+			weights.append(w)
+			total_weight += w
 
-		weights.append(w)
-		total_weight += w
+		var roll: float = rng.randf() * total_weight
+		var accum: float = 0.0
+		var chosen_sub: int = 0
 
-	var roll: float = rng.randf() * max(0.0001, total_weight)
-	var accum: float = 0.0
-	var chosen_candidate_idx: int = 0
+		for w_idx in range(weights.size()):
+			accum += weights[w_idx]
+			if roll <= accum:
+				chosen_sub = w_idx
+				break
 
-	for i in range(weights.size()):
-		accum += weights[i]
-		if roll <= accum:
-			chosen_candidate_idx = i
-			break
+		target_slot_idx = candidate_indices[chosen_sub]
 
-	var chosen_slot_global_idx: int = candidate_indices[chosen_candidate_idx]
-	var chosen_slot: Dictionary = slots_array[chosen_slot_global_idx]
-
-	slots_array.remove_at(chosen_slot_global_idx)
+	# O(1) Swap-and-Pop
+	var chosen_slot: Dictionary = slots_array[target_slot_idx]
+	var last_idx: int = total_slots - 1
+	slots_array[target_slot_idx] = slots_array[last_idx]
+	slots_array.pop_back()
 	return chosen_slot

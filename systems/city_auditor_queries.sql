@@ -7,6 +7,7 @@ UNION ALL SELECT 'districts', COUNT(*) FROM districts
 UNION ALL SELECT 'establishments', COUNT(*) FROM establishments
 UNION ALL SELECT 'households', COUNT(*) FROM households
 UNION ALL SELECT 'residents', COUNT(*) FROM residents
+UNION ALL SELECT 'workplace_job_slots', COUNT(*) FROM workplace_job_slots
 UNION ALL SELECT 'contracts', COUNT(*) FROM livelihood_contracts
 UNION ALL SELECT 'relationships', COUNT(*) FROM social_relationships;
 
@@ -143,3 +144,28 @@ LEFT JOIN households h ON h.establishment_id = e.establishment_id
 LEFT JOIN residents r ON r.household_id = h.household_id
 GROUP BY d.district_id, d.display_name
 ORDER BY d.district_id ASC;
+
+-- QUERY: labor_market_vacancies
+SELECT 
+    role.code AS role_title,
+    edu.code AS required_education,
+    COUNT(w.slot_id) AS budgeted_slots,
+    SUM(CASE WHEN w.is_filled = 1 THEN 1 ELSE 0 END) AS filled_slots,
+    SUM(CASE WHEN w.is_filled = 0 THEN 1 ELSE 0 END) AS vacant_slots,
+    ROUND(AVG(w.hourly_rate), 2) AS avg_hourly_wage
+FROM workplace_job_slots w
+JOIN system_labels role ON w.role_title_id = role.label_id
+JOIN system_labels edu ON w.min_education_level_id = edu.label_id
+GROUP BY role.code, edu.code
+ORDER BY vacant_slots DESC, budgeted_slots DESC;
+
+-- QUERY: labor_by_sector
+SELECT 
+    sec.code AS sector,
+    COUNT(w.slot_id) AS budgeted_slots,
+    SUM(CASE WHEN w.is_filled = 1 THEN 1 ELSE 0 END) AS filled_slots,
+    SUM(CASE WHEN w.is_filled = 0 THEN 1 ELSE 0 END) AS vacant_slots
+FROM workplace_job_slots w
+JOIN system_labels sec ON w.sector_category_id = sec.label_id
+GROUP BY sec.code
+ORDER BY budgeted_slots DESC;

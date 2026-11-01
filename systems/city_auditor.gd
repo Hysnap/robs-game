@@ -1,3 +1,4 @@
+# res://systems/city_auditor.gd
 class_name CityAuditor
 extends SceneTree
 
@@ -154,6 +155,31 @@ static func _audit_database(report: Dictionary, db_manager) -> void:
 	report["distributions"]["social_degree"] = _query_rows(
 		db_manager, queries, "social_degree"
 	)
+
+	# Labor Market Diagnostics
+	var sector_rows := _query_rows(db_manager, queries, "labor_by_sector")
+	report["distributions"]["labor_by_sector"] = sector_rows
+
+	var vacancy_rows := _query_rows(db_manager, queries, "labor_market_vacancies")
+	report["distributions"]["labor_market_vacancies"] = vacancy_rows
+
+	var total_budgeted_slots := 0
+	var total_filled_slots := 0
+	var total_vacant_slots := 0
+	for row in sector_rows:
+		total_budgeted_slots += int(row.get("budgeted_slots", 0))
+		total_filled_slots += int(row.get("filled_slots", 0))
+		total_vacant_slots += int(row.get("vacant_slots", 0))
+
+	report["metrics"]["workplace_budgeted_slots"] = total_budgeted_slots
+	report["metrics"]["workplace_filled_slots"] = total_filled_slots
+	report["metrics"]["workplace_vacant_slots"] = total_vacant_slots
+
+	var fill_rate: float = (float(total_filled_slots) / maxf(1.0, float(total_budgeted_slots))) * 100.0
+	report["metrics"]["workplace_fill_rate_pct"] = roundf(fill_rate * 10.0) / 10.0
+
+	_add_check(report, "has_budgeted_workplace_slots", total_budgeted_slots > 0)
+	_add_check(report, "has_filled_workplace_slots", total_filled_slots > 0)
 
 	var integrity := _query_rows(db_manager, queries, "integrity_checks")
 	for row in integrity:

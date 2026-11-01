@@ -123,39 +123,44 @@ func _init() -> void:
 		for row in civic_counts:
 			print("  • %-22s: %d facilities placed on map" % [row["category"], row["facility_count"]])
 
-	# 5. Workplace Staffing Range Audit (True Employees on the Books)
+	# 5. Workplace Staffing Range Audit (True Employees on the Books vs. Authorized Slots)
 	print("\n--- [WORKPLACE STAFFING RANGE AUDIT] ---")
 	var workplace_staff_stats = DB_MANAGER.query_rows("""
 		SELECT 
 			e.establishment_id,
 			e.name,
 			l.code AS category,
-			COUNT(c.resident_id) AS staff_count
+			COUNT(DISTINCT c.resident_id) AS formal_staff_count,
+			COUNT(DISTINCT s.slot_id) AS authorized_slots
 		FROM establishments e
 		JOIN system_labels l ON e.category_id = l.label_id
-		JOIN livelihood_contracts c ON c.employer_entity_id = ('ESTAB_' || e.establishment_id)
-		JOIN system_labels c_cls ON c.contract_class_id = c_cls.label_id
+		LEFT JOIN workplace_job_slots s ON e.establishment_id = s.establishment_id
+		LEFT JOIN livelihood_contracts c ON c.employer_entity_id = ('ESTAB_' || e.establishment_id)
+		    AND c.contract_class_id = (SELECT label_id FROM system_labels WHERE domain = 'CONTRACT_CLASS' AND code = 'FORMAL_LEGAL')
 		WHERE l.code NOT IN ('RESIDENTIAL_UNIT')
-		  AND c_cls.code = 'FORMAL_LEGAL'
 		GROUP BY e.establishment_id
-		ORDER BY staff_count DESC
+		ORDER BY formal_staff_count DESC
 		LIMIT 10;
 	""")
 
 	for wp in workplace_staff_stats:
-		print("  • Workplace #%-4d [%-24s] (%-16s): %2d staff members" % [
-			wp["establishment_id"], wp["name"], wp["category"], wp["staff_count"]
+		var staff_count: int = int(wp["formal_staff_count"])
+		var max_slots: int = int(wp["authorized_slots"])
+		print("  • Workplace #%-4d [%-24s] (%-16s): %2d staff / %2d budgeted slots" % [
+			wp["establishment_id"], wp["name"], wp["category"], staff_count, max_slots
 		])
-		assert(int(wp["staff_count"]) <= 45, "FAILED: Business staffing exceeded physical bounds!")
+		assert(staff_count <= max_slots, "FAILED: Business staffing exceeded physical bounds for #%d [%s] (%d > %d)!" % [
+			wp["establishment_id"], wp["name"], staff_count, max_slots
+		])
 
 	# 6. Verify SQLite Virtual Views
 	print("\n--- [TESTING SQLITE VIRTUAL VIEWS] ---")
 	var census = DB_MANAGER.query_rows("SELECT * FROM v_district_census LIMIT 3;")
 	assert(not census.is_empty(), "FAILED: v_district_census returned 0 rows!")
 	for c in census:
-		print("  • Ward Census [%s]: %d homes | %d residents | %d formal workers | %d claimants" % [
+		print("  • Ward Census [%s]: %d homes | %d residents | %d formal workers | %d claimants | %d vacant units" % [
 			c["district_name"], c["total_households"], c["total_residents"],
-			c["formally_employed_count"], c["street_informal_count"]
+			c["formally_employed_count"], c["street_informal_count"], c["vacant_residential_units"]
 		])
 
 	var contracts_sample = DB_MANAGER.query_rows("""

@@ -26,6 +26,9 @@
   "legal_and_pension_thresholds": {
     "majority_head_of_household_age": 18,
     "minimum_school_leaving_age": 16,
+    "armed_forces_entry": 16,
+    "univestity_start_age": 18,
+    "university_course_length": 3,
     "pension_age_female": 60,
     "pension_age_male": 65
   },

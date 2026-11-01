@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Ratio of occupied residential doors to total residential premises within a spatial catchment"
+  },
+  "metric_id": "OCCUPIED_PROPERTIES",
+  "label_token": "UI_METRIC_OCCUPIED_PROPERTIES",
+  "format": "PERCENT",
+  "decimals": 1,
+  "target_scope": "SPATIAL",
+  "telemetry_source": {
+    "type": "SQLITE_DYNAMIC",
+    "query_field": "occupancy_rate"
+  },
+  "tuning": {
+    "default_baseline_occupancy_rate": 0.0,
+    "passive_decay_rate_per_tick": 0.0
+  },
+  "perception": {
+    "target_field": "occupancy_bucket_token",
+    "mode": "N_BUCKET",
+    "fuzz_jitter_min": -0.05,
+    "fuzz_jitter_max": 0.05,
+    "home_modifier": 0.02,
+    "error_floor": 0.01,
+    "fallback_token": "UI_INTEL_MASKED_BLANK",
+    "buckets": [
+      { "max": 0.20, "token": "UI_OCC_ABANDONED" },
+      { "max": 0.50, "token": "UI_OCC_SPARSE" },
+      { "max": 0.80, "token": "UI_OCC_MODERATE" },
+      { "max": 0.95, "token": "UI_OCC_HIGH" },
+      { "token": "UI_OCC_SATURATED" }
+    ]
+  }
+}

@@ -2,9 +2,7 @@
   "_meta": {
     "target_class": "GenDistrictDocket",
     "extends": "VBoxContainer",
-    "has_inscriptions": true,
-    "inscriptions_header_token": "UI_SEC_FIELD_OBSERVATIONS",
-    "inscriptions_header_default": "INSCRIBED FIELD OBSERVATIONS"
+    "description": "District intelligence dossier inspector view"
   },
   "sections": [
     {
@@ -68,12 +66,12 @@
           "default_text": "Workforce Tension"
         },
         {
-          "id": "income_tier",
+          "id": "income",
           "field": "income_bucket_token",
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_DISPOSABLE_INCOME",
-          "default_text": "Household Prosperity"
+          "default_text": "Avg Disposable Income"
         }
       ]
     },
@@ -84,7 +82,7 @@
       "rows": [
         {
           "id": "civic_features",
-          "field": "civic_features_list",
+          "field": "establishments_summary",
           "type": "CIVIC_SUMMARY",
           "token": "UI_LBL_CIVIC_SUMMARY",
           "default_text": "Key Establishments"
@@ -98,20 +96,30 @@
       "rows": [
         {
           "id": "zhi",
-          "field": "zone_health_index",
+          "field": "zone_health_bucket_token",
           "type": "TEXT_METRIC",
-          "format": "FLOAT",
-          "suffix": " / 100",
+          "format": "TOKEN",
           "token": "UI_LBL_ZONE_HEALTH",
           "default_text": "Zone Health Index"
         },
         {
           "id": "heat",
-          "field": "actual_police_heat",
+          "field": "heat_bucket_token",
           "type": "TEXT_METRIC",
-          "format": "PERCENT",
+          "format": "TOKEN",
           "token": "UI_LBL_POLICE_HEAT",
           "default_text": "Constabulary Scrutiny"
+        }
+      ]
+    },
+    {
+      "id": "field_observations",
+      "header_token": "UI_SEC_FIELD_OBSERVATIONS",
+      "header_default": "INSCRIBED FIELD OBSERVATIONS",
+      "rows": [
+        {
+          "id": "observations_box",
+          "type": "INSCRIPTIONS_CONTAINER"
         }
       ]
     }

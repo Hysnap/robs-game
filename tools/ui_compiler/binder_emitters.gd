@@ -1,3 +1,4 @@
+# res://tools/ui_compiler/binder_emitters.gd
 @tool
 class_name UIBinderEmitters
 extends RefCounted
@@ -19,12 +20,13 @@ static func emit_binding_logic(row: Dictionary) -> Array[String]:
 
 	# 1. Specialized Controls
 	if r_type == "HEADER_BLOCK":
-		lines.append("\tif _value_labels.has(\"%s_title\"):" % r_id)
-		lines.append("\t\t_value_labels[\"%s_title\"].text = str(data.get(\"%s\", \"--- UNNAMED ---\")).to_upper()" % [r_id, f_name])
+		lines.append("\tif _value_labels.has(\"" + r_id + "_title\") and data.has(\"" + f_name + "\"):")
+		lines.append("\t\t_value_labels[\"" + r_id + "_title\"].text = str(data.get(\"" + f_name + "\", \"--- UNNAMED ---\")).to_upper()")
 		if row.has("subtitle_field"):
-			var sub_field = str(row.get("subtitle_field"))
-			lines.append("\tif _value_labels.has(\"%s_subtitle\"):" % r_id)
-			lines.append("\t\t_value_labels[\"%s_subtitle\"].text = str(data.get(\"%s\", \"\")).to_upper()" % [r_id, sub_field])
+			var sub_field := str(row.get("subtitle_field"))
+			lines.append("\tif _value_labels.has(\"" + r_id + "_subtitle\") and data.has(\"" + sub_field + "\"):")
+			lines.append("\t\t_value_labels[\"" + r_id + "_subtitle\"].text = str(data.get(\"" + sub_field + "\", \"\")).to_upper()")
+		return lines
 
 	if r_type == "SPIN_INPUT":
 		lines.append("\t\tif ctrl is SpinBox:")
@@ -55,7 +57,15 @@ static func emit_binding_logic(row: Dictionary) -> Array[String]:
 		lines.append("\t\t\telse:")
 		lines.append("\t\t\t\tfor f in features:")
 		lines.append("\t\t\t\t\tvar f_lbl := Label.new()")
-		lines.append("\t\t\t\t\tf_lbl.text = \"• \" + str(f)")
+		lines.append("\t\t\t\t\tif f is Dictionary:")
+		lines.append("\t\t\t\t\t\tvar fn: String = str(f.get(\"name\", \"\"))")
+		lines.append("\t\t\t\t\t\tvar fc: String = str(f.get(\"category_title\", f.get(\"category_code\", \"\")))")
+		lines.append("\t\t\t\t\t\tif not fc.is_empty():")
+		lines.append("\t\t\t\t\t\t\tf_lbl.text = \"• \" + fn + \" (\" + fc + \")\"")
+		lines.append("\t\t\t\t\t\telse:")
+		lines.append("\t\t\t\t\t\t\tf_lbl.text = \"• \" + fn")
+		lines.append("\t\t\t\t\telse:")
+		lines.append("\t\t\t\t\t\tf_lbl.text = \"• \" + str(f)")
 		lines.append("\t\t\t\t\tf_lbl.add_theme_font_override(\"font\", RETRO_THEME.get_monospace_font())")
 		lines.append("\t\t\t\t\tf_lbl.add_theme_color_override(\"font_color\", clr_b)")
 		lines.append("\t\t\t\t\tctrl.add_child(f_lbl)")
@@ -90,3 +100,4 @@ static func emit_binding_logic(row: Dictionary) -> Array[String]:
 			lines.append("\t\t\tctrl.text = str(data[\"" + f_name + "\"]) + \"" + suffix + "\"")
 
 	return lines
+	

@@ -294,7 +294,10 @@ static func run(
 			if on_progress.is_valid():
 				var pct: float = 20.0 + ((float(block_idx) / float(districts.size())) * 30.0)
 				on_progress.call(pct, 100.0, "Physical Premises: %d / %d blocks (%d units, %d slots)" % [block_idx, districts.size(), est_id - 1, current_slot_id - 1])
-				await Engine.get_main_loop().process_frame
+			
+			var main_loop = Engine.get_main_loop()
+			if main_loop is SceneTree:
+				await (main_loop as SceneTree).process_frame
 
 		block_idx += 1
 

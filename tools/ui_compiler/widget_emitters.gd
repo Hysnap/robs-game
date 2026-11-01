@@ -1,3 +1,4 @@
+# res://tools/ui_compiler/widget_emitters.gd
 @tool
 class_name UIWidgetEmitters
 extends RefCounted
@@ -14,44 +15,44 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			var title_sz: int = int(row.get("title_font_size", 18))
 			var sub_sz: int = int(row.get("subtitle_font_size", 12))
 			lines.append("\t# --- Header Block ---")
-			lines.append("\tvar box_%s := VBoxContainer.new()" % r_id)
-			lines.append("\tbox_%s.add_theme_constant_override(\"separation\", 0)" % r_id)
-			lines.append("\tvar title_%s := Label.new()" % r_id)
-			lines.append("\ttitle_%s.add_theme_font_override(\"font\", mono_font)" % r_id)
-			lines.append("\ttitle_%s.add_theme_font_size_override(\"font_size\", %d)" % [title_sz])
-			lines.append("\ttitle_%s.add_theme_color_override(\"font_color\", clr_blue)" % r_id)
-			lines.append("\tbox_%s.add_child(title_%s)" % [r_id, r_id])
-			lines.append("\t_value_labels[\"%s_title\"] = title_%s" % [r_id, r_id])
+			lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
+			lines.append("\tbox_" + r_id + ".add_theme_constant_override(\"separation\", 0)")
+			lines.append("\tvar title_" + r_id + " := Label.new()")
+			lines.append("\ttitle_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+			lines.append("\ttitle_" + r_id + ".add_theme_font_size_override(\"font_size\", " + str(title_sz) + ")")
+			lines.append("\ttitle_" + r_id + ".add_theme_color_override(\"font_color\", clr_blue)")
+			lines.append("\tbox_" + r_id + ".add_child(title_" + r_id + ")")
+			lines.append("\t_value_labels[\"" + r_id + "_title\"] = title_" + r_id)
 			
 			if row.has("subtitle_field"):
-				lines.append("\tvar sub_%s := Label.new()" % r_id)
-				lines.append("\tsub_%s.add_theme_font_override(\"font\", mono_font)" % r_id)
-				lines.append("\tsub_%s.add_theme_font_size_override(\"font_size\", %d)" % [sub_sz])
-				lines.append("\tsub_%s.add_theme_color_override(\"font_color\", clr_muted)" % r_id)
-				lines.append("\tbox_%s.add_child(sub_%s)" % [r_id, r_id])
-				lines.append("\t_value_labels[\"%s_subtitle\"] = sub_%s" % [r_id, r_id])
+				lines.append("\tvar sub_" + r_id + " := Label.new()")
+				lines.append("\tsub_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tsub_" + r_id + ".add_theme_font_size_override(\"font_size\", " + str(sub_sz) + ")")
+				lines.append("\tsub_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
+				lines.append("\tbox_" + r_id + ".add_child(sub_" + r_id + ")")
+				lines.append("\t_value_labels[\"" + r_id + "_subtitle\"] = sub_" + r_id)
 				
 			if bool(row.get("show_separator", true)):
-				lines.append("\tbox_%s.add_child(HSeparator.new())" % r_id)
-			lines.append("\tadd_child(box_%s)\n" % r_id)
+				lines.append("\tbox_" + r_id + ".add_child(HSeparator.new())")
+			lines.append("\tadd_child(box_" + r_id + ")\n")
 
 		"BADGE_STATUS":
-			lines.append("\tvar badge_%s := PanelContainer.new()" % r_id)
-			lines.append("\tbadge_%s.size_flags_horizontal = Control.SIZE_EXPAND_FILL" % r_id)
-			lines.append("\tvar val_%s := Label.new()" % r_id)
-			lines.append("\tval_%s.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER" % r_id)
-			lines.append("\tval_%s.add_theme_font_override(\"font\", mono_font)" % r_id)
-			lines.append("\tval_%s.add_theme_color_override(\"font_color\", clr_blue)" % r_id)
-			lines.append("\tbadge_%s.add_child(val_%s)" % [r_id, r_id])
-			lines.append("\t_value_labels[\"%s\"] = val_%s" % [r_id, r_id])
-			lines.append("\tadd_child(badge_%s)\n" % r_id)
+			lines.append("\tvar badge_" + r_id + " := PanelContainer.new()")
+			lines.append("\tbadge_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			lines.append("\tvar val_" + r_id + " := Label.new()")
+			lines.append("\tval_" + r_id + ".horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER")
+			lines.append("\tval_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+			lines.append("\tval_" + r_id + ".add_theme_color_override(\"font_color\", clr_blue)")
+			lines.append("\tbadge_" + r_id + ".add_child(val_" + r_id + ")")
+			lines.append("\t_value_labels[\"" + r_id + "\"] = val_" + r_id)
+			lines.append("\tadd_child(badge_" + r_id + ")\n")
 
 		"CIVIC_SUMMARY":
-			lines.append("\tvar civic_box_%s := VBoxContainer.new()" % r_id)
-			lines.append("\tcivic_box_%s.size_flags_horizontal = Control.SIZE_EXPAND_FILL" % r_id)
-			lines.append("\tcivic_box_%s.add_theme_constant_override(\"separation\", 2)" % r_id)
-			lines.append("\t_value_labels[\"%s\"] = civic_box_%s" % [r_id, r_id])
-			lines.append("\tadd_child(civic_box_%s)\n" % r_id)
+			lines.append("\tvar civic_box_" + r_id + " := VBoxContainer.new()")
+			lines.append("\tcivic_box_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			lines.append("\tcivic_box_" + r_id + ".add_theme_constant_override(\"separation\", 2)")
+			lines.append("\t_value_labels[\"" + r_id + "\"] = civic_box_" + r_id)
+			lines.append("\tadd_child(civic_box_" + r_id + ")\n")
 
 		"BUTTON":
 			lines.append("\tvar btn_" + r_id + " := Button.new()")
@@ -96,7 +97,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
 			lines.append("\tlbl_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-			lines.append("\tlbl_%s.add_theme_color_override(\"font_color\", clr_muted)" % r_id)
+			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
 			lines.append("\tvar spin_" + r_id + " := SpinBox.new()")
 			lines.append("\tspin_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")

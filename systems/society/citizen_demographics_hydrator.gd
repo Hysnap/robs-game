@@ -21,36 +21,28 @@ static func run(
 	var district_residents_map: Dictionary = physical_state["district_residents_map"]
 	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
 
-	# Load Labor Market Configuration Flags
-	var config := ConfigFile.new()
-	var err := config.load("res://data_modules/core/business_rules.cfg")
-	var enable_archetype_unemployment: bool = true
-	var enable_commute_distances: bool = true
-	var enable_category_restricted_hunting: bool = true
-
-	if err == OK:
-		enable_archetype_unemployment = config.get_value("labor_market", "enable_archetype_unemployment", true)
-		enable_commute_distances = config.get_value("labor_market", "enable_commute_distances", true)
-		enable_category_restricted_hunting = config.get_value("labor_market", "enable_category_restricted_hunting", true)
-
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 	var male_gender_id: int = DB_MANAGER.get_label_id("GENDER", "M")
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
-	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
+	var schedule_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
+	# Pre-build 2-level Spatial Lookup Index for Non-Working Anchors:
+	# by_cat_and_district[cat][dist_id] -> Array[Dictionary]
+	var by_cat_and_district: Dictionary = {}
+	for cat in by_cat.keys():
+		by_cat_and_district[cat] = {}
+		for item in by_cat[cat]:
+			var d_id: String = str(item.get("district_id", ""))
+			if not by_cat_and_district[cat].has(d_id):
+				by_cat_and_district[cat][d_id] = []
+			by_cat_and_district[cat][d_id].append(item)
+
+	# Shuffle all available job slots across the entire city
+	# Unified labor pool: slots are NO LONGER segregated by establishment category
 	open_job_slots.shuffle()
-
-	# Create strictly typed queues by category
-	var jobs_by_cat: Dictionary = {}
-	for slot in open_job_slots:
-		var c: String = str(slot["cat"])
-		if not jobs_by_cat.has(c):
-			var arr: Array[Dictionary] = []
-			jobs_by_cat[c] = arr
-		jobs_by_cat[c].append(slot)
 
 	var male_names: Array = lexicon.get("first_names_male", ["Terry"])
 	var female_names: Array = lexicon.get("first_names_female", ["Sharon"])
@@ -58,11 +50,19 @@ static func run(
 	var resident_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
-	var slot_update_sqls: Array[String] = []
+	var slot_updates: Array[String] = []
 
 	var current_resident_id: int = 1
 	var total_hh: int = generated_households.size()
 	var hh_idx: int = 0
+	var is_headless: bool = (DisplayServer.get_name() == "headless")
+
+	var pass3_start_ms: int = Time.get_ticks_msec()
+	var chunk_start_ms: int = pass3_start_ms
+	var db_accum_ms: int = 0
+	var gen_accum_ms: int = 0
+
+	print("  [Pass 3] Starting hydration of %d households with %d unified job vacancies..." % [total_hh, open_job_slots.size()])
 
 	for hh in generated_households:
 		hh_idx += 1
@@ -83,10 +83,7 @@ static func run(
 			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
 
 			var is_head: bool = (member_idx == 0)
-
-			# If archetype unemployment is disabled, pass unemp_rate = 0.0
-			var active_unemp_rate: float = float(hh["unemp_rate"]) if enable_archetype_unemployment else 0.0
-			var demo_profile: Dictionary = resolve_citizen_demographics(demographics, rng, is_high_dense, is_male, active_unemp_rate, 0.70, is_head)
+			var demo_profile: Dictionary = resolve_citizen_demographics(demographics, rng, is_high_dense, is_male, hh["unemp_rate"], 0.70, is_head)
 			var age_years: int = int(demo_profile["age"])
 
 			var days_old: int = int(round(float(age_years) * 365.25)) + rng.randi_range(0, 364)
@@ -111,70 +108,49 @@ static func run(
 			var occ_title: String = demo_profile["occupation"]
 			var anchor_cat: String = demo_profile["anchor_category"]
 			var contract_class: String = demo_profile["contract_class"]
-			var contract_type_id: int = contract_std_id
-			var schedule_id: int = default_daytime_id
 			var weekly_hours: float = float(demo_profile["weekly_hours"])
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
 			var assigned_est_id: int = 0
 
-			# 1. Active Formal Workforce: Match via Commute Radius & Education Eligibility
+			# 1. Active Formal Workforce: Match against UNIFIED open_job_slots by Qualification & Commute
 			if contract_class == "FORMAL_LEGAL":
 				var worker_home_pos: Vector2 = SPATIAL_RESOLVER._resolve_vector2(
 					districts[hh["district_id"]].get("spatial_anchor", Vector2.ZERO)
 				)
 
-				var slot: Dictionary = {}
+				# Draw directly from the unified open positions pool
+				var slot: Dictionary = SPATIAL_RESOLVER.pick_commute_matched_slot(
+					open_job_slots,
+					worker_home_pos,
+					edu_code,
+					districts,
+					job_definitions,
+					rng
+				)
 
-				# A. Primary search within designated category
-				if jobs_by_cat.has(anchor_cat) and not jobs_by_cat[anchor_cat].is_empty():
-					slot = SPATIAL_RESOLVER.pick_commute_matched_slot(
-						jobs_by_cat[anchor_cat],
-						worker_home_pos,
-						edu_code,
-						districts,
-						job_definitions,
-						rng,
-						enable_commute_distances
-					)
-
-				# B. Fallback search across city-wide open slots if unrestricted job hunting is enabled
-				if slot.is_empty() and not enable_category_restricted_hunting:
-					slot = SPATIAL_RESOLVER.pick_commute_matched_slot(
-						open_job_slots,
-						worker_home_pos,
-						edu_code,
-						districts,
-						job_definitions,
-						rng,
-						enable_commute_distances
-					)
-
-				# C. Assign role or transition to welfare
 				if not slot.is_empty():
 					assigned_est_id = int(slot["estab_id"])
 					occ_title = slot["role"]
 					weekly_hours = slot["hours"]
 					compensation_rate = slot["rate"]
-					contract_type_id = int(slot.get("contract_type_id", contract_std_id))
-					schedule_id = int(slot.get("schedule_window_id", default_daytime_id))
-
-					# Mark slot filled in DB
-					var slot_id: int = int(slot.get("slot_id", 0))
-					if slot_id > 0:
-						slot_update_sqls.append("""
-							UPDATE workplace_job_slots
-							SET is_filled = 1, active_resident_id = %d
-							WHERE slot_id = %d;
-						""" % [r_id, slot_id])
+					
+					if slot.has("slot_id"):
+						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
+							r_id, int(slot["slot_id"])
+						])
 				else:
-					# Saturated or Unqualified -> Transition to Unemployment
-					assigned_est_id = _transition_to_dole(demo_profile, by_cat, hh["district_id"], rng)
+					# All viable slots exhausted or citizen unqualified -> Transition to Dole
+					assigned_est_id = _transition_to_dole(by_cat, hh["district_id"], rng)
 					occ_title = demo_profile.get("unemployed_branch", {}).get("role", "UNEMPLOYED")
 					contract_class = "INFORMAL_GREY"
 					weekly_hours = 0.0
 					compensation_rate = 0.0
 			else:
-				assigned_est_id = pick_anchor(demographics, by_cat, anchor_cat, hh["district_id"], rng)
+				# 2. Non-working cohorts (Children, Students, Pensioners, Unemployed)
+				assigned_est_id = pick_anchor(demographics, by_cat, by_cat_and_district, anchor_cat, hh["district_id"], rng)
+
+			if assigned_est_id <= 0:
+				assigned_est_id = _transition_to_dole(by_cat, hh["district_id"], rng)
 
 			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
@@ -188,7 +164,7 @@ static func run(
 					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, assigned_est_id, class_id, role_id, contract_type_id, schedule_id,
+				r_id, assigned_est_id, class_id, role_id, contract_std_id, schedule_daytime_id,
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
@@ -204,13 +180,25 @@ static func run(
 							) VALUES (%d, %d, %d, NULL, 0.90, %d, NULL, %d);
 						""" % [a, b, rel_family_id, sim_start_day, reason_world_gen_id])
 
-		if resident_inserts.size() >= 500:
+		# Flush batches every 500 households
+		if hh_idx % 500 == 0:
+			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
+			gen_accum_ms += gen_time
+
+			var db_t0: int = Time.get_ticks_msec()
 			DB_MANAGER.execute_batch(resident_inserts)
 			DB_MANAGER.execute_batch(contract_inserts)
 			DB_MANAGER.execute_batch(edge_inserts)
-			if not slot_update_sqls.is_empty():
-				DB_MANAGER.execute_batch(slot_update_sqls)
-				slot_update_sqls.clear()
+			if not slot_updates.is_empty():
+				DB_MANAGER.execute_batch(slot_updates)
+				slot_updates.clear()
+
+			var db_time: int = Time.get_ticks_msec() - db_t0
+			db_accum_ms += db_time
+
+			print("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
+				hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
+			])
 
 			resident_inserts.clear()
 			contract_inserts.clear()
@@ -219,24 +207,67 @@ static func run(
 			if on_progress.is_valid():
 				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 40.0)
 				on_progress.call(pct, 100.0, "Hydrating Citizens: ~%d pop (%d/%d homes)" % [current_resident_id - 1, hh_idx, total_hh])
-				await Engine.get_main_loop().process_frame
+				if not is_headless:
+					var main_loop = Engine.get_main_loop()
+					if main_loop is SceneTree:
+						await (main_loop as SceneTree).process_frame
+
+			chunk_start_ms = Time.get_ticks_msec()
 
 	if not resident_inserts.is_empty():
+		var db_rem_t0: int = Time.get_ticks_msec()
 		DB_MANAGER.execute_batch(resident_inserts)
 		DB_MANAGER.execute_batch(contract_inserts)
 		DB_MANAGER.execute_batch(edge_inserts)
-	if not slot_update_sqls.is_empty():
-		DB_MANAGER.execute_batch(slot_update_sqls)
+		if not slot_updates.is_empty():
+			DB_MANAGER.execute_batch(slot_updates)
+			slot_updates.clear()
+		db_accum_ms += (Time.get_ticks_msec() - db_rem_t0)
+		resident_inserts.clear()
+		contract_inserts.clear()
+		edge_inserts.clear()
 
-	print("  ✓ Pass 3: Created %d citizens with legal guardians and matched jobs." % (current_resident_id - 1))
+	# Sync True Living Population back into world_state["districts"]
+	for d_id in districts.keys():
+		var pop_count: int = district_residents_map.get(d_id, []).size()
+		districts[d_id]["population"] = pop_count
+
+	var total_time_ms: int = Time.get_ticks_msec() - pass3_start_ms
+	print("  ✓ Pass 3 Completed in %dms (Gen Compute: %dms | DB Commits: %dms) | Created %d citizens." % [
+		total_time_ms, gen_accum_ms, db_accum_ms, current_resident_id - 1
+	])
 	audit_generated_jobs_by_education()
 
-static func _transition_to_dole(demo_profile: Dictionary, by_cat: Dictionary, dist_id: String, rng: RandomNumberGenerator) -> int:
-	var unemp_branch: Dictionary = demo_profile.get("unemployed_branch", {})
-	var cat: String = str(unemp_branch.get("anchor_category", "JOBCENTRE"))
-	return pick_anchor(demo_profile, by_cat, cat, dist_id, rng)
+## Strictly routes unemployed claimants to a city Jobcentre or Local Government / Civic hub
+static func _transition_to_dole(by_cat: Dictionary, _dist_id: String, rng: RandomNumberGenerator) -> int:
+	if by_cat.has("JOBCENTRE") and not by_cat["JOBCENTRE"].is_empty():
+		var jc_list: Array = by_cat["JOBCENTRE"]
+		return int(jc_list[rng.randi() % jc_list.size()]["id"])
 
-static func pick_anchor(demographics: Dictionary, by_cat: Dictionary, requested_category: String, _dist_id: String, rng: RandomNumberGenerator) -> int:
+	for civic_key in ["LOCAL_GOVERNMENT", "CIVIC", "TOWN_HALL", "COMMUNITY_CENTRE"]:
+		if by_cat.has(civic_key) and not by_cat[civic_key].is_empty():
+			var c_list: Array = by_cat[civic_key]
+			return int(c_list[rng.randi() % c_list.size()]["id"])
+
+	if by_cat.has("CIVIC") and not by_cat["CIVIC"].is_empty():
+		var civ_all: Array = by_cat["CIVIC"]
+		return int(civ_all[rng.randi() % civ_all.size()]["id"])
+
+	assert(false, "FATAL: [CitizenHydrator] No Jobcentre or Civic facility exists to anchor unemployed claimants.")
+	return 1
+
+## Resolves demographic institutions (Schools, Post Offices, Churches) using O(1) indexed district lookup
+static func pick_anchor(
+	demographics: Dictionary,
+	by_cat: Dictionary,
+	by_cat_and_district: Dictionary,
+	requested_category: String,
+	dist_id: String,
+	rng: RandomNumberGenerator
+) -> int:
+	if requested_category == "JOBCENTRE":
+		return _transition_to_dole(by_cat, dist_id, rng)
+
 	var target_cat: String = requested_category
 	var fallbacks: Dictionary = demographics.get("anchor_category_fallbacks", {})
 	var visited: Dictionary = {}
@@ -250,16 +281,19 @@ static func pick_anchor(demographics: Dictionary, by_cat: Dictionary, requested_
 		else:
 			break
 
-	var list: Array = by_cat.get(target_cat, [])
-	if list.is_empty():
-		for cat_key in by_cat.keys():
-			if not by_cat[cat_key].is_empty():
-				list = by_cat[cat_key]
-				break
+	# 1. Check O(1) indexed local district matches
+	if by_cat_and_district.has(target_cat) and by_cat_and_district[target_cat].has(dist_id):
+		var local_matches: Array = by_cat_and_district[target_cat][dist_id]
+		if not local_matches.is_empty():
+			return int(local_matches[rng.randi() % local_matches.size()]["id"])
 
-	assert(not list.is_empty(), "FATAL: Zero establishments registered in by_cat.")
-	var picked: Dictionary = list[rng.randi() % list.size()]
-	return int(picked["id"])
+	# 2. Category-wide random fallback
+	if by_cat.has(target_cat) and not by_cat[target_cat].is_empty():
+		var list: Array = by_cat[target_cat]
+		return int(list[rng.randi() % list.size()]["id"])
+
+	# 3. Final Civic Fallback
+	return _transition_to_dole(by_cat, dist_id, rng)
 
 static func resolve_citizen_demographics(demographics: Dictionary, rng: RandomNumberGenerator, is_high_density: bool, is_male: bool, unemp_rate: float, comm_share: float, is_head_of_household: bool = false) -> Dictionary:
 	var cohorts: Array = demographics.get("cohort_profiles", [])
@@ -308,10 +342,9 @@ static func resolve_citizen_demographics(demographics: Dictionary, rng: RandomNu
 		"LABOR_MARKET":
 			if rng.randf() < unemp_rate:
 				profile_data = chosen_cohort["unemployed_branch"]
-			elif rng.randf() < comm_share:
-				profile_data = chosen_cohort["commercial_branch"]
 			else:
-				profile_data = chosen_cohort["industrial_branch"]
+				# All non-unemployed adults seek formal employment across the city
+				profile_data = chosen_cohort.get("commercial_branch", chosen_cohort)
 
 	return {
 		"age": resolved_age,

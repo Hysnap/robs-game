@@ -20,6 +20,9 @@ func _ready() -> void:
 	if shell_node == null:
 		shell_node = get_parent() as OuterShell
 
+func _exit_tree() -> void:
+	cleanup()
+
 ## Mounts any compiled navigation widget into the shell's generic NAV slot
 func set_navigation_component(nav_bar: Control) -> void:
 	if shell_node:
@@ -29,6 +32,12 @@ func set_navigation_component(nav_bar: Control) -> void:
 
 ## Registers any compiled UI view to an arbitrary string key from configuration
 func register_view(domain_key: String, view_control: Control) -> void:
+	if _views.has(domain_key):
+		var old_view = _views[domain_key]
+		if is_instance_valid(old_view) and old_view != view_control:
+			if old_view.get_parent() != null:
+				old_view.get_parent().remove_child(old_view)
+			old_view.queue_free()
 	_views[domain_key] = view_control
 
 ## Swaps whatever view is currently mounted in CONTENT slot
@@ -46,14 +55,19 @@ func update_active_view_data(display_data: Dictionary) -> void:
 		if is_instance_valid(active_view) and active_view.has_method("bind_data"):
 			active_view.bind_data(display_data)
 
+## Checks whether a registered domain view supports the inscribe_entry protocol
+func supports_inscriptions(domain_key: String) -> bool:
+	if _views.has(domain_key):
+		var target_view: Control = _views[domain_key]
+		return is_instance_valid(target_view) and target_view.has_method("inscribe_entry")
+	return false
+
 ## Pure Inscription: Records an audit, transaction, or log entry into the target domain's ledger
 func inscribe_entry_to_domain(domain_key: String, entry_data: Dictionary) -> void:
 	if _views.has(domain_key):
 		var target_view: Control = _views[domain_key]
 		if is_instance_valid(target_view) and target_view.has_method("inscribe_entry"):
 			target_view.inscribe_entry(entry_data)
-		else:
-			push_warning("[ViewHost] Domain view '%s' does not implement inscribe_entry()" % domain_key)
 	else:
 		push_warning("[ViewHost] Cannot inscribe entry: unknown domain '%s'" % domain_key)
 
@@ -62,18 +76,18 @@ func attach_action_system(planner: Control, inbox: Control, composer_modal: Cont
 	_planner_view = planner
 	_desk_inbox = inbox
 	_composer_modal = composer_modal
-	
+
 	if _planner_view and _planner_view.has_signal("action_clicked"):
 		_planner_view.connect("action_clicked", func(action_code: String):
 			action_requested.emit(action_code, {})
 		)
-		
+
 	if _composer_modal and _composer_modal.has_signal("directive_committed"):
 		_composer_modal.connect("directive_committed", func(directive: Dictionary):
 			if _planner_view and _planner_view.has_method("add_directive_to_queue"):
 				_planner_view.add_directive_to_queue(directive)
 		)
-		
+
 	if _desk_inbox and _desk_inbox.has_signal("top_card_action"):
 		_desk_inbox.connect("top_card_action", func(action_id: String, payload: Dictionary):
 			triage_slip_action.emit(action_id, payload)
@@ -99,6 +113,29 @@ func get_staged_directives() -> Array:
 func clear_staged_directives() -> void:
 	if _planner_view and _planner_view.has_method("clear_staged_orders"):
 		_planner_view.clear_staged_orders()
+
+## Cleanly frees all registered view instances and clears cached references
+func cleanup() -> void:
+	for domain_key in _views.keys():
+		var v = _views[domain_key]
+		if is_instance_valid(v):
+			if v.get_parent() != null:
+				v.get_parent().remove_child(v)
+			v.free()
+	_views.clear()
+	_active_domain = ""
+
+	if is_instance_valid(_planner_view) and _planner_view.get_parent() == null:
+		_planner_view.free()
+	_planner_view = null
+
+	if is_instance_valid(_desk_inbox) and _desk_inbox.get_parent() == null:
+		_desk_inbox.free()
+	_desk_inbox = null
+
+	if is_instance_valid(_composer_modal) and _composer_modal.get_parent() == null:
+		_composer_modal.free()
+	_composer_modal = null
 
 func _on_nav_route_requested(domain_token: String, _target_page: String) -> void:
 	switch_to_domain(domain_token)

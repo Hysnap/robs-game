@@ -288,7 +288,7 @@ static func calculate_fuzzed_ratio(
 ##   {"threshold": 250, "round_to": 25},
 ##   {"threshold": 1000, "round_to": 100}
 ## ]
-static func round_headcount_adaptive(raw_count: int, tiers: Array = [], default_step: int = 1) -> int:
+static func round_adaptive(raw_count: int, tiers: Array = [], default_step: int = 1) -> int:
 	if raw_count <= 0:
 		return 0
 
@@ -340,8 +340,33 @@ static func transform_measure(
 		"STEPPED_ROUNDING":
 			var tiers: Array = spec.get("tiers", [])
 			var default_step: int = int(spec.get("default_step", 1))
-			return round_headcount_adaptive(int(evaluated_val), tiers, default_step)
-			
+			return round_adaptive(int(evaluated_val), tiers, default_step)
+
+		"FUZZ_RATIO", "RATIO":
+			return clampf(evaluated_val, 0.0, 1.0)
+
+		"CURVE":
+			var model_type: String = str(spec.get("model", "LINEAR_PER_UNIT"))
+			var factor: float = float(spec.get("factor", 1.0))
+			var params: Dictionary = spec.get("params", {})
+			return _Calculator.calculate(model_type, evaluated_val, factor, params)
+
+		"GATE", "BOOLEAN":
+			var threshold: float = float(spec.get("threshold", 0.0))
+			var op: String = str(spec.get("operator", ">="))
+			return evaluate(evaluated_val, threshold, op)
+
+		"QUANTILE":
+			var thresholds: Array[float] = []
+			for t in spec.get("thresholds", []):
+				thresholds.append(float(t))
+			return evaluate_quantile_bucket(evaluated_val, thresholds)
+
+		"PRECISION_ROUND", "PRECISION":
+			var decimals: int = int(spec.get("precision", 2))
+			var scale: float = pow(10.0, float(decimals))
+			return roundf(evaluated_val * scale) / scale
+
 		"DIRECT":
 			return evaluated_val
 			

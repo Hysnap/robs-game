@@ -1,7 +1,7 @@
 # res://tools/test_view_host_wiring.gd
 extends SceneTree
 
-const SCHEMAS_DIR := "res://data_modules/core/ui_schemas/"
+const SCHEMAS_VIEW_DIR := "res://data_modules/core/ui_schemas/views/"
 const GENERATED_DIR := "res://generated/ui/"
 
 # Explicit preloads to guarantee availability in headless CLI mode
@@ -19,6 +19,11 @@ func _init() -> void:
 	var shell = shell_scene.instantiate()
 	root.add_child(shell)
 
+	# Mount default Filofax wrapper so generic slots (NAV, CONTENT, ACTION) are available
+	var filo_spread_scene: PackedScene = load("res://scenes/ui/shells/filofax/filofax_spread.tscn")
+	assert(filo_spread_scene != null, "filofax_spread.tscn failed to load!")
+	shell.set_spread_wrapper(filo_spread_scene.instantiate())
+
 	var host = ViewHostScript.new()
 	host.shell_node = shell
 	shell.add_child(host)
@@ -30,12 +35,12 @@ func _init() -> void:
 	host.set_navigation_component(nav_bar)
 
 	var nav_slot = shell.get_slot("NAV")
-	assert(nav_slot.get_child_count() == 1, "NavSlot did not receive navigation component!")
+	assert(nav_slot != null and nav_slot.get_child_count() == 1, "NavSlot did not receive navigation component!")
 	print("  ✓ Pure navigation component mounted into generic NAV slot.")
 
 	# 3. Dynamically Register All Generated Views Without Hardcoded Names
-	var dir := DirAccess.open(SCHEMAS_DIR)
-	assert(dir != null, "Failed to open schemas directory")
+	var dir := DirAccess.open(SCHEMAS_VIEW_DIR)
+	assert(dir != null, "Failed to open schemas directory: %s" % SCHEMAS_VIEW_DIR)
 	dir.list_dir_begin()
 	var file_name := dir.get_next()
 	var registered_count := 0
@@ -74,7 +79,9 @@ func _init() -> void:
 
 	print("  ✓ All registered views cycled through ContentSlot and ingested data cleanly.")
 
-	# Clean teardown
+	# 5. Clean teardown: purge views and slots before removing root
+	host.cleanup()
+	nav_bar.free()
 	root.remove_child(shell)
 	shell.free()
 

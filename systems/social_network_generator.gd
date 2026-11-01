@@ -9,6 +9,7 @@ const PREMISES_BUILDER = preload("res://systems/society/premises_workplace_build
 const BOROUGH_CLUSTERER = preload("res://systems/society/borough_clusterer.gd")
 const CITIZEN_HYDRATOR = preload("res://systems/society/citizen_demographics_hydrator.gd")
 const DUNBAR_WEAVER = preload("res://systems/society/dunbar_graph_weaver.gd")
+const CITY_AUDITOR = preload("res://systems/city_auditor.gd")
 
 static var _lexicon: Dictionary = {}
 static var _demographics: Dictionary = {}
@@ -57,7 +58,6 @@ static func generate_city_society(
 	# -------------------------------------------------------------------------
 	# PASS 0.5: LAND PARCEL DENSITY & INITIAL VACANCY
 	# -------------------------------------------------------------------------
-	# Example in SocialNetworkGenerator.generate_city_society:
 	if on_progress.is_valid():
 		on_progress.call(0.05, 1.0, "Pass 1: Generate Initial Land Parcels...")
 		await Engine.get_main_loop().process_frame
@@ -118,3 +118,18 @@ static func generate_city_society(
 		await Engine.get_main_loop().process_frame
 
 	print("[SocialNetwork] Generation complete across all passes in %d ms." % elapsed)
+
+	# -------------------------------------------------------------------------
+	# POST-GENERATION HEALTH & LABOR MARKET AUDIT
+	# -------------------------------------------------------------------------
+	print("[SocialNetwork] Compiling automated city health and labor market audit...")
+	var audit_report := CITY_AUDITOR.audit_and_save(world_state, DB_MANAGER)
+	if audit_report.has("report_path"):
+		print("  ✓ City Audit Report generated: %s" % audit_report["report_path"])
+		if not audit_report.get("is_healthy", false):
+			for warning in audit_report.get("warnings", []):
+				print("    [Audit Warning] %s" % warning)
+			for err in audit_report.get("errors", []):
+				push_warning("[Audit Error] %s" % err)
+	else:
+		push_warning("[SocialNetwork] CityAuditor did not write a report.")

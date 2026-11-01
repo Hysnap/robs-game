@@ -1,3 +1,4 @@
+# res://tools/ui_compiler/ui_compiler.gd
 @tool
 class_name UICompiler
 extends RefCounted
@@ -76,6 +77,8 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	lines.append("\tvar clr_black: Color = RETRO_THEME.get_ink_color(\"body\")\n")
 
 	var sections: Array = schema.get("sections", [])
+	var has_inscriptions_container: bool = bool(meta.get("has_inscriptions", false))
+
 	for sec in sections:
 		var s_id: String = sec.get("id", "sec")
 		var s_token: String = sec.get("header_token", "")
@@ -96,6 +99,10 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 			lines.append("\tadd_child(sec_" + s_id + ")\n")
 
 		for row in sec.get("rows", []):
+			var r_type: String = row.get("type", "").to_upper()
+			if r_type == "INSCRIPTIONS_CONTAINER":
+				has_inscriptions_container = true
+
 			var r_token: String = row.get("token", "")
 			var r_def: String = row.get("default_text", row.get("id", ""))
 			if not r_token.is_empty():
@@ -117,6 +124,25 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 		lines.append("\tpass")
 	else:
 		lines.append_array(binding_lines)
+
+	# inscribe_entry() (if supported)
+	if has_inscriptions_container:
+		lines.append("\nfunc inscribe_entry(entry: Dictionary) -> void:")
+		lines.append("\tif not _value_labels.has(\"__inscriptions__\") and not _value_labels.has(\"observations_box\"):")
+		lines.append("\t\treturn")
+		lines.append("\tvar target_box = _value_labels.get(\"__inscriptions__\", _value_labels.get(\"observations_box\"))")
+		lines.append("\tif not target_box is Container:")
+		lines.append("\t\treturn")
+		lines.append("\tvar author: String = str(entry.get(\"author\", \"\"))")
+		lines.append("\tvar text_content: String = str(entry.get(\"text\", \"\"))")
+		lines.append("\tvar note_lbl := Label.new()")
+		lines.append("\tif not author.is_empty():")
+		lines.append("\t\tnote_lbl.text = \"[\" + author + \"] \" + text_content")
+		lines.append("\telse:")
+		lines.append("\t\tnote_lbl.text = text_content")
+		lines.append("\tnote_lbl.add_theme_font_override(\"font\", RETRO_THEME.get_monospace_font())")
+		lines.append("\tnote_lbl.add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"body\"))")
+		lines.append("\ttarget_box.add_child(note_lbl)")
 
 	var out_file := FileAccess.open(out_path, FileAccess.WRITE)
 	assert(out_file != null, "[UICompiler FATAL] Could not write output file: " + out_path)

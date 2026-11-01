@@ -2,18 +2,12 @@
 class_name SocietyQueries
 extends RefCounted
 
-## Fetches raw, unfiltered census totals and labor market breakdown from SQLite for a district
+## Fetches raw, unfiltered census totals, housing occupancy, and labor market breakdown from SQLite for a district
 static func get_district_census(district_id: String) -> Dictionary:
 	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
 
 	var rows = DBManager.query_rows("""
-		SELECT 
-			total_households, 
-			total_residents, 
-			active_living_population, 
-			formally_employed_count, 
-			street_informal_count, 
-			incarcerated_count 
+		SELECT *
 		FROM v_district_census 
 		WHERE district_id = '%s';
 	""" % district_id)
@@ -23,12 +17,65 @@ static func get_district_census(district_id: String) -> Dictionary:
 
 	var row: Dictionary = rows[0]
 	return {
-		"active_population": int(row.get("active_living_population", 0)),
+		"district_id": str(row.get("district_id", district_id)),
+		"district_name": str(row.get("district_name", "")),
+		"borough_id": str(row.get("borough_id", "")),
+		"borough_name": str(row.get("borough_name", "")),
+
+		# Demographics
 		"total_residents": int(row.get("total_residents", 0)),
-		"total_households": int(row.get("total_households", 0)),
+		"active_population": int(row.get("active_living_population", 0)),
+		"active_living_population": int(row.get("active_living_population", 0)),
+		"children_under_working_age_count": int(row.get("children_under_working_age_count", 0)),
+		"working_age_population": int(row.get("working_age_population", 0)),
+		"pensioners_count": int(row.get("pensioners_count", 0)),
+
+		# Housing & Tenancy
+		"total_households": int(row.get("total_active_households", 0)),
+		"total_active_households": int(row.get("total_active_households", 0)),
+		"total_residential_units": int(row.get("total_residential_units", 0)),
+		"occupied_residential_units": int(row.get("occupied_residential_units", 0)),
+		"vacant_residential_units": int(row.get("vacant_residential_units", 0)),
+		"residential_occupancy_rate": float(row.get("residential_occupancy_rate", 0.0)),
+		"avg_residents_per_occupied_dwelling": float(row.get("avg_residents_per_occupied_dwelling", 0.0)),
+		"avg_household_size": float(row.get("avg_household_size", 0.0)),
+
+		# Commercial & Industrial Stock
+		"total_commercial_units": int(row.get("total_commercial_units", 0)),
+		"vacant_commercial_units": int(row.get("vacant_commercial_units", 0)),
+		"total_industrial_units": int(row.get("total_industrial_units", 0)),
+		"vacant_industrial_units": int(row.get("vacant_industrial_units", 0)),
+		"civic_anchors_count": int(row.get("civic_anchors_count", 0)),
+
+		# Overlapping Non-Exclusive Labor Categories
 		"formally_employed_count": int(row.get("formally_employed_count", 0)),
 		"street_informal_count": int(row.get("street_informal_count", 0)),
-		"incarcerated_count": int(row.get("incarcerated_count", 0))
+		"incarcerated_count": int(row.get("incarcerated_count", 0)),
+		"unemployed_count": int(row.get("unemployed_count", 0)),
+		"long_term_sick_count": int(row.get("long_term_sick_count", 0)),
+
+		# Economy
+		"base_disposable_income": float(row.get("base_disposable_income", 0.0))
+	}
+
+## Fetches residential unit stock, occupancy count, vacancies, and occupancy rate for a district
+static func get_district_housing_census(district_id: String) -> Dictionary:
+	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
+
+	var census: Dictionary = get_district_census(district_id)
+	if census.is_empty():
+		return {
+			"total_residential_units": 0,
+			"occupied_units": 0,
+			"vacant_units": 0,
+			"occupancy_rate": 0.0
+		}
+
+	return {
+		"total_residential_units": census.get("total_residential_units", 0),
+		"occupied_units": census.get("occupied_residential_units", 0),
+		"vacant_units": census.get("vacant_residential_units", 0),
+		"occupancy_rate": census.get("residential_occupancy_rate", 0.0)
 	}
 
 ## Fetches all establishments located in a given district for list views

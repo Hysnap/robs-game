@@ -118,6 +118,9 @@ func set_district(district_id: String, data: Dictionary) -> void:
 func get_district_truth(district_id: String) -> Dictionary:
 	return get_district(district_id)
 
+func get_selected_district_id() -> String:
+	return selected_district_id
+
 ## Sets the currently clicked/inspected district and synchronizes world_state
 func set_selected_district(district_id: String) -> void:
 	selected_district_id = district_id
@@ -145,10 +148,11 @@ func get_district_view(district_id: String) -> Dictionary:
 		raw_data["is_public_landmark"] = bool(arch.get("is_public_landmark", false))
 		raw_data["type_title"] = str(arch.get("display_name", d_type.capitalize()))
 
-	# 3. Enrich with SQLite census ground truth and establishments
+	# 3. Enrich with unified SQLite census ground truth and establishments
 	var census_data: Dictionary = SOCIETY_QUERIES.get_district_census(district_id)
 	for k in census_data.keys():
 		raw_data[k] = census_data[k]
+
 	raw_data["establishments_summary"] = SOCIETY_QUERIES.get_district_establishments(district_id)
 
 	# 4. Assemble player knowledge context
