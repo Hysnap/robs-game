@@ -187,6 +187,7 @@
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "COUNCIL_CLEANSING_DEPOT", "title": "Council Direct Labour & Cleansing Depot", "description": "Municipal depot for refuse collection, street cleansing, and direct labour." },
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MAGISTRATES_COURT", "title": "Magistrates' Court & Petty Sessions", "description": "Local magistrates' court and petty sessions venue." },
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FIRE_STATION_DEPOT", "title": "Fire Station", "description": "Fire and rescue station." },
+	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOME_MAKER", "title": "Home Maker", "description": "Cleaner, carer, general dogs body, unpaid skivvy." },
 
 	{ "domain": "ROLE_TITLE", "code": "CHILD", "title": "Child / Dependent", "description": "Pre-school or primary age dependent." },
 	{ "domain": "ROLE_TITLE", "code": "PUPIL", "title": "Primary School Pupil", "description": "Enrolled infant and junior school pupil." },
@@ -197,6 +198,7 @@
 	{ "domain": "ROLE_TITLE", "code": "COMMERCIAL_SERVICE", "title": "Commercial Service Worker", "description": "Clerk, retail assistant, bar staff, or office worker." },
 	{ "domain": "ROLE_TITLE", "code": "MANUAL_WORKS", "title": "Manual Laborer / Tradesman", "description": "Factory operative, craftsman, or construction worker." },
 	{ "domain": "ROLE_TITLE", "code": "PENSIONER", "title": "State Pensioner", "description": "Retired senior citizen receiving state pension." },
+	{ "domain": "ROLE_TITLE", "code": "HOME_MAKER", "title": "Home Maker", "description": "Cleaner, carer, general dogs body, unpaid skivvy." },
 
 	{ "domain": "ROLE_TITLE", "code": "PRIMARY_TEACHER", "title": "Primary School Teacher", "description": "Teacher at junior and infant school." },
 	{ "domain": "ROLE_TITLE", "code": "TEACHER_OR_STAFF", "title": "Comprehensive Teacher / Staff", "description": "Secondary school educator or academic staff." },

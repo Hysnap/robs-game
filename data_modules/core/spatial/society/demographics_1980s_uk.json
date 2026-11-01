@@ -2,7 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "description": "Historical 1980s British demographic cohorts, statutory pension thresholds, and labor splits."
+    "version": "3.2.0",
+    "description": "Historical 1980s British demographic cohorts, actuarial age/gender pyramid, household typologies, uncapped maternal parity with twin rates, and age/gender-stratified educational attainment."
   },
   "temporal_anchor": {
     "epoch_date": "1900-01-01",
@@ -15,6 +16,7 @@
     "PRIMARY_SCHOOL": "CIVIC",
     "SECONDARY_SCHOOL": "CIVIC",
     "HOSPITAL": "CIVIC",
+    "LOCAL_GOVERNMENT": "CIVIC",
     "POST_OFFICE": "COMMERCIAL",
     "GP_PRACTICE": "COMMERCIAL",
     "MANUAL_WORKS": "INDUSTRIAL",
@@ -32,14 +34,198 @@
     "pension_age_female": 60,
     "pension_age_male": 65
   },
-  "life_expectancy_caps": {
-    "male_max_age": 75,
-    "female_max_age": 79
-  },
   "household_occupancy_mean": 2.6,
-  "labor_market_splits": {
-    "commercial_tertiary_share": 0.70,
-    "industrial_secondary_share": 0.30
+  "population_pyramid": [
+    { "min_age": 0,  "max_age": 4,  "male_pct": 3.1, "female_pct": 2.9 },
+    { "min_age": 5,  "max_age": 9,  "male_pct": 3.5, "female_pct": 3.3 },
+    { "min_age": 10, "max_age": 14, "male_pct": 4.1, "female_pct": 3.9 },
+    { "min_age": 15, "max_age": 19, "male_pct": 4.2, "female_pct": 4.1 },
+    { "min_age": 20, "max_age": 24, "male_pct": 3.8, "female_pct": 3.6 },
+    { "min_age": 25, "max_age": 29, "male_pct": 3.5, "female_pct": 3.4 },
+    { "min_age": 30, "max_age": 34, "male_pct": 3.7, "female_pct": 3.7 },
+    { "min_age": 35, "max_age": 39, "male_pct": 3.1, "female_pct": 3.1 },
+    { "min_age": 40, "max_age": 44, "male_pct": 2.9, "female_pct": 2.8 },
+    { "min_age": 45, "max_age": 49, "male_pct": 2.8, "female_pct": 2.7 },
+    { "min_age": 50, "max_age": 54, "male_pct": 2.8, "female_pct": 2.9 },
+    { "min_age": 55, "max_age": 59, "male_pct": 2.9, "female_pct": 3.1 },
+    { "min_age": 60, "max_age": 64, "male_pct": 2.3, "female_pct": 2.7 },
+    { "min_age": 65, "max_age": 69, "male_pct": 2.3, "female_pct": 2.8 },
+    { "min_age": 70, "max_age": 74, "male_pct": 1.8, "female_pct": 2.5 },
+    { "min_age": 75, "max_age": 79, "male_pct": 1.1, "female_pct": 1.9 },
+    { "min_age": 80, "max_age": 84, "male_pct": 0.5, "female_pct": 1.2 },
+    { "min_age": 85, "max_age": 92, "male_pct": 0.2, "female_pct": 0.8 }
+  ],
+  "household_typology_model": {
+    "types_by_head_age": [
+      {
+        "age_min": 18,
+        "age_max": 24,
+        "weights": {
+          "SINGLE_PERSON": 0.46,
+          "FLATSHARE_SHARED": 0.16,
+          "COUPLE_WITHOUT_DEP": 0.20,
+          "COUPLE_WITH_DEP": 0.10,
+          "LONE_PARENT": 0.08
+        }
+      },
+      {
+        "age_min": 25,
+        "age_max": 34,
+        "weights": {
+          "SINGLE_PERSON": 0.18,
+          "FLATSHARE_SHARED": 0.06,
+          "COUPLE_WITHOUT_DEP": 0.22,
+          "COUPLE_WITH_DEP": 0.44,
+          "LONE_PARENT": 0.10
+        }
+      },
+      {
+        "age_min": 35,
+        "age_max": 49,
+        "weights": {
+          "SINGLE_PERSON": 0.12,
+          "FLATSHARE_SHARED": 0.02,
+          "COUPLE_WITHOUT_DEP": 0.18,
+          "COUPLE_WITH_DEP": 0.58,
+          "LONE_PARENT": 0.10
+        }
+      },
+      {
+        "age_min": 50,
+        "age_max": 64,
+        "weights": {
+          "SINGLE_PERSON": 0.24,
+          "FLATSHARE_SHARED": 0.01,
+          "COUPLE_WITHOUT_DEP": 0.58,
+          "COUPLE_WITH_DEP": 0.14,
+          "LONE_PARENT": 0.03
+        }
+      },
+      {
+        "age_min": 65,
+        "age_max": 95,
+        "weights": {
+          "SINGLE_PERSON": 0.58,
+          "FLATSHARE_SHARED": 0.00,
+          "COUPLE_WITHOUT_DEP": 0.40,
+          "COUPLE_WITH_DEP": 0.01,
+          "LONE_PARENT": 0.01
+        }
+      }
+    ],
+    "spousal_age_difference": {
+      "husband_older_mean": 2.2,
+      "husband_older_std_dev": 3.0
+    },
+    "marital_status_by_head_age": [
+      {
+        "age_min": 18,
+        "age_max": 24,
+        "married": 0.28,
+        "never_married": 0.69,
+        "divorced": 0.03,
+        "widowed": 0.00
+      },
+      {
+        "age_min": 25,
+        "age_max": 29,
+        "married": 0.68,
+        "never_married": 0.25,
+        "divorced": 0.07,
+        "widowed": 0.00
+      },
+      {
+        "age_min": 30,
+        "age_max": 44,
+        "married": 0.81,
+        "never_married": 0.08,
+        "divorced": 0.10,
+        "widowed": 0.01
+      },
+      {
+        "age_min": 45,
+        "age_max": 59,
+        "married": 0.82,
+        "never_married": 0.05,
+        "divorced": 0.09,
+        "widowed": 0.04
+      },
+      {
+        "age_min": 60,
+        "age_max": 74,
+        "married": 0.65,
+        "never_married": 0.06,
+        "divorced": 0.05,
+        "widowed": 0.24
+      },
+      {
+        "age_min": 75,
+        "age_max": 95,
+        "married": 0.32,
+        "never_married": 0.08,
+        "divorced": 0.03,
+        "widowed": 0.57
+      }
+    ],
+    "lone_parent_gender_split": {
+      "female_parent_prob": 0.88,
+      "male_parent_prob": 0.12
+    },
+    "shared_household_rules": {
+      "min_peers": 1,
+      "max_peers": 3,
+      "max_age_difference": 4
+    }
+  },
+  "fertility_and_family_model": {
+    "maternal_age_rules": {
+      "min_mother_age_at_birth": 16,
+      "max_mother_age_at_birth": 44,
+      "maternal_age_first_birth_distribution": [
+        { "min_age": 16, "max_age": 19, "weight": 0.10 },
+        { "min_age": 20, "max_age": 24, "weight": 0.38 },
+        { "min_age": 25, "max_age": 29, "weight": 0.34 },
+        { "min_age": 30, "max_age": 34, "weight": 0.14 },
+        { "min_age": 35, "max_age": 42, "weight": 0.04 }
+      ]
+    },
+    "birth_spacing": {
+      "min_spacing_years": 1,
+      "max_spacing_years": 4,
+      "mean_spacing_years": 2.3
+    },
+    "multiple_birth_rates": {
+      "twin_probability": 0.0115,
+      "triplet_probability": 0.00013
+    },
+    "parity_distribution": {
+      "base_weights": {
+        "1": 0.42,
+        "2": 0.36,
+        "3": 0.14,
+        "4": 0.05
+      },
+      "continuation_probability_beyond_4": 0.35,
+      "absolute_max_children": 10
+    },
+    "cohabiting_adult_offspring_retention": {
+      "age_18_to_21_stay_rate": 0.45,
+      "age_22_to_25_stay_rate": 0.15,
+      "age_26_plus_stay_rate": 0.03
+    },
+    "female_labor_participation_modifiers": {
+      "base_unmarried_rate": 0.74,
+      "base_married_rate": 0.68,
+      "has_infant_under_5_multiplier": 0.44,
+      "has_school_child_5_to_15_multiplier": 0.86,
+      "education_boost": {
+        "NO_FORMAL": 0.85,
+        "O_LEVELS_CSE": 1.00,
+        "A_LEVELS": 1.08,
+        "POLYTECHNIC_DIPLOMA": 1.15,
+        "UNIVERSITY_DEGREE": 1.25
+      }
+    }
   },
   "cohort_profiles": [
     {
@@ -51,11 +237,7 @@
       "weekly_hours": 25.0,
       "compensation_rate": 0.0,
       "age_min": 0,
-      "age_max": 15,
-      "density_weights": {
-        "high_density": 0.26,
-        "suburban_low_density": 0.20
-      }
+      "age_max": 15
     },
     {
       "id": "youth_transition",
@@ -76,11 +258,7 @@
         "compensation_rate": 2.10
       },
       "age_min": 16,
-      "age_max": 17,
-      "density_weights": {
-        "high_density": 0.08,
-        "suburban_low_density": 0.05
-      }
+      "age_max": 17
     },
     {
       "id": "young_adult",
@@ -90,25 +268,10 @@
         "anchor_category": "JOBCENTRE",
         "contract_class": "INFORMAL_GREY",
         "weekly_hours": 0.0,
-        "compensation_rate": 0.0},
-      "commercial_branch": {
-        "role": "COMMERCIAL_SERVICE",
-        "anchor_category": "COMMERCIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 37.5,
-        "compensation_rate": 3.75},
-      "industrial_branch": {
-        "role": "MANUAL_WORKS",
-        "anchor_category": "INDUSTRIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 40.0,
-        "compensation_rate": 4.20},
+        "compensation_rate": 0.0
+      },
       "age_min": 18,
-      "age_max": 29,
-      "density_weights": {
-        "high_density": 0.16,
-        "suburban_low_density": 0.08
-      }
+      "age_max": 29
     },
     {
       "id": "prime_adult",
@@ -118,25 +281,10 @@
         "anchor_category": "JOBCENTRE",
         "contract_class": "INFORMAL_GREY",
         "weekly_hours": 0.0,
-        "compensation_rate": 0.0},
-      "commercial_branch": {
-        "role": "COMMERCIAL_SERVICE",
-        "anchor_category": "COMMERCIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 37.5,
-        "compensation_rate": 3.75},
-      "industrial_branch": {
-        "role": "MANUAL_WORKS",
-        "anchor_category": "INDUSTRIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 40.0,
-        "compensation_rate": 4.20},
+        "compensation_rate": 0.0
+      },
       "age_min": 30,
-      "age_max": 49,
-      "density_weights": {
-        "high_density": 0.22,
-        "suburban_low_density": 0.33
-      }
+      "age_max": 49
     },
     {
       "id": "older_working_tier",
@@ -146,25 +294,10 @@
         "anchor_category": "JOBCENTRE",
         "contract_class": "INFORMAL_GREY",
         "weekly_hours": 0.0,
-        "compensation_rate": 0.0},
-      "commercial_branch": {
-        "role": "COMMERCIAL_SERVICE",
-        "anchor_category": "COMMERCIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 37.5,
-        "compensation_rate": 3.75},
-      "industrial_branch": {
-        "role": "MANUAL_WORKS",
-        "anchor_category": "INDUSTRIAL",
-        "contract_class": "FORMAL_LEGAL",
-        "weekly_hours": 40.0,
-        "compensation_rate": 4.20},
+        "compensation_rate": 0.0
+      },
       "age_min": 50,
-      "age_max_dynamic": "pension_age",
-      "density_weights": {
-        "high_density": 0.15,
-        "suburban_low_density": 0.18
-      }
+      "age_max_dynamic": "pension_age"
     },
     {
       "id": "pensioners",
@@ -175,39 +308,79 @@
       "weekly_hours": 0.0,
       "compensation_rate": 0.0,
       "age_min_dynamic": "pension_age",
-      "age_max_dynamic": "life_cap",
-      "density_weights": {
-        "high_density": 0.13,
-        "suburban_low_density": 0.16
-      }
+      "age_max": 95
     }
   ],
   "education_attainment_model": {
     "default_code": "NO_FORMAL",
-    "tiers": [
+    "cohort_attainment_rates": [
       {
-        "code": "UNIVERSITY_DEGREE",
-        "min_age": 21,
-        "base_probability": 0.12,
-        "high_density_penalty": 0.05
+        "age_min": 16,
+        "age_max": 24,
+        "high_density_penalty": 0.05,
+        "male_probabilities": {
+          "UNIVERSITY_DEGREE": 0.12,
+          "POLYTECHNIC_DIPLOMA": 0.16,
+          "A_LEVELS": 0.18,
+          "O_LEVELS_CSE": 0.72
+        },
+        "female_probabilities": {
+          "UNIVERSITY_DEGREE": 0.10,
+          "POLYTECHNIC_DIPLOMA": 0.14,
+          "A_LEVELS": 0.19,
+          "O_LEVELS_CSE": 0.76
+        }
       },
       {
-        "code": "POLYTECHNIC_DIPLOMA",
-        "min_age": 18,
-        "base_probability": 0.18,
-        "high_density_penalty": 0.03
+        "age_min": 25,
+        "age_max": 39,
+        "high_density_penalty": 0.05,
+        "male_probabilities": {
+          "UNIVERSITY_DEGREE": 0.14,
+          "POLYTECHNIC_DIPLOMA": 0.19,
+          "A_LEVELS": 0.17,
+          "O_LEVELS_CSE": 0.65
+        },
+        "female_probabilities": {
+          "UNIVERSITY_DEGREE": 0.09,
+          "POLYTECHNIC_DIPLOMA": 0.13,
+          "A_LEVELS": 0.16,
+          "O_LEVELS_CSE": 0.64
+        }
       },
       {
-        "code": "A_LEVELS",
-        "min_age": 18,
-        "base_probability": 0.17,
-        "high_density_penalty": 0.04
+        "age_min": 40,
+        "age_max": 54,
+        "high_density_penalty": 0.04,
+        "male_probabilities": {
+          "UNIVERSITY_DEGREE": 0.09,
+          "POLYTECHNIC_DIPLOMA": 0.15,
+          "A_LEVELS": 0.12,
+          "O_LEVELS_CSE": 0.48
+        },
+        "female_probabilities": {
+          "UNIVERSITY_DEGREE": 0.04,
+          "POLYTECHNIC_DIPLOMA": 0.09,
+          "A_LEVELS": 0.10,
+          "O_LEVELS_CSE": 0.42
+        }
       },
       {
-        "code": "O_LEVELS_CSE",
-        "min_age": 16,
-        "base_probability": 0.80,
-        "high_density_penalty": 0.0
+        "age_min": 55,
+        "age_max": 95,
+        "high_density_penalty": 0.03,
+        "male_probabilities": {
+          "UNIVERSITY_DEGREE": 0.05,
+          "POLYTECHNIC_DIPLOMA": 0.10,
+          "A_LEVELS": 0.07,
+          "O_LEVELS_CSE": 0.25
+        },
+        "female_probabilities": {
+          "UNIVERSITY_DEGREE": 0.02,
+          "POLYTECHNIC_DIPLOMA": 0.05,
+          "A_LEVELS": 0.04,
+          "O_LEVELS_CSE": 0.20
+        }
       }
     ]
   }

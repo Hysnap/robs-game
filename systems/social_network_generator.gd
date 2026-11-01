@@ -17,6 +17,7 @@ static var _cultural: Dictionary = {}
 static var _civic_hierarchy: Dictionary = {}
 static var _archetypes: Dictionary = {}
 static var _building_classes: Dictionary = {}
+
 static var _job_definitions: Dictionary = {}
 
 static func _load_configs() -> void:
@@ -78,10 +79,9 @@ static func generate_city_society(
 		on_progress.call(20.0, 100.0, "Pass 3: Populating physical premises & tenancies...")
 		await Engine.get_main_loop().process_frame
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
-		world_state, _archetypes, _building_classes, _job_definitions, _cultural, rng, 
+		world_state, _archetypes, _building_classes, _job_definitions, _cultural, _lexicon, rng, 
 		func(c, t, d): 
 			if on_progress.is_valid(): 
-				# Normalize sub-pass into 0.20 -> 0.50 range
 				var normalized = 0.20 + (c / maxf(t, 1.0)) * 0.30
 				on_progress.call(normalized, 1.0, d)
 	)

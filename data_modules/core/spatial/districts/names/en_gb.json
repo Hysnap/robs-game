@@ -1,7 +1,9 @@
 {
   "_meta": {
     "locale": "en_GB",
-    "display_language": "English (British Regional)"
+    "display_language": "English (British Regional)",
+    "version": "2.0.0",
+    "description": "Civic landmarks, district toponyms, borough labels, street names, and building identifiers for British urban generation."
   },
   "civic_sites": {
     "local_government": [
@@ -50,10 +52,38 @@
     "format": "{prefix} {suffix}",
     "duplicate_fallback": "{prefix} Common"
   },
-    "borough_names": [
+  "borough_names": [
     "Aston", "Edgbaston", "Selly Oak", "Handsworth", "Ladywood",
     "Erdington", "Moseley", "Kings Heath", "Perry Barr", "Yardley",
     "Harborne", "Northfield", "Solihull", "Saltley", "Bordesley",
     "Nechells", "Hockley", "Sparkbrook", "Small Heath", "Bournville"
+  ],
+  "street_names": {
+    "roots": [
+      "Victoria", "Albert", "Church", "St. Jude's", "High", "Queen", "Station", 
+      "Canal", "Mill", "Moor", "Park", "Green", "Grange", "Kings", "Grove",
+      "Wellington", "Nelson", "Gladstone", "Salisbury", "York", "Albany"
+    ],
+    "suffixes": [
+      "Road", "Street", "Lane", "Avenue", "Terrace", "Close", "Crescent", "Row", "Way", "Parade"
     ]
+  },
+  "residential_building_names": {
+    "roots": [
+      "Birch", "Falcon", "Moor", "Aston", "Westfield", "Victoria", "Rednal", 
+      "Greenfields", "Highgate", "Blackthorn", "Castle", "Paddock", "Rowan",
+      "Oakfield", "Kings", "Charter", "Caledonian", "Cumberland", "Portland"
+    ],
+    "suffixes": [
+      "House", "Court", "Towers", "Grange", "Mansions", "Lodge", "Buildings"
+    ]
+  },
+  "address_formats": {
+    "flat_unit": "Flat {door}, {building}",
+    "flat_door": "Flat {door}",
+    "street_unit": "{door} {street}",
+    "street_door": "{door}",
+    "street_name": "{root} {suffix}",
+    "building_name": "{root} {suffix}"
+  }
 }

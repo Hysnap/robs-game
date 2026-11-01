@@ -6,7 +6,7 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
 
-## Pass 3: Hydrates living citizens, verifies qualifications, and matches jobs via edge commute
+## Pass 3: Generates realistic family structures and hydrates citizens via demographic models
 static func run(
 	physical_state: Dictionary,
 	demographics: Dictionary,
@@ -27,10 +27,9 @@ static func run(
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
-	var schedule_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
+	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
-	# Pre-build 2-level Spatial Lookup Index for Non-Working Anchors:
-	# by_cat_and_district[cat][dist_id] -> Array[Dictionary]
+	# Spatial index for non-working establishments
 	var by_cat_and_district: Dictionary = {}
 	for cat in by_cat.keys():
 		by_cat_and_district[cat] = {}
@@ -40,8 +39,6 @@ static func run(
 				by_cat_and_district[cat][d_id] = []
 			by_cat_and_district[cat][d_id].append(item)
 
-	# Shuffle all available job slots across the entire city
-	# Unified labor pool: slots are NO LONGER segregated by establishment category
 	open_job_slots.shuffle()
 
 	var male_names: Array = lexicon.get("first_names_male", ["Terry"])
@@ -62,34 +59,55 @@ static func run(
 	var db_accum_ms: int = 0
 	var gen_accum_ms: int = 0
 
-	print("  [Pass 3] Starting hydration of %d households with %d unified job vacancies..." % [total_hh, open_job_slots.size()])
+	print("  [Pass 3] Hydrating %d households with realistic family archetypes..." % total_hh)
 
 	for hh in generated_households:
 		hh_idx += 1
-		var family_size := rng.randi_range(1, 4)
 		var surname_list: Array = lexicon.get(hh["surnames_pool"], ["Smith"])
 		var family_surname: String = str(surname_list[rng.randi() % surname_list.size()]).replace("'", "''")
 		var is_high_dense: bool = str(hh["district_type"]).begins_with("high_density")
-		var household_members: Array[int] = []
+		var unemp_rate: float = float(hh.get("unemp_rate", 0.10))
+		var home_estab_id: int = int(hh["establishment_id"])
 
-		for member_idx in range(family_size):
+		# 1. Synthesize Household Composition via Demographic Models
+		var planned_members: Array[Dictionary] = _generate_household_composition(demographics, rng)
+
+		# Context flags for labor participation
+		var has_child_under_5: bool = false
+		var has_child_5_to_15: bool = false
+		for m in planned_members:
+			var age: int = int(m["age"])
+			if age < 5:
+				has_child_under_5 = true
+			elif age <= 15:
+				has_child_5_to_15 = true
+
+		var household_member_ids: Array[int] = []
+
+		for member in planned_members:
 			var r_id := current_resident_id
 			current_resident_id += 1
-			household_members.append(r_id)
+			household_member_ids.append(r_id)
 			district_residents_map[hh["district_id"]].append(r_id)
 
-			var is_male: bool = (rng.randf() > 0.5)
+			var is_male: bool = bool(member["is_male"])
+			var age_years: int = int(member["age"])
+			var is_head: bool = bool(member.get("is_head", false))
+			var is_married: bool = bool(member.get("is_married", false))
+
 			var gender_id: int = male_gender_id if is_male else female_gender_id
 			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
+			var member_surname: String = family_surname
 
-			var is_head: bool = (member_idx == 0)
-			var demo_profile: Dictionary = resolve_citizen_demographics(demographics, rng, is_high_dense, is_male, hh["unemp_rate"], 0.70, is_head)
-			var age_years: int = int(demo_profile["age"])
+			# Flatmates draw independent surnames
+			if member.get("role_in_home") == "PEER":
+				var peer_surname_list: Array = lexicon.get(hh["surnames_pool"], ["Smith"])
+				member_surname = str(peer_surname_list[rng.randi() % peer_surname_list.size()]).replace("'", "''")
 
 			var days_old: int = int(round(float(age_years) * 365.25)) + rng.randi_range(0, 364)
 			var dob_day: int = sim_start_day - days_old
 
-			var edu_code: String = resolve_citizen_education(demographics, rng, age_years, is_high_dense)
+			var edu_code: String = resolve_citizen_education(demographics, rng, age_years, is_male, is_high_dense)
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_code)
 
 			resident_inserts.append("""
@@ -101,9 +119,15 @@ static func run(
 					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, 0, %d, NULL, %d
 				);
 			""" % [
-				r_id, hh["household_id"], first_name, family_surname, family_surname,
+				r_id, hh["household_id"], first_name, member_surname, member_surname,
 				dob_day, gender_id, edu_id, hh["ethnicity_id"], hh["religion_id"], sim_start_day, reason_world_gen_id
 			])
+
+			# 2. Resolve Role & Employment Profile
+			var demo_profile: Dictionary = resolve_citizen_demographics(
+				demographics, rng, age_years, is_male, unemp_rate, edu_code,
+				is_married, has_child_under_5, has_child_5_to_15
+			)
 
 			var occ_title: String = demo_profile["occupation"]
 			var anchor_cat: String = demo_profile["anchor_category"]
@@ -112,13 +136,15 @@ static func run(
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
 			var assigned_est_id: int = 0
 
-			# 1. Active Formal Workforce: Match against UNIFIED open_job_slots by Qualification & Commute
-			if contract_class == "FORMAL_LEGAL":
+			# 3. Match Formal Workforce Slots or Domestic/Enclave Anchors
+			if occ_title == "HOME_MAKER":
+				# Homemakers anchor directly to their home dwelling
+				assigned_est_id = home_estab_id
+			elif contract_class == "FORMAL_LEGAL":
 				var worker_home_pos: Vector2 = SPATIAL_RESOLVER._resolve_vector2(
 					districts[hh["district_id"]].get("spatial_anchor", Vector2.ZERO)
 				)
 
-				# Draw directly from the unified open positions pool
 				var slot: Dictionary = SPATIAL_RESOLVER.pick_commute_matched_slot(
 					open_job_slots,
 					worker_home_pos,
@@ -133,24 +159,23 @@ static func run(
 					occ_title = slot["role"]
 					weekly_hours = slot["hours"]
 					compensation_rate = slot["rate"]
-					
+
 					if slot.has("slot_id"):
 						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
 							r_id, int(slot["slot_id"])
 						])
 				else:
-					# All viable slots exhausted or citizen unqualified -> Transition to Dole
-					assigned_est_id = _transition_to_dole(by_cat, hh["district_id"], rng)
-					occ_title = demo_profile.get("unemployed_branch", {}).get("role", "UNEMPLOYED")
+					assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
+					occ_title = "UNEMPLOYED"
 					contract_class = "INFORMAL_GREY"
 					weekly_hours = 0.0
 					compensation_rate = 0.0
 			else:
-				# 2. Non-working cohorts (Children, Students, Pensioners, Unemployed)
+				# Children, Students, Pensioners
 				assigned_est_id = pick_anchor(demographics, by_cat, by_cat_and_district, anchor_cat, hh["district_id"], rng)
 
 			if assigned_est_id <= 0:
-				assigned_est_id = _transition_to_dole(by_cat, hh["district_id"], rng)
+				assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
 
 			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
@@ -164,14 +189,14 @@ static func run(
 					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, assigned_est_id, class_id, role_id, contract_std_id, schedule_daytime_id,
+				r_id, assigned_est_id, class_id, role_id, contract_std_id, default_daytime_id,
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
 		# Kinship Edges inside Household
-		if household_members.size() > 1:
-			for a in household_members:
-				for b in household_members:
+		if household_member_ids.size() > 1:
+			for a in household_member_ids:
+				for b in household_member_ids:
 					if a != b:
 						edge_inserts.append("""
 							INSERT INTO social_relationships (
@@ -227,10 +252,8 @@ static func run(
 		contract_inserts.clear()
 		edge_inserts.clear()
 
-	# Sync True Living Population back into world_state["districts"]
 	for d_id in districts.keys():
-		var pop_count: int = district_residents_map.get(d_id, []).size()
-		districts[d_id]["population"] = pop_count
+		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()
 
 	var total_time_ms: int = Time.get_ticks_msec() - pass3_start_ms
 	print("  ✓ Pass 3 Completed in %dms (Gen Compute: %dms | DB Commits: %dms) | Created %d citizens." % [
@@ -238,8 +261,410 @@ static func run(
 	])
 	audit_generated_jobs_by_education()
 
-## Strictly routes unemployed claimants to a city Jobcentre or Local Government / Civic hub
-static func _transition_to_dole(by_cat: Dictionary, _dist_id: String, rng: RandomNumberGenerator) -> int:
+## -----------------------------------------------------------------------------
+## GENERATIVE HOUSEHOLD COMPOSITION ENGINE
+## -----------------------------------------------------------------------------
+
+static func _generate_household_composition(demographics: Dictionary, rng: RandomNumberGenerator) -> Array[Dictionary]:
+	var members: Array[Dictionary] = []
+	var legal_cfg: Dictionary = demographics.get("legal_and_pension_thresholds", {})
+	var min_head_age: int = int(legal_cfg.get("majority_head_of_household_age", 18))
+
+	# 1. Sample Head of Household from Population Pyramid (age >= min_head_age)
+	var head_sample: Dictionary = _sample_from_population_pyramid(demographics, rng, min_head_age)
+	var head_age: int = int(head_sample["age"])
+	var head_is_male: bool = bool(head_sample["is_male"])
+
+	# 2. Select Household Typology based on Head's age
+	var typology_model: Dictionary = demographics.get("household_typology_model", {})
+	var archetype_str: String = _sample_typology(typology_model, head_age, rng)
+
+	# 3. Resolve Marital Status
+	var is_married: bool = false
+	if archetype_str in ["COUPLE_WITHOUT_DEP", "COUPLE_WITH_DEP"]:
+		is_married = true
+	else:
+		is_married = _sample_marital_status(typology_model, head_age, rng) == "MARRIED"
+
+	members.append({
+		"role_in_home": "HEAD",
+		"age": head_age,
+		"is_male": head_is_male,
+		"is_head": true,
+		"is_married": is_married
+	})
+
+	match archetype_str:
+		"SINGLE_PERSON":
+			return members
+
+		"FLATSHARE_SHARED":
+			var shared_rules: Dictionary = typology_model.get("shared_household_rules", {})
+			var min_peers: int = int(shared_rules.get("min_peers", 1))
+			var max_peers: int = int(shared_rules.get("max_peers", 3))
+			var max_diff: int = int(shared_rules.get("max_age_difference", 4))
+			var peer_count: int = rng.randi_range(min_peers, max_peers)
+
+			for _i in range(peer_count):
+				var p_age: int = maxi(min_head_age, head_age + rng.randi_range(-max_diff, max_diff))
+				var p_male: bool = rng.randf() > 0.5
+				members.append({
+					"role_in_home": "PEER",
+					"age": p_age,
+					"is_male": p_male,
+					"is_head": false,
+					"is_married": false
+				})
+
+		"COUPLE_WITHOUT_DEP":
+			var sp_age: int = _calculate_spouse_age(typology_model, head_age, head_is_male, rng)
+			members.append({
+				"role_in_home": "SPOUSE",
+				"age": sp_age,
+				"is_male": not head_is_male,
+				"is_head": false,
+				"is_married": true
+			})
+
+		"COUPLE_WITH_DEP":
+			var sp_age: int = _calculate_spouse_age(typology_model, head_age, head_is_male, rng)
+			var spouse_is_male: bool = not head_is_male
+			members.append({
+				"role_in_home": "SPOUSE",
+				"age": sp_age,
+				"is_male": spouse_is_male,
+				"is_head": false,
+				"is_married": true
+			})
+
+			var mother_age: int = head_age if not head_is_male else sp_age
+			var children: Array[Dictionary] = _generate_children(demographics, mother_age, rng)
+			members.append_array(children)
+
+		"LONE_PARENT":
+			var lone_parent_is_female: bool = rng.randf() < float(typology_model.get("lone_parent_gender_split", {}).get("female_parent_prob", 0.88))
+			members[0]["is_male"] = not lone_parent_is_female
+			members[0]["is_married"] = false
+
+			var p_mother_age: int = head_age if lone_parent_is_female else maxi(18, head_age - 2)
+			var lone_children: Array[Dictionary] = _generate_children(demographics, p_mother_age, rng)
+			members.append_array(lone_children)
+
+	return members
+
+static func _sample_from_population_pyramid(demographics: Dictionary, rng: RandomNumberGenerator, min_allowed_age: int = 0) -> Dictionary:
+	var pyramid: Array = demographics.get("population_pyramid", [])
+	var eligible: Array = []
+	var total_weight: float = 0.0
+
+	for bracket in pyramid:
+		var max_a: int = int(bracket["max_age"])
+		if max_a < min_allowed_age:
+			continue
+		eligible.append(bracket)
+		total_weight += float(bracket.get("male_pct", 0.0)) + float(bracket.get("female_pct", 0.0))
+
+	if eligible.is_empty():
+		return { "age": maxi(min_allowed_age, 25), "is_male": true }
+
+	var roll: float = rng.randf() * total_weight
+	var cumulative: float = 0.0
+	var chosen: Dictionary = eligible[0]
+
+	for b in eligible:
+		var b_weight: float = float(b.get("male_pct", 0.0)) + float(b.get("female_pct", 0.0))
+		cumulative += b_weight
+		if roll <= cumulative:
+			chosen = b
+			break
+
+	var b_min: int = maxi(int(chosen["min_age"]), min_allowed_age)
+	var b_max: int = int(chosen["max_age"])
+	var resolved_age: int = rng.randi_range(b_min, b_max)
+
+	var male_pct: float = float(chosen.get("male_pct", 50.0))
+	var female_pct: float = float(chosen.get("female_pct", 50.0))
+	var is_male: bool = rng.randf() < (male_pct / maxf(0.001, male_pct + female_pct))
+
+	return { "age": resolved_age, "is_male": is_male }
+
+static func _sample_typology(typology_model: Dictionary, head_age: int, rng: RandomNumberGenerator) -> String:
+	var table: Array = typology_model.get("types_by_head_age", [])
+	var chosen_row: Dictionary = {}
+
+	for row in table:
+		if head_age >= int(row["age_min"]) and head_age <= int(row["age_max"]):
+			chosen_row = row
+			break
+
+	if chosen_row.is_empty() and not table.is_empty():
+		chosen_row = table[-1]
+
+	var weights: Dictionary = chosen_row.get("weights", { "SINGLE_PERSON": 1.0 })
+	var total_w: float = 0.0
+	for k in weights.keys():
+		total_w += float(weights[k])
+
+	var roll: float = rng.randf() * total_w
+	var cum: float = 0.0
+	for k in weights.keys():
+		cum += float(weights[k])
+		if roll <= cum:
+			return str(k)
+
+	return "SINGLE_PERSON"
+
+static func _sample_marital_status(typology_model: Dictionary, head_age: int, rng: RandomNumberGenerator) -> String:
+	var rows: Array = typology_model.get("marital_status_by_head_age", [])
+	for row in rows:
+		if head_age >= int(row["age_min"]) and head_age <= int(row["age_max"]):
+			var r: float = rng.randf()
+			var m_p: float = float(row.get("married", 0.7))
+			var nm_p: float = float(row.get("never_married", 0.2))
+			var d_p: float = float(row.get("divorced", 0.1))
+			if r < m_p:
+				return "MARRIED"
+			elif r < m_p + nm_p:
+				return "NEVER_MARRIED"
+			elif r < m_p + nm_p + d_p:
+				return "DIVORCED"
+			else:
+				return "WIDOWED"
+	return "NEVER_MARRIED"
+
+static func _calculate_spouse_age(typology_model: Dictionary, head_age: int, head_is_male: bool, rng: RandomNumberGenerator) -> int:
+	var sp_cfg: Dictionary = typology_model.get("spousal_age_difference", {})
+	var mean_diff: float = float(sp_cfg.get("husband_older_mean", 2.2))
+	var std_dev: float = float(sp_cfg.get("husband_older_std_dev", 3.0))
+
+	var u1: float = maxf(0.0001, rng.randf())
+	var u2: float = rng.randf()
+	var z: float = sqrt(-2.0 * log(u1)) * cos(TAU * u2)
+	var sampled_diff: float = mean_diff + (z * std_dev)
+
+	var sp_age: int = head_age
+	if head_is_male:
+		sp_age = int(round(float(head_age) - sampled_diff))
+	else:
+		sp_age = int(round(float(head_age) + sampled_diff))
+
+	return clampi(sp_age, 16, 95)
+
+static func _generate_children(demographics: Dictionary, mother_age: int, rng: RandomNumberGenerator) -> Array[Dictionary]:
+	var children: Array[Dictionary] = []
+	var fert_model: Dictionary = demographics.get("fertility_and_family_model", {})
+	var parity_cfg: Dictionary = fert_model.get("parity_distribution", {})
+	var base_weights: Dictionary = parity_cfg.get("base_weights", { "1": 0.42, "2": 0.36, "3": 0.14, "4": 0.05 })
+	var continuation_p: float = float(parity_cfg.get("continuation_probability_beyond_4", 0.35))
+	var abs_max: int = int(parity_cfg.get("absolute_max_children", 10))
+
+	var target_children: int = 1
+	var total_w: float = 0.0
+	for k in base_weights.keys():
+		total_w += float(base_weights[k])
+
+	var roll: float = rng.randf() * total_w
+	var cum: float = 0.0
+	for k in base_weights.keys():
+		cum += float(base_weights[k])
+		if roll <= cum:
+			target_children = int(k)
+			break
+
+	if target_children == 4:
+		while target_children < abs_max and rng.randf() < continuation_p:
+			target_children += 1
+
+	var maternal_rules: Dictionary = fert_model.get("maternal_age_rules", {})
+	var min_m_age: int = int(maternal_rules.get("min_mother_age_at_birth", 16))
+	var max_m_age: int = int(maternal_rules.get("max_mother_age_at_birth", 44))
+	var first_birth_dist: Array = maternal_rules.get("maternal_age_first_birth_distribution", [])
+
+	var fb_total_w: float = 0.0
+	for row in first_birth_dist:
+		fb_total_w += float(row.get("weight", 0.0))
+
+	var fb_roll: float = rng.randf() * fb_total_w
+	var fb_cum: float = 0.0
+	var first_birth_age: int = 24
+
+	for row in first_birth_dist:
+		fb_cum += float(row.get("weight", 0.0))
+		if fb_roll <= fb_cum:
+			first_birth_age = rng.randi_range(int(row["min_age"]), int(row["max_age"]))
+			break
+
+	first_birth_age = mini(first_birth_age, mother_age)
+	if mother_age < min_m_age:
+		return children
+
+	var twin_p: float = float(fert_model.get("multiple_birth_rates", {}).get("twin_probability", 0.0115))
+	var spacing_cfg: Dictionary = fert_model.get("birth_spacing", {})
+	var min_spacing: int = int(spacing_cfg.get("min_spacing_years", 1))
+	var max_spacing: int = int(spacing_cfg.get("max_spacing_years", 4))
+
+	var current_m_age_at_birth: int = first_birth_age
+	var spawned_count: int = 0
+
+	var retention_cfg: Dictionary = fert_model.get("cohabiting_adult_offspring_retention", {})
+	var stay_18_21: float = float(retention_cfg.get("age_18_to_21_stay_rate", 0.45))
+	var stay_22_25: float = float(retention_cfg.get("age_22_to_25_stay_rate", 0.15))
+	var stay_26_plus: float = float(retention_cfg.get("age_26_plus_stay_rate", 0.03))
+
+	while spawned_count < target_children and current_m_age_at_birth <= max_m_age and current_m_age_at_birth <= mother_age:
+		var is_twin: bool = (rng.randf() < twin_p) and (spawned_count + 1 < target_children)
+		var birth_size: int = 2 if is_twin else 1
+		var c_age: int = mother_age - current_m_age_at_birth
+
+		for _b in range(birth_size):
+			var retain_in_home: bool = true
+			if c_age >= 26:
+				retain_in_home = (rng.randf() < stay_26_plus)
+			elif c_age >= 22:
+				retain_in_home = (rng.randf() < stay_22_25)
+			elif c_age >= 18:
+				retain_in_home = (rng.randf() < stay_18_21)
+
+			if retain_in_home:
+				children.append({
+					"role_in_home": "CHILD",
+					"age": c_age,
+					"is_male": (rng.randf() > 0.5),
+					"is_head": false,
+					"is_married": false
+				})
+			spawned_count += 1
+
+		current_m_age_at_birth += rng.randi_range(min_spacing, max_spacing)
+
+	return children
+
+## -----------------------------------------------------------------------------
+## DEMOGRAPHIC PROFILE, EDUCATION & CONTRACT RESOLUTION
+## -----------------------------------------------------------------------------
+
+static func resolve_citizen_demographics(
+	demographics: Dictionary,
+	rng: RandomNumberGenerator,
+	age_years: int,
+	is_male: bool,
+	unemp_rate: float,
+	edu_code: String,
+	is_married: bool,
+	has_child_under_5: bool,
+	has_child_5_to_15: bool
+) -> Dictionary:
+	var cohorts: Array = demographics.get("cohort_profiles", [])
+	var thresholds: Dictionary = demographics.get("legal_and_pension_thresholds", {})
+	var pen_age: int = int(thresholds["pension_age_male"] if is_male else thresholds["pension_age_female"])
+
+	var chosen_cohort: Dictionary = cohorts[0]
+	for c in cohorts:
+		var c_min: int = int(c.get("age_min", 0))
+		if c.has("age_min_dynamic") and c["age_min_dynamic"] == "pension_age":
+			c_min = pen_age
+
+		var c_max: int = int(c.get("age_max", 95))
+		if c.has("age_max_dynamic") and c["age_max_dynamic"] == "pension_age":
+			c_max = pen_age - 1
+
+		if age_years >= c_min and age_years <= c_max:
+			chosen_cohort = c
+			break
+
+	var strategy: String = chosen_cohort.get("strategy", "FIXED")
+	var profile_data: Dictionary = {}
+
+	match strategy:
+		"FIXED":
+			profile_data = chosen_cohort
+		"PROBABILISTIC":
+			var prob: float = float(chosen_cohort.get("condition_probability", 0.5))
+			profile_data = chosen_cohort["if_true"] if (rng.randf() < prob) else chosen_cohort["if_false"]
+		"LABOR_MARKET":
+			var participates_in_formal_labor: bool = true
+			if not is_male:
+				var part_mods: Dictionary = demographics.get("fertility_and_family_model", {}).get("female_labor_participation_modifiers", {})
+				var base_rate: float = float(part_mods.get("base_married_rate", 0.68) if is_married else part_mods.get("base_unmarried_rate", 0.74))
+
+				if has_child_under_5:
+					base_rate *= float(part_mods.get("has_infant_under_5_multiplier", 0.44))
+				elif has_child_5_to_15:
+					base_rate *= float(part_mods.get("has_school_child_5_to_15_multiplier", 0.86))
+
+				var edu_boosts: Dictionary = part_mods.get("education_boost", {})
+				base_rate *= float(edu_boosts.get(edu_code, 1.0))
+
+				if rng.randf() > base_rate:
+					participates_in_formal_labor = false
+
+			if not participates_in_formal_labor:
+				profile_data = {
+					"role": "HOME_MAKER",
+					"anchor_category": "RESIDENTIAL_UNIT",
+					"contract_class": "INFORMAL_GREY",
+					"weekly_hours": 0.0,
+					"compensation_rate": 0.0
+				}
+			elif rng.randf() < unemp_rate:
+				profile_data = chosen_cohort["unemployed_branch"]
+			else:
+				profile_data = {
+					"role": "WORKER_SEEKER",
+					"anchor_category": "COMMERCIAL",
+					"contract_class": "FORMAL_LEGAL",
+					"weekly_hours": 37.5,
+					"compensation_rate": 3.75
+				}
+
+	return {
+		"age": age_years,
+		"occupation": str(profile_data.get("role", "COMMERCIAL_SERVICE")),
+		"anchor_category": str(profile_data.get("anchor_category", "COMMERCIAL")),
+		"contract_class": str(profile_data.get("contract_class", "FORMAL_LEGAL")),
+		"weekly_hours": float(profile_data.get("weekly_hours", 37.5)),
+		"compensation_rate": float(profile_data.get("compensation_rate", 3.50))
+	}
+
+static func resolve_citizen_education(
+	demographics: Dictionary,
+	rng: RandomNumberGenerator,
+	age_years: int,
+	is_male: bool,
+	is_high_density: bool
+) -> String:
+	var edu_model: Dictionary = demographics.get("education_attainment_model", {})
+	var default_code: String = str(edu_model.get("default_code", "NO_FORMAL"))
+	var rates: Array = edu_model.get("cohort_attainment_rates", [])
+
+	if age_years < 16:
+		return default_code
+
+	var matched_row: Dictionary = {}
+	for row in rates:
+		if age_years >= int(row["age_min"]) and age_years <= int(row["age_max"]):
+			matched_row = row
+			break
+
+	if matched_row.is_empty():
+		return default_code
+
+	var penalty: float = float(matched_row.get("high_density_penalty", 0.0)) if is_high_density else 0.0
+	var prob_dict: Dictionary = matched_row.get("male_probabilities", {}) if is_male else matched_row.get("female_probabilities", {})
+
+	for tier_code in ["UNIVERSITY_DEGREE", "POLYTECHNIC_DIPLOMA", "A_LEVELS", "O_LEVELS_CSE"]:
+		if prob_dict.has(tier_code):
+			var p: float = maxf(0.01, float(prob_dict[tier_code]) - penalty)
+			if rng.randf() < p:
+				return tier_code
+
+	return default_code
+
+## -----------------------------------------------------------------------------
+## ANCHORS & CIVIC ROUTING
+## -----------------------------------------------------------------------------
+
+static func _transition_to_dole(by_cat: Dictionary, fallback_estab_id: int, rng: RandomNumberGenerator) -> int:
 	if by_cat.has("JOBCENTRE") and not by_cat["JOBCENTRE"].is_empty():
 		var jc_list: Array = by_cat["JOBCENTRE"]
 		return int(jc_list[rng.randi() % jc_list.size()]["id"])
@@ -253,10 +678,9 @@ static func _transition_to_dole(by_cat: Dictionary, _dist_id: String, rng: Rando
 		var civ_all: Array = by_cat["CIVIC"]
 		return int(civ_all[rng.randi() % civ_all.size()]["id"])
 
-	assert(false, "FATAL: [CitizenHydrator] No Jobcentre or Civic facility exists to anchor unemployed claimants.")
-	return 1
+	# Clean fail-safe: anchor to resident's own home establishment if no civic infrastructure exists
+	return maxi(1, fallback_estab_id)
 
-## Resolves demographic institutions (Schools, Post Offices, Churches) using O(1) indexed district lookup
 static func pick_anchor(
 	demographics: Dictionary,
 	by_cat: Dictionary,
@@ -266,7 +690,7 @@ static func pick_anchor(
 	rng: RandomNumberGenerator
 ) -> int:
 	if requested_category == "JOBCENTRE":
-		return _transition_to_dole(by_cat, dist_id, rng)
+		return _transition_to_dole(by_cat, 1, rng)
 
 	var target_cat: String = requested_category
 	var fallbacks: Dictionary = demographics.get("anchor_category_fallbacks", {})
@@ -281,99 +705,20 @@ static func pick_anchor(
 		else:
 			break
 
-	# 1. Check O(1) indexed local district matches
 	if by_cat_and_district.has(target_cat) and by_cat_and_district[target_cat].has(dist_id):
 		var local_matches: Array = by_cat_and_district[target_cat][dist_id]
 		if not local_matches.is_empty():
 			return int(local_matches[rng.randi() % local_matches.size()]["id"])
 
-	# 2. Category-wide random fallback
 	if by_cat.has(target_cat) and not by_cat[target_cat].is_empty():
 		var list: Array = by_cat[target_cat]
 		return int(list[rng.randi() % list.size()]["id"])
 
-	# 3. Final Civic Fallback
-	return _transition_to_dole(by_cat, dist_id, rng)
+	return 1
 
-static func resolve_citizen_demographics(demographics: Dictionary, rng: RandomNumberGenerator, is_high_density: bool, is_male: bool, unemp_rate: float, comm_share: float, is_head_of_household: bool = false) -> Dictionary:
-	var cohorts: Array = demographics.get("cohort_profiles", [])
-	var thresholds: Dictionary = demographics.get("legal_and_pension_thresholds", {})
-	var life_caps: Dictionary = demographics.get("life_expectancy_caps", {})
-
-	var pen_age: int = int(thresholds["pension_age_male"] if is_male else thresholds["pension_age_female"])
-	var max_age: int = int(life_caps["male_max_age"] if is_male else life_caps["female_max_age"])
-	var majority_age: int = int(thresholds.get("majority_head_of_household_age", 18))
-	var density_key := "high_density" if is_high_density else "suburban_low_density"
-
-	var eligible_cohorts: Array = []
-	for c in cohorts:
-		if is_head_of_household and int(c.get("age_min", 0)) < majority_age and not c.has("age_min_dynamic"):
-			continue
-		eligible_cohorts.append(c)
-
-	if eligible_cohorts.is_empty():
-		eligible_cohorts = cohorts
-
-	var roll := rng.randf()
-	var cumulative := 0.0
-	var chosen_cohort: Dictionary = eligible_cohorts[0]
-
-	for c in eligible_cohorts:
-		cumulative += float(c["density_weights"][density_key])
-		if roll <= cumulative:
-			chosen_cohort = c
-			break
-
-	var age_min: int = pen_age if (chosen_cohort.get("age_min_dynamic") == "pension_age") else int(chosen_cohort.get("age_min", majority_age if is_head_of_household else 0))
-	var age_max: int = int(chosen_cohort.get("age_max", 70))
-	if chosen_cohort.has("age_max_dynamic"):
-		age_max = (pen_age - 1) if (chosen_cohort["age_max_dynamic"] == "pension_age") else max_age
-
-	var resolved_age: int = rng.randi_range(maxi(age_min, majority_age if is_head_of_household else 0), age_max)
-	var strategy: String = chosen_cohort.get("strategy", "FIXED")
-	var profile_data: Dictionary = {}
-
-	match strategy:
-		"FIXED":
-			profile_data = chosen_cohort
-		"PROBABILISTIC":
-			var prob: float = float(chosen_cohort["condition_probability"])
-			profile_data = chosen_cohort["if_true"] if (rng.randf() < prob) else chosen_cohort["if_false"]
-		"LABOR_MARKET":
-			if rng.randf() < unemp_rate:
-				profile_data = chosen_cohort["unemployed_branch"]
-			else:
-				# All non-unemployed adults seek formal employment across the city
-				profile_data = chosen_cohort.get("commercial_branch", chosen_cohort)
-
-	return {
-		"age": resolved_age,
-		"occupation": str(profile_data.get("role", "COMMERCIAL_SERVICE")),
-		"anchor_category": str(profile_data.get("anchor_category", "COMMERCIAL")),
-		"contract_class": str(profile_data.get("contract_class", "FORMAL_LEGAL")),
-		"weekly_hours": float(profile_data.get("weekly_hours", 37.5)),
-		"compensation_rate": float(profile_data.get("compensation_rate", 3.50)),
-		"unemployed_branch": chosen_cohort.get("unemployed_branch", {})
-	}
-
-static func resolve_citizen_education(demographics: Dictionary, rng: RandomNumberGenerator, age_years: int, is_high_density: bool) -> String:
-	var edu_model: Dictionary = demographics["education_attainment_model"]
-	var default_code: String = str(edu_model["default_code"])
-	var tiers: Array = edu_model["tiers"]
-
-	for tier in tiers:
-		var min_age: int = int(tier["min_age"])
-		if age_years < min_age:
-			continue
-
-		var prob: float = float(tier["base_probability"])
-		if is_high_density and tier.has("high_density_penalty"):
-			prob = max(0.01, prob - float(tier["high_density_penalty"]))
-
-		if rng.randf() < prob:
-			return str(tier["code"])
-
-	return default_code
+## -----------------------------------------------------------------------------
+## CENSUS & LABOR AUDIT
+## -----------------------------------------------------------------------------
 
 static func audit_generated_jobs_by_education() -> void:
 	print("\n==========================================================================")
@@ -430,7 +775,8 @@ static func audit_generated_jobs_by_education() -> void:
 			SUM(CASE WHEN c_cls.code = 'FORMAL_LEGAL' THEN 1 ELSE 0 END) AS formal_workers,
 			SUM(CASE WHEN c_cls.code = 'ENCLAVE_STUDENT' THEN 1 ELSE 0 END) AS students_pupils,
 			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code = 'PENSIONER' THEN 1 ELSE 0 END) AS pensioners,
-			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code != 'PENSIONER' THEN 1 ELSE 0 END) AS unemployed_or_informal
+			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code = 'HOME_MAKER' THEN 1 ELSE 0 END) AS homemakers,
+			SUM(CASE WHEN c_cls.code = 'INFORMAL_GREY' AND role.code NOT IN ('PENSIONER', 'HOME_MAKER') THEN 1 ELSE 0 END) AS unemployed_or_informal
 		FROM residents r
 		JOIN system_labels edu ON r.education_level_id = edu.label_id
 		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id
@@ -441,21 +787,24 @@ static func audit_generated_jobs_by_education() -> void:
 	"""
 	var summary_results: Array = DB_MANAGER.query_rows(summary_query)
 
-	print("\n--------------------------------------------------------------------------")
-	print("                     SUMMARY BY EDUCATION LEVEL                           ")
-	print("--------------------------------------------------------------------------")
-	print("  %-20s | %-8s | %-14s | %-10s | %-18s | %-10s" % ["Education Level", "Pop", "Formal Workers", "Students", "Unemployed/Informal", "Pensioners"])
+	print("\n------------------------------------------------------------------------------------------------")
+	print("                                SUMMARY BY EDUCATION LEVEL                                      ")
+	print("------------------------------------------------------------------------------------------------")
+	print("  %-20s | %-8s | %-14s | %-10s | %-12s | %-16s | %-10s" % [
+		"Education Level", "Pop", "Formal Workers", "Students", "Homemakers", "Unemployed/Other", "Pensioners"
+	])
 	print("  ------------------------------------------------------------------------------------------------")
 	for s_row in summary_results:
-		print("  %-20s | %-8d | %-14d | %-10d | %-18d | %-10d" % [
+		print("  %-20s | %-8d | %-14d | %-10d | %-12d | %-16d | %-10d" % [
 			str(s_row["education_level"]),
 			int(s_row["citizen_count"]),
 			int(s_row["formal_workers"]),
 			int(s_row["students_pupils"]),
+			int(s_row["homemakers"]),
 			int(s_row["unemployed_or_informal"]),
 			int(s_row["pensioners"])
 		])
 
-	print("==========================================================================")
+	print("================================================================================================")
 	print("  Total Contracted Citizens: %d" % total_city_jobs)
-	print("==========================================================================\n")
+	print("================================================================================================\n")

@@ -6,13 +6,14 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
 
-## Pass 2: Populates physical establishments, households, and job slots
+## Pass 2: Populates physical establishments, households, and job slots with authentic UK addresses
 static func run(
 	world_state: Dictionary,
 	archetypes: Dictionary,
 	building_classes: Dictionary,
 	job_definitions: Dictionary,
 	cultural: Dictionary,
+	lexicon: Dictionary,
 	rng: RandomNumberGenerator,
 	on_progress: Callable
 ) -> Dictionary:
@@ -45,6 +46,21 @@ static func run(
 	for dist_id in districts.keys():
 		block_estimates[dist_id] = float(districts[dist_id].get("estimated_population", 0.0))
 
+	# Address resolution tables from lexicon
+	var street_cfg: Dictionary = lexicon.get("street_names", {})
+	var street_roots: Array = street_cfg.get("roots", ["Victoria", "High", "Albert", "Church"])
+	var street_suffixes: Array = street_cfg.get("suffixes", ["Road", "Street", "Avenue", "Terrace"])
+
+	var bldg_cfg: Dictionary = lexicon.get("residential_building_names", {})
+	var bldg_roots: Array = bldg_cfg.get("roots", ["Birch", "Falcon", "Moor", "Westfield", "Victoria"])
+	var bldg_suffixes: Array = bldg_cfg.get("suffixes", ["House", "Court", "Towers", "Grange", "Mansions"])
+
+	var address_fmts: Dictionary = lexicon.get("address_formats", {})
+	var fmt_flat_unit: String = str(address_fmts.get("flat_unit", "Flat {door}, {building}"))
+	var fmt_flat_door: String = str(address_fmts.get("flat_door", "Flat {door}"))
+	var fmt_street_unit: String = str(address_fmts.get("street_unit", "{door} {street}"))
+	var fmt_street_door: String = str(address_fmts.get("street_door", "{door}"))
+
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
 		var district_type: String = str(d.get("district_type", ""))
@@ -58,6 +74,12 @@ static func run(
 		var exp_min: int = int(d.get("expected_pop_min", pop_range[0]))
 		var exp_max: int = int(d.get("expected_pop_max", pop_range[1]))
 		var center_vec: Vector2 = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
+
+		# 1. Establish Primary Street Name for this parcel
+		var street_root: String = str(street_roots[rng.randi() % street_roots.size()])
+		var street_suf: String = str(street_suffixes[rng.randi() % street_suffixes.size()])
+		var parcel_street_name := "%s %s" % [street_root, street_suf]
+		var street_door_counter: int = 1
 
 		dist_inserts.append("""
 			INSERT INTO districts (
@@ -84,7 +106,7 @@ static func run(
 
 		district_residents_map[dist_id] = []
 
-		# 1. Dedicated Institutional Anchor
+		# 2. Dedicated Institutional Anchor
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
@@ -100,16 +122,13 @@ static func run(
 			""" % [est_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			_register_est_cat(by_cat, cat_name, est_id, dist_id)
-			_register_est_cat(by_cat, "CIVIC", est_id, dist_id)
-			
 			current_slot_id = expand_staffing_slots(
-				available_job_slots, job_slot_inserts, current_slot_id,
-				est_id, dist_id, cat_name, cat_id,
-				inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+				available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+				cat_name, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 			)
 			est_id += 1
 
-		# 2. Sub-Block Embedded Civics placed in Pass 1
+		# 3. Sub-Block Embedded Civics placed in Pass 1
 		if d.has("embedded_civics"):
 			for civic_key in d["embedded_civics"]:
 				var c_arch: Dictionary = archetypes.get(civic_key, {})
@@ -127,21 +146,20 @@ static func run(
 				""" % [est_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
 				_register_est_cat(by_cat, c_cat_name, est_id, dist_id)
-				_register_est_cat(by_cat, "CIVIC", est_id, dist_id)
-
 				current_slot_id = expand_staffing_slots(
-					available_job_slots, job_slot_inserts, current_slot_id,
-					est_id, dist_id, c_cat_name, c_cat_id,
-					c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+					available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+					c_cat_name, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 				)
 				est_id += 1
 
-		# 3. Units from building_allocations
+		# 4. Units from building_allocations
 		var housing_prof: Dictionary = arch.get("housing_profile", {})
 		var res_type_code: String = str(housing_prof.get("residence_type", "NONE"))
 		var wealth_bracket: int = int(housing_prof.get("wealth_bracket", 2))
 		var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type_code)
 		var tenure_type: String = str(housing_prof.get("tenure_type", "COUNCIL_TENANT"))
+
+		var is_multi_flat_block: bool = (res_type_code == "COUNCIL_FLAT" or res_type_code == "FLAT_ABOVE_SHOP" or district_type == "high_density_high_rise")
 
 		var allocations: Array = d.get("building_allocations", [])
 		var block_tenancy_counts: Dictionary = {}
@@ -154,9 +172,26 @@ static func run(
 
 			# A. Residential Units
 			if num_homes > 0 and res_type_code != "NONE":
+				var building_name := ""
+				if is_multi_flat_block:
+					var b_root: String = str(bldg_roots[rng.randi() % bldg_roots.size()])
+					var b_suf: String = str(bldg_suffixes[rng.randi() % bldg_suffixes.size()])
+					building_name = "%s %s" % [b_root, b_suf]
+
 				for u_idx in range(num_homes):
-					var unit_door := "Unit %d-%d" % [b_idx + 1, u_idx + 1]
-					var unit_name := "%s, %s (%s)" % [unit_door, arch.get("display_name", "Parade"), dist_id]
+					var unit_door := ""
+					var unit_name := ""
+
+					if is_multi_flat_block:
+						var flat_num: int = u_idx + 1
+						unit_door = fmt_flat_door.replace("{door}", str(flat_num))
+						unit_name = fmt_flat_unit.replace("{door}", str(flat_num)).replace("{building}", building_name)
+					else:
+						var door_num: int = street_door_counter
+						street_door_counter += 1
+						unit_door = fmt_street_door.replace("{door}", str(door_num))
+						unit_name = fmt_street_unit.replace("{door}", str(door_num)).replace("{street}", parcel_street_name)
+
 					var is_vacant: int = 1 if (rng.randf() < 0.03) else 0
 
 					estab_inserts.append("""
@@ -205,7 +240,6 @@ static func run(
 					var tenancy: Dictionary = pick_tenancy(rng, comm_classes, embedded_civic_classes, district_type)
 					var cat_code: String = tenancy["code"]
 
-					# Local block tenancy collision avoidance
 					var max_per_block: int = 2 if cat_code in ["CORNER_SHOP", "LOCAL_PUB"] else 1
 					var attempts := 0
 					while block_tenancy_counts.get(cat_code, 0) >= max_per_block and attempts < 10:
@@ -247,9 +281,8 @@ static func run(
 
 					if is_vacant == 0:
 						current_slot_id = expand_staffing_slots(
-							available_job_slots, job_slot_inserts, current_slot_id,
-							est_id, dist_id, "COMMERCIAL", cat_id,
-							tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+							available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+							"COMMERCIAL", tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
 						)
 
 					est_id += 1
@@ -274,9 +307,8 @@ static func run(
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
 
 					current_slot_id = expand_staffing_slots(
-						available_job_slots, job_slot_inserts, current_slot_id,
-						est_id, dist_id, "INDUSTRIAL", i_cat_id,
-						ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+						available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+						"INDUSTRIAL", ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
 					)
 					est_id += 1
 
@@ -285,19 +317,20 @@ static func run(
 			DB_MANAGER.execute_batch(dist_inserts)
 			DB_MANAGER.execute_batch(estab_inserts)
 			DB_MANAGER.execute_batch(household_inserts)
-			DB_MANAGER.execute_batch(job_slot_inserts)
+			if not job_slot_inserts.is_empty():
+				DB_MANAGER.execute_batch(job_slot_inserts)
+				job_slot_inserts.clear()
+
 			dist_inserts.clear()
 			estab_inserts.clear()
 			household_inserts.clear()
-			job_slot_inserts.clear()
 
 			if on_progress.is_valid():
 				var pct: float = 20.0 + ((float(block_idx) / float(districts.size())) * 30.0)
 				on_progress.call(pct, 100.0, "Physical Premises: %d / %d blocks (%d units, %d slots)" % [block_idx, districts.size(), est_id - 1, current_slot_id - 1])
-			
-			var main_loop = Engine.get_main_loop()
-			if main_loop is SceneTree:
-				await (main_loop as SceneTree).process_frame
+				var loop = Engine.get_main_loop()
+				if loop is SceneTree:
+					await (loop as SceneTree).process_frame
 
 		block_idx += 1
 
@@ -309,6 +342,7 @@ static func run(
 		DB_MANAGER.execute_batch(household_inserts)
 	if not job_slot_inserts.is_empty():
 		DB_MANAGER.execute_batch(job_slot_inserts)
+		job_slot_inserts.clear()
 
 	print("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
 		est_id - 1, current_household_id - 1, available_job_slots.size()
@@ -322,26 +356,24 @@ static func run(
 		"available_job_slots": available_job_slots
 	}
 
-## Single authoritative staffing generator: unrolls master job definitions, records DB rows, and queues slot tracking
 static func expand_staffing_slots(
 	slots_array: Array[Dictionary],
 	sql_inserts: Array[String],
 	starting_slot_id: int,
-	estab_id: int,
-	dist_id: String,
-	category_code: String,
-	cat_label_id: int,
-	host_def: Dictionary,
+	estab_id: int, 
+	dist_id: String, 
+	category_code: String, 
+	host_def: Dictionary, 
 	job_definitions: Dictionary,
 	sim_start_day: int,
 	reason_id: int,
 	rng: RandomNumberGenerator
 ) -> int:
+	var slot_id_counter: int = starting_slot_id
 	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
 	var estab_bonus: float = float(host_def.get("wage_bonus", 0.0))
-	var next_slot_id: int = starting_slot_id
+	var default_schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
-	# 1. Multi-role detailed roster
 	if host_def.has("staffing_roster"):
 		for item in host_def["staffing_roster"]:
 			var job_code: String = str(item.get("job_id", item.get("role_title", "COMMERCIAL_SERVICE")))
@@ -351,12 +383,7 @@ static func expand_staffing_slots(
 			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "NO_FORMAL")))
 			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
 			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
-			var contract_type_code: String = str(item.get("contract_type", master_job.get("contract_type", "STANDARD")))
-			var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", contract_type_code)
 
-			var schedule_code: String = str(item.get("schedule_window", master_job.get("schedule_window", "DAYTIME")))
-			var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", schedule_code)
-			
 			var resolved_rate: float = 3.50
 			if item.has("hourly_rate"):
 				resolved_rate = float(item["hourly_rate"])
@@ -377,50 +404,40 @@ static func expand_staffing_slots(
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
 
 			for _i in range(count):
-				var slot_id: int = next_slot_id
-				next_slot_id += 1
+				var s_id: int = slot_id_counter
+				slot_id_counter += 1
 
-				sql_inserts.append("""
-					INSERT INTO workplace_job_slots (
-						slot_id, establishment_id, sector_category_id, role_title_id,
-						contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
-						weekly_hours, hourly_rate, is_field_worker,
-						is_filled, active_resident_id, valid_from, valid_to, change_reason_id
-					) VALUES (
-						%d, %d, %d, %d,
-						%d, %d, %d, %d,
-						%.1f, %.2f, %d,
-						0, NULL, %d, NULL, %d
-					);
-				""" % [
-					slot_id, estab_id, cat_label_id, role_id,
-					class_id, contract_type_id, edu_id, schedule_id,
-					hours, resolved_rate, 1 if is_field else 0,
-					sim_start_day, reason_id
-				])
-
+				# 1. In-memory queue for Pass 3 distance-decay matching
 				slots_array.append({
-					"slot_id": slot_id,
+					"slot_id": s_id,
 					"estab_id": estab_id,
 					"district_id": dist_id,
 					"cat": category_code,
-					"cat_id": cat_label_id,
 					"role": job_code,
-					"role_id": role_id,
 					"contract_class": contract_class,
-					"contract_class_id": class_id,
-					"contract_type": contract_type_code,
-					"contract_type_id": contract_type_id,
 					"edu_req": edu_req,
-					"edu_id": edu_id,
 					"rate": resolved_rate,
 					"hours": hours,
-					"schedule_window": schedule_code,
-					"schedule_window_id": schedule_id,
 					"is_field_worker": is_field
 				})
 
-	# 2. Single employee_range fallback
+				# 2. Relational persistence to SQLite workplace_job_slots
+				sql_inserts.append("""
+					INSERT INTO workplace_job_slots (
+						slot_id, establishment_id, role_title_id, contract_class_id,
+						min_education_level_id , schedule_window_id, weekly_hours, hourly_rate,
+						is_field_worker, is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+					) VALUES (
+						%d, %d, %d, %d,
+						%d, %d, %.1f, %.2f,
+						%d, 0, NULL, %d, NULL, %d
+					);
+				""" % [
+					s_id, estab_id, role_id, class_id,
+					edu_id, default_schedule_id, hours, resolved_rate,
+					1 if is_field else 0, sim_start_day, reason_id
+				])
+
 	else:
 		var emp_range: Array = host_def.get("employee_range", host_def.get("default_employees", [1, 3]))
 		var count: int = rng.randi_range(int(emp_range[0]), int(emp_range[1]))
@@ -430,59 +447,47 @@ static func expand_staffing_slots(
 		var default_edu: String = str(master.get("education_required", "NO_FORMAL"))
 		var default_hours: float = float(master.get("weekly_hours", 37.5))
 		var r_range: Array = master.get("hourly_rate_range", [3.20, 3.80])
-
-		var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", fallback_job)
-		var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", "FORMAL_LEGAL")
-		var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
-		var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
-		var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 		
+		var fallback_role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", fallback_job)
+		var formal_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", "FORMAL_LEGAL")
+		var fallback_edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
+
 		for _i in range(count):
-			var slot_id: int = next_slot_id
-			next_slot_id += 1
+			var s_id: int = slot_id_counter
+			slot_id_counter += 1
+
 			var rate: float = snappedf(rng.randf_range(float(r_range[0]), float(r_range[1])) * estab_multiplier, 0.05)
 
-			sql_inserts.append("""
-				INSERT INTO workplace_job_slots (
-					slot_id, establishment_id, sector_category_id, role_title_id,
-					contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
-					weekly_hours, hourly_rate, is_field_worker,
-					is_filled, active_resident_id, valid_from, valid_to, change_reason_id
-				) VALUES (
-					%d, %d, %d, %d,
-					%d, %d, %d, %d,
-					%.1f, %.2f, 0,
-					0, NULL, %d, NULL, %d
-				);
-			""" % [
-				slot_id, estab_id, cat_label_id, role_id,
-				class_id, contract_type_id, edu_id, schedule_id,
-				default_hours, rate,
-				sim_start_day, reason_id
-			])
-
 			slots_array.append({
-				"slot_id": slot_id,
+				"slot_id": s_id,
 				"estab_id": estab_id,
 				"district_id": dist_id,
 				"cat": category_code,
-				"cat_id": cat_label_id,
 				"role": fallback_job,
-				"role_id": role_id,
 				"contract_class": "FORMAL_LEGAL",
-				"contract_class_id": class_id,
-				"contract_type": "STANDARD",
-				"contract_type_id": contract_type_id,
 				"edu_req": default_edu,
-				"edu_id": edu_id,
 				"rate": rate,
 				"hours": default_hours,
-				"schedule_window": "DAYTIME",
-				"schedule_window_id": schedule_id,
 				"is_field_worker": false
 			})
 
-	return next_slot_id
+			sql_inserts.append("""
+				INSERT INTO workplace_job_slots (
+					slot_id, establishment_id, role_title_id, contract_class_id,
+					min_education_level_id , schedule_window_id, weekly_hours, hourly_rate,
+					is_field_worker, is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, %d, %d, %d,
+					%d, %d, %.1f, %.2f,
+					0, 0, NULL, %d, NULL, %d
+				);
+			""" % [
+				s_id, estab_id, fallback_role_id, formal_class_id,
+				fallback_edu_id, default_schedule_id, default_hours, rate,
+				sim_start_day, reason_id
+			])
+
+	return slot_id_counter
 
 static func pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionary, secondary_classes: Dictionary, district_type: String) -> Dictionary:
 	var pool: Array[Dictionary] = []
@@ -552,3 +557,4 @@ static func roll_household_culture(cultural: Dictionary, rng: RandomNumberGenera
 		"religion": chosen_rel,
 		"surnames_pool": eth_profile.get("surnames_pool", "surnames")
 	}
+	
