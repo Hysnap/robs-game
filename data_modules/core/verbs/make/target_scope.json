@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb": "MAKE",
+    "description": "Targeting rules for manufacturing and recipe-driven batch assembly."
+  },
+  "target_scopes": [
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [
+    {
+      "id": "MAKE_RECIPE",
+      "label_token": "UI_TARGET_MAKE_RECIPE",
+      "domain": "RECIPE",
+      "catalog_source": "recipe_registry"
+    }
+  ]
+}

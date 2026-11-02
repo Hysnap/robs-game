@@ -309,7 +309,7 @@
 	  "core_weight": 15,
 	  "inner_weight": 70,
 	  "mid_weight": 20,
-	"outer_weight": 05	
+	  "outer_weight": 5
 	},
 	"population_range": [
 	  80,

@@ -18,6 +18,7 @@ var selected_district_id: String = ""
 
 const DISTRICT_PERCEPTION_FILTER = preload("res://systems/multilayer_info_loop/district_perception_filter.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
+const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -66,6 +67,21 @@ func initialize_fresh_state() -> void:
 		world_state["metadata"] = {"calendar_year": 1980, "current_week_tick": 1, "current_day_tick": 1, "active_seed": "default-city"}
 		world_state["finances"] = {"liquid_cash": 0.0, "clean_bank_balance": 0.0}
 		world_state["operations"] = {"fatigue": 0.0}
+
+	# 3. Dynamic Catalog Ingestion via CommodityManager (Rule 1 & Rule 8)
+	var core_commodities := "res://data_modules/core/commodities/"
+	world_state["commodity_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(core_commodities)
+	if world_state["commodity_registry"].is_empty():
+		push_warning("[GAME_STATE] No commodities loaded from %s" % core_commodities)
+	else:
+		print("[GAME_STATE] Ingested %d catalog commodities." % world_state["commodity_registry"].size())
+
+	var core_recipes := "res://data_modules/core/recipes/"
+	world_state["recipe_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(core_recipes)
+	if world_state["recipe_registry"].is_empty():
+		push_warning("[GAME_STATE] No recipes loaded from %s" % core_recipes)
+	else:
+		print("[GAME_STATE] Ingested %d recipes." % world_state["recipe_registry"].size())
 
 	print("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()

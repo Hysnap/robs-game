@@ -2,34 +2,46 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "District-level consumer confidence, spending buoyancy, and price tolerance versus economic distress"
+    "description": "Spatial district consumer confidence, market optimism, and willingness to spend."
   },
   "metric_id": "CONSUMER_SENTIMENT",
   "label_token": "UI_METRIC_CONSUMER_SENTIMENT",
-  "format": "FLOAT",
-  "decimals": 2,
+  "target_scope": "SPATIAL",
+  "routing_mode": "DIRECT",
+  "state_container": "districts",
+  "state_field": "consumer_sentiment",
+  "format": "PERCENT",
+  "decimals": 1,
+  "min_value": 0.0,
+  "max_value": 1.0,
+  "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "consumer_sentiment"
+    "state_path": "districts.consumer_sentiment"
   },
   "tuning": {
-    "default_baseline_sentiment": 1.0,
-    "passive_drift_per_tick": 0.02
+    "default_baseline_sentiment": 0.50,
+    "passive_drift_per_tick": 0.02,
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 1.0
   },
   "perception": {
-    "target_field": "sentiment_bucket_token",
-    "mode": "N_BUCKET",
-    "fuzz_jitter_min": -0.10,
-    "fuzz_jitter_max": 0.10,
-    "home_modifier": 0.05,
-    "error_floor": 0.02,
-    "fallback_token": "UI_INTEL_MASKED_BLANK",
-    "buckets": [
-      { "max": 0.35, "token": "UI_SENTIMENT_DESPERATE" },
-      { "max": 0.70, "token": "UI_SENTIMENT_PESSIMISTIC" },
-      { "max": 1.15, "token": "UI_SENTIMENT_NEUTRAL" },
-      { "max": 1.60, "token": "UI_SENTIMENT_CONFIDENT" },
-      { "token": "UI_SENTIMENT_BUOYANT" }
-    ]
+    "bucket_channel": {
+      "id": "sentiment_bucket",
+      "source_field": "consumer_sentiment",
+      "target_field": "sentiment_bucket_token",
+      "mode": "N_BUCKET",
+      "fuzz_jitter_min": -0.05,
+      "fuzz_jitter_max": 0.05,
+      "home_modifier": 0.02,
+      "error_floor": 0.01,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "buckets": [
+        { "max": 0.25, "token": "UI_SENTIMENT_DESPERATE" },
+        { "max": 0.45, "token": "UI_SENTIMENT_DISSATISFIED" },
+        { "max": 0.75, "token": "UI_SENTIMENT_CONTENT" },
+        { "token": "UI_SENTIMENT_ELATED" }
+      ]
+    }
   }
 }

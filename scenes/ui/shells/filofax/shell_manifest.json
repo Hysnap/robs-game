@@ -2,6 +2,8 @@
   "id": "filofax",
   "display_name": "1984 Personal Organiser",
   "spread_scene": "res://scenes/ui/shells/filofax/filofax_spread.tscn",
+  "inbox_manifest": "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_inbox.json",
+  "order_composer_manifest": "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_order_pad.json",
   "default_theme_profile": "classic_1984_oxblood",
   "supports_customizer": true
 }

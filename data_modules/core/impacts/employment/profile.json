@@ -2,19 +2,30 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Labor market employment ratio and formal economic activity partition across a spatial catchment"
+    "description": "Spatial district labor participation and citizen employment rate."
   },
   "metric_id": "EMPLOYMENT",
   "label_token": "UI_METRIC_EMPLOYMENT",
+  "target_scope": "SPATIAL",
+  "routing_mode": "DIRECT",
+  "state_container": "districts",
+  "state_field": "actual_employment_rate",
   "format": "PERCENT",
   "decimals": 1,
+  "min_value": 0.0,
+  "max_value": 1.0,
+  "suffix": "%",
   "telemetry_source": {
-    "type": "SQLITE_DYNAMIC",
-    "query_field": "employment_rate"
+    "type": "DATABASE_AGGREGATE",
+    "table": "citizens",
+    "aggregate": "AVG(CASE WHEN employment_status = 'EMPLOYED' THEN 1.0 ELSE 0.0 END)",
+    "where": "district_id = '{id}' AND age >= 16 AND age < 65"
   },
   "tuning": {
-    "default_baseline_employment_rate": 0.88,
-    "min_labor_age": 16
+    "default_baseline": 0.88,
+    "passive_drift_per_tick": 0.005,
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 1.0
   },
   "perception": {
     "bucket_channel": {
@@ -45,6 +56,23 @@
       "home_modifier": 0.10,
       "error_floor": 0.03,
       "fallback_token": "UI_INTEL_MASKED_BLANK"
+    },
+    "bucket_employment_channel": {
+      "id": "employment_bucket",
+      "source_field": "actual_employment_rate",
+      "target_field": "employment_bucket_token",
+      "mode": "N_BUCKET",
+      "fuzz_jitter_min": -0.04,
+      "fuzz_jitter_max": 0.04,
+      "home_modifier": 0.015,
+      "error_floor": 0.01,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "buckets": [
+        { "max": 0.70, "token": "UI_EMPLOYMENT_DEPRESSED" },
+        { "max": 0.82, "token": "UI_EMPLOYMENT_STAGNANT" },
+        { "max": 0.93, "token": "UI_EMPLOYMENT_STABLE" },
+        { "token": "UI_EMPLOYMENT_BOOMING" }
+      ]
     }
   }
 }

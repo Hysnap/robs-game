@@ -1,26 +1,38 @@
 {
   "_meta": {
-    "version": "1.1.0",
-    "scope": "IMPACT_METRIC_PROFILE"
+    "version": "1.3.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Civic infrastructure condition, structural upkeep, and district physical livability."
   },
   "metric_id": "ZONE_HEALTH",
-  "label_token": "UI_LBL_ZONE_HEALTH",
+  "label_token": "UI_METRIC_ZONE_HEALTH",
+  "target_scope": "SPATIAL",
+  "routing_mode": "DIRECT",
+  "state_container": "districts",
+  "state_field": "zone_health_index",
   "format": "FLOAT",
   "decimals": 1,
   "min_value": 0.0,
   "max_value": 100.0,
-  "suffix": " / 100",
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "actual_zone_health"
+    "state_path": "districts.{id}.zone_health_index"
+  },
+  "tuning": {
+    "default_baseline": 80.0,
+    "passive_recovery_per_tick": 1.0,
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 100.0
   },
   "perception": {
+    "id": "zone_health_bucket",
+    "source_field": "zone_health_index",
     "target_field": "zone_health_bucket_token",
     "mode": "N_BUCKET",
-    "fuzz_jitter_min": -0.08,
-    "fuzz_jitter_max": 0.08,
-    "home_modifier": 0.05,
-    "error_floor": 0.02,
+    "fuzz_jitter_min": -2.5,
+    "fuzz_jitter_max": 2.5,
+    "home_modifier": 1.0,
+    "error_floor": 0.5,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
       { "max": 20.0, "token": "UI_ZHI_COLLAPSED" },

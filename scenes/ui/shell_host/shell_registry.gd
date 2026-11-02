@@ -58,6 +58,26 @@ static func get_shell_manifest(shell_id: String) -> Dictionary:
 	push_error("[ShellRegistry FATAL] No valid shell manifests discovered in %s" % SHELLS_DIR)
 	return {}
 
+## Returns the path to the active inbox stationery manifest declared in the active shell manifest
+static func get_active_inbox_manifest_path() -> String:
+	var shell_id := get_configured_shell_id()
+	var manifest := get_shell_manifest(shell_id)
+	var inbox_path: String = str(manifest.get("inbox_manifest", ""))
+	if inbox_path.is_empty():
+		push_warning("[ShellRegistry] Shell '%s' manifest missing 'inbox_manifest'. Using default filofax inbox." % shell_id)
+		return "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_inbox.json"
+	return inbox_path
+
+## Returns the path to the active order compilation manifest declared in the active shell manifest
+static func get_active_order_composer_manifest_path() -> String:
+	var shell_id := get_configured_shell_id()
+	var manifest := get_shell_manifest(shell_id)
+	var composer_path: String = str(manifest.get("order_composer_manifest", ""))
+	if composer_path.is_empty():
+		push_warning("[ShellRegistry] Shell '%s' manifest missing 'order_composer_manifest'. Using default filofax order pad." % shell_id)
+		return "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_order_pad.json"
+	return composer_path
+
 ## Instantiates and returns the spread wrapper scene for the active shell
 static func instantiate_active_spread() -> Control:
 	var shell_id := get_configured_shell_id()

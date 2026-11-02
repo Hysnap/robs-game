@@ -2,22 +2,35 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Active contracted workforce staffing headcount at an individual establishment"
+    "description": "Spatial district total commercial workforce and active establishment staffing headcount."
   },
   "metric_id": "ESTABLISHMENT_HEADCOUNT",
-  "label_token": "UI_LBL_WORKFORCE_COUNT",
+  "label_token": "UI_METRIC_ESTABLISHMENT_HEADCOUNT",
+  "target_scope": "SPATIAL",
+  "routing_mode": "DIRECT",
+  "state_container": "districts",
+  "state_field": "actual_establishment_headcount",
   "format": "INTEGER",
   "decimals": 0,
+  "min_value": 0,
+  "max_value": 50000,
+  "suffix": " staff",
   "telemetry_source": {
-    "type": "SQLITE_DYNAMIC",
-    "query_field": "active_workforce_count"
+    "type": "DATABASE_AGGREGATE",
+    "table": "establishments",
+    "aggregate": "COALESCE(SUM(staff_count), 0)",
+    "where": "district_id = '{id}'"
   },
   "tuning": {
-    "default_baseline_headcount": 0,
-    "allow_overstaffing": false
+    "default_baseline": 250,
+    "minimum_floor": 0,
+    "maximum_ceiling": 50000
   },
   "perception": {
-    "target_field": "worker_count",
+    "STEPPED_ROUNDING":{
+    "id": "headcount_bucket",
+    "source_field": "actual_establishment_headcount",
+    "target_field": "headcount_bucket_token",
     "mode": "STEPPED_ROUNDING",
     "default_step": 1,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
@@ -27,5 +40,23 @@
       { "threshold": 250, "round_to": 25 },
       { "threshold": 1000, "round_to": 100 }
     ]
+  },
+    "bucket_channel": {
+      "id": "headcount_bucket",
+      "source_field": "actual_establishment_headcount",
+      "target_field": "headcount_bucket_token",
+      "mode": "N_BUCKET",
+      "fuzz_jitter_min": -5.0,
+      "fuzz_jitter_max": 5.0,
+      "home_modifier": 2.0,
+      "error_floor": 1.0,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "buckets": [
+        { "max": 50, "token": "UI_HEADCOUNT_DESERTED" },
+        { "max": 200, "token": "UI_HEADCOUNT_SKELETON" },
+        { "max": 1000, "token": "UI_HEADCOUNT_STAFFED" },
+        { "token": "UI_HEADCOUNT_CONGESTED" }
+      ]
+    }
   }
 }

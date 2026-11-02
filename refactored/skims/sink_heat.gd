@@ -2,7 +2,7 @@
 class_name SinkPoliceHeat
 extends ImpactSinkBase
 
-const PROFILE_PATH := "res://data_modules/crime/impacts/police_heat/profile.json"
+const PROFILE_PATH := "res://data_modules/core/impacts/police_heat/profile.json"
 
 static var _tuning_cache: Dictionary = {}
 

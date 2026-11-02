@@ -2,20 +2,27 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Liquid transactional capital held by actors, ledgers, or organizational vaults"
+    "description": "Liquid cash currency across operatives, NPCs, and the central player vault."
   },
   "metric_id": "CASH",
   "label_token": "UI_METRIC_CASH",
+  "target_scope": "ACTOR",
+  "routing_mode": "MULTI_CONTAINER",
+  "state_container": "finances",
+  "state_field": "liquid_cash",
   "format": "CURRENCY",
   "decimals": 2,
-  "target_scope": "ACTOR",
+  "min_value": 0.0,
+  "max_value": 1000000000.0,
   "telemetry_source": {
     "type": "WORLD_STATE",
     "state_path": "finances.liquid_cash"
   },
   "tuning": {
     "default_baseline_float": 0.0,
-    "allow_negative_balance": false
+    "allow_negative_balance": false,
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 1000000000.0
   },
   "perception": {
     "target_field": "cash_bucket_token",

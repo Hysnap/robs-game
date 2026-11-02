@@ -104,3 +104,19 @@ static func _load_verb_mappings(path: String) -> void:
 		var json: JSON = JSON.new()
 		if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
 			_verb_mappings.merge(json.data, true)
+
+## Returns a sorted list of all active mounted verb tokens
+static func get_registered_verbs() -> Array[String]:
+	if not _initialized:
+		initialize()
+	var verbs: Array[String] = []
+	for k in _registry.keys():
+		verbs.append(str(k))
+	verbs.sort()
+	return verbs
+
+## Returns active alias verb mappings
+static func get_verb_mappings() -> Dictionary:
+	if not _initialized:
+		initialize()
+	return _verb_mappings.duplicate(true)

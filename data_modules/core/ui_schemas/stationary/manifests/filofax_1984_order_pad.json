@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "manifest_type": "ORDER_COMPOSER_MANIFEST",
+    "id": "filofax_1984_order_pad",
+    "description": "Multi-note pastel adhesive order pad for 1984 Filofax organizer."
+  },
+  "stationery_definition": "res://data_modules/core/ui_schemas/stationary/definitions/sticky_note.json",
+  "palette_slots": {
+    "StickyNote_Action": "CANARY",
+    "StickyNote_What": "LIGHTBLUE",
+    "StickyNote_Amount": "PEACH",
+    "StickyNote_Who": "MINTGREEN",
+    "StickyNote_Where": "LAVENDER",
+    "StickyNote_Estimate": "ROSEPINK"
+  }
+}

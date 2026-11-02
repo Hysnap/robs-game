@@ -1,25 +1,34 @@
 {
   "_meta": {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Statutory oversight pressure from Customs & Excise, Weights & Measures, and Trading Standards"
+    "description": "Municipal health, customs, and commercial regulatory audit pressure applied to districts and operations."
   },
   "metric_id": "REGULATORY_SCRUTINY",
   "label_token": "UI_METRIC_REGULATORY_SCRUTINY",
+  "target_scope": "SPATIAL",
+  "routing_mode": "DIRECT",
+  "state_container": "districts",
+  "state_field": "regulatory_scrutiny",
   "format": "PERCENT",
-  "decimals": 0,
+  "decimals": 1,
   "min_value": 0.0,
   "max_value": 1.0,
+  "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
     "state_path": "districts.{id}.regulatory_scrutiny"
   },
   "tuning": {
-    "ambient_decay_step": 0.02,
-    "min_scrutiny_floor": 0.0
+    "default_baseline": 0.0,
+    "ambient_decay_step": 0.05,
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 1.0
   },
   "perception": {
-    "target_field": "regulatory_scrutiny_bucket_token",
+    "id": "scrutiny_bucket",
+    "source_field": "regulatory_scrutiny",
+    "target_field": "scrutiny_bucket_token",
     "mode": "N_BUCKET",
     "fuzz_jitter_min": -0.10,
     "fuzz_jitter_max": 0.10,

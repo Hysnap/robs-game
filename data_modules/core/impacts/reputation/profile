@@ -2,35 +2,46 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Standing, esteem, and relational trust held with actors, establishments, and organizations"
+    "description": "Public, interpersonal, and institutional standing across actors, organizations, and spatial districts."
   },
   "metric_id": "REPUTATION",
   "label_token": "UI_METRIC_REPUTATION",
-  "format": "FLOAT",
-  "decimals": 1,
   "target_scope": "ACTOR",
+  "routing_mode": "MULTI_CONTAINER",
+  "state_container": "standings",
+  "state_field": "reputation",
+  "format": "SIGNED_FLOAT",
+  "decimals": 2,
+  "min_value": -1.0,
+  "max_value": 1.0,
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "reputation"
+    "state_path": "standings.{id}"
   },
   "tuning": {
     "default_baseline_reputation": 0.0,
-    "passive_decay_rate_per_tick": 0.01
+    "passive_decay_rate_per_tick": 0.02,
+    "minimum_floor": -1.0,
+    "maximum_ceiling": 1.0
   },
   "perception": {
-    "target_field": "reputation_bucket_token",
-    "mode": "N_BUCKET",
-    "fuzz_jitter_min": -0.08,
-    "fuzz_jitter_max": 0.08,
-    "home_modifier": 0.05,
-    "error_floor": 0.02,
-    "fallback_token": "UI_INTEL_MASKED_BLANK",
-    "buckets": [
-      { "max": -0.50, "token": "UI_REP_REVILED" },
-      { "max": -0.15, "token": "UI_REP_DISTRUSTED" },
-      { "max": 0.20, "token": "UI_REP_NEUTRAL" },
-      { "max": 0.60, "token": "UI_REP_RESPECTED" },
-      { "token": "UI_REP_REVERED" }
-    ]
+    "bucket_channel": {
+      "id": "reputation_bucket",
+      "source_field": "reputation",
+      "target_field": "reputation_bucket_token",
+      "mode": "N_BUCKET",
+      "fuzz_jitter_min": -0.05,
+      "fuzz_jitter_max": 0.05,
+      "home_modifier": 0.02,
+      "error_floor": 0.01,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "buckets": [
+        { "max": -0.60, "token": "UI_REP_LOATHED" },
+        { "max": -0.20, "token": "UI_REP_DISTORIOUS" },
+        { "max": 0.20, "token": "UI_REP_NEUTRAL" },
+        { "max": 0.60, "token": "UI_REP_FAVORED" },
+        { "token": "UI_REP_REVERED" }
+      ]
+    }
   }
 }

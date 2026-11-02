@@ -14,7 +14,12 @@
   "header_template": "{title} • WK {week}",
   "palettes": {
     "YELLOW": { "bg": "#fff9a6", "ink": "#1a1a1a", "title": "MEMO NOTE" },
-    "MINT":   { "bg": "#d4fcd6", "ink": "#102413", "title": "FIELD NOTE" },
-    "ROSE":   { "bg": "#ffd1d5", "ink": "#2b1114", "title": "URGENT DISPATCH" }
+    "MINT":   { "bg": "#d4fcd5", "ink": "#102413", "title": "FIELD NOTE" },
+    "CANARY":   { "bg": "#ffd1d5", "ink": "#2b1114", "title": "ACTION" },
+    "LIGHTBLUE":   { "bg": "#bae1ff", "ink": "#2b1114", "title": "WHAT" },
+    "PEACH":   { "bg": "#ffd8b1", "ink": "#2b1114", "title": "AMOUNT" },
+    "MINTGREEN":   { "bg": "#d4fcd6", "ink": "#2b1114", "title": "WHO" },
+    "LAVENDER":   { "bg": "#e8dff5", "ink": "#2b1114", "title": "WHERE" },
+    "ROSEPINK":   { "bg": "#ffd1d6", "ink": "#2b1114", "title": "ESTIMATE" }
   }
 }

@@ -1,3 +1,29 @@
 {
-  "target_scopes": ["DISTRICT", "ESTABLISHMENT"]
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb": "INVESTIGATE",
+    "description": "Targeting rules for reconnaissance, sourcing, and surveillance."
+  },
+  "target_scopes": [
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [
+    {
+      "id": "AREA_RECON",
+      "label_token": "UI_TARGET_GENERAL_AREA_SURVEY",
+      "domain": "NONE"
+    },
+    {
+      "id": "SOURCE_COMMODITY",
+      "label_token": "UI_TARGET_SOURCE_COMMODITY",
+      "domain": "COMMODITY",
+      "catalog_source": "commodity_registry"
+    },
+    {
+      "id": "SHADOW_PERSON",
+      "label_token": "UI_TARGET_SHADOW_PERSON",
+      "domain": "CONTACT"
+    }
+  ]
 }

@@ -1,3 +1,19 @@
 {
-  "target_scopes": ["DISTRICT", "ESTABLISHMENT"]
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb": "BUY",
+    "description": "Targeting rules for purchasing commodities and wholesale inventory."
+  },
+  "target_scopes": [
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [
+    {
+      "id": "BUY_COMMODITY",
+      "label_token": "UI_TARGET_BUY_COMMODITY",
+      "domain": "COMMODITY",
+      "catalog_source": "commodity_registry"
+    }
+  ]
 }
