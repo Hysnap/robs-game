@@ -24,9 +24,12 @@ func build_ui() -> void:
 
 	# --- Section: vault_summary ---
 	var sec_vault_summary := VBoxContainer.new()
+	sec_vault_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_vault_summary.add_theme_constant_override("separation", 2)
 	var hdr_vault_summary := Label.new()
 	hdr_vault_summary.text = "[ " + tr("UI_SEC_VAULT_RESERVES").to_upper() + " ]"
+	hdr_vault_summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_vault_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_vault_summary.add_theme_font_override("font", mono_font)
 	hdr_vault_summary.add_theme_color_override("font_color", clr_blue)
 	sec_vault_summary.add_child(hdr_vault_summary)
@@ -39,11 +42,14 @@ func build_ui() -> void:
 	var lbl_liquid_cash := Label.new()
 	lbl_liquid_cash.text = tr("UI_LBL_LIQUID_CASH")
 	lbl_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_liquid_cash.add_theme_font_override("font", mono_font)
 	lbl_liquid_cash.add_theme_color_override("font_color", clr_muted)
 	row_liquid_cash.add_child(lbl_liquid_cash)
 	var val_liquid_cash := Label.new()
 	val_liquid_cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_liquid_cash.add_theme_font_override("font", mono_font)
 	val_liquid_cash.add_theme_color_override("font_color", clr_black)
 	row_liquid_cash.add_child(val_liquid_cash)
@@ -55,11 +61,14 @@ func build_ui() -> void:
 	var lbl_filed_receipts_total := Label.new()
 	lbl_filed_receipts_total.text = tr("UI_LBL_EXPENSE_TOTAL")
 	lbl_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_filed_receipts_total.add_theme_font_override("font", mono_font)
 	lbl_filed_receipts_total.add_theme_color_override("font_color", clr_muted)
 	row_filed_receipts_total.add_child(lbl_filed_receipts_total)
 	var val_filed_receipts_total := Label.new()
 	val_filed_receipts_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_filed_receipts_total.add_theme_font_override("font", mono_font)
 	val_filed_receipts_total.add_theme_color_override("font_color", clr_black)
 	row_filed_receipts_total.add_child(val_filed_receipts_total)
@@ -69,6 +78,8 @@ func build_ui() -> void:
 	# --- Inscriptions Container ---
 	var hdr_insc := Label.new()
 	hdr_insc.text = "[ " + tr("UI_SEC_FILED_RECEIPTS").to_upper() + " ]"
+	hdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_insc.add_theme_font_override("font", mono_font)
 	hdr_insc.add_theme_color_override("font_color", clr_blue)
 	add_child(hdr_insc)
@@ -106,6 +117,8 @@ func inscribe_entry(entry: Dictionary) -> void:
 		note_lbl.text = "[" + author + "] " + text_content
 	else:
 		note_lbl.text = text_content
+	note_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
 	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	target_box.add_child(note_lbl)

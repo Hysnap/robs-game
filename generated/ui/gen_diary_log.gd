@@ -24,9 +24,12 @@ func build_ui() -> void:
 
 	# --- Section: diary_header ---
 	var sec_diary_header := VBoxContainer.new()
+	sec_diary_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_diary_header.add_theme_constant_override("separation", 2)
 	var hdr_diary_header := Label.new()
 	hdr_diary_header.text = "[ " + tr("UI_SEC_DISPATCH_DIARY").to_upper() + " ]"
+	hdr_diary_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_diary_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_diary_header.add_theme_font_override("font", mono_font)
 	hdr_diary_header.add_theme_color_override("font_color", clr_blue)
 	sec_diary_header.add_child(hdr_diary_header)
@@ -39,11 +42,14 @@ func build_ui() -> void:
 	var lbl_current_week := Label.new()
 	lbl_current_week.text = tr("UI_LBL_CURRENT_WEEK")
 	lbl_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_current_week.add_theme_font_override("font", mono_font)
 	lbl_current_week.add_theme_color_override("font_color", clr_muted)
 	row_current_week.add_child(lbl_current_week)
 	var val_current_week := Label.new()
 	val_current_week.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_current_week.add_theme_font_override("font", mono_font)
 	val_current_week.add_theme_color_override("font_color", clr_black)
 	row_current_week.add_child(val_current_week)
@@ -55,11 +61,14 @@ func build_ui() -> void:
 	var lbl_dispatched_count := Label.new()
 	lbl_dispatched_count.text = tr("UI_LBL_DISPATCH_COUNT")
 	lbl_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_dispatched_count.add_theme_font_override("font", mono_font)
 	lbl_dispatched_count.add_theme_color_override("font_color", clr_muted)
 	row_dispatched_count.add_child(lbl_dispatched_count)
 	var val_dispatched_count := Label.new()
 	val_dispatched_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_dispatched_count.add_theme_font_override("font", mono_font)
 	val_dispatched_count.add_theme_color_override("font_color", clr_black)
 	row_dispatched_count.add_child(val_dispatched_count)
@@ -69,6 +78,8 @@ func build_ui() -> void:
 	# --- Inscriptions Container ---
 	var hdr_insc := Label.new()
 	hdr_insc.text = "[ " + tr("UI_SEC_DISPATCH_INSCRIPTIONS").to_upper() + " ]"
+	hdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_insc.add_theme_font_override("font", mono_font)
 	hdr_insc.add_theme_color_override("font_color", clr_blue)
 	add_child(hdr_insc)
@@ -104,6 +115,8 @@ func inscribe_entry(entry: Dictionary) -> void:
 		note_lbl.text = "[" + author + "] " + text_content
 	else:
 		note_lbl.text = text_content
+	note_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
 	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	target_box.add_child(note_lbl)

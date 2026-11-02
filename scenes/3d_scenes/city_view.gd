@@ -11,6 +11,7 @@ const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
+const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/shells/filofax/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
 
@@ -150,6 +151,15 @@ func _setup_compiled_shell_host_views() -> void:
 	if diary_class:
 		view_host.register_view("DIARY", diary_class.new())
 
+	# Sub-Docket Inspection Views (Option A - Driven dynamically by schema route)
+	var estab_class = load("res://generated/ui/gen_establishment_docket.gd")
+	if estab_class:
+		view_host.register_view("ESTABLISHMENT_DOCKET", estab_class.new())
+
+	var res_class = load("res://generated/ui/gen_residential_docket.gd")
+	if res_class:
+		view_host.register_view("RESIDENTIAL_DOCKET", res_class.new())
+
 	# D. Mount Interactive Action Planner into ACTION slot
 	var action_planner_view: Control = null
 	var planner_class = load("res://generated/ui/gen_action_planner.gd")
@@ -167,11 +177,13 @@ func _setup_compiled_shell_host_views() -> void:
 	# F. Query active spread for its era-specific composer modal (duck-typed)
 	var era_modal: Control = outer_shell.get_slot("MODAL")
 
-	# G. Connect all three systems to ViewHost
-	if view_host and action_planner_view:
-		view_host.attach_action_system(action_planner_view, feedback_inbox, era_modal)
+	# G. Connect ViewHost signals
+	if view_host:
+		if action_planner_view:
+			view_host.attach_action_system(action_planner_view, feedback_inbox, era_modal)
 		view_host.action_requested.connect(_on_view_host_action_requested)
 		view_host.triage_slip_action.connect(_on_view_host_slip_triage)
+		view_host.item_selected.connect(_on_view_host_item_selected)
 
 	view_host.switch_to_domain("DOSSIER")
 
@@ -214,6 +226,13 @@ func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> v
 		OperationsControllerScript.file_card_slip(card_payload, view_host)
 	else:
 		print("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
+
+func _on_view_host_item_selected(target_route: String, filter_key: Variant) -> void:
+	var estab_id: int = int(filter_key)
+	var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
+	if view_host != null:
+		view_host.switch_to_domain(target_route)
+		view_host.update_active_view_data(docket_data)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:

@@ -47,7 +47,6 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		if cfg.load(BUSINESS_RULES_PATH) == OK:
 			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
 
-	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)		
 	if not staged_directives.is_empty():
 		for i in range(staged_directives.size()):
 			var directive: Dictionary = staged_directives[i]
@@ -131,9 +130,11 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		_ImpactRouter.dispatch_ambient_tick(world_state)
 
 	# Store the single canonical time offset
+	var dow := _CalendarHelper.day_of_week(current_day)
 	meta["current_sim_day"] = current_day
 	meta["current_week_tick"] = _CalendarHelper.day_to_week(current_day)
-	meta["current_day_tick"] = _CalendarHelper.day_of_week(current_day)
+	meta["current_day_tick"] = dow
+	meta["current_day_of_week"] = dow
 	world_state["metadata"] = meta
 
 	# 3. Inform GameState (Observer Pattern)
@@ -151,9 +152,9 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	return {
 		"current_sim_day": current_day,
-		"calendar_date":_CalendarHelper.day_to_calendar_date(current_day),
+		"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 		"week": meta["current_week_tick"],
-		"day_of_week": meta["current_day_of_week"],
+		"day_of_week": dow,
 		"week_rollover": crossed_boundary,
 		"executed_events": executed_events,
 		"diary_memos": diary_memos

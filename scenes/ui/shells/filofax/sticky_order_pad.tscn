@@ -4,11 +4,11 @@
 
 [node name="StickyOrderPad" type="PanelContainer"]
 z_index = 25
-custom_minimum_size = Vector2(380, 430)
+custom_minimum_size = Vector2(380, 480)
 offset_left = 550.0
-offset_top = 130.0
+offset_top = 110.0
 offset_right = 930.0
-offset_bottom = 560.0
+offset_bottom = 590.0
 script = ExtResource("1_order_pad")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -89,7 +89,7 @@ layout_mode = 2
 
 [node name="WhoLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Who/VBox"]
 layout_mode = 2
-text = "4. WHO"
+text = "4. WHO (ASSIGNED)"
 
 [node name="WhoOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Who/VBox"]
 layout_mode = 2
@@ -104,9 +104,15 @@ layout_mode = 2
 
 [node name="WhereLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
 layout_mode = 2
-text = "5. WHERE"
+text = "5. WHERE & CONTACT"
+
+[node name="WhereFilterOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
+layout_mode = 2
 
 [node name="WhereOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
+layout_mode = 2
+
+[node name="ContactOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox"]
 layout_mode = 2
 
 [node name="StickyNote_Estimate" type="PanelContainer" parent="VBox/NotesGrid"]

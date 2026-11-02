@@ -26,7 +26,7 @@ static func compile_all() -> void:
 	dir.list_dir_end()
 
 	sync_localization_tokens(harvested_tokens)
-	print("[UICompiler] Build complete. Artifacts written to: " + OUTPUT_DIR)
+	print("[UICompiler] Build and verification complete. Artifacts written to: " + OUTPUT_DIR)
 
 static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> void:
 	var file := FileAccess.open(schema_path, FileAccess.READ)
@@ -43,17 +43,37 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	var target_filename := "gen_" + schema_path.get_file().replace(".json", ".gd")
 	var out_path := OUTPUT_DIR + target_filename
 
+	# 1. Harvest and Deduplicate Signals
+	var declared_signals: Dictionary = {}
+	var signal_defs: Array[String] = []
+
+	for sig in meta.get("signals", []):
+		var sig_str: String = str(sig).strip_edges()
+		var base_name: String = sig_str.split("(")[0].strip_edges()
+		if not declared_signals.has(base_name):
+			declared_signals[base_name] = true
+			signal_defs.append(sig_str)
+
+	# Auto-discover signals needed by interactive primitives
+	var sections: Array = schema.get("sections", [])
+	for sec in sections:
+		for row in sec.get("rows", []):
+			var r_type: String = row.get("type", "").to_upper()
+			if r_type == "LINKED_LIST" or r_type == "CIVIC_SUMMARY":
+				var sig_name: String = str(row.get("action_signal", "item_selected")).strip_edges()
+				if not declared_signals.has(sig_name):
+					declared_signals[sig_name] = true
+					signal_defs.append(sig_name + "(target_route, filter_key)")
+
 	var lines: Array[String] = []
 	lines.append("# AUTO-GENERATED CODE - DO NOT EDIT MANUALLY")
 	lines.append("# Compiled from: " + schema_path)
 	lines.append("class_name " + class_name_str)
 	lines.append("extends " + extends_str + "\n")
 
-	# Schema signals
-	var signals: Array = meta.get("signals", [])
-	for sig in signals:
-		lines.append("signal " + str(sig))
-	if not signals.is_empty():
+	for sig_def in signal_defs:
+		lines.append("signal " + sig_def)
+	if not signal_defs.is_empty():
 		lines.append("")
 
 	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")\n")
@@ -76,7 +96,6 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	lines.append("\tvar clr_muted: Color = RETRO_THEME.get_ink_color(\"muted\")")
 	lines.append("\tvar clr_black: Color = RETRO_THEME.get_ink_color(\"body\")\n")
 
-	var sections: Array = schema.get("sections", [])
 	var has_inscriptions_container: bool = bool(meta.get("has_inscriptions", false))
 
 	for sec in sections:
@@ -88,9 +107,12 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 			out_tokens[s_token] = s_def
 			lines.append("\t# --- Section: " + s_id + " ---")
 			lines.append("\tvar sec_" + s_id + " := VBoxContainer.new()")
+			lines.append("\tsec_" + s_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tsec_" + s_id + ".add_theme_constant_override(\"separation\", 2)")
 			lines.append("\tvar hdr_" + s_id + " := Label.new()")
 			lines.append("\thdr_" + s_id + ".text = \"[ \" + tr(\"" + s_token + "\").to_upper() + \" ]\"")
+			lines.append("\thdr_" + s_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			lines.append("\thdr_" + s_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\thdr_" + s_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\thdr_" + s_id + ".add_theme_color_override(\"font_color\", clr_blue)")
 			lines.append("\tsec_" + s_id + ".add_child(hdr_" + s_id + ")")
@@ -140,6 +162,8 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 		lines.append("\t\tnote_lbl.text = \"[\" + author + \"] \" + text_content")
 		lines.append("\telse:")
 		lines.append("\t\tnote_lbl.text = text_content")
+		lines.append("\tnote_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+		lines.append("\tnote_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 		lines.append("\tnote_lbl.add_theme_font_override(\"font\", RETRO_THEME.get_monospace_font())")
 		lines.append("\tnote_lbl.add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"body\"))")
 		lines.append("\ttarget_box.add_child(note_lbl)")
@@ -148,7 +172,26 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	assert(out_file != null, "[UICompiler FATAL] Could not write output file: " + out_path)
 	out_file.store_string("\n".join(lines) + "\n")
 	out_file.close()
-	print("[UICompiler] Generated: " + out_path)
+
+	# 2. Enforced Post-Compilation Validation
+	_validate_generated_view(out_path, declared_signals)
+	print("[UICompiler] Generated & Validated: " + out_path)
+
+static func _validate_generated_view(out_path: String, expected_signals: Dictionary) -> void:
+	var script_res = load(out_path)
+	assert(script_res != null, "[UIValidator FATAL] Failed to load generated script: " + out_path)
+	
+	var instance = script_res.new()
+	assert(instance != null, "[UIValidator FATAL] Failed to instantiate generated view: " + out_path)
+	
+	for sig_name in expected_signals.keys():
+		assert(instance.has_signal(sig_name), "[UIValidator FATAL] Generated view missing declared signal '%s' in %s" % [sig_name, out_path])
+	
+	# Cleanly free all constructed child nodes to prevent CanvasItem / ObjectDB leaks
+	if instance is Node:
+		for child in instance.get_children():
+			child.free()
+	instance.free()
 
 static func _emit_inscriptions_block(lines: Array[String], meta: Dictionary, out_tokens: Dictionary) -> void:
 	var h_token: String = meta.get("inscriptions_header_token", "UI_SEC_INSCRIBED_NOTES")
@@ -158,6 +201,8 @@ static func _emit_inscriptions_block(lines: Array[String], meta: Dictionary, out
 	lines.append("\t# --- Inscriptions Container ---")
 	lines.append("\tvar hdr_insc := Label.new()")
 	lines.append("\thdr_insc.text = \"[ \" + tr(\"" + h_token + "\").to_upper() + \" ]\"")
+	lines.append("\thdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+	lines.append("\thdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 	lines.append("\thdr_insc.add_theme_font_override(\"font\", mono_font)")
 	lines.append("\thdr_insc.add_theme_color_override(\"font_color\", clr_blue)")
 	lines.append("\tadd_child(hdr_insc)")

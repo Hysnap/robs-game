@@ -2,7 +2,10 @@
   "_meta": {
     "target_class": "GenDistrictDocket",
     "extends": "VBoxContainer",
-    "description": "District intelligence dossier inspector view"
+    "description": "District intelligence dossier inspector view",
+    "signals": [
+      "item_selected(target_route, filter_key)"
+    ]
   },
   "sections": [
     {
@@ -15,7 +18,8 @@
           "subtitle_field": "type_title",
           "title_font_size": 18,
           "subtitle_font_size": 12,
-          "show_separator": true
+          "show_separator": true,
+          "autowrap": true
         }
       ]
     },
@@ -30,7 +34,8 @@
           "type": "BADGE_STATUS",
           "format": "TOKEN",
           "token": "UI_LBL_INTEL_STATUS",
-          "default_text": "INTELLIGENCE STATUS"
+          "default_text": "INTELLIGENCE STATUS",
+          "autowrap": true
         }
       ]
     },
@@ -46,7 +51,8 @@
           "format": "INT",
           "suffix": " citizens",
           "token": "UI_LBL_ACTIVE_POPULATION",
-          "default_text": "Estimated Population"
+          "default_text": "Estimated Population",
+          "autowrap": true
         },
         {
           "id": "households",
@@ -55,7 +61,8 @@
           "format": "INT",
           "suffix": " households",
           "token": "UI_LBL_TOTAL_HOUSEHOLDS",
-          "default_text": "Recorded Households"
+          "default_text": "Recorded Households",
+          "autowrap": true
         },
         {
           "id": "unemployment_tier",
@@ -63,7 +70,8 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_UNEMPLOYMENT_TIER",
-          "default_text": "Workforce Tension"
+          "default_text": "Workforce Tension",
+          "autowrap": true
         },
         {
           "id": "income",
@@ -71,7 +79,8 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_DISPOSABLE_INCOME",
-          "default_text": "Avg Disposable Income"
+          "default_text": "Avg Disposable Income",
+          "autowrap": true
         }
       ]
     },
@@ -82,10 +91,17 @@
       "rows": [
         {
           "id": "civic_features",
+          "type": "LINKED_LIST",
           "field": "establishments_summary",
-          "type": "CIVIC_SUMMARY",
+          "key_field": "establishment_id",
+          "label_field": "name",
+          "sublabel_field": "category_title",
           "token": "UI_LBL_CIVIC_SUMMARY",
-          "default_text": "Key Establishments"
+          "default_text": "Key Establishments",
+          "action_signal": "item_selected",
+          "route_field": "detail_route",
+          "target_route": "ESTABLISHMENT_DOCKET",
+          "autowrap": true
         }
       ]
     },
@@ -100,7 +116,8 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_ZONE_HEALTH",
-          "default_text": "Zone Health Index"
+          "default_text": "Zone Health Index",
+          "autowrap": true
         },
         {
           "id": "heat",
@@ -108,7 +125,8 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_POLICE_HEAT",
-          "default_text": "Constabulary Scrutiny"
+          "default_text": "Constabulary Scrutiny",
+          "autowrap": true
         }
       ]
     },

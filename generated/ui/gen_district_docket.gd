@@ -3,6 +3,8 @@
 class_name GenDistrictDocket
 extends VBoxContainer
 
+signal item_selected(target_route, filter_key)
+
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 var _value_labels: Dictionary = {}
@@ -24,14 +26,19 @@ func build_ui() -> void:
 
 	# --- Header Block ---
 	var box_docket_header := VBoxContainer.new()
+	box_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box_docket_header.add_theme_constant_override("separation", 0)
 	var title_docket_header := Label.new()
+	title_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_docket_header.add_theme_font_override("font", mono_font)
 	title_docket_header.add_theme_font_size_override("font_size", 18)
 	title_docket_header.add_theme_color_override("font_color", clr_blue)
 	box_docket_header.add_child(title_docket_header)
 	_value_labels["docket_header_title"] = title_docket_header
 	var sub_docket_header := Label.new()
+	sub_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sub_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sub_docket_header.add_theme_font_override("font", mono_font)
 	sub_docket_header.add_theme_font_size_override("font_size", 12)
 	sub_docket_header.add_theme_color_override("font_color", clr_muted)
@@ -42,9 +49,12 @@ func build_ui() -> void:
 
 	# --- Section: intel_status_header ---
 	var sec_intel_status_header := VBoxContainer.new()
+	sec_intel_status_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_intel_status_header.add_theme_constant_override("separation", 2)
 	var hdr_intel_status_header := Label.new()
 	hdr_intel_status_header.text = "[ " + tr("UI_HDR_SURVEY_INTELLIGENCE").to_upper() + " ]"
+	hdr_intel_status_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_intel_status_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_intel_status_header.add_theme_font_override("font", mono_font)
 	hdr_intel_status_header.add_theme_color_override("font_color", clr_blue)
 	sec_intel_status_header.add_child(hdr_intel_status_header)
@@ -55,7 +65,9 @@ func build_ui() -> void:
 	var badge_survey_badge := PanelContainer.new()
 	badge_survey_badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var val_survey_badge := Label.new()
+	val_survey_badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_survey_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	val_survey_badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_survey_badge.add_theme_font_override("font", mono_font)
 	val_survey_badge.add_theme_color_override("font_color", clr_blue)
 	badge_survey_badge.add_child(val_survey_badge)
@@ -64,9 +76,12 @@ func build_ui() -> void:
 
 	# --- Section: demographics_overview ---
 	var sec_demographics_overview := VBoxContainer.new()
+	sec_demographics_overview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_demographics_overview.add_theme_constant_override("separation", 2)
 	var hdr_demographics_overview := Label.new()
 	hdr_demographics_overview.text = "[ " + tr("UI_HDR_WARD_DEMOGRAPHICS").to_upper() + " ]"
+	hdr_demographics_overview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_demographics_overview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_demographics_overview.add_theme_font_override("font", mono_font)
 	hdr_demographics_overview.add_theme_color_override("font_color", clr_blue)
 	sec_demographics_overview.add_child(hdr_demographics_overview)
@@ -79,11 +94,14 @@ func build_ui() -> void:
 	var lbl_pop := Label.new()
 	lbl_pop.text = tr("UI_LBL_ACTIVE_POPULATION")
 	lbl_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_pop.add_theme_font_override("font", mono_font)
 	lbl_pop.add_theme_color_override("font_color", clr_muted)
 	row_pop.add_child(lbl_pop)
 	var val_pop := Label.new()
 	val_pop.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_pop.add_theme_font_override("font", mono_font)
 	val_pop.add_theme_color_override("font_color", clr_black)
 	row_pop.add_child(val_pop)
@@ -95,11 +113,14 @@ func build_ui() -> void:
 	var lbl_households := Label.new()
 	lbl_households.text = tr("UI_LBL_TOTAL_HOUSEHOLDS")
 	lbl_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_households.add_theme_font_override("font", mono_font)
 	lbl_households.add_theme_color_override("font_color", clr_muted)
 	row_households.add_child(lbl_households)
 	var val_households := Label.new()
 	val_households.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_households.add_theme_font_override("font", mono_font)
 	val_households.add_theme_color_override("font_color", clr_black)
 	row_households.add_child(val_households)
@@ -111,11 +132,14 @@ func build_ui() -> void:
 	var lbl_unemployment_tier := Label.new()
 	lbl_unemployment_tier.text = tr("UI_LBL_UNEMPLOYMENT_TIER")
 	lbl_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_unemployment_tier.add_theme_font_override("font", mono_font)
 	lbl_unemployment_tier.add_theme_color_override("font_color", clr_muted)
 	row_unemployment_tier.add_child(lbl_unemployment_tier)
 	var val_unemployment_tier := Label.new()
 	val_unemployment_tier.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_unemployment_tier.add_theme_font_override("font", mono_font)
 	val_unemployment_tier.add_theme_color_override("font_color", clr_black)
 	row_unemployment_tier.add_child(val_unemployment_tier)
@@ -127,11 +151,14 @@ func build_ui() -> void:
 	var lbl_income := Label.new()
 	lbl_income.text = tr("UI_LBL_DISPOSABLE_INCOME")
 	lbl_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_income.add_theme_font_override("font", mono_font)
 	lbl_income.add_theme_color_override("font_color", clr_muted)
 	row_income.add_child(lbl_income)
 	var val_income := Label.new()
 	val_income.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_income.add_theme_font_override("font", mono_font)
 	val_income.add_theme_color_override("font_color", clr_black)
 	row_income.add_child(val_income)
@@ -140,9 +167,12 @@ func build_ui() -> void:
 
 	# --- Section: civic_infrastructure ---
 	var sec_civic_infrastructure := VBoxContainer.new()
+	sec_civic_infrastructure.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_civic_infrastructure.add_theme_constant_override("separation", 2)
 	var hdr_civic_infrastructure := Label.new()
 	hdr_civic_infrastructure.text = "[ " + tr("UI_HDR_CIVIC_FEATURES").to_upper() + " ]"
+	hdr_civic_infrastructure.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_civic_infrastructure.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_civic_infrastructure.add_theme_font_override("font", mono_font)
 	hdr_civic_infrastructure.add_theme_color_override("font_color", clr_blue)
 	sec_civic_infrastructure.add_child(hdr_civic_infrastructure)
@@ -158,9 +188,12 @@ func build_ui() -> void:
 
 	# --- Section: security_environment ---
 	var sec_security_environment := VBoxContainer.new()
+	sec_security_environment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_security_environment.add_theme_constant_override("separation", 2)
 	var hdr_security_environment := Label.new()
 	hdr_security_environment.text = "[ " + tr("UI_HDR_SECURITY_ENVIRONMENT").to_upper() + " ]"
+	hdr_security_environment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_security_environment.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_security_environment.add_theme_font_override("font", mono_font)
 	hdr_security_environment.add_theme_color_override("font_color", clr_blue)
 	sec_security_environment.add_child(hdr_security_environment)
@@ -173,11 +206,14 @@ func build_ui() -> void:
 	var lbl_zhi := Label.new()
 	lbl_zhi.text = tr("UI_LBL_ZONE_HEALTH")
 	lbl_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_zhi.add_theme_font_override("font", mono_font)
 	lbl_zhi.add_theme_color_override("font_color", clr_muted)
 	row_zhi.add_child(lbl_zhi)
 	var val_zhi := Label.new()
 	val_zhi.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_zhi.add_theme_font_override("font", mono_font)
 	val_zhi.add_theme_color_override("font_color", clr_black)
 	row_zhi.add_child(val_zhi)
@@ -189,11 +225,14 @@ func build_ui() -> void:
 	var lbl_heat := Label.new()
 	lbl_heat.text = tr("UI_LBL_POLICE_HEAT")
 	lbl_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_heat.add_theme_font_override("font", mono_font)
 	lbl_heat.add_theme_color_override("font_color", clr_muted)
 	row_heat.add_child(lbl_heat)
 	var val_heat := Label.new()
 	val_heat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_heat.add_theme_font_override("font", mono_font)
 	val_heat.add_theme_color_override("font_color", clr_black)
 	row_heat.add_child(val_heat)
@@ -202,9 +241,12 @@ func build_ui() -> void:
 
 	# --- Section: field_observations ---
 	var sec_field_observations := VBoxContainer.new()
+	sec_field_observations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sec_field_observations.add_theme_constant_override("separation", 2)
 	var hdr_field_observations := Label.new()
 	hdr_field_observations.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
+	hdr_field_observations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_field_observations.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_field_observations.add_theme_font_override("font", mono_font)
 	hdr_field_observations.add_theme_color_override("font_color", clr_blue)
 	sec_field_observations.add_child(hdr_field_observations)
@@ -217,11 +259,14 @@ func build_ui() -> void:
 	var lbl_observations_box := Label.new()
 	lbl_observations_box.text = tr("")
 	lbl_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lbl_observations_box.add_theme_font_override("font", mono_font)
 	lbl_observations_box.add_theme_color_override("font_color", clr_muted)
 	row_observations_box.add_child(lbl_observations_box)
 	var val_observations_box := Label.new()
 	val_observations_box.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_observations_box.add_theme_font_override("font", mono_font)
 	val_observations_box.add_theme_color_override("font_color", clr_black)
 	row_observations_box.add_child(val_observations_box)
@@ -229,8 +274,6 @@ func build_ui() -> void:
 	add_child(row_observations_box)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("docket_header") and data.has("display_name"):
-		var ctrl = _value_labels["docket_header"]
 	if _value_labels.has("docket_header_title") and data.has("display_name"):
 		_value_labels["docket_header_title"].text = str(data.get("display_name", "--- UNNAMED ---")).to_upper()
 	if _value_labels.has("docket_header_subtitle") and data.has("type_title"):
@@ -272,28 +315,39 @@ func bind_data(data: Dictionary) -> void:
 				c.queue_free()
 			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
 			var clr_b: Color = RETRO_THEME.get_ink_color("body")
-			var features: Array = data.get("establishments_summary", [])
-			if features.is_empty():
+			var mono_f: Font = RETRO_THEME.get_monospace_font()
+			var items: Array = data.get("establishments_summary", [])
+			if items.is_empty():
 				var empty_lbl := Label.new()
 				empty_lbl.text = tr("UI_INTEL_MASKED_BLANK")
-				empty_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+				empty_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				empty_lbl.add_theme_font_override("font", mono_f)
 				empty_lbl.add_theme_color_override("font_color", clr_m)
 				ctrl.add_child(empty_lbl)
 			else:
-				for f in features:
-					var f_lbl := Label.new()
-					if f is Dictionary:
-						var fn: String = str(f.get("name", ""))
-						var fc: String = str(f.get("category_title", f.get("category_code", "")))
-						if not fc.is_empty():
-							f_lbl.text = "• " + fn + " (" + fc + ")"
-						else:
-							f_lbl.text = "• " + fn
-					else:
-						f_lbl.text = "• " + str(f)
-					f_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
-					f_lbl.add_theme_color_override("font_color", clr_b)
-					ctrl.add_child(f_lbl)
+				for item in items:
+					assert(item is Dictionary, "[UI CONTRACT ERROR] Expected Dictionary in list payload for: establishments_summary")
+					assert(item.has("establishment_id"), "[UI CONTRACT ERROR] Missing required key 'establishment_id' in item: " + str(item))
+					var key_val = item["establishment_id"]
+					var main_txt: String = str(item.get("name", "Unnamed"))
+					var sub_txt: String = str(item.get("category_title", ""))
+					var display_txt: String = "• " + main_txt
+					if not sub_txt.is_empty():
+						display_txt += " (" + sub_txt + ")"
+					var btn := Button.new()
+					btn.text = display_txt
+					btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+					btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+					btn.add_theme_font_override("font", mono_f)
+					btn.add_theme_font_size_override("font_size", 11)
+					btn.add_theme_color_override("font_color", clr_b)
+					var dest_route: String = str(item.get("detail_route", "ESTABLISHMENT_DOCKET"))
+					if dest_route.is_empty():
+						dest_route = "ESTABLISHMENT_DOCKET"
+					btn.pressed.connect(func(): item_selected.emit(dest_route, key_val))
+					ctrl.add_child(btn)
 	if _value_labels.has("zhi") and data.has("zone_health_bucket_token"):
 		var ctrl = _value_labels["zhi"]
 		if data["zone_health_bucket_token"] == null:
@@ -320,6 +374,8 @@ func inscribe_entry(entry: Dictionary) -> void:
 		note_lbl.text = "[" + author + "] " + text_content
 	else:
 		note_lbl.text = text_content
+	note_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
 	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	target_box.add_child(note_lbl)

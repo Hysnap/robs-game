@@ -9,6 +9,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 	var r_id: String = row.get("id", "widget")
 	var r_type: String = row.get("type", "TEXT_METRIC").to_upper()
 	var r_token: String = row.get("token", "")
+	var wrap_enabled: bool = bool(row.get("autowrap", true))
 
 	match r_type:
 		"HEADER_BLOCK":
@@ -16,8 +17,12 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			var sub_sz: int = int(row.get("subtitle_font_size", 12))
 			lines.append("\t# --- Header Block ---")
 			lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
+			lines.append("\tbox_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tbox_" + r_id + ".add_theme_constant_override(\"separation\", 0)")
 			lines.append("\tvar title_" + r_id + " := Label.new()")
+			lines.append("\ttitle_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			if wrap_enabled:
+				lines.append("\ttitle_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\ttitle_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\ttitle_" + r_id + ".add_theme_font_size_override(\"font_size\", " + str(title_sz) + ")")
 			lines.append("\ttitle_" + r_id + ".add_theme_color_override(\"font_color\", clr_blue)")
@@ -26,6 +31,9 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			
 			if row.has("subtitle_field"):
 				lines.append("\tvar sub_" + r_id + " := Label.new()")
+				lines.append("\tsub_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				if wrap_enabled:
+					lines.append("\tsub_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 				lines.append("\tsub_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 				lines.append("\tsub_" + r_id + ".add_theme_font_size_override(\"font_size\", " + str(sub_sz) + ")")
 				lines.append("\tsub_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
@@ -40,14 +48,17 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tvar badge_" + r_id + " := PanelContainer.new()")
 			lines.append("\tbadge_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar val_" + r_id + " := Label.new()")
+			lines.append("\tval_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tval_" + r_id + ".horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER")
+			if wrap_enabled:
+				lines.append("\tval_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\tval_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\tval_" + r_id + ".add_theme_color_override(\"font_color\", clr_blue)")
 			lines.append("\tbadge_" + r_id + ".add_child(val_" + r_id + ")")
 			lines.append("\t_value_labels[\"" + r_id + "\"] = val_" + r_id)
 			lines.append("\tadd_child(badge_" + r_id + ")\n")
 
-		"CIVIC_SUMMARY":
+		"CIVIC_SUMMARY", "LINKED_LIST":
 			lines.append("\tvar civic_box_" + r_id + " := VBoxContainer.new()")
 			lines.append("\tcivic_box_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tcivic_box_" + r_id + ".add_theme_constant_override(\"separation\", 2)")
@@ -57,6 +68,10 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 		"BUTTON":
 			lines.append("\tvar btn_" + r_id + " := Button.new()")
 			lines.append("\tbtn_" + r_id + ".text = tr(\"" + r_token + "\")")
+			lines.append("\tbtn_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			lines.append("\tbtn_" + r_id + ".alignment = HORIZONTAL_ALIGNMENT_LEFT")
+			if wrap_enabled:
+				lines.append("\tbtn_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\tbtn_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			var action_signal: String = row.get("action_signal", "action_clicked")
 			var emit_args: String = str(row.get("emit_args", ""))
@@ -71,14 +86,19 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tvar list_" + r_id + " := ItemList.new()")
 			var min_h: int = int(row.get("min_height", 120))
 			lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
+			lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
 			lines.append("\tadd_child(list_" + r_id + ")\n")
 
 		"OPTION_DROPDOWN", "DROPDOWN":
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
+			lines.append("\trow_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
+			lines.append("\tlbl_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			if wrap_enabled:
+				lines.append("\tlbl_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\tlbl_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
@@ -94,8 +114,12 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"SPIN_INPUT":
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
+			lines.append("\trow_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
+			lines.append("\tlbl_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			if wrap_enabled:
+				lines.append("\tlbl_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\tlbl_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
@@ -115,11 +139,16 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
 			lines.append("\tlbl_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			if wrap_enabled:
+				lines.append("\tlbl_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 			lines.append("\tlbl_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
 			lines.append("\tvar val_" + r_id + " := Label.new()")
 			lines.append("\tval_" + r_id + ".horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT")
+			if wrap_enabled:
+				lines.append("\tval_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
+				lines.append("\tval_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tval_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			lines.append("\tval_" + r_id + ".add_theme_color_override(\"font_color\", clr_black)")
 			lines.append("\trow_" + r_id + ".add_child(val_" + r_id + ")")
