@@ -176,6 +176,10 @@
 "UI_CASH_MEAGER","Just enough for a half.","Just enough for a half.","Just enough for a half.","Gerade genug für ein halbes.","Juste assez pour une demi-tournée.","Justo para una copa.","Justo para una copa."
 "UI_CASH_SOLVENT","Whose round is it?.","Whose round is it?.","Whose round is it?.","Wer ist mit der Runde dran?","À qui le prochain tour ?","¿A quién le toca invitar?","¿A quién le toca invitar?"
 "UI_CASH_PROPEROUS","Next rounds on me.","Next rounds on me.","Next rounds on me.","Die nächste Runde geht auf mich.","La prochaine tournée est pour moi.","La próxima ronda corre de mi cuenta.","La próxima ronda corre de mi cuenta."
-"UI_CASH_WEALTHY","My cards behind the bar, drinkgs for all.","My cards behind the bar, drinkgs for all.","My cards behind the bar, drinkgs for all.","Meine Karten liegen hinter der Bar, Getränke für alle.","Mes cartes sont au bar, à boire pour tout le monde.","Mis tarjetas están en la barra: copas para todos.","Mis tarjetas están en la barra: copas para todos."
+"UI_CASH_WEALTHY","My cards behind the bar, drinks for all.","My cards behind the bar, drinks for all.","My cards behind the bar, drinks for all.","Meine Karten liegen hinter der Bar, Getränke für alle.","Mes cartes sont au bar, à boire pour tout le monde.","Mis tarjetas están en la barra: copas para todos.","Mis tarjetas están en la barra: copas para todos."
+"UI_FILTER_ALL_SCOPES","All Districts and Establishments","All Districts and Establishments","All Districts and Establishments"
+"UI_FILTER_DISTRICTS_ONLY","Select District","Select District","Select District"
+"UI_FILTER_WORKPLACES","Select Establishment","Select Establishment","Select Establishment"
+"UI_FILTER_RESIDENTIAL","Select Residential Address","Select Residential Address","Select Residential Address"
 
 

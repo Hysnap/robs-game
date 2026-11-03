@@ -103,7 +103,7 @@ func _on_generate_city_pressed() -> void:
 	if settings.is_empty():
 		return
 
-	print("Saving city settings: city_name=%s seed_id=%s" % [
+	SystemLogger.log_info("Saving city settings: city_name=%s seed_id=%s" % [
 		settings["city_name"],
 		settings["seed_id"]
 	])
@@ -114,15 +114,18 @@ func _on_generate_city_pressed() -> void:
 	generate_city_requested.emit(settings)
 	var error := get_tree().change_scene_to_file("res://scenes/menus/city_generator_loader.tscn")
 	if error != OK:
+		SystemLogger.log_error("Could not open generated city. Error code: %s" % error)
 		push_error("Could not open generated city. Error code: %s" % error)
 
 func _on_recall_city_pressed() -> void:
 	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
 	if city_name.is_empty():
+		SystemLogger.log_error("Enter a city name before recalling a city.")
 		push_error("Enter a city name before recalling a city.")
 		return
 	var seed_id: String = $VBoxControlsContainer/HBoxSeedID/seed_text.text.strip_edges()
 	if seed_id.is_empty():
+		SystemLogger.log_error("Enter a seed before recalling a city.")
 		push_error("Enter a seed before recalling a city.")
 		return
 
@@ -136,6 +139,7 @@ func _on_recall_city_pressed() -> void:
 	recall_city_requested.emit(city_name)
 	var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
 	if error != OK:
+		SystemLogger.log_error("Could not open recalled city. Error code: %s" % error)
 		push_error("Could not open recalled city. Error code: %s" % error)
 
 func seed_text_to_int(seed_text: String) -> int:
@@ -144,17 +148,20 @@ func seed_text_to_int(seed_text: String) -> int:
 func save_city_settings(settings: Dictionary) -> bool:
 	var directory := DirAccess.open("user://")
 	if directory == null:
+		SystemLogger.log_error("Could not access the user data directory.")
 		push_error("Could not access the user data directory.")
 		return false
 
 	var directory_error := DirAccess.make_dir_recursive_absolute("user://cities")
 	if directory_error != OK and directory_error != ERR_ALREADY_EXISTS:
+		SystemLogger.log_error("Could not create city save directory. Error code: %s" % directory_error)
 		push_error("Could not create city save directory. Error code: %s" % directory_error)
 		return false
 
 	var city_name: String = sanitize_city_name(str(settings["city_name"]))
 	var seed_id: String = sanitize_city_name(str(settings["seed_id"]))
 	if city_name.is_empty() or seed_id.is_empty():
+		SystemLogger.log_error("City name must contain at least one valid character.")
 		push_error("City name must contain at least one valid character.")
 		return false
 
@@ -199,15 +206,18 @@ func write_json_file(file_path: String, settings: Dictionary) -> bool:
 
 func read_json_file(file_path: String) -> Dictionary:
 	if not FileAccess.file_exists(file_path):
+		SystemLogger.log_error("City save file does not exist: %s" % file_path)
 		push_error("City save file does not exist: %s" % file_path)
 		return {}
 	var file := FileAccess.open(file_path, FileAccess.READ)
 	if file == null:
+		SystemLogger.log_error("Could not open city save file: %s" % file_path)
 		push_error("Could not open city save file: %s" % file_path)
 		return {}
 	var parsed = JSON.parse_string(file.get_as_text())
 	file.close()
 	if not parsed is Dictionary:
+		SystemLogger.log_error("City save file has invalid content: %s" % file_path)
 		push_error("City save file has invalid content: %s" % file_path)
 		return {}
 	return parsed
@@ -215,10 +225,12 @@ func read_json_file(file_path: String) -> Dictionary:
 func build_settings_from_form() -> Dictionary:
 	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
 	if city_name.is_empty():
+		SystemLogger.log_error("Enter a city name before generating a city.")
 		push_error("Enter a city name before generating a city.")
 		return {}
 	var seed_id: String = $VBoxControlsContainer/HBoxSeedID/seed_text.text.strip_edges()
 	if seed_id.is_empty():
+		SystemLogger.log_error("Enter a seed before generating a city.")
 		push_error("Enter a seed before generating a city.")
 		return {}
 	var residential_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value)
@@ -230,6 +242,7 @@ func build_settings_from_form() -> Dictionary:
 
 	var ratio_total := residential_ratio + commercial_ratio + industrial_ratio
 	if ratio_total <= 0.0:
+		SystemLogger.log_error("At least one district ratio must be greater than zero.")
 		push_error("At least one district ratio must be greater than zero.")
 		return {}
 

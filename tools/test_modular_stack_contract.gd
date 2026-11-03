@@ -7,14 +7,14 @@ const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_tran
 const StationeryRegistryScript = preload("res://scenes/ui/feedback/stationery_registry.gd")
 
 func _init() -> void:
-	print("\n=======================================================")
-	print("   TESTING PURE EVENT TRIGGERS & UNIVERSAL STACK MODULE")
-	print("=======================================================")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   TESTING PURE EVENT TRIGGERS & UNIVERSAL STACK MODULE")
+	SystemLogger.log_info("=======================================================")
 
 	# 1. Initialize Stationery & Stack Rules Manifest
 	StationeryRegistryScript.initialize()
 	var stack_rules: Dictionary = StationeryRegistryScript.get_stack_rules()
-	print("[STEP 1] Loaded stationery registry and stack rules.")
+	SystemLogger.log_info("[STEP 1] Loaded stationery registry and stack rules.")
 
 	# 2. Simulate Turn Progression (SimController returns a report Dictionary)
 	var world_state := {
@@ -29,14 +29,14 @@ func _init() -> void:
 	assert(not triggers.is_empty(), "SimController failed to emit executed events in report")
 	assert(not triggers[0].has("display_text"), "LEAK: SimController is generating presentation text!")
 	assert(not triggers[0].has("palette_bg"), "LEAK: SimController is generating UI styling!")
-	print("  ✓ SimController returned pure telemetry triggers in report (zero presentation leaks).")
+	SystemLogger.log_info("  ✓ SimController returned pure telemetry triggers in report (zero presentation leaks).")
 
 	# 3. Translate Triggers to Card Payloads via StationeryRegistry (1 argument)
 	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(triggers)
 	assert(cards.size() == 1, "Translator failed to map triggers to cards")
 	assert(cards[0].has("stationery_profile"), "Missing stationery_profile in card payload")
 	assert(cards[0]["destination"] == "FINANCE", "Failed to resolve filing domain from registry bindings")
-	print("  ✓ Triggers translated into configured card payloads via StationeryRegistry.")
+	SystemLogger.log_info("  ✓ Triggers translated into configured card payloads via StationeryRegistry.")
 
 	# 4. Mount Universal StaggeredCardStack Module
 	var stack = StaggeredStackScript.new()
@@ -64,7 +64,7 @@ func _init() -> void:
 	assert(stack.get_card_count() == 1, "Stack failed to ingest cards")
 	assert(stack.visible == true, "Stack should be visible when holding cards")
 	assert(tracker["count_received"] == 1, "FAILED: stack_count_changed did not fire on push_cards!")
-	print("  ✓ Cards pushed: count signal and visibility verified.")
+	SystemLogger.log_info("  ✓ Cards pushed: count signal and visibility verified.")
 
 	# 7. Test Triage & Pop Signal
 	stack.pop_top_card("FILE")
@@ -72,13 +72,13 @@ func _init() -> void:
 	assert(tracker["payload"]["destination"] == "FINANCE", "Triaged card payload corrupted")
 	assert(stack.is_empty(), "Stack should be empty after triage")
 	assert(tracker["count_received"] == 0, "FAILED: stack_count_changed did not fire on pop_top_card!")
-	print("  ✓ Universal StaggeredCardStack triaged top card cleanly.")
+	SystemLogger.log_info("  ✓ Universal StaggeredCardStack triaged top card cleanly.")
 
 	# Clean teardown
 	root.remove_child(stack)
 	stack.free()
 
-	print("\n=======================================================")
-	print("   ALL EVENT TRIGGER & STACK CONTRACTS VERIFIED")
-	print("=======================================================\n")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   ALL EVENT TRIGGER & STACK CONTRACTS VERIFIED")
+	SystemLogger.log_info("=======================================================\n")
 	quit(0)

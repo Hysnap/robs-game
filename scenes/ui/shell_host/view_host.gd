@@ -23,6 +23,7 @@ var _staged_directives: Array[Dictionary] = []
 func _ready() -> void:
 	if shell_node == null:
 		shell_node = get_parent() as OuterShell
+	SystemLogger.log_info("[ViewHost] View host ready.")
 
 func _exit_tree() -> void:
 	cleanup()
@@ -36,6 +37,7 @@ func set_navigation_component(nav_bar: Control) -> void:
 
 ## Registers any compiled UI view to an arbitrary string key from configuration
 func register_view(domain_key: String, view_control: Control) -> void:
+	SystemLogger.log_debug("[ViewHost] Registering view domain '%s'." % domain_key)
 	if _views.has(domain_key):
 		var old_view = _views[domain_key]
 		if is_instance_valid(old_view) and old_view != view_control:
@@ -55,6 +57,7 @@ func register_view(domain_key: String, view_control: Control) -> void:
 ## Swaps whatever view is currently mounted in CONTENT slot
 func switch_to_domain(domain_key: String) -> void:
 	if not _views.has(domain_key) or shell_node == null:
+		SystemLogger.log_warn("[ViewHost] Cannot switch to unavailable domain '%s'." % domain_key)
 		return
 	_active_domain = domain_key
 	shell_node.mount_view("CONTENT", _views[domain_key])
@@ -81,6 +84,7 @@ func inscribe_entry_to_domain(domain_key: String, entry_data: Dictionary) -> voi
 		if is_instance_valid(target_view) and target_view.has_method("inscribe_entry"):
 			target_view.inscribe_entry(entry_data)
 	else:
+		SystemLogger.log_warn("[ViewHost] Cannot inscribe entry: unknown domain '%s'." % domain_key)
 		push_warning("[ViewHost] Cannot inscribe entry: unknown domain '%s'" % domain_key)
 
 ## Connects the Action Planner, Desktop Feedback Inbox, and optional Era Composer Modal

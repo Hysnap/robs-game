@@ -79,6 +79,12 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 	var domain: String = str(target_cat.get("domain", "NONE")).to_upper()
 	var catalog_source: String = str(target_cat.get("catalog_source", ""))
 
+	SystemLogger.log_info("[DEBUG TARGETS] Verb: %s | Categories: %s | WorldState has catalog: %s" % [
+    	verb_code, 
+    	categories.size(), 
+    	world_state.has(catalog_source) if not catalog_source.is_empty() else false
+		])
+
 	match domain:
 		"NONE":
 			return [{

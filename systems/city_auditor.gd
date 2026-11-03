@@ -19,9 +19,9 @@ func _run_as_script() -> void:
 
 	var report := audit_and_save(world_state, DB_MANAGER)
 	if report.has("report_path"):
-		print("[CityAuditor] Report written to: %s" % report["report_path"])
+		SystemLogger.log_info("[CityAuditor] Report written to: %s" % report["report_path"])
 	else:
-		print("[CityAuditor] Audit did not write a report.")
+		SystemLogger.log_info("[CityAuditor] Audit did not write a report.")
 		for error in report.get("errors", []):
 			push_error("[CityAuditor] %s" % error)
 	quit(0 if report.get("is_healthy", false) else 1)

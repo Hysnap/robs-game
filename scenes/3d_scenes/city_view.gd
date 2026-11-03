@@ -29,6 +29,7 @@ var _marker_elevation: float = 1.5
 var _landmark_elevation: float = 4.0
 
 func _ready() -> void:
+	SystemLogger.log_info("[CityView] Initializing city view.")
 	_load_spatial_indicator_rules()
 
 	# 1. Mount Presenter Host inside OuterShell
@@ -66,6 +67,7 @@ func _ready() -> void:
 		if gs.has_signal("turn_advanced"):
 			gs.turn_advanced.connect(func(_week: int, _day: int):
 				refresh_all_district_indicators()
+				SystemLogger.log_info("[CityView] Mounted %d district ground indicators." % _district_ground_nodes.size())
 			)
 
 	if "seed_id" in city_crafter:
@@ -225,7 +227,7 @@ func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> v
 	if action_id == "FILE":
 		OperationsControllerScript.file_card_slip(card_payload, view_host)
 	else:
-		print("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
+		SystemLogger.log_info("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
 
 func _on_view_host_item_selected(target_route: String, filter_key: Variant) -> void:
 	var estab_id: int = int(filter_key)
@@ -241,7 +243,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _on_district_clicked(block_id: String) -> void:
-	print("[CityView] District clicked on 3D map: %s" % block_id)
+	SystemLogger.log_info("[CityView] District clicked on 3D map: %s" % block_id)
 	
 	var gs = ScenarioManifestManager.get_game_state()
 	var district_data: Dictionary = {}

@@ -16,11 +16,13 @@ static func run_pipeline(
 	
 	# 1. Prepare Storage Slot & Fresh SQLite DB
 	if not SaveManager.prepare_new_slot(target_slot_id):
+		SystemLogger.log_error("[CityGenerationController] Failed to prepare slot: %s" % target_slot_id)
 		push_error("[CityGenerationController] Failed to prepare slot: %s" % target_slot_id)
 		return false
 
 	# 2. Instantiate and Configure CityCrafter Engine
 	var city_crafter := CustomCityCrafter.new()
+	SystemLogger.log_info("[CityGenerationController] Starting city generation for seed '%s' in slot '%s'." % [gen_seed, target_slot_id])
 	city_crafter.name = "CityCrafterGenerator"
 	var base_config: Resource = ScenarioManifestManager.get_city_configuration()
 	var config_instance: Resource = base_config.duplicate()
@@ -74,6 +76,7 @@ static func run_pipeline(
 		GameState.world_state["city_layout"] = city_crafter.export_visual_layout()
 
 	var save_ok = SaveManager.save_game(target_slot_id, city_crafter)
+	SystemLogger.log_info("[CityGenerationController] City generation pipeline completed with save status: %s." % save_ok)
 	# Clean up temporary generator node from tree
 	if city_crafter.get_parent():
 		city_crafter.get_parent().remove_child(city_crafter)

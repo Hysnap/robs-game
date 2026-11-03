@@ -14,6 +14,7 @@ static func initialize() -> void:
 
 	var dir := DirAccess.open(SHELLS_DIR)
 	if not dir:
+		SystemLogger.log_error("[ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
 		push_error("[ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
 		return
 
@@ -55,6 +56,7 @@ static func get_shell_manifest(shell_id: String) -> Dictionary:
 	if not _manifests.is_empty():
 		return _manifests[_manifests.keys()[0]]
 
+	SystemLogger.log_critical("[ShellRegistry FATAL] No valid shell manifests discovered in %s" % SHELLS_DIR)
 	push_error("[ShellRegistry FATAL] No valid shell manifests discovered in %s" % SHELLS_DIR)
 	return {}
 

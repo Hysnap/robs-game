@@ -13,9 +13,6 @@ static func _scan_directory_recursive(
 	inherited_activations: Dictionary, 
 	out_registry: Dictionary
 ) -> void:
-	if not DirAccess.dir_exists_absolute(current_path):
-		return
-
 	var dir = DirAccess.open(current_path)
 	if not dir:
 		return

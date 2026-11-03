@@ -61,8 +61,9 @@ func initialize_fresh_state() -> void:
 		_load_section_into_state(config, "starting_metadata", "metadata")
 		_load_section_into_state(config, "starting_finances", "finances")
 		_load_section_into_state(config, "starting_operations", "operations")
-		print("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
+		SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
 	else:
+		SystemLogger.log_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
 		push_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
 		world_state["metadata"] = {"calendar_year": 1980, "current_week_tick": 1, "current_day_tick": 1, "active_seed": "default-city"}
 		world_state["finances"] = {"liquid_cash": 0.0, "clean_bank_balance": 0.0}
@@ -74,16 +75,16 @@ func initialize_fresh_state() -> void:
 	if world_state["commodity_registry"].is_empty():
 		push_warning("[GAME_STATE] No commodities loaded from %s" % core_commodities)
 	else:
-		print("[GAME_STATE] Ingested %d catalog commodities." % world_state["commodity_registry"].size())
+		SystemLogger.log_info("[GAME_STATE] Ingested %d catalog commodities." % world_state["commodity_registry"].size())
 
 	var core_recipes := "res://data_modules/core/recipes/"
 	world_state["recipe_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(core_recipes)
 	if world_state["recipe_registry"].is_empty():
 		push_warning("[GAME_STATE] No recipes loaded from %s" % core_recipes)
 	else:
-		print("[GAME_STATE] Ingested %d recipes." % world_state["recipe_registry"].size())
+		SystemLogger.log_info("[GAME_STATE] Ingested %d recipes." % world_state["recipe_registry"].size())
 
-	print("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
+	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()
 
 ## Pure State Setter: Records the confirmed home district resolved by CitySpatialAdapter

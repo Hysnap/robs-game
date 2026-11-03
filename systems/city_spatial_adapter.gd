@@ -12,9 +12,11 @@ static func load_archetypes() -> void:
 		"FATAL: Scenario manifest missing 'archetypes' module registration.")
 
 	_archetypes = ScenarioManifestManager.load_module("archetypes")
+	SystemLogger.log_info("[CitySpatialAdapter] Loaded %d district archetypes." % _archetypes.size())
 	assert(not _archetypes.is_empty(), "HALT: Archetypes loaded as empty dictionary.")
 
 static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_state: Dictionary, seed_id: String) -> void:
+	SystemLogger.log_info("[CitySpatialAdapter] Ingesting generated city for seed '%s'." % seed_id)
 	if _archetypes.is_empty():
 		load_archetypes()
 		
@@ -118,6 +120,7 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		}
 
 		child.set_meta("display_name", display_name)
+	SystemLogger.log_info("[CitySpatialAdapter] Ingested %d districts." % out_world_state["districts"].size())
 
 ## Evaluates finalized districts to find a valid, populated residential neighborhood.
 ## Also auto-seeds all 'is_public_landmark' districts into known_districts.
@@ -184,6 +187,7 @@ static func resolve_verified_home_district(world_state: Dictionary, seed_id: Str
 	)
 
 	var selected_home_id: String = candidates[0]
+	SystemLogger.log_info("[CitySpatialAdapter] Resolved home district '%s' from %d candidates." % [selected_home_id, candidates.size()])
 
 	# Ensure selected home district is in known_districts
 	if not selected_home_id in known:

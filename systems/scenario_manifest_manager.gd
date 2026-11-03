@@ -25,6 +25,7 @@ static func get_manifest_path() -> String:
 	assert(FileAccess.file_exists(path), "FATAL: Scenario manifest file declared in business_rules.cfg does not exist: %s" % path)
 
 	_active_manifest_path = path
+	SystemLogger.log_info("[ScenarioManifestManager] Active manifest resolved: %s" % path)
 	return _active_manifest_path
 
 ## Parses and caches the root scenario manifest JSON
@@ -39,6 +40,7 @@ static func get_manifest() -> Dictionary:
 	assert(parsed["modules"] is Dictionary, "FATAL: 'modules' in manifest must be a Dictionary: %s" % manifest_path)
 
 	_cached_manifest = parsed
+	SystemLogger.log_info("[ScenarioManifestManager] Scenario manifest loaded with %d modules." % parsed.get("modules", {}).size())
 	return _cached_manifest
 
 ## Checks whether a named module key is registered in the active manifest
@@ -68,6 +70,7 @@ static func load_module(module_key: String) -> Dictionary:
 	var parsed: Dictionary = load_json_file(path)
 	
 	_cached_modules[module_key] = parsed
+	SystemLogger.log_debug("[ScenarioManifestManager] Loaded module '%s'." % module_key)
 	return _cached_modules[module_key]
 
 ## Universal JSON Reader enforcing strict syntax validation and hard assertions
@@ -83,6 +86,9 @@ static func load_json_file(file_path: String) -> Dictionary:
 	var json := JSON.new()
 	var parse_err := json.parse(raw_text)
 	if parse_err != OK:
+		SystemLogger.log_critical("[ScenarioManifestManager CRITICAL] JSON syntax error in %s at line %d: %s" % [
+			file_path, json.get_error_line(), json.get_error_message()
+		])
 		push_error("[ScenarioManifestManager CRITICAL] JSON syntax error in %s at line %d: %s" % [
 			file_path, json.get_error_line(), json.get_error_message()
 		])

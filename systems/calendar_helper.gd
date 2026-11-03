@@ -25,7 +25,7 @@ static func initialize(temporal_config: Dictionary) -> void:
 	
 	_start_day_offset = int(res[0]["day_diff"])
 	_initialized = true
-	print("[CalendarHelper] Initialized: Epoch '%s', Start Date '%s' (Day Offset: %d), Days/Tick: %d" % [
+	SystemLogger.log_info("[CalendarHelper] Initialized: Epoch '%s', Start Date '%s' (Day Offset: %d), Days/Tick: %d" % [
 		_epoch_date, _sim_start_date, _start_day_offset, _days_per_tick
 	])
 

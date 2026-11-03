@@ -9,9 +9,9 @@ const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const OuterShellScript = preload("res://scenes/ui/shell_host/outer_shell.gd")
 
 func _init() -> void:
-	print("\n=======================================================")
-	print("   TESTING PURE VIEW HOST (ZERO NOUN LEAKS)")
-	print("=======================================================")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   TESTING PURE VIEW HOST (ZERO NOUN LEAKS)")
+	SystemLogger.log_info("=======================================================")
 
 	# 1. Mount OuterShell and ViewHost
 	var shell_scene: PackedScene = load("res://scenes/ui/shell_host/outer_shell.tscn")
@@ -36,7 +36,7 @@ func _init() -> void:
 
 	var nav_slot = shell.get_slot("NAV")
 	assert(nav_slot != null and nav_slot.get_child_count() == 1, "NavSlot did not receive navigation component!")
-	print("  ✓ Pure navigation component mounted into generic NAV slot.")
+	SystemLogger.log_info("  ✓ Pure navigation component mounted into generic NAV slot.")
 
 	# 3. Dynamically Register All Generated Views Without Hardcoded Names
 	var dir := DirAccess.open(SCHEMAS_VIEW_DIR)
@@ -56,7 +56,7 @@ func _init() -> void:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
-	print("  ✓ Dynamically registered %d compiled views into ViewHost." % registered_count)
+	SystemLogger.log_info("  ✓ Dynamically registered %d compiled views into ViewHost." % registered_count)
 
 	# 4. Test Switching Domains and Ingesting Data Payloads (Agnostic Contract)
 	for domain_key in host._views.keys():
@@ -77,7 +77,7 @@ func _init() -> void:
 			"text": "Automated verified note."
 		})
 
-	print("  ✓ All registered views cycled through ContentSlot and ingested data cleanly.")
+	SystemLogger.log_info("  ✓ All registered views cycled through ContentSlot and ingested data cleanly.")
 
 	# 5. Clean teardown: purge views and slots before removing root
 	host.cleanup()
@@ -85,7 +85,7 @@ func _init() -> void:
 	root.remove_child(shell)
 	shell.free()
 
-	print("\n=======================================================")
-	print("   ALL VIEW HOST ARCHITECTURAL RULES VERIFIED")
-	print("=======================================================\n")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   ALL VIEW HOST ARCHITECTURAL RULES VERIFIED")
+	SystemLogger.log_info("=======================================================\n")
 	quit(0)

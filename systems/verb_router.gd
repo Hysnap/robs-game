@@ -25,7 +25,7 @@ static func initialize(active_variant: String = "") -> void:
 			_load_verb_mappings(variant_mappings)
 			
 	_initialized = true
-	print("[VERB ROUTER] Mounted %d atomic verbs into execution switchboard." % _registry.size())
+	SystemLogger.log_info("[VERB ROUTER] Mounted %d atomic verbs into execution switchboard." % _registry.size())
 
 ## Executes an action directive safely through the registered verb
 static func dispatch(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -46,6 +46,7 @@ static func dispatch(world_state: Dictionary, action_directive: Dictionary) -> D
 	
 	# 3. Locate mounted script in the registry
 	if not _registry.has(resolved_verb):
+		SystemLogger.log_error("[VERB ROUTER] No action script mounted for verb key: %s (Raw: %s)" % [resolved_verb, raw_verb])
 		push_error("[VERB ROUTER] No action script mounted for verb key: %s (Raw: %s)" % [resolved_verb, raw_verb])
 		return EngineResult.fail(
 			EngineResult.ErrorCode.ROUTER_UNMAPPED_VERB,
@@ -65,6 +66,7 @@ static func dispatch(world_state: Dictionary, action_directive: Dictionary) -> D
 	elif raw_result is Dictionary:
 		return raw_result
 		
+	SystemLogger.log_error("[VERB ROUTER] Verb '%s' returned invalid type: %s" % [raw_verb, typeof(raw_result)])
 	push_error("[VERB ROUTER] Verb '%s' returned invalid type: %s" % [raw_verb, typeof(raw_result)])
 	return EngineResult.fail(
 		EngineResult.ErrorCode.INVALID_DIRECTIVE,

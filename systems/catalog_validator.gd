@@ -249,26 +249,26 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 	return report
 
 static func _print_summary(report: Dictionary) -> void:
-	print("\n=======================================================")
-	print("       SYSTEM CATALOG AUDIT & SANITIZATION             ")
-	print("=======================================================")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("       SYSTEM CATALOG AUDIT & SANITIZATION             ")
+	SystemLogger.log_info("=======================================================")
 	var raw_c = report.get("raw_commodity_count", report.get("commodity_count", 0))
 	var san_c = report.get("sanitized_commodity_count", raw_c)
 	var raw_r = report.get("raw_recipe_count", report.get("recipe_count", 0))
 	var san_r = report.get("sanitized_recipe_count", raw_r)
 
-	print("  Discovered Categories: ", report.get("discovered_categories", []))
-	print("  Discovered Models:     ", report.get("discovered_models", []))
-	print("  Commodities: %d on disk  ->  %d surfaced to player" % [raw_c, san_c])
-	print("  Recipes:     %d on disk  ->  %d surfaced to player" % [raw_r, san_r])
-	print("  Status:      ", "100% CLEAN" if report["is_clean"] else "ISSUES DETECTED & ISOLATED")
+	SystemLogger.log_info("  Discovered Categories: ", report.get("discovered_categories", []))
+	SystemLogger.log_info("  Discovered Models:     ", report.get("discovered_models", []))
+	SystemLogger.log_info("  Commodities: %d on disk  ->  %d surfaced to player" % [raw_c, san_c])
+	SystemLogger.log_info("  Recipes:     %d on disk  ->  %d surfaced to player" % [raw_r, san_r])
+	SystemLogger.log_info("  Status:      ", "100% CLEAN" if report["is_clean"] else "ISSUES DETECTED & ISOLATED")
 
 	if not report["errors"].is_empty():
-		print("\n  [!] ISOLATED ITEMS (Hidden from player):")
+		SystemLogger.log_info("\n  [!] ISOLATED ITEMS (Hidden from player):")
 		for err in report["errors"]:
-			print("    ⚠️  ", err)
+			SystemLogger.log_info("    ⚠️  ", err)
 
-	print("=======================================================\n")
+	SystemLogger.log_info("=======================================================\n")
 
 static func _write_log_to_disk(report: Dictionary) -> void:
 	var file = FileAccess.open("user://catalog_audit.log", FileAccess.WRITE)
@@ -308,6 +308,7 @@ static func audit_hierarchy_properties(
 	}
 	
 	if not DirAccess.dir_exists_absolute(root_dir):
+		SystemLogger.log_warn("[CATALOG VALIDATOR] Directory not found for audit: %s" % root_dir)
 		push_warning("[CATALOG VALIDATOR] Directory not found for audit: %s" % root_dir)
 		return report
 
@@ -409,28 +410,28 @@ static func _read_json_file(file_path: String) -> Variant:
 	return null
 
 static func _print_hierarchy_property_summary(report: Dictionary) -> void:
-	print("\n=======================================================")
-	print("       N-TIER HIERARCHY PROPERTY AUDIT                 ")
-	print("=======================================================")
-	print("  Root Scanned:         ", report["root_dir"])
-	print("  Files Analyzed:       ", report["total_files_scanned"])
-	print("  Unique Properties:    ", report["unique_properties_discovered"].size())
-	print("\n  [PROPERTY CATALOG & DEFINITION SOURCES]")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("       N-TIER HIERARCHY PROPERTY AUDIT                 ")
+	SystemLogger.log_info("=======================================================")
+	SystemLogger.log_info("  Root Scanned:         ", report["root_dir"])
+	SystemLogger.log_info("  Files Analyzed:       ", report["total_files_scanned"])
+	SystemLogger.log_info("  Unique Properties:    ", report["unique_properties_discovered"].size())
+	SystemLogger.log_info("\n  [PROPERTY CATALOG & DEFINITION SOURCES]")
 
 	for prop in report["unique_properties_discovered"]:
 		var sources: Array = report["property_distribution"].get(prop, [])
-		print("    • %-32s (Set in %d file%s)" % [prop, sources.size(), "s" if sources.size() != 1 else ""])
+		SystemLogger.log_info("    • %-32s (Set in %d file%s)" % [prop, sources.size(), "s" if sources.size() != 1 else ""])
 		for src in sources:
 			var short_path = src.replace("res://data_modules/core/", "")
-			print("        └─ %s" % short_path)
+			SystemLogger.log_info("        └─ %s" % short_path)
 
-	print("\n  [TIER STRUCTURE TREE]")
+	SystemLogger.log_info("\n  [TIER STRUCTURE TREE]")
 	_print_tree_node_console(report["directory_tree"], 0)
-	print("=======================================================\n")
+	SystemLogger.log_info("=======================================================\n")
 
 static func _print_tree_node_console(node: Dictionary, depth: int) -> void:
 	var indent = "  ".repeat(depth)
-	print("%s📂 %s/" % [indent, node.get("folder", "")])
+	SystemLogger.log_info("%s📂 %s/" % [indent, node.get("folder", "")])
 
 	var files: Dictionary = node.get("files", {})
 	for f in files.keys():
@@ -440,7 +441,7 @@ static func _print_tree_node_console(node: Dictionary, depth: int) -> void:
 		var extra = ""
 		if override_count > 0:
 			extra = " [OVERRIDES: %s]" % ", ".join(f_info["overrides"])
-		print("%s   📄 %s -> %d properties%s" % [indent, f, keys_count, extra])
+		SystemLogger.log_info("%s   📄 %s -> %d properties%s" % [indent, f, keys_count, extra])
 
 	var subfolders: Dictionary = node.get("subfolders", {})
 	for sf in subfolders.keys():
@@ -567,28 +568,28 @@ static func full_file_path_safe(p: String) -> String:
 	return p
 
 static func _print_usage_audit_summary(report: Dictionary) -> void:
-	print("\n=======================================================")
-	print("       CATALOG PROPERTY USAGE & CODE REFERENCE AUDIT   ")
-	print("=======================================================")
-	print("  Source Files Scanned:       ", report["total_source_files_scanned"])
-	print("  Total Properties Defined:   ", report["total_defined_properties"])
-	print("  Actively Consumed:          ", report["referenced_properties"].size())
-	print("  Orphaned / Unused:          ", report["orphaned_properties"].size())
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("       CATALOG PROPERTY USAGE & CODE REFERENCE AUDIT   ")
+	SystemLogger.log_info("=======================================================")
+	SystemLogger.log_info("  Source Files Scanned:       ", report["total_source_files_scanned"])
+	SystemLogger.log_info("  Total Properties Defined:   ", report["total_defined_properties"])
+	SystemLogger.log_info("  Actively Consumed:          ", report["referenced_properties"].size())
+	SystemLogger.log_info("  Orphaned / Unused:          ", report["orphaned_properties"].size())
 	
 	if not report["referenced_properties"].is_empty():
-		print("\n  [ACTIVE CONSUMPTION TRACE]")
+		SystemLogger.log_info("\n  [ACTIVE CONSUMPTION TRACE]")
 		for token in report["referenced_properties"].keys():
 			var info = report["referenced_properties"][token]
-			print("    • %s  (Referenced in %d locations)" % [token, info["references"].size()])
+			SystemLogger.log_info("    • %s  (Referenced in %d locations)" % [token, info["references"].size()])
 			for ref in info["references"]:
-				print("        └─ %s:%d -> %s" % [ref["file"].replace("res://", ""), ref["line"], ref["snippet"]])
+				SystemLogger.log_info("        └─ %s:%d -> %s" % [ref["file"].replace("res://", ""), ref["line"], ref["snippet"]])
 
 	if not report["orphaned_properties"].is_empty():
-		print("\n  ⚠️  [ORPHANED / UNUSED PROPERTIES (Never read in code or UI)]:")
+		SystemLogger.log_info("\n  ⚠️  [ORPHANED / UNUSED PROPERTIES (Never read in code or UI)]:")
 		for orphan in report["orphaned_properties"]:
-			print("    ❌ %-25s Defined in: %s" % [orphan["token"], orphan["defined_in"]])
+			SystemLogger.log_info("    ❌ %-25s Defined in: %s" % [orphan["token"], orphan["defined_in"]])
 			
-	print("=======================================================\n")
+	SystemLogger.log_info("=======================================================\n")
 
 static func _write_usage_log_to_disk(report: Dictionary) -> void:
 	var file = FileAccess.open("user://catalog_property_usage.log", FileAccess.WRITE)
@@ -756,23 +757,23 @@ static func validate_society_manifests() -> Dictionary:
 	return report
 
 static func _print_society_summary(report: Dictionary) -> void:
-	print("\n=======================================================")
-	print("     SOCIETY MANIFEST & CROSS-REFERENCE AUDIT         ")
-	print("=======================================================")
-	print("  Labels Baseline Scanned: ", report["labels_scanned"])
-	print("  Job Definitions Scanned: ", report["jobs_scanned"])
-	print("  Archetypes Scanned:      ", report["archetypes_scanned"])
-	print("  Tenancies Scanned:       ", report["tenancies_scanned"])
-	print("  Integrity Status:        ", "100% CLEAN" if report["is_clean"] else "INTEGRITY DEFECTS FOUND")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("     SOCIETY MANIFEST & CROSS-REFERENCE AUDIT         ")
+	SystemLogger.log_info("=======================================================")
+	SystemLogger.log_info("  Labels Baseline Scanned: ", report["labels_scanned"])
+	SystemLogger.log_info("  Job Definitions Scanned: ", report["jobs_scanned"])
+	SystemLogger.log_info("  Archetypes Scanned:      ", report["archetypes_scanned"])
+	SystemLogger.log_info("  Tenancies Scanned:       ", report["tenancies_scanned"])
+	SystemLogger.log_info("  Integrity Status:        ", "100% CLEAN" if report["is_clean"] else "INTEGRITY DEFECTS FOUND")
 
 	if not report["errors"].is_empty():
-		print("\n  [!] CRITICAL DEFECTS (%d):" % report["errors"].size())
+		SystemLogger.log_info("\n  [!] CRITICAL DEFECTS (%d):" % report["errors"].size())
 		for err in report["errors"]:
-			print("    ❌ ", err)
+			SystemLogger.log_info("    ❌ ", err)
 
 	if not report["warnings"].is_empty():
-		print("\n  [*] WARNINGS (%d):" % report["warnings"].size())
+		SystemLogger.log_info("\n  [*] WARNINGS (%d):" % report["warnings"].size())
 		for warn in report["warnings"]:
-			print("    ⚠️  ", warn)
+			SystemLogger.log_info("    ⚠️  ", warn)
 
-	print("=======================================================\n")
+	SystemLogger.log_info("=======================================================\n")

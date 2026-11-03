@@ -24,6 +24,7 @@ static func initialize_database(reset_existing: bool = false, custom_path: Strin
 		close_database()
 
 	if not ClassDB.class_exists("SQLite"):
+		SystemLogger.log_critical("[DBManager CRITICAL] 'SQLite' class not found.")
 		push_error("[DBManager CRITICAL] 'SQLite' class not found! Is 2shady4u godot-sqlite enabled?")
 		return false
 
@@ -34,6 +35,7 @@ static func initialize_database(reset_existing: bool = false, custom_path: Strin
 	_db.foreign_keys = true
 
 	if not _db.open_db():
+		SystemLogger.log_critical("[DBManager CRITICAL] Failed to open SQLite connection at %s" % absolute_path)
 		push_error("[DBManager CRITICAL] Failed to open SQLite connection at %s" % absolute_path)
 		return false
 
@@ -46,7 +48,7 @@ static func initialize_database(reset_existing: bool = false, custom_path: Strin
 		_drop_society_schema()
 
 	_create_society_schema()
-	print("[DBManager] Connected to SQLite database at: %s" % absolute_path)
+	SystemLogger.log_info("[DBManager] Connected to SQLite database at: %s" % absolute_path)
 
 	# -------------------------------------------------------------
 	# 1. Ingest Core Engine Labels (GENDER, CHANGE_REASON, CONTRACT_CLASS, RELATIONSHIP_TYPE)
@@ -758,7 +760,7 @@ static func harvest_scenario_taxonomies() -> void:
 
 	execute_batch(inserts)
 	_rebuild_label_cache()
-	print("[DBManager] Synchronized %d total labels (Core JSON + Scenario Harvested)." % _label_cache.size())
+	SystemLogger.log_info("[DBManager] Synchronized %d total labels (Core JSON + Scenario Harvested)." % _label_cache.size())
 
 static func _append_label_sql(out_array: Array[String], domain: String, code: String, title: String) -> void:
 	out_array.append("""
@@ -796,7 +798,7 @@ static func _init_temporal_metadata() -> void:
 	set_metadata("pension_age_female", str(pension_f))
 	set_metadata("pension_age_male", str(pension_m))
 
-	print("[DBManager] Seeded metadata -> Epoch: '%s', Start: '%s', MinWorkAge: %d, Pension(F/M): %d/%d" % [
+	SystemLogger.log_info("[DBManager] Seeded metadata -> Epoch: '%s', Start: '%s', MinWorkAge: %d, Pension(F/M): %d/%d" % [
 		CALENDAR_HELPER.get_epoch_date(), 
 		str(temp_cfg["simulation_start_date"]),
 		min_working_age,
@@ -825,6 +827,7 @@ static func get_label_id(domain: String, code: String) -> int:
 		_label_cache[key] = id
 		return id
 
+	SystemLogger.log_error("[DBManager CRITICAL] Missing required taxonomy label in system_labels: [%s:%s]" % [domain, code])
 	push_error("[DBManager CRITICAL] Missing required taxonomy label in system_labels: [%s:%s]" % [domain, code])
 	assert(false, "FATAL: System label lookup failed for [%s:%s]. Check db_labels_en_gb.json or scenario module definitions!" % [domain, code])
 	return -1
@@ -880,7 +883,7 @@ static func is_society_populated(expected_seed: String = "") -> bool:
 			return false
 		var db_seed: String = str(seed_row[0].get("value", ""))
 		if db_seed != expected_seed:
-			print("[DBManager] Seed mismatch detected (DB: '%s' vs Current: '%s'). Rebuilding." % [db_seed, expected_seed])
+			SystemLogger.log_warn("[DBManager] Seed mismatch detected (DB: '%s' vs Current: '%s'). Rebuilding." % [db_seed, expected_seed])
 			return false
 
 	return true
@@ -910,7 +913,7 @@ static func close_database() -> void:
 		_db.close_db()
 		_db = null
 		_label_cache.clear()
-		print("[DBManager] Database connection closed.")
+		SystemLogger.log_info("[DBManager] Database connection closed.")
 
 ## Returns true if the internal SQLite instance exists and has an open connection
 static func is_database_open() -> bool:

@@ -3,6 +3,9 @@ class_name SaveManager
 extends RefCounted
 
 const SAVES_BASE_DIR := "user://saves"
+const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
+const CORE_COMMODITIES_DIR := "res://data_modules/core/commodities/"
+const CORE_RECIPES_DIR := "res://data_modules/core/recipes/"
 
 ## Returns the full directory path for a given slot
 static func get_slot_dir(slot_id: String) -> String:
@@ -48,11 +51,16 @@ static func _resolve_world_state(explicit_state: Dictionary = {}) -> Dictionary:
 ## Packages current GameState and SQLite database into the slot directory
 static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_world_state: Dictionary = {}) -> bool:
 	if not ensure_slot_dir(slot_id):
+		SystemLogger.log_error("[SaveManager] Failed to create slot directory: %s" % slot_id)
 		push_error("[SaveManager] Failed to create slot directory: %s" % slot_id)
 		return false
 
 	var slot_dir := get_slot_dir(slot_id)
 	var state_to_save := _resolve_world_state(custom_world_state)
+	SystemLogger.log_info("[SaveManager] Saving registries: commodities=%d recipes=%d." % [
+		state_to_save.get("commodity_registry", {}).size(),
+		state_to_save.get("recipe_registry", {}).size()
+	])
 
 	# 1. Save GameState JSON
 	var state_file := FileAccess.open("%s/game_state.json" % slot_dir, FileAccess.WRITE)
@@ -80,7 +88,7 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 			layout_file.store_string(JSON.stringify(layout, "\t"))
 			layout_file.close()
 
-	print("[SaveManager] Game saved successfully to: %s" % slot_dir)
+	SystemLogger.log_info("[SaveManager] Game saved successfully to: %s" % slot_dir)
 	return true
 
 ## Loads an existing save slot into GameState and mounts SQLite DB directly
@@ -90,6 +98,7 @@ static func load_game(slot_id: String) -> bool:
 	var db_path := "%s/society.db" % slot_dir
 	
 	if not FileAccess.file_exists(state_path) or not FileAccess.file_exists(db_path):
+		SystemLogger.log_error("[SaveManager] Save slot incomplete or missing: %s" % slot_id)
 		push_error("[SaveManager] Save slot incomplete or missing: %s" % slot_id)
 		return false
 
@@ -98,7 +107,11 @@ static func load_game(slot_id: String) -> bool:
 	var parsed = JSON.parse_string(file.get_as_text())
 	file.close()
 	if not parsed is Dictionary:
+		SystemLogger.log_error("[SaveManager] Corrupted game_state.json in slot: %s" % slot_id)
 		push_error("[SaveManager] Corrupted game_state.json in slot: %s" % slot_id)
+		return false
+	var catalogs_repaired: Variant = _ensure_catalog_registries(parsed, slot_id)
+	if catalogs_repaired == null:
 		return false
 
 	var main_loop := Engine.get_main_loop()
@@ -118,11 +131,60 @@ static func load_game(slot_id: String) -> bool:
 
 	# 3. Mount SQLite database directly in place
 	if not DBManager.initialize_database(false, db_path):
+		SystemLogger.log_error("[SaveManager] Failed to mount database from: %s" % db_path)
 		push_error("[SaveManager] Failed to mount database from: %s" % db_path)
 		return false
 
-	print("[SaveManager] Loaded game slot: %s" % slot_id)
+	if catalogs_repaired:
+		var repaired_file := FileAccess.open(state_path, FileAccess.WRITE)
+		if repaired_file == null:
+			var repair_error := "[SaveManager] Failed to persist repaired registries for save '%s' (Error: %d)." % [
+				slot_id, FileAccess.get_open_error()
+			]
+			SystemLogger.log_error(repair_error)
+			push_error(repair_error)
+			return false
+		repaired_file.store_string(JSON.stringify(parsed, "\t"))
+		repaired_file.close()
+		SystemLogger.log_info("[SaveManager] Persisted repaired registries for save '%s'." % slot_id)
+
+	SystemLogger.log_info("[SaveManager] Loaded game slot: %s (commodities=%d recipes=%d)." % [
+		slot_id,
+		parsed.get("commodity_registry", {}).size(),
+		parsed.get("recipe_registry", {}).size()
+	])
 	return true
+
+## Repairs legacy or incomplete saves that do not contain runtime catalog data.
+static func _ensure_catalog_registries(state: Dictionary, slot_id: String) -> Variant:
+	var commodity_registry: Dictionary = state.get("commodity_registry", {})
+	var recipe_registry: Dictionary = state.get("recipe_registry", {})
+	var repaired := false
+
+	if commodity_registry.is_empty():
+		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty commodity registry; rehydrating from core catalog." % slot_id)
+		commodity_registry = COMMODITY_MANAGER.load_hierarchical_commodities(CORE_COMMODITIES_DIR)
+		state["commodity_registry"] = commodity_registry
+		repaired = true
+
+	if recipe_registry.is_empty():
+		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty recipe registry; rehydrating from core catalog." % slot_id)
+		recipe_registry = COMMODITY_MANAGER.load_hierarchical_commodities(CORE_RECIPES_DIR)
+		state["recipe_registry"] = recipe_registry
+		repaired = true
+
+	SystemLogger.log_info("[SaveManager] Catalog registries ready: commodities=%d recipes=%d." % [
+		commodity_registry.size(),
+		recipe_registry.size()
+	])
+
+	if commodity_registry.is_empty() or recipe_registry.is_empty():
+		var message := "[SaveManager] Could not restore required catalog registries for save '%s'." % slot_id
+		SystemLogger.log_error(message)
+		push_error(message)
+		return null
+
+	return repaired
 
 # ==============================================================================
 # NON-IRONMAN PER-TURN SNAPSHOTS (Developer & Debugging State History)
@@ -133,6 +195,7 @@ static func save_turn_snapshot(slot_id: String, turn_index: int, state: Dictiona
 	var snap_dir := get_snapshots_dir(slot_id)
 	var dir_err := DirAccess.make_dir_recursive_absolute(snap_dir)
 	if dir_err != OK and dir_err != ERR_ALREADY_EXISTS:
+		SystemLogger.log_error("[SaveManager] Failed to create snapshots directory: %s" % snap_dir)
 		push_error("[SaveManager] Failed to create snapshots directory: %s" % snap_dir)
 		return ""
 
@@ -148,13 +211,14 @@ static func save_turn_snapshot(slot_id: String, turn_index: int, state: Dictiona
 	file.store_string(JSON.stringify(state, "\t"))
 	file.close()
 
-	print("[SaveManager] Turn %d snapshot written: %s" % [turn_index, file_path])
+	SystemLogger.log_info("[SaveManager] Turn %d snapshot written: %s" % [turn_index, file_path])
 	return file_path
 
 ## Loads a specific turn snapshot back into GameState memory
 static func load_turn_snapshot(slot_id: String, turn_index: int) -> Dictionary:
 	var file_path := get_snapshots_dir(slot_id).path_join("turn_%03d.json" % turn_index)
 	if not FileAccess.file_exists(file_path):
+		SystemLogger.log_error("[SaveManager] Snapshot not found: %s" % file_path)
 		push_error("[SaveManager] Snapshot not found: %s" % file_path)
 		return {}
 
@@ -174,7 +238,7 @@ static func load_turn_snapshot(slot_id: String, turn_index: int) -> Dictionary:
 		var gs = main_loop.root.get_node("GameState")
 		gs.world_state = parsed
 
-	print("[SaveManager] Restored turn %d snapshot from: %s" % [turn_index, file_path])
+	SystemLogger.log_info("[SaveManager] Restored turn %d snapshot from: %s" % [turn_index, file_path])
 	return parsed
 
 ## Lists all snapshot paths in a given slot in chronological turn order

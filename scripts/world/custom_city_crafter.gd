@@ -231,7 +231,7 @@ func generate_buildings_async() -> void:
 
 ## Overrides ground generation loop using batching and logging controls from business_rules.cfg
 func generate_ground_planes_async() -> void:
-	print(">>> RUNNING CUSTOM CITY CRAFTER GROUND GENERATION <<<")
+	SystemLogger.log_info(">>> RUNNING CUSTOM CITY CRAFTER GROUND GENERATION <<<")
 	if not city_configuration.generate_ground:
 		return
 		
@@ -415,7 +415,7 @@ func export_visual_layout() -> Dictionary:
 
 	# 2. Capture Road and Intersection Meshes
 	var all_meshes = find_children("*", "MeshInstance3D", true, false)
-	print("[CustomCityCrafter] Total MeshInstance3D nodes found during export: %d" % all_meshes.size())
+	SystemLogger.log_info("[CustomCityCrafter] Total MeshInstance3D nodes found during export: %d" % all_meshes.size())
 
 	for mesh_node in all_meshes:
 		# Districts have block_id, skip them here
@@ -443,7 +443,7 @@ func export_visual_layout() -> Dictionary:
 				"size": sz
 			})
 
-	print("[CustomCityCrafter] Successfully exported %d road segments into layout." % layout["roads"].size())
+	SystemLogger.log_info("[CustomCityCrafter] Successfully exported %d road segments into layout." % layout["roads"].size())
 	return layout
 
 ## Instantiates ground planes and roads directly from saved layout data
@@ -632,7 +632,7 @@ func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data
 			"origin": origin,
 			"footprint": footprint
 		})
-		print("[CustomCityCrafter] Preclaimed '%s' [%d x %d cells for %.0f m²] at %s" % [
+		SystemLogger.log_info("[CustomCityCrafter] Preclaimed '%s' [%d x %d cells for %.0f m²] at %s" % [
 			arch_key, footprint.x, footprint.y, sqm, origin
 		])
 

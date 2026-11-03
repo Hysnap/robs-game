@@ -7,13 +7,15 @@ const StationeryRegistryScript = preload("res://scenes/ui/feedback/stationery_re
 
 ## Executes staged directives through SimController, updates world state, and returns UI payloads
 static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = null) -> Dictionary:
+	SystemLogger.log_info("[OperationsController] Executing %d staged directives." % staged_orders.size())
 	var gs = ScenarioManifestManager.get_game_state()
 	if gs == null or not "world_state" in gs:
+		SystemLogger.log_error("[OperationsController] GameState or world_state unmounted.")
 		push_error("[OperationsController] GameState or world_state unmounted.")
 		return {}
 
 	if staged_orders.is_empty():
-		print("[OperationsController] No directives staged for operational cycle.")
+		SystemLogger.log_info("[OperationsController] No directives staged for operational cycle.")
 		return {}
 
 	# 1. Run pure simulation cycle
@@ -62,6 +64,7 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 	if gs.has_signal("turn_advanced"):
 		gs.turn_advanced.emit(report.get("week", 1), report.get("day", 1))
 
+	SystemLogger.log_info("[OperationsController] Operational cycle produced %d feedback cards." % cards.size())
 	return report
 
 ## Files a card slip into the appropriate ledger domain
@@ -72,4 +75,4 @@ static func file_card_slip(card_payload: Dictionary, view_host: ViewHost = null)
 			"tick": card_payload.get("tick", 1),
 			"text": card_payload.get("display_text", "")
 		})
-	print("[OperationsController] Filed slip to %s: %s" % [dest, card_payload.get("display_text")])
+	SystemLogger.log_info("[OperationsController] Filed slip to %s: %s" % [dest, card_payload.get("display_text")])

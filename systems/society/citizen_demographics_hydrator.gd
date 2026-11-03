@@ -59,7 +59,7 @@ static func run(
 	var db_accum_ms: int = 0
 	var gen_accum_ms: int = 0
 
-	print("  [Pass 3] Hydrating %d households with realistic family archetypes..." % total_hh)
+	SystemLogger.log_info("  [Pass 3] Hydrating %d households with realistic family archetypes..." % total_hh)
 
 	for hh in generated_households:
 		hh_idx += 1
@@ -221,7 +221,7 @@ static func run(
 			var db_time: int = Time.get_ticks_msec() - db_t0
 			db_accum_ms += db_time
 
-			print("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
+			SystemLogger.log_info("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
 				hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
 			])
 
@@ -256,7 +256,7 @@ static func run(
 		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()
 
 	var total_time_ms: int = Time.get_ticks_msec() - pass3_start_ms
-	print("  ✓ Pass 3 Completed in %dms (Gen Compute: %dms | DB Commits: %dms) | Created %d citizens." % [
+	SystemLogger.log_info("  ✓ Pass 3 Completed in %dms (Gen Compute: %dms | DB Commits: %dms) | Created %d citizens." % [
 		total_time_ms, gen_accum_ms, db_accum_ms, current_resident_id - 1
 	])
 	audit_generated_jobs_by_education()
@@ -721,9 +721,9 @@ static func pick_anchor(
 ## -----------------------------------------------------------------------------
 
 static func audit_generated_jobs_by_education() -> void:
-	print("\n==========================================================================")
-	print("               SOCIETY LABOR & EDUCATION AUDIT REPORT                     ")
-	print("==========================================================================")
+	SystemLogger.log_info("\n==========================================================================")
+	SystemLogger.log_info("               SOCIETY LABOR & EDUCATION AUDIT REPORT                     ")
+	SystemLogger.log_info("==========================================================================")
 
 	var query := """
 		SELECT 
@@ -744,8 +744,8 @@ static func audit_generated_jobs_by_education() -> void:
 
 	var results: Array = DB_MANAGER.query_rows(query)
 	if results.is_empty():
-		print("  [Audit] No contract records found.")
-		print("==========================================================================\n")
+		SystemLogger.log_info("  [Audit] No contract records found.")
+		SystemLogger.log_info("==========================================================================\n")
 		return
 
 	var current_edu: String = ""
@@ -762,11 +762,11 @@ static func audit_generated_jobs_by_education() -> void:
 
 		if edu != current_edu:
 			current_edu = edu
-			print("\n▶ [Education Tier: %s]" % current_edu)
-			print("  %-24s | %-16s | %-6s | %-9s | %-8s" % ["Role Title", "Class", "Count", "Avg Rate", "Avg Hrs"])
-			print("  ------------------------------------------------------------------------")
+			SystemLogger.log_info("\n▶ [Education Tier: %s]" % current_edu)
+			SystemLogger.log_info("  %-24s | %-16s | %-6s | %-9s | %-8s" % ["Role Title", "Class", "Count", "Avg Rate", "Avg Hrs"])
+			SystemLogger.log_info("  ------------------------------------------------------------------------")
 
-		print("  %-24s | %-16s | %-6d | £%-8.2f | %-5.1f hrs" % [role, cls, count, rate, hours])
+		SystemLogger.log_info("  %-24s | %-16s | %-6d | £%-8.2f | %-5.1f hrs" % [role, cls, count, rate, hours])
 
 	var summary_query := """
 		SELECT 
@@ -787,15 +787,15 @@ static func audit_generated_jobs_by_education() -> void:
 	"""
 	var summary_results: Array = DB_MANAGER.query_rows(summary_query)
 
-	print("\n------------------------------------------------------------------------------------------------")
-	print("                                SUMMARY BY EDUCATION LEVEL                                      ")
-	print("------------------------------------------------------------------------------------------------")
-	print("  %-20s | %-8s | %-14s | %-10s | %-12s | %-16s | %-10s" % [
+	SystemLogger.log_info("\n------------------------------------------------------------------------------------------------")
+	SystemLogger.log_info("                                SUMMARY BY EDUCATION LEVEL                                      ")
+	SystemLogger.log_info("------------------------------------------------------------------------------------------------")
+	SystemLogger.log_info("  %-20s | %-8s | %-14s | %-10s | %-12s | %-16s | %-10s" % [
 		"Education Level", "Pop", "Formal Workers", "Students", "Homemakers", "Unemployed/Other", "Pensioners"
 	])
-	print("  ------------------------------------------------------------------------------------------------")
+	SystemLogger.log_info("  ------------------------------------------------------------------------------------------------")
 	for s_row in summary_results:
-		print("  %-20s | %-8d | %-14d | %-10d | %-12d | %-16d | %-10d" % [
+		SystemLogger.log_info("  %-20s | %-8d | %-14d | %-10d | %-12d | %-16d | %-10d" % [
 			str(s_row["education_level"]),
 			int(s_row["citizen_count"]),
 			int(s_row["formal_workers"]),
@@ -805,6 +805,6 @@ static func audit_generated_jobs_by_education() -> void:
 			int(s_row["pensioners"])
 		])
 
-	print("================================================================================================")
-	print("  Total Contracted Citizens: %d" % total_city_jobs)
-	print("================================================================================================\n")
+	SystemLogger.log_info("================================================================================================")
+	SystemLogger.log_info("  Total Contracted Citizens: %d" % total_city_jobs)
+	SystemLogger.log_info("================================================================================================\n")

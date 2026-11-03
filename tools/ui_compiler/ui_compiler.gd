@@ -26,7 +26,7 @@ static func compile_all() -> void:
 	dir.list_dir_end()
 
 	sync_localization_tokens(harvested_tokens)
-	print("[UICompiler] Build and verification complete. Artifacts written to: " + OUTPUT_DIR)
+	SystemLogger.log_info("[UICompiler] Build and verification complete. Artifacts written to: " + OUTPUT_DIR)
 
 static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> void:
 	var file := FileAccess.open(schema_path, FileAccess.READ)
@@ -175,7 +175,7 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 
 	# 2. Enforced Post-Compilation Validation
 	_validate_generated_view(out_path, declared_signals)
-	print("[UICompiler] Generated & Validated: " + out_path)
+	SystemLogger.log_info("[UICompiler] Generated & Validated: " + out_path)
 
 static func _validate_generated_view(out_path: String, expected_signals: Dictionary) -> void:
 	var script_res = load(out_path)
@@ -245,7 +245,7 @@ static func sync_localization_tokens(tokens_to_sync: Dictionary) -> void:
 			for h in range(2, headers.size()):
 				row_cols.append("\"\"")
 			appended_lines.append(",".join(row_cols))
-			print("[UICompiler] Appended token to ui_strings.csv: " + token_key)
+			SystemLogger.log_info("[UICompiler] Appended token to ui_strings.csv: " + token_key)
 
 	if not appended_lines.is_empty():
 		var out_file := FileAccess.open(UI_STRINGS_PATH, FileAccess.WRITE)

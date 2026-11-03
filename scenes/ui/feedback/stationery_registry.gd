@@ -11,6 +11,7 @@ static func initialize(manifest_path: String = "res://data_modules/core/ui_schem
 		return
 
 	if not FileAccess.file_exists(manifest_path):
+		SystemLogger.log_error("[StationeryRegistry] Manifest missing at: %s" % manifest_path)
 		push_error("[StationeryRegistry] Manifest missing at: %s" % manifest_path)
 		return
 
@@ -32,7 +33,7 @@ static func initialize(manifest_path: String = "res://data_modules/core/ui_schem
 				_cached_definitions[id] = parsed
 				
 	_initialized = true
-	print("[StationeryRegistry] Ingested %d stationery definitions for shell manifest." % _cached_definitions.size())
+	SystemLogger.log_info("[StationeryRegistry] Ingested %d stationery definitions for shell manifest." % _cached_definitions.size())
 
 static func get_definition(def_id: String) -> Dictionary:
 	initialize()

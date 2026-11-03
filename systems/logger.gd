@@ -12,6 +12,7 @@ static var _instance: AppLogger = null
 var active_log_level: Level = Level.DEBUG
 var log_file: FileAccess = null
 var _is_file_enabled: bool = true
+var _is_console_enabled: bool = true
 var _log_path: String = DEFAULT_LOG_PATH
 
 func _enter_tree() -> void:
@@ -40,6 +41,7 @@ func _init_configuration() -> void:
 			_: active_log_level = Level.DEBUG
 
 		_is_file_enabled = bool(cfg.get_value("system_diagnostics", "enable_file_logging", true))
+		_is_console_enabled = bool(cfg.get_value("system_diagnostics", "enable_console_logging", true))
 		_log_path = str(cfg.get_value("system_diagnostics", "session_log_path", DEFAULT_LOG_PATH))
 
 func _open_log_stream() -> void:
@@ -56,10 +58,11 @@ func _log_message(level: Level, tag: String, message: String) -> void:
 	var time_str := Time.get_time_string_from_system()
 	var formatted := "[%s] [%s] %s" % [time_str, tag, message]
 
-	if level >= Level.ERROR:
-		push_error(formatted)
-	else:
-		print(formatted)
+	if _is_console_enabled:
+		if level >= Level.ERROR:
+			push_error(formatted)
+		else:
+			print(formatted)
 
 	if _is_file_enabled and log_file:
 		log_file.store_line(formatted)
@@ -73,26 +76,42 @@ func error(msg: String) -> void: _log_message(Level.ERROR, "ERROR", msg)
 func critical(msg: String) -> void: _log_message(Level.CRITICAL, "CRIT ", msg)
 
 # --- Static Fallback API (AppLogger.log_info(...)) ---
-static func log_info(msg: String) -> void:
+static func log_info(msg: String, detail: Variant = null) -> void:
+	if detail != null:
+		msg = "%s %s" % [msg, detail]
 	if _instance:
 		_instance.info(msg)
 	else:
 		print("[%s] [INFO ] %s" % [Time.get_time_string_from_system(), msg])
 
-static func log_error(msg: String) -> void:
+static func log_error(msg: String, detail: Variant = null) -> void:
+	if detail != null:
+		msg = "%s %s" % [msg, detail]
 	if _instance:
 		_instance.error(msg)
 	else:
 		push_error("[%s] [ERROR] %s" % [Time.get_time_string_from_system(), msg])
 
-static func log_debug(msg: String) -> void:
+static func log_debug(msg: String, detail: Variant = null) -> void:
+	if detail != null:
+		msg = "%s %s" % [msg, detail]
 	if _instance:
 		_instance.debug(msg)
 	else:
 		print("[%s] [DEBUG] %s" % [Time.get_time_string_from_system(), msg])
 
-static func log_warn(msg: String) -> void:
+static func log_warn(msg: String, detail: Variant = null) -> void:
+	if detail != null:
+		msg = "%s %s" % [msg, detail]
 	if _instance:
 		_instance.warn(msg)
 	else:
 		print("[%s] [WARN ] %s" % [Time.get_time_string_from_system(), msg])
+
+static func log_critical(msg: String, detail: Variant = null) -> void:
+	if detail != null:
+		msg = "%s %s" % [msg, detail]
+	if _instance:
+		_instance.critical(msg)
+	else:
+		push_error("[%s] [CRIT ] %s" % [Time.get_time_string_from_system(), msg])

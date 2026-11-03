@@ -150,6 +150,6 @@ static func cluster_districts_into_boroughs(
 	DB_MANAGER.execute_batch(borough_inserts)
 	DB_MANAGER.execute_batch(update_statements)
 
-	print("  ✓ UK Organic Borough Realignment: Clustered %d districts into %d municipal wards." % [
+	SystemLogger.log_info("  ✓ UK Organic Borough Realignment: Clustered %d districts into %d municipal wards." % [
 		num_districts, borough_defs.size()
 	])

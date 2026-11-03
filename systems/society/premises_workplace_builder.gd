@@ -344,7 +344,7 @@ static func run(
 		DB_MANAGER.execute_batch(job_slot_inserts)
 		job_slot_inserts.clear()
 
-	print("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
+	SystemLogger.log_info("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
 		est_id - 1, current_household_id - 1, available_job_slots.size()
 	])
 

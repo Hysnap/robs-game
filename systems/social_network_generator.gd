@@ -40,7 +40,7 @@ static func generate_city_society(
 	on_progress: Callable = Callable()
 ) -> void:
 	if not force_regenerate and DB_MANAGER.is_society_populated(seed_id):
-		print("[SocialNetwork] Society for seed '%s' already exists in SQLite. Skipping generation." % seed_id)
+		SystemLogger.log_info("[SocialNetwork] Society for seed '%s' already exists in SQLite. Skipping generation." % seed_id)
 		return
 
 	_load_configs()
@@ -48,7 +48,7 @@ static func generate_city_society(
 	DB_MANAGER.record_active_seed(seed_id)
 
 	var start_ms: int = Time.get_ticks_msec()
-	print("[SocialNetwork] Commencing 4-Pass modular urban society generation...")
+	SystemLogger.log_info("[SocialNetwork] Commencing 4-Pass modular urban society generation...")
 
 	var districts: Dictionary = world_state.get("districts", {})
 	assert(not districts.is_empty(), "FATAL: world_state has no districts during society generation.")
@@ -117,19 +117,21 @@ static func generate_city_society(
 		on_progress.call(100.0, 100.0, "Living society complete in %d ms." % elapsed)
 		await Engine.get_main_loop().process_frame
 
-	print("[SocialNetwork] Generation complete across all passes in %d ms." % elapsed)
+	SystemLogger.log_info("[SocialNetwork] Generation complete across all passes in %d ms." % elapsed)
 
 	# -------------------------------------------------------------------------
 	# POST-GENERATION HEALTH & LABOR MARKET AUDIT
 	# -------------------------------------------------------------------------
-	print("[SocialNetwork] Compiling automated city health and labor market audit...")
+	SystemLogger.log_info("[SocialNetwork] Compiling automated city health and labor market audit...")
 	var audit_report := CITY_AUDITOR.audit_and_save(world_state, DB_MANAGER)
 	if audit_report.has("report_path"):
-		print("  ✓ City Audit Report generated: %s" % audit_report["report_path"])
+		SystemLogger.log_info("  ✓ City Audit Report generated: %s" % audit_report["report_path"])
 		if not audit_report.get("is_healthy", false):
 			for warning in audit_report.get("warnings", []):
-				print("    [Audit Warning] %s" % warning)
+				SystemLogger.log_info("    [Audit Warning] %s" % warning)
 			for err in audit_report.get("errors", []):
+				SystemLogger.log_warn("[Audit Error] %s" % err)
 				push_warning("[Audit Error] %s" % err)
 	else:
+		SystemLogger.log_warn("[SocialNetwork] CityAuditor did not write a report.")
 		push_warning("[SocialNetwork] CityAuditor did not write a report.")

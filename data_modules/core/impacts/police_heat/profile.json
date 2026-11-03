@@ -37,11 +37,11 @@
       "error_floor": 0.01,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.15, "token": "UI_HEAT_DORMANT" },
-        { "max": 0.35, "token": "UI_HEAT_PATROLLED" },
-        { "max": 0.60, "token": "UI_HEAT_ALERT" },
-        { "max": 0.85, "token": "UI_HEAT_SATURATED" },
-        { "token": "UI_HEAT_CRACKDOWN" }
+        { "max": 0.15, "token": "UI_HEAT_COLD" },
+        { "max": 0.35, "token": "UI_HEAT_NORMAL" },
+        { "max": 0.60, "token": "UI_HEAT_HEIGHTENED" },
+        { "max": 0.85, "token": "UI_HEAT_ACUTE" },
+        { "token": "UI_HEAT_CRITICAL" }
       ]
     }
   }

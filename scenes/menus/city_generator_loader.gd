@@ -16,6 +16,7 @@ func _ready() -> void:
 
 	var gen_seed: String = str(settings.get("seed_id", settings.get("seed", "midlands-1984"))).strip_edges()
 	var target_slot: String = str(settings.get("save_slot", SaveManager.get_next_available_slot()))
+	SystemLogger.log_info("[CityGeneratorLoader] Starting generation for seed '%s' in slot '%s'." % [gen_seed, target_slot])
 
 	# 2. Trigger Controller Pipeline
 	_execute_generation(gen_seed, target_slot, settings)
@@ -29,12 +30,15 @@ func _execute_generation(gen_seed: String, slot_id: String, settings: Dictionary
 	)
 
 	if success:
+		SystemLogger.log_info("[CityGeneratorLoader] City generation completed; opening city view.")
 		await get_tree().create_timer(0.3).timeout
 		get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
 	else:
+		SystemLogger.log_error("[CityGeneratorLoader] City generation failed.")
 		status_label.text = "ERROR: Generation Failed. See Logs."
 
 func _on_pipeline_progress(percent: float, stage_title: String, detail_text: String) -> void:
+	SystemLogger.log_debug("[CityGeneratorLoader] Generation progress %.1f%%: %s" % [percent, stage_title])
 	if _progress_tween and _progress_tween.is_valid():
 		_progress_tween.kill()
 

@@ -9,6 +9,7 @@ const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
+	SystemLogger.log_debug("[SimController] Executing directive: %s" % action_directive.get("verb", action_directive.get("type", "")))
 	var result: Dictionary = _VerbRouter.dispatch(world_state, action_directive)
 	
 	if result.get("success", false):
@@ -27,11 +28,13 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 				
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_key, delta_val)
 		
+	SystemLogger.log_info("[SimController] Directive completed: success=%s" % result.get("success", false))
 	return result
 
 ## Processes complete operational cycle: resolves directives, advances time via CalendarHelper,
 ## triggers ambient drift, and returns structured cycle report.
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
+	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
 	var meta: Dictionary = world_state.get("metadata", {})
 	# Current time is anchored by a single monotonic day offset
 	var current_day: int = int(meta.get("current_sim_day", _CalendarHelper.get_simulation_start_day()))
@@ -149,6 +152,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
+	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (week rollover=%s)." % [current_day, crossed_boundary])
 
 	return {
 		"current_sim_day": current_day,

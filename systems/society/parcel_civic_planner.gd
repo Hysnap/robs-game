@@ -177,7 +177,7 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 			placed_by_type[code].append(chosen["center"])
 			placed += 1
 
-		print("  ✓ Cadence: Placed %d '%s' facilities (Quota: %d)" % [placed, code, quota])
+		SystemLogger.log_info("  ✓ Cadence: Placed %d '%s' facilities (Quota: %d)" % [placed, code, quota])
 
 	_reclassify_surplus_vacant_parcels(districts)
 
@@ -263,7 +263,7 @@ static func _reclassify_surplus_vacant_parcels(districts: Dictionary) -> void:
 			count += 1
 
 	if count > 0:
-		print("  ✓ Reassigned %d surplus vacant parcels to allotments/cleared sites/scrap sidings." % count)
+		SystemLogger.log_info("  ✓ Reassigned %d surplus vacant parcels to allotments/cleared sites/scrap sidings." % count)
 
 static func get_district_area_sqm(district: Dictionary, _archetypes: Dictionary) -> float:
 	var cfg = ScenarioManifestManager.get_city_configuration()

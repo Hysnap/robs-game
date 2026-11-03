@@ -14,12 +14,12 @@ const CommodityManagerScript = preload("res://systems/commodity_manager.gd")
 const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
 
 func _init() -> void:
-	print("\n=======================================================")
-	print("   HEADLESS BRIDGE TEST: TURN COMMIT, INBOX & LEDGERS")
-	print("=======================================================")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   HEADLESS BRIDGE TEST: TURN COMMIT, INBOX & LEDGERS")
+	SystemLogger.log_info("=======================================================")
 
 	# 1. MOUNT ENGINE SUBSYSTEMS & REGISTRIES
-	print("\n[STEP 1] Booting simulation switchboards & commodity catalogs...")
+	SystemLogger.log_info("\n[STEP 1] Booting simulation switchboards & commodity catalogs...")
 	DBManagerScript.initialize_database(false)
 	CalendarHelperScript.initialize({
 		"epoch_date": "1900-01-01",
@@ -56,13 +56,13 @@ func _init() -> void:
 			}
 		}
 	}
-	print("  ✓ Engine initialized. World cash: £%.2f | District heat: %.2f" % [
+	SystemLogger.log_info("  ✓ Engine initialized. World cash: £%.2f | District heat: %.2f" % [
 		world_state["finances"]["liquid_cash"],
 		world_state["districts"]["DIST_ASTON_01"]["actual_police_heat"]
 	])
 
 	# 2. MOUNT PRESENTATION LAYER (SHELL, VIEWHOST, SPREAD WRAPPER)
-	print("\n[STEP 2] Assembling presentation layer (OuterShell, ViewHost, StaggeredCardStack)...")
+	SystemLogger.log_info("\n[STEP 2] Assembling presentation layer (OuterShell, ViewHost, StaggeredCardStack)...")
 	var shell_scene: PackedScene = load("res://scenes/ui/shell_host/outer_shell.tscn")
 	assert(shell_scene != null, "outer_shell.tscn failed to load!")
 	var shell: OuterShell = shell_scene.instantiate() as OuterShell
@@ -98,10 +98,10 @@ func _init() -> void:
 	shell.mount_view("ACTION", planner)
 	host.attach_action_system(planner, card_stack, null)
 	host.switch_to_domain("DIARY")
-	print("  ✓ Navigation, Docket, Cashbook, Diary, and Action Planner mounted cleanly.")
+	SystemLogger.log_info("  ✓ Navigation, Docket, Cashbook, Diary, and Action Planner mounted cleanly.")
 
 	# 3. TEST DIRECTIVE STAGING, REORDERING & DISPATCH THROUGH VIEWHOST
-	print("\n[STEP 3] Testing directive staging & reordering in ViewHost...")
+	SystemLogger.log_info("\n[STEP 3] Testing directive staging & reordering in ViewHost...")
 	var directive_1: Dictionary = {
 		"verb": "BUY",
 		"initiator_id": "STAFF_BILLY",
@@ -140,7 +140,7 @@ func _init() -> void:
 
 	var reordered_queue: Array = host.get_staged_directives()
 	assert(reordered_queue[0]["verb"] == "SELL", "Reordering failed: SELL directive should now be index 0!")
-	print("  ✓ Staging buffer and priority reordering verified (SELL prioritized ahead of BUY).")
+	SystemLogger.log_info("  ✓ Staging buffer and priority reordering verified (SELL prioritized ahead of BUY).")
 
 	# Trigger shift commitment signal
 	var test_signal_fired := {"fired": false, "code": ""}
@@ -159,10 +159,10 @@ func _init() -> void:
 
 	assert(test_signal_fired["fired"], "Action requested failed to emit from ViewHost!")
 	assert(test_signal_fired["code"] == "COMMIT_SHIFT", "Expected 'COMMIT_SHIFT' action code!")
-	print("  ✓ Shift execution triggered cleanly via 'COMMIT_SHIFT' button.")
+	SystemLogger.log_info("  ✓ Shift execution triggered cleanly via 'COMMIT_SHIFT' button.")
 
 	# 4. EXECUTE TURN & INSCRIBE ORDERS INTO DIARY
-	print("\n[STEP 4] Executing turn: inscribe orders into Diary & run SimController...")
+	SystemLogger.log_info("\n[STEP 4] Executing turn: inscribe orders into Diary & run SimController...")
 	var active_orders: Array = [directive_2] # Process the SELL directive
 	for cmd in active_orders:
 		host.inscribe_entry_to_domain("DIARY", {
@@ -177,7 +177,7 @@ func _init() -> void:
 	elif "_inscribed_entries_container" in diary:
 		diary_container = diary._inscribed_entries_container
 	assert(diary_container != null and diary_container.get_child_count() >= 1, "Diary failed to inscribe dispatched order!")
-	print("  ✓ Dispatched order inscribed on Diary ruled lines (%d entries present)." % diary_container.get_child_count())
+	SystemLogger.log_info("  ✓ Dispatched order inscribed on Diary ruled lines (%d entries present)." % diary_container.get_child_count())
 
 	# Run SimController cycle
 	var turn_report: Dictionary = SimControllerScript.process_turn_cycle(world_state, active_orders)
@@ -187,17 +187,17 @@ func _init() -> void:
 	# Verify state mutation: Cash credited and stock decremented
 	assert(world_state["finances"]["liquid_cash"] == 135.0, "Liquid cash failed to credit from sale!")
 	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "Inventory stock failed to decrement!")
-	print("  ✓ SimController execution succeeded: £135.00 vault cash, 10 units stock remaining.")
+	SystemLogger.log_info("  ✓ SimController execution succeeded: £135.00 vault cash, 10 units stock remaining.")
 
 	# 5. TRANSLATE EVENT TRIGGERS INTO MODULAR CARD STACK
-	print("\n[STEP 5] Translating pure telemetry triggers to desk cards...")
+	SystemLogger.log_info("\n[STEP 5] Translating pure telemetry triggers to desk cards...")
 	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(event_triggers)
 	card_stack.push_cards(cards)
 	assert(card_stack.get_card_count() >= 1, "CardStack failed to accept translated cards!")
-	print("  ✓ Translated outcome card landed on desktop stack (%d cards queued)." % card_stack.get_card_count())
+	SystemLogger.log_info("  ✓ Translated outcome card landed on desktop stack (%d cards queued)." % card_stack.get_card_count())
 
 	# 6. TEST PHYSICAL TRIAGE: 📌 FILE RECEIPT TO FINANCE
-	print("\n[STEP 6] Testing Triage Action: 📌 File Receipt to FINANCE...")
+	SystemLogger.log_info("\n[STEP 6] Testing Triage Action: 📌 File Receipt to FINANCE...")
 	var initial_evidence: float = float(world_state["operations"]["police_evidence_weight"])
 
 	var triage_recorded := {"filed": false}
@@ -224,10 +224,10 @@ func _init() -> void:
 		cashbook_container = cashbook._inscribed_entries_container
 	assert(cashbook_container != null and cashbook_container.get_child_count() >= 1, "Cashbook failed to inscribe filed receipt!")
 	assert(is_equal_approx(world_state["operations"]["police_evidence_weight"], initial_evidence + 0.08), "Evidence weight did not increment on file!")
-	print("  ✓ Card filed into Cashbook ledger; police evidence updated to: %.2f" % world_state["operations"]["police_evidence_weight"])
+	SystemLogger.log_info("  ✓ Card filed into Cashbook ledger; police evidence updated to: %.2f" % world_state["operations"]["police_evidence_weight"])
 
 	# 7. TEST VIEW SWITCHING & DATA BINDING
-	print("\n[STEP 7] Testing ViewHost domain switching & Finance bind_data()...")
+	SystemLogger.log_info("\n[STEP 7] Testing ViewHost domain switching & Finance bind_data()...")
 	host.switch_to_domain("FINANCE")
 	host.update_active_view_data({
 		"reported_cash": world_state["finances"]["liquid_cash"],
@@ -242,7 +242,7 @@ func _init() -> void:
 
 	assert(cash_lbl != null, "liquid_cash label missing in Cashbook view!")
 	assert(cash_lbl.text.contains("135"), "Cashbook failed to format synced cash! Label text: %s" % cash_lbl.text)
-	print("  ✓ Switched to FINANCE view. Inked liquid cash bound: %s" % cash_lbl.text)
+	SystemLogger.log_info("  ✓ Switched to FINANCE view. Inked liquid cash bound: %s" % cash_lbl.text)
 
 	# Clean synchronous teardown
 	host.cleanup()
@@ -253,7 +253,7 @@ func _init() -> void:
 	shell.free()
 	card_stack.free()
 
-	print("\n=======================================================")
-	print("   ALL BRIDGE ORCHESTRATION TESTS PASSED CLEANLY")
-	print("=======================================================\n")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   ALL BRIDGE ORCHESTRATION TESTS PASSED CLEANLY")
+	SystemLogger.log_info("=======================================================\n")
 	quit(0)

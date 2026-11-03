@@ -8,9 +8,9 @@ const SCHEMAS_VIEW_DIR := "res://data_modules/core/ui_schemas/views/"
 const GENERATED_DIR := "res://generated/ui/"
 
 func _init() -> void:
-	print("\n=======================================================")
-	print("   DYNAMIC UI COMPILER & CONTRACT TEST SUITE")
-	print("=======================================================")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   DYNAMIC UI COMPILER & CONTRACT TEST SUITE")
+	SystemLogger.log_info("=======================================================")
 
 	# 1. Discover all screen schemas under views/
 	var dir := DirAccess.open(SCHEMAS_VIEW_DIR)
@@ -25,33 +25,33 @@ func _init() -> void:
 		file_name = dir.get_next()
 	dir.list_dir_end()
 
-	print("[DISCOVERY] Found %d screen schema definition(s) in %s" % [schema_files.size(), SCHEMAS_VIEW_DIR])
+	SystemLogger.log_info("[DISCOVERY] Found %d screen schema definition(s) in %s" % [schema_files.size(), SCHEMAS_VIEW_DIR])
 	assert(schema_files.size() >= 5, "Expected at least 5 view schemas (docket, nav, cashbook, diary, planner)")
 
 	# 2. Audit contracts
-	print("\n[TEST 1] Auditing schema syntaxes and contracts...")
+	SystemLogger.log_info("\n[TEST 1] Auditing schema syntaxes and contracts...")
 	for s_path in schema_files:
 		_audit_schema_file(s_path)
-	print("  ✓ All view schemas passed structural contract validation.")
+	SystemLogger.log_info("  ✓ All view schemas passed structural contract validation.")
 
 	# 3. Compile
-	print("\n[TEST 2] Executing Headless Compilation Pass...")
+	SystemLogger.log_info("\n[TEST 2] Executing Headless Compilation Pass...")
 	UICompilerScript.compile_all()
 
 	# 4. Test dynamic instantiation & binding
-	print("\n[TEST 3] Testing Dynamic Instantiation & bind_data() Across All Components...")
+	SystemLogger.log_info("\n[TEST 3] Testing Dynamic Instantiation & bind_data() Across All Components...")
 	for s_path in schema_files:
 		_test_compiled_component(s_path)
-	print("  ✓ All compiled UI classes instantiated, bound, and verified cleanly.")
+	SystemLogger.log_info("  ✓ All compiled UI classes instantiated, bound, and verified cleanly.")
 
 	# 5. Test OuterShell & Slot Mounting
-	print("\n[TEST 4] Testing OuterShell Scene & View Mounting...")
+	SystemLogger.log_info("\n[TEST 4] Testing OuterShell Scene & View Mounting...")
 	test_outer_shell_mounting()
-	print("  ✓ OuterShell instantiated, mounted with wrapper, and verified across all slots.")
+	SystemLogger.log_info("  ✓ OuterShell instantiated, mounted with wrapper, and verified across all slots.")
 
-	print("\n=======================================================")
-	print("   ALL DYNAMIC UI TESTS PASSED CLEANLY")
-	print("=======================================================\n")
+	SystemLogger.log_info("\n=======================================================")
+	SystemLogger.log_info("   ALL DYNAMIC UI TESTS PASSED CLEANLY")
+	SystemLogger.log_info("=======================================================\n")
 	quit(0)
 
 func _audit_schema_file(path: String) -> void:
