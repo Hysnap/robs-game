@@ -36,11 +36,13 @@ static func run(
 	var generated_households: Array[Dictionary] = []
 	var district_residents_map: Dictionary = {}
 	var available_job_slots: Array[Dictionary] = []
+	var available_tied_housing: Dictionary = {}
 
 	var est_id: int = 1
 	var current_household_id: int = 1
 	var current_slot_id: int = 1
 	var block_idx: int = 0
+	var total_tied_units_count: int = 0
 
 	var block_estimates: Dictionary = {}
 	for dist_id in districts.keys():
@@ -113,20 +115,72 @@ static func run(
 			var display_label: String = str(arch.get("display_name", cat_name)).replace("'", "''")
 			var capacity: int = int(inst.get("default_capacity", 250))
 			var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_name)
+			var institution_estab_id: int = est_id
 
 			estab_inserts.append("""
 				INSERT INTO establishments (
 					establishment_id, district_id, building_index, unit_door_number,
 					owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
 				) VALUES (%d, '%s', 0, 'MAIN', 'CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
-			""" % [est_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
+			""" % [institution_estab_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
-			_register_est_cat(by_cat, cat_name, est_id, dist_id)
+			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id)
 			current_slot_id = expand_staffing_slots(
-				available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
 				cat_name, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 			)
 			est_id += 1
+
+			# Generate Tied Living Accommodation Units anchored to this institution
+			var housing_profiles: Array[Dictionary] = _extract_housing_profiles(arch)
+			for h_prof in housing_profiles:
+				var res_type: String = str(h_prof.get("residence_type", "NONE"))
+				if res_type == "NONE":
+					continue
+
+				var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type)
+				var tenure_type: String = str(h_prof.get("tenure_type", "EMPLOYMENT_TIED"))
+				var wealth_bracket: int = int(h_prof.get("wealth_bracket", 3))
+
+				var units_to_generate: int = 1
+				if h_prof.has("capacity"):
+					units_to_generate = maxi(1, int(round(float(h_prof["capacity"]) / 2.0)))
+				elif arch.has("population_range"):
+					var p_rng: Array = arch["population_range"]
+					units_to_generate = maxi(1, int(round(float(p_rng[1]) / 2.5)))
+
+				units_to_generate = mini(units_to_generate, 60)
+
+				if not available_tied_housing.has(res_type):
+					available_tied_housing[res_type] = []
+
+				for u_idx in range(units_to_generate):
+					var unit_num: int = u_idx + 1
+					var unit_door: String = "Room %d" % unit_num
+					var unit_title: String = "%s %s %s" % [display_label, res_type.replace("_", " ").capitalize(), unit_door]
+
+					estab_inserts.append("""
+						INSERT INTO establishments (
+							establishment_id, district_id, building_index, unit_door_number,
+							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 2, 1, %d, NULL, %d);
+					""" % [
+						est_id, dist_id, unit_door, tenure_type,
+						unit_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
+					])
+
+					available_tied_housing[res_type].append({
+						"establishment_id": est_id,
+						"district_id": dist_id,
+						"residence_type": res_type,
+						"residence_type_id": res_type_id,
+						"wealth_bracket_id": wealth_bracket,
+						"tenure_type": tenure_type,
+						"parent_workplace_id": institution_estab_id
+					})
+
+					total_tied_units_count += 1
+					est_id += 1
 
 		# 3. Sub-Block Embedded Civics placed in Pass 1
 		if d.has("embedded_civics"):
@@ -137,23 +191,64 @@ static func run(
 				var c_display: String = str(c_arch.get("display_name", c_cat_name)).replace("'", "''")
 				var c_cap: int = int(c_inst.get("default_capacity", 250))
 				var c_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", c_cat_name)
+				var embedded_estab_id: int = est_id
 
 				estab_inserts.append("""
 					INSERT INTO establishments (
 						establishment_id, district_id, building_index, unit_door_number,
 						owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
 					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', 'CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
-				""" % [est_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
+				""" % [embedded_estab_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
-				_register_est_cat(by_cat, c_cat_name, est_id, dist_id)
+				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id)
 				current_slot_id = expand_staffing_slots(
-					available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
 					c_cat_name, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 				)
 				est_id += 1
 
-		# 4. Units from building_allocations
-		var housing_prof: Dictionary = arch.get("housing_profile", {})
+				# Embedded civic tied accommodations
+				var embedded_h_profiles: Array[Dictionary] = _extract_housing_profiles(c_arch)
+				for eh_prof in embedded_h_profiles:
+					var e_res_type: String = str(eh_prof.get("residence_type", "NONE"))
+					if e_res_type == "NONE":
+						continue
+
+					var e_res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", e_res_type)
+					var e_wealth: int = int(eh_prof.get("wealth_bracket", 2))
+					var e_tenure: String = str(eh_prof.get("tenure_type", "EMPLOYMENT_TIED"))
+					var e_door := "Lodge 1"
+					var e_title := "%s %s" % [c_display, e_door]
+
+					estab_inserts.append("""
+						INSERT INTO establishments (
+							establishment_id, district_id, building_index, unit_door_number,
+							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 4, 1, %d, NULL, %d);
+					""" % [
+						est_id, dist_id, e_door, e_tenure,
+						e_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
+					])
+
+					if not available_tied_housing.has(e_res_type):
+						available_tied_housing[e_res_type] = []
+
+					available_tied_housing[e_res_type].append({
+						"establishment_id": est_id,
+						"district_id": dist_id,
+						"residence_type": e_res_type,
+						"residence_type_id": e_res_type_id,
+						"wealth_bracket_id": e_wealth,
+						"tenure_type": e_tenure,
+						"parent_workplace_id": embedded_estab_id
+					})
+
+					total_tied_units_count += 1
+					est_id += 1
+
+		# 4. Units from building_allocations (Defensively handles Dictionary or Array housing profiles)
+		var h_profiles: Array[Dictionary] = _extract_housing_profiles(arch)
+		var housing_prof: Dictionary = h_profiles[0] if not h_profiles.is_empty() else {}
 		var res_type_code: String = str(housing_prof.get("residence_type", "NONE"))
 		var wealth_bracket: int = int(housing_prof.get("wealth_bracket", 2))
 		var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type_code)
@@ -344,8 +439,8 @@ static func run(
 		DB_MANAGER.execute_batch(job_slot_inserts)
 		job_slot_inserts.clear()
 
-	SystemLogger.log_info("  ✓ Pass 2: Generated %d establishments, %d households, and %d open workplace positions." % [
-		est_id - 1, current_household_id - 1, available_job_slots.size()
+	SystemLogger.log_info("  ✓ Pass 2: Generated %d establishments, %d active households, %d vacant tied living units, and %d workplace positions." % [
+		est_id - 1, current_household_id - 1, total_tied_units_count, available_job_slots.size()
 	])
 
 	return {
@@ -353,8 +448,22 @@ static func run(
 		"by_cat": by_cat,
 		"households": generated_households,
 		"district_residents_map": district_residents_map,
-		"available_job_slots": available_job_slots
+		"available_job_slots": available_job_slots,
+		"available_tied_housing": available_tied_housing
 	}
+
+static func _extract_housing_profiles(arch: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if not arch.has("housing_profile"):
+		return result
+	var hp = arch["housing_profile"]
+	if hp is Array:
+		for item in hp:
+			if item is Dictionary:
+				result.append(item)
+	elif hp is Dictionary and not hp.is_empty():
+		result.append(hp)
+	return result
 
 static func expand_staffing_slots(
 	slots_array: Array[Dictionary],
@@ -383,6 +492,7 @@ static func expand_staffing_slots(
 			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "NO_FORMAL")))
 			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
 			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
+			var tied_res: String = str(item.get("tied_accomodation", ""))
 
 			var resolved_rate: float = 3.50
 			if item.has("hourly_rate"):
@@ -407,7 +517,6 @@ static func expand_staffing_slots(
 				var s_id: int = slot_id_counter
 				slot_id_counter += 1
 
-				# 1. In-memory queue for Pass 3 distance-decay matching
 				slots_array.append({
 					"slot_id": s_id,
 					"estab_id": estab_id,
@@ -418,10 +527,10 @@ static func expand_staffing_slots(
 					"edu_req": edu_req,
 					"rate": resolved_rate,
 					"hours": hours,
-					"is_field_worker": is_field
+					"is_field_worker": is_field,
+					"tied_accomodation": tied_res
 				})
 
-				# 2. Relational persistence to SQLite workplace_job_slots
 				sql_inserts.append("""
 					INSERT INTO workplace_job_slots (
 						slot_id, establishment_id, role_title_id, contract_class_id,
@@ -468,7 +577,8 @@ static func expand_staffing_slots(
 				"edu_req": default_edu,
 				"rate": rate,
 				"hours": default_hours,
-				"is_field_worker": false
+				"is_field_worker": false,
+				"tied_accomodation": ""
 			})
 
 			sql_inserts.append("""
@@ -557,4 +667,3 @@ static func roll_household_culture(cultural: Dictionary, rng: RandomNumberGenera
 		"religion": chosen_rel,
 		"surnames_pool": eth_profile.get("surnames_pool", "surnames")
 	}
-	

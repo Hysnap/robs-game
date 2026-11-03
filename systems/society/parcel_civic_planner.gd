@@ -172,7 +172,7 @@ static func calculate_city_expected_population(world_state: Dictionary, archetyp
 
 	return total_expected_residents
 
-## Pass 1: Dynamically places population-ratio civic facilities and absorbs vacant plots
+## Pass 1: Dynamically places all population-ratio civic facilities and absorbs vacant plots
 static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictionary, rng: RandomNumberGenerator) -> void:
 	var districts: Dictionary = world_state.get("districts", {})
 	if districts.is_empty():
@@ -193,11 +193,11 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 		max_r = max(max_r, p.length())
 		block_estimates[dist_id] = float(d.get("estimated_population", 0.0))
 
-	var cadence_rules: Array[Dictionary] = _harvest_cadence_rules(archetypes)
+	var civic_rules: Array[Dictionary] = _harvest_all_civic_rules(archetypes)
 	var placed_by_type: Dictionary = {}
 	var audit_stats: Array[Dictionary] = []
 
-	for spec in cadence_rules:
+	for spec in civic_rules:
 		var code: String = spec["code"]
 		placed_by_type[code] = []
 
@@ -205,6 +205,7 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 		if total_city_est_pop < min_p:
 			audit_stats.append({
 				"code": code,
+				"mode": spec.get("placement_mode", "CADENCE"),
 				"quota": 0,
 				"placed": 0,
 				"full_block": 0,
@@ -215,14 +216,19 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 			continue
 
 		var pop_ratio: float = float(spec["pop_ratio"])
-		var quota: int = maxi(1, int(round((total_city_est_pop / pop_ratio) * rng.randf_range(0.85, 1.15))))
+		var max_per_city: int = int(spec.get("max_per_city", 999))
+		var quota: int = 1
+		if pop_ratio > 0.0:
+			quota = maxi(1, int(round((total_city_est_pop / pop_ratio) * rng.randf_range(0.90, 1.10))))
+		quota = mini(quota, max_per_city)
+
 		var placed := 0
 		var full_block_count := 0
 		var multi_block_count := 0
 		var sub_block_count := 0
 		var req_footprint: float = float(spec["footprint_sqm"])
 
-		for _attempt in range(quota * 20):
+		for _attempt in range(quota * 25):
 			if placed >= quota:
 				break
 
@@ -257,7 +263,7 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 				placed += 1
 				placed_by_type[code].append(chosen["center"])
 
-			# Case B: True Whole Block Campus (Footprint is 70% to 105% of parcel)
+			# Case B: True Whole Block Campus (Footprint is 70% to 105% of parcel or chosen parcel is vacant)
 			elif chosen["is_vacant"] or req_footprint >= (host_area * 0.70):
 				d["district_type"] = code
 				d["is_repurposed_civic"] = true
@@ -284,6 +290,7 @@ static func run_civic_cadence_pass(world_state: Dictionary, archetypes: Dictiona
 
 		audit_stats.append({
 			"code": code,
+			"mode": spec.get("placement_mode", "CADENCE"),
 			"quota": quota,
 			"placed": placed,
 			"full_block": full_block_count,
@@ -302,7 +309,6 @@ static func _amass_contiguous_blocks(districts: Dictionary, seed_dist_id: String
 	var gathered_ids: Array[String] = [seed_dist_id]
 	var accumulated_sqm: float = float(seed_d.get("area_sqm", 40000.0))
 
-	# Spatial lookup for rapid neighbor retrieval
 	var coord_map: Dictionary = {}
 	for d_id in districts.keys():
 		var cd: Vector2i = districts[d_id].get("grid_coords", Vector2i(0, 0))
@@ -326,7 +332,7 @@ static func _amass_contiguous_blocks(districts: Dictionary, seed_dist_id: String
 			var n_type: String = str(nd.get("district_type", ""))
 			var n_arch: Dictionary = archetypes.get(n_type, {})
 
-			# Never absorb existing landmarks, dedicated civic institutions, or parks
+			# Never absorb existing landmarks, dedicated civic institutions, or already repurposed civics
 			if n_arch.get("sector_class", "") == "CIVIC" or n_arch.get("is_unique_anchor", false) or bool(nd.get("is_repurposed_civic", false)):
 				continue
 
@@ -337,7 +343,7 @@ static func _amass_contiguous_blocks(districts: Dictionary, seed_dist_id: String
 			if accumulated_sqm >= target_sqm:
 				break
 
-	# Mark absorbed satellite blocks
+	# Mark absorbed satellite blocks as non-zoned complex grounds
 	for i in range(1, gathered_ids.size()):
 		var absorbed_id: String = gathered_ids[i]
 		var ad: Dictionary = districts[absorbed_id]
@@ -373,11 +379,16 @@ static func _apply_sub_block_carveout(
 		chosen_d["is_repurposed_civic"] = false
 		
 		var host_sector: String = str(chosen_d.get("initial_sector", "RESIDENTIAL")).to_upper()
-		var fallback_type: String = "medium_density_residential"
-		if host_sector == "COMMERCIAL":
-			fallback_type = "commercial"
-		elif host_sector == "INDUSTRIAL":
-			fallback_type = "industrial"
+		var setup: Dictionary = archetypes.get("setup", {})
+		var fallback_type: String = str(setup.get("default_fallback_archetype", "medium_density_residential"))
+
+		for a_key in archetypes.keys():
+			if a_key in ["_meta", "setup"]:
+				continue
+			var cand_arch: Dictionary = archetypes[a_key]
+			if str(cand_arch.get("sector_class", "")).to_upper() == host_sector and not cand_arch.has("spatial_rules"):
+				fallback_type = a_key
+				break
 
 		var arch: Dictionary = archetypes.get(fallback_type, {})
 		var area_sqm: float = float(chosen_d.get("area_sqm", 40000.0))
@@ -458,26 +469,46 @@ static func _apply_sub_block_carveout(
 	chosen_d["estimated_population"] = max(0.0, float(chosen_d.get("estimated_population", 0.0)) - pop_lost)
 	block_estimates[chosen_d.get("district_id", "")] = chosen_d["estimated_population"]
 
-static func _harvest_cadence_rules(archetypes: Dictionary) -> Array[Dictionary]:
+## Harvests all civic and institutional rules declaring spatial_rules
+static func _harvest_all_civic_rules(archetypes: Dictionary) -> Array[Dictionary]:
 	var rules: Array[Dictionary] = []
 	for arch_key in archetypes.keys():
 		if arch_key in ["_meta", "setup"]:
 			continue
 		var arch: Dictionary = archetypes[arch_key]
 		var sp_rules: Dictionary = arch.get("spatial_rules", {})
-		if sp_rules.get("placement_mode", "") == "CADENCE":
-			rules.append({
-				"code": arch_key,
-				"pop_ratio": float(sp_rules.get("pop_ratio", 1500.0)),
-				"travel_dist_m": float(sp_rules.get("travel_dist_m", sp_rules.get("min_sep_m", 750.0))),
-				"min_sep_m": 0.0,
-				"min_pop": int(sp_rules.get("min_city_population", 0)),
-				"footprint_sqm": float(arch.get("footprint_size", arch.get("footprint_sqm", 40000.0))),
-				"norm_dist_range": sp_rules.get("norm_distance_range", [0.0, 1.0]),
-				"allowed_sectors": ["RESIDENTIAL", "COMMERCIAL"],
-				"forbidden_types": ["municipal_park", "industrial"],
-				"prefer_vacant": true
-			})
+		if sp_rules.is_empty():
+			continue
+
+		var mode: String = str(sp_rules.get("placement_mode", "CADENCE"))
+		var p_ratio: float = float(sp_rules.get("pop_ratio", 0.0))
+		var max_c: int = int(sp_rules.get("max_per_city", 999))
+		var min_p: int = int(sp_rules.get("min_city_population", 0))
+
+		var allowed_sec: Array = sp_rules.get("prefer_sectors", sp_rules.get("allowed_sectors", ["RESIDENTIAL", "COMMERCIAL"]))
+
+		rules.append({
+			"code": arch_key,
+			"placement_mode": mode,
+			"pop_ratio": p_ratio,
+			"max_per_city": max_c,
+			"min_pop": min_p,
+			"travel_dist_m": float(sp_rules.get("travel_dist_m", sp_rules.get("min_sep_m", 750.0))),
+			"min_sep_m": float(sp_rules.get("min_sep_m", 0.0)),
+			"footprint_sqm": float(arch.get("footprint_size", arch.get("footprint_sqm", 40000.0))),
+			"norm_dist_range": sp_rules.get("norm_distance_range", [0.0, 1.0]),
+			"allowed_sectors": allowed_sec,
+			"repel_sectors": sp_rules.get("repel_sectors", []),
+			"forbidden_types": sp_rules.get("forbidden_types", []),
+			"prefer_vacant": true
+		})
+
+	# Sort rules: multi-block & large facilities first (Town Hall, Hospital, Campus, Automotive)
+	# then medium institutions, then cadence neighborhood civics (Primary, Church)
+	rules.sort_custom(func(a, b):
+		return float(a["footprint_sqm"]) > float(b["footprint_sqm"])
+	)
+
 	return rules
 
 static func _reclassify_surplus_vacant_parcels(districts: Dictionary) -> void:
@@ -509,17 +540,18 @@ static func _reclassify_surplus_vacant_parcels(districts: Dictionary) -> void:
 		SystemLogger.log_info("  ✓ Reassigned %d surplus vacant parcels to allotments/cleared sites/scrap sidings." % count)
 
 static func _log_civic_cadence_audit(audit_stats: Array[Dictionary], macro_pop: float) -> void:
-	SystemLogger.log_info("\n==========================================================================================")
-	SystemLogger.log_info("                           CIVIC CADENCE PLACEMENT AUDIT REPORT                           ")
-	SystemLogger.log_info("==========================================================================================")
+	SystemLogger.log_info("\n==========================================================================================================")
+	SystemLogger.log_info("                                     CIVIC PLACEMENT AUDIT REPORT                                         ")
+	SystemLogger.log_info("==========================================================================================================")
 	SystemLogger.log_info("  Macro City Expected Population: %.0f" % macro_pop)
-	SystemLogger.log_info("  %-28s | %-6s | %-6s | %-10s | %-11s | %-10s | %-12s" % [
-		"Civic Archetype", "Quota", "Placed", "Full-Block", "Multi-Block", "Sub-Block", "Status"
+	SystemLogger.log_info("  %-28s | %-16s | %-6s | %-6s | %-10s | %-11s | %-10s | %-12s" % [
+		"Civic Archetype", "Mode", "Quota", "Placed", "Full-Block", "Multi-Block", "Sub-Block", "Status"
 	])
-	SystemLogger.log_info("  ----------------------------------------------------------------------------------------")
+	SystemLogger.log_info("  --------------------------------------------------------------------------------------------------------")
 
 	for row in audit_stats:
 		var code: String = str(row["code"])
+		var mode: String = str(row["mode"])
 		var quota: int = int(row["quota"])
 		var placed: int = int(row["placed"])
 		var fb: int = int(row["full_block"])
@@ -527,8 +559,8 @@ static func _log_civic_cadence_audit(audit_stats: Array[Dictionary], macro_pop: 
 		var sb: int = int(row["sub_block"])
 		var reason: String = str(row["reason"])
 
-		SystemLogger.log_info("  %-28s | %-6d | %-6d | %-10d | %-11d | %-10d | %-12s" % [
-			code, quota, placed, fb, mb, sb, reason
+		SystemLogger.log_info("  %-28s | %-16s | %-6d | %-6d | %-10d | %-11d | %-10d | %-12s" % [
+			code, mode, quota, placed, fb, mb, sb, reason
 		])
 
 		if placed < quota:
@@ -536,7 +568,7 @@ static func _log_civic_cadence_audit(audit_stats: Array[Dictionary], macro_pop: 
 				code, quota - placed, reason
 			])
 
-	SystemLogger.log_info("==========================================================================================\n")
+	SystemLogger.log_info("==========================================================================================================\n")
 
 static func get_district_area_sqm(district: Dictionary, _archetypes: Dictionary) -> float:
 	var cfg = ScenarioManifestManager.get_city_configuration()

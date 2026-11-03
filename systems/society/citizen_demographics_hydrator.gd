@@ -6,12 +6,13 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
 
-## Pass 3: Generates realistic family structures and hydrates citizens via demographic models
+## Pass 3: Generates realistic family structures, allocates labor, and populates tied accommodation
 static func run(
 	physical_state: Dictionary,
 	demographics: Dictionary,
 	lexicon: Dictionary,
 	job_definitions: Dictionary,
+	cultural: Dictionary,
 	rng: RandomNumberGenerator,
 	on_progress: Callable
 ) -> void:
@@ -20,6 +21,7 @@ static func run(
 	var by_cat: Dictionary = physical_state["by_cat"]
 	var district_residents_map: Dictionary = physical_state["district_residents_map"]
 	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
+	var available_tied_housing: Dictionary = physical_state.get("available_tied_housing", {})
 
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
@@ -27,6 +29,7 @@ static func run(
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_family_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
+	var rel_civic_peer_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
 	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
 	# Spatial index for non-working establishments
@@ -48,10 +51,13 @@ static func run(
 	var contract_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
 	var slot_updates: Array[String] = []
+	var resident_updates: Array[String] = []
+	var tied_household_inserts: Array[String] = []
 
 	var current_resident_id: int = 1
 	var total_hh: int = generated_households.size()
 	var hh_idx: int = 0
+	var next_household_id: int = total_hh + 1
 	var is_headless: bool = (DisplayServer.get_name() == "headless")
 
 	var pass3_start_ms: int = Time.get_ticks_msec()
@@ -59,8 +65,16 @@ static func run(
 	var db_accum_ms: int = 0
 	var gen_accum_ms: int = 0
 
+	# Tracking for tied housing cohort peer weaving: Array of { resident_id, estab_id, workplace_id, res_type_id, age }
+	var tied_occupants: Array[Dictionary] = []
+	var local_tied_relocated_count := 0
+	var external_tied_influx_count := 0
+
 	SystemLogger.log_info("  [Pass 3] Hydrating %d households with realistic family archetypes..." % total_hh)
 
+	# --------------------------------------------------------------------------
+	# STAGE 1: Standard Household Hydration & Local Tied Youth Relocation
+	# --------------------------------------------------------------------------
 	for hh in generated_households:
 		hh_idx += 1
 		var surname_list: Array = lexicon.get(hh["surnames_pool"], ["Smith"])
@@ -69,10 +83,8 @@ static func run(
 		var unemp_rate: float = float(hh.get("unemp_rate", 0.10))
 		var home_estab_id: int = int(hh["establishment_id"])
 
-		# 1. Synthesize Household Composition via Demographic Models
 		var planned_members: Array[Dictionary] = _generate_household_composition(demographics, rng)
 
-		# Context flags for labor participation
 		var has_child_under_5: bool = false
 		var has_child_5_to_15: bool = false
 		for m in planned_members:
@@ -94,13 +106,13 @@ static func run(
 			var age_years: int = int(member["age"])
 			var is_head: bool = bool(member.get("is_head", false))
 			var is_married: bool = bool(member.get("is_married", false))
+			var role_in_home: String = str(member.get("role_in_home", "CHILD"))
 
 			var gender_id: int = male_gender_id if is_male else female_gender_id
 			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
 			var member_surname: String = family_surname
 
-			# Flatmates draw independent surnames
-			if member.get("role_in_home") == "PEER":
+			if role_in_home == "PEER":
 				var peer_surname_list: Array = lexicon.get(hh["surnames_pool"], ["Smith"])
 				member_surname = str(peer_surname_list[rng.randi() % peer_surname_list.size()]).replace("'", "''")
 
@@ -123,7 +135,7 @@ static func run(
 				dob_day, gender_id, edu_id, hh["ethnicity_id"], hh["religion_id"], sim_start_day, reason_world_gen_id
 			])
 
-			# 2. Resolve Role & Employment Profile
+			# Resolve Role & Employment Profile
 			var demo_profile: Dictionary = resolve_citizen_demographics(
 				demographics, rng, age_years, is_male, unemp_rate, edu_code,
 				is_married, has_child_under_5, has_child_5_to_15
@@ -136,9 +148,7 @@ static func run(
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
 			var assigned_est_id: int = 0
 
-			# 3. Match Formal Workforce Slots or Domestic/Enclave Anchors
 			if occ_title == "HOME_MAKER":
-				# Homemakers anchor directly to their home dwelling
 				assigned_est_id = home_estab_id
 			elif contract_class == "FORMAL_LEGAL":
 				var worker_home_pos: Vector2 = SPATIAL_RESOLVER._resolve_vector2(
@@ -164,6 +174,43 @@ static func run(
 						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
 							r_id, int(slot["slot_id"])
 						])
+
+					# Check for tied accommodation relocation (e.g. Student Nurse, Junior Doctor, Constable, Uni Student)
+					var tied_type: String = str(slot.get("tied_accomodation", ""))
+					if not tied_type.is_empty() and available_tied_housing.has(tied_type) and not is_head:
+						var unit_list: Array = available_tied_housing[tied_type]
+						if not unit_list.is_empty():
+							var tied_unit: Dictionary = unit_list.pop_back()
+							var tied_h_id: int = next_household_id
+							next_household_id += 1
+
+							var tied_est_id: int = int(tied_unit["establishment_id"])
+							var tied_res_type_id: int = int(tied_unit["residence_type_id"])
+							var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
+
+							tied_household_inserts.append("""
+								INSERT INTO households (
+									household_id, establishment_id, residence_type_id,
+									wealth_bracket_id, local_pub_id, ethnicity_id, religion_id,
+									valid_from, valid_to, change_reason_id
+								) VALUES (%d, %d, %d, %d, NULL, %d, %d, %d, NULL, %d);
+							""" % [
+								tied_h_id, tied_est_id, tied_res_type_id,
+								tied_wealth_id, hh["ethnicity_id"], hh["religion_id"], sim_start_day, reason_world_gen_id
+							])
+
+							# Relocate resident's household pointer while family relationship edges remain intact
+							resident_updates.append("UPDATE residents SET household_id = %d WHERE resident_id = %d;" % [tied_h_id, r_id])
+							resident_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
+
+							tied_occupants.append({
+								"resident_id": r_id,
+								"establishment_id": tied_est_id,
+								"workplace_id": assigned_est_id,
+								"residence_type_id": tied_res_type_id,
+								"age": age_years
+							})
+							local_tied_relocated_count += 1
 				else:
 					assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
 					occ_title = "UNEMPLOYED"
@@ -171,7 +218,6 @@ static func run(
 					weekly_hours = 0.0
 					compensation_rate = 0.0
 			else:
-				# Children, Students, Pensioners
 				assigned_est_id = pick_anchor(demographics, by_cat, by_cat_and_district, anchor_cat, hh["district_id"], rng)
 
 			if assigned_est_id <= 0:
@@ -193,7 +239,7 @@ static func run(
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
-		# Kinship Edges inside Household
+		# Weave domestic FAMILY relationships across co-living household members
 		if household_member_ids.size() > 1:
 			for a in household_member_ids:
 				for b in household_member_ids:
@@ -217,6 +263,12 @@ static func run(
 			if not slot_updates.is_empty():
 				DB_MANAGER.execute_batch(slot_updates)
 				slot_updates.clear()
+			if not tied_household_inserts.is_empty():
+				DB_MANAGER.execute_batch(tied_household_inserts)
+				tied_household_inserts.clear()
+			if not resident_updates.is_empty():
+				DB_MANAGER.execute_batch(resident_updates)
+				resident_updates.clear()
 
 			var db_time: int = Time.get_ticks_msec() - db_t0
 			db_accum_ms += db_time
@@ -230,7 +282,7 @@ static func run(
 			edge_inserts.clear()
 
 			if on_progress.is_valid():
-				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 40.0)
+				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 35.0)
 				on_progress.call(pct, 100.0, "Hydrating Citizens: ~%d pop (%d/%d homes)" % [current_resident_id - 1, hh_idx, total_hh])
 				if not is_headless:
 					var main_loop = Engine.get_main_loop()
@@ -239,27 +291,197 @@ static func run(
 
 			chunk_start_ms = Time.get_ticks_msec()
 
+	# Flush remaining Stage 1 records
 	if not resident_inserts.is_empty():
-		var db_rem_t0: int = Time.get_ticks_msec()
 		DB_MANAGER.execute_batch(resident_inserts)
-		DB_MANAGER.execute_batch(contract_inserts)
-		DB_MANAGER.execute_batch(edge_inserts)
-		if not slot_updates.is_empty():
-			DB_MANAGER.execute_batch(slot_updates)
-			slot_updates.clear()
-		db_accum_ms += (Time.get_ticks_msec() - db_rem_t0)
 		resident_inserts.clear()
+	if not contract_inserts.is_empty():
+		DB_MANAGER.execute_batch(contract_inserts)
 		contract_inserts.clear()
+	if not edge_inserts.is_empty():
+		DB_MANAGER.execute_batch(edge_inserts)
 		edge_inserts.clear()
+	if not slot_updates.is_empty():
+		DB_MANAGER.execute_batch(slot_updates)
+		slot_updates.clear()
+	if not tied_household_inserts.is_empty():
+		DB_MANAGER.execute_batch(tied_household_inserts)
+		tied_household_inserts.clear()
+	if not resident_updates.is_empty():
+		DB_MANAGER.execute_batch(resident_updates)
+		resident_updates.clear()
 
+	# --------------------------------------------------------------------------
+	# STAGE 2: External Migrant Influx (Unmarried Newcomers for Remaining Tied Slots)
+	# --------------------------------------------------------------------------
+	var influx_resident_inserts: Array[String] = []
+	var influx_contract_inserts: Array[String] = []
+	var influx_hh_inserts: Array[String] = []
+	var influx_slot_updates: Array[String] = []
+	var remaining_unfilled_slots: Array[Dictionary] = []
+
+	for slot in open_job_slots:
+		var tied_type: String = str(slot.get("tied_accomodation", ""))
+		if not tied_type.is_empty() and available_tied_housing.has(tied_type) and not available_tied_housing[tied_type].is_empty():
+			var tied_unit: Dictionary = available_tied_housing[tied_type].pop_back()
+			var r_id: int = current_resident_id
+			current_resident_id += 1
+
+			var role_key: String = str(slot["role"])
+			var master_def: Dictionary = job_definitions.get(role_key, {})
+			var age_min: int = int(master_def.get("age_min", 20))
+			var age_max: int = int(master_def.get("age_max", 30))
+			var migrant_age: int = rng.randi_range(age_min, age_max)
+			var is_male: bool = (rng.randf() > 0.5)
+
+			var gender_id: int = male_gender_id if is_male else female_gender_id
+			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
+
+			# Roll authentic culture from cultural configuration rather than hardcoding
+			var cult: Dictionary = PremisesWorkplaceBuilder.roll_household_culture(cultural, rng, "suburban_low_density")
+			var eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", cult["ethnicity"])
+			var rel_id: int = DB_MANAGER.get_label_id("RELIGION", cult["religion"])
+			var surname_pool: Array = lexicon.get(cult["surnames_pool"], lexicon.get("surnames", ["Smith", "Jones"]))
+			var migrant_surname: String = str(surname_pool[rng.randi() % surname_pool.size()]).replace("'", "''")
+
+			var days_old: int = int(round(float(migrant_age) * 365.25)) + rng.randi_range(0, 364)
+			var dob_day: int = sim_start_day - days_old
+
+			var edu_req: String = str(slot.get("edu_req", "O_LEVELS_CSE"))
+			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
+
+			var tied_h_id: int = next_household_id
+			next_household_id += 1
+
+			var tied_est_id: int = int(tied_unit["establishment_id"])
+			var tied_res_type_id: int = int(tied_unit["residence_type_id"])
+			var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
+
+			influx_hh_inserts.append("""
+				INSERT INTO households (
+									household_id, establishment_id, residence_type_id,
+									wealth_bracket_id, local_pub_id, ethnicity_id, religion_id,
+									valid_from, valid_to, change_reason_id
+				) VALUES (%d, %d, %d, %d, NULL, %d, %d, %d, NULL, %d);
+			""" % [
+				tied_h_id, tied_est_id, tied_res_type_id,
+				tied_wealth_id, eth_id, rel_id, sim_start_day, reason_world_gen_id
+			])
+
+			influx_resident_inserts.append("""
+				INSERT INTO residents (
+					resident_id, household_id, first_name, birth_surname, current_surname,
+					dob, dod, death_reason_id, gender_id, education_level_id,
+					ethnicity_id, religion_id, is_active_agent, valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, 0, %d, NULL, %d
+				);
+			""" % [
+				r_id, tied_h_id, first_name, migrant_surname, migrant_surname,
+				dob_day, gender_id, edu_id, eth_id, rel_id, sim_start_day, reason_world_gen_id
+			])
+
+			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", str(slot["contract_class"]))
+			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", role_key)
+
+			influx_contract_inserts.append("""
+				INSERT INTO livelihood_contracts (
+					resident_id, employer_entity_id, contract_class_id, role_title_id,
+					contract_type_id, schedule_window_id, weekly_hours, compensation_rate, 
+					valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
+				);
+			""" % [
+				r_id, int(slot["estab_id"]), class_id, role_id, contract_std_id, default_daytime_id,
+				float(slot["hours"]), float(slot["rate"]), sim_start_day, reason_world_gen_id
+			])
+
+			if slot.has("slot_id"):
+				influx_slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
+					r_id, int(slot["slot_id"])
+				])
+			influx_slot_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
+
+			tied_occupants.append({
+				"resident_id": r_id,
+				"establishment_id": tied_est_id,
+				"workplace_id": int(slot["estab_id"]),
+				"residence_type_id": tied_res_type_id,
+				"age": migrant_age
+			})
+			external_tied_influx_count += 1
+		else:
+			remaining_unfilled_slots.append(slot)
+
+	# Overwrite open_job_slots with remaining unfilled slots
+	open_job_slots.clear()
+	open_job_slots.append_array(remaining_unfilled_slots)
+
+	if not influx_hh_inserts.is_empty():
+		DB_MANAGER.execute_batch(influx_hh_inserts)
+		DB_MANAGER.execute_batch(influx_resident_inserts)
+		DB_MANAGER.execute_batch(influx_contract_inserts)
+		DB_MANAGER.execute_batch(influx_slot_updates)
+
+	# --------------------------------------------------------------------------
+	# STAGE 3: Intake-Cohort Peer Relationship Weaving
+	# (Connects residents of the same age living in tied accommodation)
+	# --------------------------------------------------------------------------
+	var cohort_groups: Dictionary = {}
+	for occ in tied_occupants:
+		var key := "%d_%d_%d" % [occ["workplace_id"], occ["residence_type_id"], occ["age"]]
+		if not cohort_groups.has(key):
+			cohort_groups[key] = []
+		cohort_groups[key].append(occ["resident_id"])
+
+	var cohort_edge_inserts: Array[String] = []
+	for group in cohort_groups.values():
+		if group.size() > 1:
+			for i in range(group.size()):
+				for j in range(i + 1, group.size()):
+					var a: int = group[i]
+					var b: int = group[j]
+					cohort_edge_inserts.append("""
+						INSERT OR IGNORE INTO social_relationships (
+							from_resident_id, to_resident_id, relationship_type_id,
+							context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+						) VALUES (%d, %d, %d, NULL, 0.75, %d, NULL, %d);
+					""" % [a, b, rel_civic_peer_id, sim_start_day, reason_world_gen_id])
+					cohort_edge_inserts.append("""
+						INSERT OR IGNORE INTO social_relationships (
+							from_resident_id, to_resident_id, relationship_type_id,
+							context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
+						) VALUES (%d, %d, %d, NULL, 0.75, %d, NULL, %d);
+					""" % [b, a, rel_civic_peer_id, sim_start_day, reason_world_gen_id])
+
+	if not cohort_edge_inserts.is_empty():
+		DB_MANAGER.execute_batch(cohort_edge_inserts)
+
+	# Update district population aggregates
 	for d_id in districts.keys():
 		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()
 
 	var total_time_ms: int = Time.get_ticks_msec() - pass3_start_ms
-	SystemLogger.log_info("  ✓ Pass 3 Completed in %dms (Gen Compute: %dms | DB Commits: %dms) | Created %d citizens." % [
-		total_time_ms, gen_accum_ms, db_accum_ms, current_resident_id - 1
+	SystemLogger.log_info("  ✓ Pass 3 Completed in %dms | Created %d citizens (%d local relocated, %d external influx)." % [
+		total_time_ms, current_resident_id - 1, local_tied_relocated_count, external_tied_influx_count
 	])
+	_log_tied_housing_audit(available_tied_housing, local_tied_relocated_count, external_tied_influx_count)
 	audit_generated_jobs_by_education()
+
+## Logs an audit breakdown of tied accommodation occupancy
+static func _log_tied_housing_audit(available_tied: Dictionary, local_count: int, external_count: int) -> void:
+	SystemLogger.log_info("\n==========================================================================")
+	SystemLogger.log_info("                  TIED ACCOMMODATION OCCUPANCY AUDIT                      ")
+	SystemLogger.log_info("==========================================================================")
+	SystemLogger.log_info("  Local Youth Relocated (Preserved Family Roots): %d" % local_count)
+	SystemLogger.log_info("  External Migrants Influxed (Solo Intake Cohorts): %d" % external_count)
+	SystemLogger.log_info("  Total Occupied Work-Tied Homes:                %d" % (local_count + external_count))
+	SystemLogger.log_info("  ------------------------------------------------------------------------")
+	SystemLogger.log_info("  Remaining Vacant Tied Units by Category:")
+	for res_type in available_tied.keys():
+		SystemLogger.log_info("    • %-24s: %d units vacant" % [res_type, available_tied[res_type].size()])
+	SystemLogger.log_info("==========================================================================\n")
 
 ## -----------------------------------------------------------------------------
 ## GENERATIVE HOUSEHOLD COMPOSITION ENGINE
@@ -270,16 +492,13 @@ static func _generate_household_composition(demographics: Dictionary, rng: Rando
 	var legal_cfg: Dictionary = demographics.get("legal_and_pension_thresholds", {})
 	var min_head_age: int = int(legal_cfg.get("majority_head_of_household_age", 18))
 
-	# 1. Sample Head of Household from Population Pyramid (age >= min_head_age)
 	var head_sample: Dictionary = _sample_from_population_pyramid(demographics, rng, min_head_age)
 	var head_age: int = int(head_sample["age"])
 	var head_is_male: bool = bool(head_sample["is_male"])
 
-	# 2. Select Household Typology based on Head's age
 	var typology_model: Dictionary = demographics.get("household_typology_model", {})
 	var archetype_str: String = _sample_typology(typology_model, head_age, rng)
 
-	# 3. Resolve Marital Status
 	var is_married: bool = false
 	if archetype_str in ["COUPLE_WITHOUT_DEP", "COUPLE_WITH_DEP"]:
 		is_married = true
@@ -678,7 +897,6 @@ static func _transition_to_dole(by_cat: Dictionary, fallback_estab_id: int, rng:
 		var civ_all: Array = by_cat["CIVIC"]
 		return int(civ_all[rng.randi() % civ_all.size()]["id"])
 
-	# Clean fail-safe: anchor to resident's own home establishment if no civic infrastructure exists
 	return maxi(1, fallback_estab_id)
 
 static func pick_anchor(

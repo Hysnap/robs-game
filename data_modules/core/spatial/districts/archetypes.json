@@ -775,19 +775,43 @@
 	  "default_capacity": 300,
 	  "staffing_roster": [
 		{
-		  "job_id": "CLERGY_OR_CARETAKER",
+		  "job_id": "CLERGY",
+		  "tied_accomodation": "RECTORY",
 		  "target_count": [
 			1,
-			2
+			1
+		  ]
+		},
+		{
+		  "job_id": "CARETAKER",
+		  "tied_accomodation": "CHURCH_CARETAKER_LODGE",
+		  "target_count": [
+			1,
+			1
+		  ]
+		},
+		{
+		  "job_id": "COMMERCIAL_CLEANER",
+		  "tied_accomodation": "CHURCH_CARETAKER_LODGE",
+		  "target_count": [
+			1,
+			1
 		  ]
 		}
 	  ]
 	},
-	"housing_profile": {
+	"housing_profile": [
+		{
 	  "residence_type": "RECTORY",
 	  "wealth_bracket": 3,
 	  "tenure_type": "EMPLOYMENT_TIED"
 	},
+	{
+	  "residence_type": "CHURCH_CARETAKER_LODGE",
+	  "wealth_bracket": 3,
+	  "tenure_type": "EMPLOYMENT_TIED"
+	}
+	],
 	"visual_profile": {
 	  "color": "#A855F7",
 	  "roughness": 0.85
@@ -873,6 +897,7 @@
 		},
 		{
 		  "job_id": "SCHOOL_CARETAKER",
+		  "tied_accomodation": "CARETAKER_LODGE",
 		  "target_count": [
 			1,
 			1
@@ -1119,6 +1144,7 @@
 		},
 		{
 		  "job_id": "SCHOOL_CARETAKER",
+		  "tied_accomodation":"CARETAKER_LODGE",
 		  "target_count": [
 			1,
 			2
@@ -1387,11 +1413,20 @@
 	  0
 	],
 	"typical_population_density": 1,
-	"housing_profile": {
-	  "residence_type": "STAFF_QUARTERS",
-	  "wealth_bracket": 3,
+	"housing_profile": [
+		{
+	  "residence_type": "NURSES_QUARTERS",
+	  "wealth_bracket": 4,
+	  "capacity": 100,
 	  "tenure_type": "EMPLOYMENT_TIED"
 	},
+	{
+	  "residence_type": "DOCTORS_QUARTERS",
+	  "wealth_bracket": 3,
+	  "capacity": 75,
+	  "tenure_type": "EMPLOYMENT_TIED"
+	}
+	],
 	"visual_profile": {
 	  "color": "#0284C7",
 	  "roughness": 0.6
@@ -1420,17 +1455,40 @@
 	  "wage_multiplier": 1.1,
 	  "staffing_roster": [
 		{
+		  "job_id": "CONSULTANT",
+		  "target_count": [
+			15,
+			25
+		  ]
+		},
+		{
 		  "job_id": "HOSPITAL_DOCTOR",
 		  "target_count": [
-			80,
-			160
+			25,
+			60
+		  ]
+		},
+		{
+		  "job_id": "HOSPITAL_RESIDENT_DOCTOR",
+		  "tied_accomodation": "DOCTORS_QUARTERS",
+		  "target_count": [
+			40,
+			75
 		  ]
 		},
 		{
 		  "job_id": "HOSPITAL_NURSE",
 		  "target_count": [
-			250,
-			500
+			200,
+			400
+		  ]
+		},
+		{
+		  "job_id": "STUDENT_NURSE",
+		  "tied_accomodation": "NURSES_QUARTERS",
+		  "target_count": [
+			50,
+			100
 		  ]
 		},
 		{
@@ -1455,17 +1513,24 @@
 		  ]
 		},
 		{
-		  "job_id": "OFFICE_MANAGER",
+		  "job_id": "CLERK",
 		  "target_count": [
 			40,
-			100
+			60
+		  ]
+		},
+		{
+		  "job_id": "OFFICE_MANAGER",
+		  "target_count": [
+			5,
+			20
 		  ]
 		}
 	  ]
 	},
 	"population_range": [
-	  3,
-	  10
+	  90,
+	  175
 	],
 	"unemployment_rate_range": [
 	  0.01,
@@ -1514,6 +1579,7 @@
 	"typical_population_density": 20,
 	"housing_profile": {
 	  "residence_type": "STUDENT_HALLS",
+	  "capacity": 600,
 	  "wealth_bracket": 1,
 	  "tenure_type": "STUDENT"
 	},
@@ -1545,6 +1611,7 @@
 	  "client_to_staff_ratio": 12.0,
 	  "client_profile": {
 		"role_title": "HIGHER_ED_STUDENT",
+		"tied_accomodation": "STUDENT_HALLS",
 		"contract_class": "ENCLAVE_STUDENT",
 		"schedule_window": "FLEXIBLE_DAYTIME",
 		"weekly_hours": 20.0,
@@ -1855,6 +1922,7 @@
 	  "client_to_staff_ratio": 4.0,
 	  "client_profile": {
 		"role_title": "PRISON_INMATE",
+		"tied_accomodation": "CELL_BLOCK",
 		"contract_class": "CUSTODIAL_INMATE",
 		"schedule_window": "REGULATED_FULL_TIME",
 		"weekly_hours": 30.0,
@@ -1887,7 +1955,7 @@
 	  ]
 	},
 	"housing_profile": {
-	  "residence_type": "CUSTODIAL",
+	  "residence_type": "CELL_BLOCK",
 	  "wealth_bracket": 1,
 	  "tenure_type": "CUSTODIAL"
 	},
@@ -1969,8 +2037,16 @@
 		{
 		  "job_id": "POLICE_OFFICER",
 		  "target_count": [
-			50,
-			150
+			25,
+			100
+		  ]
+		},
+		{
+		  "job_id": "POLICE_CONSTABLE",
+		  "tied_accomodation": "STATION_HOUSE",
+		  "target_count": [
+			25,
+			50
 		  ]
 		},
 		{
@@ -2011,9 +2087,10 @@
 	  ]
 	},
 	"housing_profile": {
-	  "residence_type": "NONE",
+	  "residence_type": "STATION_HOUSE",
+	  "capacity": 50,
 	  "wealth_bracket": 3,
-	  "tenure_type": "NONE"
+	  "tenure_type": "EMPLOYMENT_TIED"
 	},
 	"visual_profile": {
 	  "color": "#4338CA",
@@ -2093,8 +2170,16 @@
 		{
 		  "job_id": "POLICE_OFFICER",
 		  "target_count": [
-			25,
-			75
+			15,
+			50
+		  ]
+		},
+		{
+		  "job_id": "POLICE_CONSTABLE",
+		  "tied_accomodation": "STATION_HOUSE",
+		  "target_count": [
+			10,
+			35
 		  ]
 		},
 		{
@@ -2135,9 +2220,10 @@
 	  ]
 	},
 	"housing_profile": {
-	  "residence_type": "NONE",
+	  "residence_type": "STATION_HOUSE",
+	  "capacity": 35,
 	  "wealth_bracket": 3,
-	  "tenure_type": "NONE"
+	  "tenure_type": "EMPLOYMENT_TIED"
 	},
 	"visual_profile": {
 	  "color": "#4338CA",

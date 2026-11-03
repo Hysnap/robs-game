@@ -101,8 +101,14 @@ static func generate_city_society(
 		on_progress.call(50.0, 100.0, "Pass 5: Hydrating citizens into households...")
 		await Engine.get_main_loop().process_frame
 	await CITIZEN_HYDRATOR.run(
-		physical_state, _demographics, _lexicon, _job_definitions, rng, on_progress
-	)
+			physical_state,
+			_demographics,
+			_lexicon,
+			_job_definitions,
+			_cultural,
+			rng,
+			on_progress
+			)
 
 	# -------------------------------------------------------------------------
 	# PASS 4: DUNBAR NETWORK EDGES (Kinship, Workplace, Parish)

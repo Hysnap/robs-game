@@ -10,10 +10,8 @@ const DEFAULT_FALLBACK_STREET_WIDTH: float = 25.0
 # Cached layout rules from business_rules.cfg
 var _layout_rules: Dictionary = {}
 var _archetypes_data: Dictionary = {}
-var _anchor_claim_map: Dictionary = {} # Vector2i -> archetype_id
 var _material_cache: Dictionary = {}
 var _civic_hierarchy: Dictionary = {}
-var _placed_facilities: Array = [] # Array of { "type": String, "origin": Vector2i, "footprint": Vector2i }
 var _road_counter: int = 0
 var _intersection_counter: int = 0
 
@@ -77,15 +75,13 @@ func _init_archetypes() -> void:
 	assert(not _archetypes_data.is_empty(), "FATAL: Loaded archetypes dictionary is empty.")
 
 ## Overrides generate_base_grid_with_sizes() -> Array
-## Claims multi-cell anchor footprints first, then populates surrounding blocks
+## Populates baseline blocks; civic institutions are allocated dynamically in ParcelCivicPlanner
 func generate_base_grid_with_sizes() -> Array:
 	_init_layout_rules()
 	_init_archetypes()
 	
 	var blocks_data: Array = []
 	var occupied_positions: Dictionary = {}
-	_anchor_claim_map.clear()
-	_placed_facilities.clear()
 	_road_counter = 0
 	_intersection_counter = 0
 
@@ -98,17 +94,7 @@ func generate_base_grid_with_sizes() -> Array:
 	var jitter: float = float(cfg.get("radial_jitter")) if (cfg and "radial_jitter" in cfg) else float(_layout_rules.get("default_radial_jitter", 0.35))
 	var noise_scale: float = float(_layout_rules.get("boundary_noise_scale", 15.0))
 
-	# 1. Pre-claim multi-cell & dedicated spatial archetypes
-	_preclaim_spatial_archetypes(radius_val, occupied_positions, blocks_data)
-
-	# Register pre-claimed anchors into parent active_blocks & block_sizes
-	for b in blocks_data:
-		var p: Vector2i = b["position"]
-		var s: Vector2i = b["size"]
-		active_blocks.append(p)
-		block_sizes[p] = s
-
-	# 2. Populate regular blocks around pre-claimed footprints
+	# Populate regular blocks across the city radius with radial boundary noise
 	for x in range(-radius_val, radius_val + 1):
 		for z in range(-radius_val, radius_val + 1):
 			var dist: float = Vector2(x, z).length()
@@ -141,20 +127,15 @@ func generate_base_grid_with_sizes() -> Array:
 	return blocks_data
 
 ## 100% Data-Driven Zoning Selection
-## Priority: Anchor Pre-claims -> archetypes.json Bands & Placement -> Fallback
+## Priority: archetypes.json Concentric Bands & Placement -> Fallback
 func get_district_type(grid_x: int, grid_z: int) -> String:
 	_init_archetypes()
-	var pos := Vector2i(grid_x, grid_z)
-
-	# 1. Check if claimed by a unique preclaimed civic anchor
-	if _anchor_claim_map.has(pos):
-		return str(_anchor_claim_map[pos])
 
 	var cfg = city_configuration
 	var radius_val: float = float(cfg.get("city_radius")) if (cfg and "city_radius" in cfg and float(cfg.get("city_radius")) > 0.0) else float(_layout_rules.get("default_city_radius", 14.0))
 	var norm_dist: float = Vector2(grid_x, grid_z).length() / max(radius_val, 1.0)
 
-	# 2. Extract User Sliders from city_configuration (Default: Balanced)
+	# 1. Extract User Sliders from city_configuration (Default: Balanced)
 	var com_share: float = float(cfg.get("commercial_ratio")) if (cfg and "commercial_ratio" in cfg) else 0.15
 	var ind_share: float = float(cfg.get("industrial_ratio")) if (cfg and "industrial_ratio" in cfg) else 0.30
 	var res_share: float = float(cfg.get("residential_ratio")) if (cfg and "residential_ratio" in cfg) else 0.55
@@ -164,7 +145,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 	ind_share /= total_shares
 	res_share /= total_shares
 
-	# 3. Determine concentric distance ring
+	# 2. Determine concentric distance ring
 	var band_key := "outer_weight"
 	if norm_dist <= 0.25:
 		band_key = "core_weight"
@@ -173,7 +154,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 	elif norm_dist <= 0.85:
 		band_key = "mid_weight"
 
-	# 4. Group candidate archetypes strictly by SECTOR
+	# 3. Group candidate archetypes strictly by SECTOR (exclude dedicated civics)
 	var archetypes_by_sector: Dictionary = {
 		"COMMERCIAL": {},
 		"INDUSTRIAL": {},
@@ -184,7 +165,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 		if arch_key in ["_meta", "setup"]:
 			continue
 		var arch: Dictionary = _archetypes_data[arch_key]
-		if arch.get("is_unique_anchor", false):
+		if arch.get("sector_class", "") == "CIVIC" or arch.get("is_unique_anchor", false) or arch.has("spatial_rules"):
 			continue
 
 		var placement: Dictionary = arch.get("spatial_placement", {})
@@ -198,7 +179,7 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 				if archetypes_by_sector.has(s_class):
 					archetypes_by_sector[s_class][arch_key] = w
 
-	# 5. Build Sector Lottery from User Sliders
+	# 4. Build Sector Lottery from User Sliders
 	var sector_lottery: Dictionary = {}
 	if not archetypes_by_sector["COMMERCIAL"].is_empty() and com_share > 0.0:
 		sector_lottery["COMMERCIAL"] = com_share
@@ -210,14 +191,14 @@ func get_district_type(grid_x: int, grid_z: int) -> String:
 	if sector_lottery.is_empty():
 		return "suburban_low_density"
 
-	# 6. Sample Sector using Spatial Noise
+	# 5. Sample Sector using Spatial Noise
 	var z_noise_scale: float = float(_layout_rules.get("zoning_noise_scale", 8.0))
 	var sample_val: float = (noise.get_noise_2d(float(grid_x) * z_noise_scale, float(grid_z) * z_noise_scale) + 1.0) * 0.5
 	
 	var chosen_sector: String = _pick_from_normalized_weights(sector_lottery, sample_val)
 	var sector_candidates: Dictionary = archetypes_by_sector[chosen_sector]
 
-	# 7. Sample Archetype within the chosen sector
+	# 6. Sample Archetype within the chosen sector
 	var sub_sample: float = (noise.get_noise_2d(float(grid_x) * 16.0 + 100.0, float(grid_z) * 16.0 + 100.0) + 1.0) * 0.5
 	return _sample_weighted_archetype(sector_candidates, sub_sample)
 
@@ -245,7 +226,6 @@ func generate_ground_planes_async() -> void:
 	var yield_frame: bool = bool(_layout_rules.get("yield_per_batch", true))
 
 	var cell_size: float = city_configuration.block_size + city_configuration.street_width
-	var _half_street: float = city_configuration.street_width * 0.5
 	
 	if enable_log:
 		emit_progress(10, 100, "Generating ground layout (%d districts)..." % total_blocks)
@@ -418,7 +398,6 @@ func export_visual_layout() -> Dictionary:
 	SystemLogger.log_info("[CustomCityCrafter] Total MeshInstance3D nodes found during export: %d" % all_meshes.size())
 
 	for mesh_node in all_meshes:
-		# Districts have block_id, skip them here
 		if mesh_node.has_meta("block_id"):
 			continue
 
@@ -426,7 +405,6 @@ func export_visual_layout() -> Dictionary:
 		var n_name: String = mesh_node.name.to_lower()
 		var p_name: String = mesh_node.get_parent().name.to_lower() if mesh_node.get_parent() else ""
 		
-		# Match meta flag, road name, or any non-district plane mesh added during generation
 		if is_road or n_name.begins_with("road") or n_name.begins_with("intersection") or p_name.begins_with("road") or p_name.begins_with("intersection"):
 			var sz := [default_street_w, default_street_w]
 			if mesh_node.mesh is PlaneMesh:
@@ -510,203 +488,6 @@ func _sample_weighted_archetype(weights: Dictionary, sample: float) -> String:
 			
 	return str(weights.keys()[-1])
 
-func _compute_dynamic_concentric_bands(cfg) -> Array:
-	var setup: Dictionary = _archetypes_data.get("setup", {})
-	var bands_template: Array = setup.get("concentric_bands", [])
-	assert(not bands_template.is_empty(), "FATAL: 'setup.concentric_bands' is missing or empty in archetypes.json")
-
-	var user_sector_ratios: Dictionary = {}
-	for arch_key in _archetypes_data.keys():
-		if arch_key in ["_meta", "setup"]: 
-			continue
-		var arch: Dictionary = _archetypes_data[arch_key]
-		var sector: String = str(arch.get("sector_class", "residential")).to_lower()
-		var prop_name := "%s_ratio" % sector
-		
-		if not user_sector_ratios.has(sector):
-			var ratio_val: float = float(cfg.get(prop_name)) if (cfg and prop_name in cfg) else 1.0
-			user_sector_ratios[sector] = max(0.01, ratio_val)
-
-	var band_demands: Array = []
-	var total_demand: float = 0.0
-
-	for band_entry in bands_template:
-		var weight_key: String = str(band_entry.get("weight_key"))
-		var band_score: float = 0.0
-		
-		for arch_key in _archetypes_data.keys():
-			if arch_key in ["_meta", "setup"]: 
-				continue
-			var arch: Dictionary = _archetypes_data[arch_key]
-			if arch.get("is_unique_anchor", false):
-				continue
-				
-			var placement: Dictionary = arch.get("spatial_placement", {})
-			var base_w: float = float(placement.get(weight_key, 0))
-			var sector: String = str(arch.get("sector_class", "residential")).to_lower()
-			var user_ratio: float = user_sector_ratios.get(sector, 1.0)
-			
-			band_score += base_w * user_ratio
-			
-		band_score = max(0.001, band_score)
-		band_demands.append({
-			"weight_key": weight_key,
-			"demand": band_score
-		})
-		total_demand += band_score
-
-	var dynamic_bands: Array = []
-	var cumulative_area: float = 0.0
-	var num_bands: int = band_demands.size()
-
-	for i in range(num_bands):
-		var demand_share: float = band_demands[i]["demand"] / total_demand
-		cumulative_area += demand_share
-		
-		var max_r: float = 1.0
-		if i == num_bands - 1:
-			max_r = 99.0
-		else:
-			max_r = sqrt(clampf(cumulative_area, 0.05, 0.95))
-			
-		dynamic_bands.append({
-			"weight_key": band_demands[i]["weight_key"],
-			"max_norm_dist": max_r
-		})
-
-	return dynamic_bands
-
-func _init_civic_hierarchy() -> void:
-	if not _civic_hierarchy.is_empty():
-		return
-	
-	assert(ScenarioManifestManager.has_module("civic_hierarchy"), 
-		"FATAL: Scenario manifest is missing 'civic_hierarchy' module registration.")
-		
-	_civic_hierarchy = ScenarioManifestManager.load_module("civic_hierarchy")
-	assert(_civic_hierarchy.has("civic_institutions"), 
-		"FATAL: civic_hierarchy module is missing 'civic_institutions' root table.")
-
-## Pre-claims any archetype declaring "spatial_rules" based on footprint_sqm / footprint_size in m²
-func _preclaim_spatial_archetypes(radius: int, occupied: Dictionary, blocks_data: Array) -> void:
-	for arch_key in _archetypes_data.keys():
-		if arch_key in ["_meta", "setup"]:
-			continue
-		var arch: Dictionary = _archetypes_data[arch_key]
-		if not arch.has("spatial_rules"):
-			continue
-
-		# Read footprint in square metres (fallback to 1600.0 if not specified)
-		var sqm: float = float(arch.get("footprint_size", arch.get("footprint_sqm", 1600.0)))
-		
-		# Convert square metres into discrete grid cells (Standard 200m x 200m block = 40,000 m²)
-		var cell_side_m: float = 200.0
-		var cell_area_sqm: float = cell_side_m * cell_side_m # 40,000
-		var side_cells: int = maxi(1, int(round(sqrt(sqm / cell_area_sqm))))
-		var footprint := Vector2i(side_cells, side_cells)
-
-		var rules: Dictionary = arch["spatial_rules"]
-		var mode: String = str(rules.get("placement_mode", ""))
-		var dist_range: Array = rules.get("norm_distance_range", [0.0, 1.0])
-		var min_sep: int = int(rules.get("min_sep_m", 600.0) / 200.0)
-		if mode == "CADENCE":
-			continue
-
-		var origin: Vector2i = _find_valid_anchor_site(radius, footprint, dist_range, min_sep, occupied)
-		if origin == Vector2i(9999, 9999):
-			continue
-
-		blocks_data.append({
-			"position": origin,
-			"size": footprint
-		})
-
-		for bx in range(footprint.x):
-			for bz in range(footprint.y):
-				var cell := Vector2i(origin.x + bx, origin.y + bz)
-				occupied[cell] = true
-				_anchor_claim_map[cell] = arch_key
-
-		_placed_facilities.append({
-			"type": arch_key,
-			"origin": origin,
-			"footprint": footprint
-		})
-		SystemLogger.log_info("[CustomCityCrafter] Preclaimed '%s' [%d x %d cells for %.0f m²] at %s" % [
-			arch_key, footprint.x, footprint.y, sqm, origin
-		])
-
-func _find_valid_anchor_site(
-	radius_val: int, 
-	footprint: Vector2i, 
-	dist_range: Array, 
-	min_sep: int, 
-	occupied: Dictionary,
-	placement_mode: String = ""
-) -> Vector2i:
-	var r_min: float = float(dist_range[0])
-	var r_max: float = float(dist_range[1])
-	var core_tolerance: float = float(_layout_rules.get("core_distance_tolerance", 0.08))
-
-	# Core Anchor Check: triggered by semantic mode or configured map_layout tolerance
-	if placement_mode == "EXACT_CORE" or (r_min == 0.0 and r_max <= core_tolerance):
-		var core_fits := true
-		for bx in range(footprint.x):
-			for bz in range(footprint.y):
-				if occupied.has(Vector2i(bx, bz)):
-					core_fits = false
-					break
-			if not core_fits:
-				break
-		if core_fits:
-			return Vector2i.ZERO
-		return Vector2i(9999, 9999)
-
-	var candidates: Array[Vector2i] = []
-
-	for x in range(-radius_val, radius_val - footprint.x + 1):
-		for z in range(-radius_val, radius_val - footprint.y + 1):
-			var norm_d: float = Vector2(x, z).length() / max(float(radius_val), 1.0)
-			if norm_d < r_min or norm_d > r_max:
-				continue
-
-			var can_fit := true
-			for bx in range(footprint.x):
-				for bz in range(footprint.y):
-					var cell := Vector2i(x + bx, z + bz)
-					if occupied.has(cell) or cell.length() > radius_val:
-						can_fit = false
-						break
-				if not can_fit:
-					break
-
-			if not can_fit:
-				continue
-
-			var separated := true
-			for placed in _placed_facilities:
-				var p_origin: Vector2i = placed["origin"]
-				var dist: float = (Vector2(x, z) - Vector2(p_origin.x, p_origin.y)).length()
-				if dist < float(min_sep):
-					separated = false
-					break
-					
-			if not separated:
-				continue
-
-			candidates.append(Vector2i(x, z))
-
-	if candidates.is_empty():
-		return Vector2i(9999, 9999)
-
-	candidates.sort_custom(func(a, b):
-		var ha = abs(("%s:%d:%d" % [seed_id, a.x, a.y]).hash())
-		var hb = abs(("%s:%d:%d" % [seed_id, b.x, b.y]).hash())
-		return ha < hb
-	)
-	
-	return candidates[0]
-
 ## Overrides create_road_plane to guarantee unique node names and metadata
 func create_road_plane(center: Vector3, size: Vector2, road_type: String):
 	_road_counter += 1
@@ -724,7 +505,6 @@ func create_road_plane(center: Vector3, size: Vector2, road_type: String):
 		mesh_instance.material_override = _resolve_road_material()
 
 	mesh_instance.position = center
-	# Give it a unique, deterministic name so Godot never renames it to @MeshInstance3D@...
 	mesh_instance.name = "Road_Segment_%d" % _road_counter
 	mesh_instance.set_meta("is_road", true)
 	mesh_instance.set_meta("road_type", road_type)
@@ -748,7 +528,6 @@ func create_intersection_plane(center: Vector3, size: Vector2):
 		mesh_instance.material_override = _resolve_intersection_material()
 
 	mesh_instance.position = center
-	# Give it a unique, deterministic name
 	mesh_instance.name = "Intersection_Node_%d" % _intersection_counter
 	mesh_instance.set_meta("is_road", true)
 	mesh_instance.set_meta("road_type", "Intersection")
