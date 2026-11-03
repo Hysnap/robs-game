@@ -14,9 +14,9 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 		push_error("[OperationsController] GameState or world_state unmounted.")
 		return {}
 
+	# If no orders staged, process an idle operational shift (advances calendar & runs ambient updates)
 	if staged_orders.is_empty():
-		SystemLogger.log_info("[OperationsController] No directives staged for operational cycle.")
-		return {}
+		SystemLogger.log_info("[OperationsController] No directives staged: executing idle turn cycle.")
 
 	# 1. Run pure simulation cycle
 	var report: Dictionary = SimControllerScript.process_turn_cycle(gs.world_state, staged_orders)
@@ -53,6 +53,8 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 
 		if not cards.is_empty():
 			view_host.push_feedback_slips(cards)
+			if view_host.has_method("show_feedback_inbox"):
+				view_host.show_feedback_inbox()
 
 		# Refresh currently selected docket view
 		var active_id: String = str(gs.world_state.get("selected_district_id", ""))
@@ -62,7 +64,8 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 
 	# 4. Notify world of timeline step
 	if gs.has_signal("turn_advanced"):
-		gs.turn_advanced.emit(report.get("week", 1), report.get("day", 1))
+		var current_day_tick: int = int(report.get("current_sim_day", report.get("day_offset", gs.world_state.get("metadata", {}).get("current_day_tick", 1))))
+		gs.turn_advanced.emit(current_day_tick)
 
 	SystemLogger.log_info("[OperationsController] Operational cycle produced %d feedback cards." % cards.size())
 	return report

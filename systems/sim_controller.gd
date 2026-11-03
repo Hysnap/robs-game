@@ -56,9 +56,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			var res: Dictionary = execute_directive(world_state, directive)
 			var success: bool = res.get("success", false)
 			# Resolve author cleanly: counterparty -> initiator -> localized role fallback
-			var author_str: String = str(directive.get("counterparty_id", directive.get("initiator_id", "")))
-			if author_str.is_empty():
-				author_str = TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")
+			var author_str: String = _resolve_directive_author(world_state, directive)
 			
 			var event_record := {
 				"trigger_type": "ACTION_RESOLUTION",
@@ -82,9 +80,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			if not success and strict_halt:
 				for j in range(i + 1, staged_directives.size()):
 					var blocked_directive: Dictionary = staged_directives[j]
-					var blocked_author: String = str(blocked_directive.get("counterparty_id", blocked_directive.get("initiator_id", "")))
-					if blocked_author.is_empty():
-						blocked_author = TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")
+					var blocked_author: String = _resolve_directive_author(world_state, blocked_directive)
 
 					executed_events.append({
 						"trigger_type": "ACTION_ABORTED",
@@ -140,16 +136,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["current_day_of_week"] = dow
 	world_state["metadata"] = meta
 
-	# 3. Inform GameState (Observer Pattern)
-	var main_loop = Engine.get_main_loop()
-	if main_loop is SceneTree:
-		var root = (main_loop as SceneTree).root
-		if root:
-			var gs_node = root.get_node_or_null("GameState")
-			if gs_node and gs_node.has_signal("turn_advanced"):
-				gs_node.emit_signal("turn_advanced", current_day)
-	
-	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
+	# 3. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
 	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (week rollover=%s)." % [current_day, crossed_boundary])
@@ -163,3 +150,17 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"executed_events": executed_events,
 		"diary_memos": diary_memos
 	}
+
+static func _resolve_directive_author(world_state: Dictionary, directive: Dictionary) -> String:
+	var agent_id: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", directive.get("counterparty_id", "")))))
+	if agent_id.is_empty() or agent_id == "PLAYER":
+		return TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")
+
+	# Check roster or staff table if mounted in world_state
+	var roster: Dictionary = world_state.get("roster", world_state.get("staff", {}))
+	if roster.has(agent_id):
+		var record = roster[agent_id]
+		if record is Dictionary and record.has("name"):
+			return str(record["name"])
+
+	return agent_id

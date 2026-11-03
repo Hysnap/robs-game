@@ -12,7 +12,7 @@ const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
-const DesktopSlipStackScene = preload("res://scenes/ui/shells/filofax/desktop_slip_stack.tscn")
+const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
 
 var view_host: ViewHost = null
@@ -54,6 +54,7 @@ func _ready() -> void:
 	# 3. HUD wiring
 	if game_hud != null:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
+		game_hud.end_turn_requested.connect(_on_end_turn_requested)
 
 	# 4. Synchronize Seed & Visual Layout
 	var gs = ScenarioManifestManager.get_game_state()
@@ -65,7 +66,7 @@ func _ready() -> void:
 
 		# Listen reactively for turn completion to update 3D ground markers
 		if gs.has_signal("turn_advanced"):
-			gs.turn_advanced.connect(func(_week: int, _day: int):
+			gs.turn_advanced.connect(func(_current_tick: int):
 				refresh_all_district_indicators()
 				SystemLogger.log_info("[CityView] Mounted %d district ground indicators." % _district_ground_nodes.size())
 			)
@@ -176,6 +177,9 @@ func _setup_compiled_shell_host_views() -> void:
 		feedback_inbox.z_index = 15
 		workspace_canvas.add_child(feedback_inbox)
 
+		if view_host != null and feedback_inbox != null:
+			view_host.set_desk_inbox(feedback_inbox)
+
 	# F. Query active spread for its era-specific composer modal (duck-typed)
 	var era_modal: Control = outer_shell.get_slot("MODAL")
 
@@ -220,8 +224,7 @@ func _on_view_host_action_requested(action_code: String, _payload: Dictionary) -
 		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
 			view_host.open_composer({"target_district_id": target_district})
 		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
-			var staged = view_host.get_staged_directives()
-			OperationsControllerScript.execute_staged_cycle(staged, view_host)
+			_on_end_turn_requested()
 
 func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> void:
 	if action_id == "FILE":
@@ -266,12 +269,41 @@ func _toggle_workspace_visibility() -> void:
 		return
 
 	workspace_canvas.visible = not workspace_canvas.visible
-	if workspace_canvas.visible and view_host != null:
-		var gs = ScenarioManifestManager.get_game_state()
-		var active_id: String = ""
-		if gs != null and "world_state" in gs:
-			active_id = str(gs.world_state.get("selected_district_id", ""))
+	if workspace_canvas.visible:
+		# Anti-lost protection: ensure outer_shell is on-screen and accessible below the HUD
+		if outer_shell != null:
+			outer_shell.move_to_front()
+			var vp_size: Vector2 = get_viewport().get_visible_rect().size
+			var shell_size: Vector2 = outer_shell.size
+			
+			# If unpositioned or dragged off-screen / under HUD, clamp safely
+			var min_y: float = 60.0 # Clear HUD top-bar margin
+			var max_x: float = maxf(20.0, vp_size.x - shell_size.x - 20.0)
+			var max_y: float = maxf(min_y, vp_size.y - 80.0)
+			
+			if outer_shell.global_position.x < 0.0 or outer_shell.global_position.x > max_x \
+			or outer_shell.global_position.y < min_y or outer_shell.global_position.y > max_y:
+				# Recenter on screen if lost
+				outer_shell.global_position = Vector2(
+					maxf(20.0, (vp_size.x - shell_size.x) * 0.5),
+					maxf(min_y, (vp_size.y - shell_size.y) * 0.5)
+				)
 
-		if not active_id.is_empty() and gs != null and gs.has_method("get_district_view"):
-			var district_data: Dictionary = gs.get_district_view(active_id)
-			view_host.update_active_view_data(district_data)
+		if view_host != null:
+			var gs = ScenarioManifestManager.get_game_state()
+			var active_id: String = ""
+			if gs != null and "world_state" in gs:
+				active_id = str(gs.world_state.get("selected_district_id", ""))
+
+			if not active_id.is_empty() and gs != null and gs.has_method("get_district_view"):
+				var district_data: Dictionary = gs.get_district_view(active_id)
+				view_host.update_active_view_data(district_data)
+
+func _on_end_turn_requested() -> void:
+	var staged: Array = []
+	if view_host != null:
+		if view_host.has_method("consume_selected_staged_directives"):
+			staged = view_host.consume_selected_staged_directives()
+		elif view_host.has_method("get_staged_directives"):
+			staged = view_host.get_staged_directives()
+	OperationsControllerScript.execute_staged_cycle(staged, view_host)

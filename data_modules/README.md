@@ -7,7 +7,6 @@ loader even when the host filesystem is not.
 ## Modules
 
 * `core/` is the active baseline catalog and scenario.
-* `shared/` contains reusable feedback data.
 * `crime/` is an optional variant overlay. It currently contains impact data;
   it is not automatically active unless a caller mounts that variant.
 

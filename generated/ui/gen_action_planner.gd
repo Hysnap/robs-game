@@ -73,6 +73,26 @@ func build_ui() -> void:
 	_value_labels["queue_list"] = list_queue_list
 	add_child(list_queue_list)
 
+	var btn_btn_toggle_select := Button.new()
+	btn_btn_toggle_select.text = tr("UI_BTN_TOGGLE_SELECT")
+	btn_btn_toggle_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_toggle_select.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_toggle_select.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_toggle_select.add_theme_font_override("font", mono_font)
+	btn_btn_toggle_select.pressed.connect(func(): action_clicked.emit("TOGGLE_SELECT"))
+	_value_labels["btn_toggle_select"] = btn_btn_toggle_select
+	add_child(btn_btn_toggle_select)
+
+	var btn_btn_select_all := Button.new()
+	btn_btn_select_all.text = tr("UI_BTN_SELECT_ALL")
+	btn_btn_select_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_select_all.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_select_all.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_select_all.add_theme_font_override("font", mono_font)
+	btn_btn_select_all.pressed.connect(func(): action_clicked.emit("SELECT_ALL"))
+	_value_labels["btn_select_all"] = btn_btn_select_all
+	add_child(btn_btn_select_all)
+
 	var btn_btn_move_up := Button.new()
 	btn_btn_move_up.text = tr("UI_BTN_MOVE_UP")
 	btn_btn_move_up.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -102,16 +122,6 @@ func build_ui() -> void:
 	btn_btn_remove_order.pressed.connect(func(): action_clicked.emit("REMOVE_ORDER"))
 	_value_labels["btn_remove_order"] = btn_btn_remove_order
 	add_child(btn_btn_remove_order)
-
-	var btn_btn_execute_shift := Button.new()
-	btn_btn_execute_shift.text = tr("UI_BTN_EXECUTE_SHIFT")
-	btn_btn_execute_shift.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_execute_shift.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_execute_shift.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_execute_shift.add_theme_font_override("font", mono_font)
-	btn_btn_execute_shift.pressed.connect(func(): action_clicked.emit("COMMIT_SHIFT"))
-	_value_labels["btn_execute_shift"] = btn_btn_execute_shift
-	add_child(btn_btn_execute_shift)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("queue_list") and data.has("staged_queue"):

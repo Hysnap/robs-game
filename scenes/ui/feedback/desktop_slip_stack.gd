@@ -19,17 +19,10 @@ var _pending_slips: Array[Dictionary] = []
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 
-var _presentation_order: String = "ISSUED_ORDER"
-var _max_visible_stack: int = 4
-var _max_rotation_degrees: float = 12.0
-var _jitter_px: float = 12.0
-
-const SLIP_PALETTES: Dictionary = {
-	"STICKY_YELLOW": {"bg": Color("#fff9a6"), "ink": Color("#1a1a1a"), "title": "MEMO NOTE"},
-	"STICKY_MINT":   {"bg": Color("#d4fcd6"), "ink": Color("#102413"), "title": "FIELD NOTE"},
-	"STICKY_ROSE":   {"bg": Color("#ffd1d5"), "ink": Color("#2b1114"), "title": "URGENT DISPATCH"},
-	"PAPER_SCRAP":   {"bg": Color("#f0ede6"), "ink": Color("#1f2421"), "title": "TORN RECEIPT / SCRAP"}
-}
+var _presentation_order: String = ""
+var _max_visible_stack: int = 0
+var _max_rotation_degrees: float = 0.0
+var _jitter_px: float = 0.0
 
 func _ready() -> void:
 	_load_manifest_rules()
@@ -43,6 +36,8 @@ func _ready() -> void:
 func _load_manifest_rules() -> void:
 	STATIONERY_REGISTRY.initialize()
 	var rules: Dictionary = STATIONERY_REGISTRY.get_stack_rules()
+	assert(not rules.is_empty(), "FATAL: [DesktopSlipStack] Failed to load stack_rules from active inbox manifest.")
+
 	_presentation_order = str(rules.get("presentation_order", "ISSUED_ORDER")).to_upper()
 	_max_visible_stack = int(rules.get("max_visible_cards", rules.get("max_visible_stack", 4)))
 	_max_rotation_degrees = float(rules.get("max_tilt_degrees", rules.get("max_rotation_degrees", 12.0)))
@@ -122,13 +117,24 @@ func _refresh_display() -> void:
 		_render_slip_card(slip, is_top_card, i)
 
 func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void:
-	var style_key: String = str(slip.get("slip_style", "STICKY_YELLOW"))
-	var palette: Dictionary = SLIP_PALETTES.get(style_key, SLIP_PALETTES["STICKY_YELLOW"])
+	var def_id: String = str(slip.get("stationery_profile", "STICKY_NOTE")).to_upper()
+	var def: Dictionary = STATIONERY_REGISTRY.get_definition(def_id)
+
+	# Defensive resolution with loud warning if definition missing
+	if def.is_empty():
+		push_warning("[DesktopSlipStack] Missing stationery definition for '%s', falling back to STICKY_NOTE" % def_id)
+		def = STATIONERY_REGISTRY.get_definition("STICKY_NOTE")
+	
+	var palettes: Dictionary = def.get("palettes", {})
+	var palette_key: String = str(slip.get("palette_key", "YELLOW")).to_upper()
+	var palette: Dictionary = palettes.get(palette_key, palettes.values()[0] if not palettes.is_empty() else {"bg": "#fff9a6", "ink": "#1a1a1a", "title": "MEMO"})
+
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
 
 	var card := PanelContainer.new()
-	var card_w: float = 270.0
-	var card_h: float = 240.0
+	var dims: Array = def.get("dimensions", [270.0, 240.0])
+	var card_w: float = float(dims[0]) if dims.size() > 0 else 270.0
+	var card_h: float = float(dims[1]) if dims.size() > 1 else 240.0
 	card.custom_minimum_size = Vector2(card_w, card_h)
 	card.size = Vector2(card_w, card_h)
 	card.pivot_offset = Vector2(card_w * 0.5, card_h * 0.5)
@@ -146,14 +152,19 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 
 	var sb := StyleBoxFlat.new()
 	var bg_color: Color = palette["bg"]
+	var ink_color := Color(palette.get("ink", "#1a1a1a"))
 	if not is_top:
 		bg_color = bg_color.darkened(0.05 * (depth_index + 1))
 	sb.bg_color = bg_color
-	sb.set_corner_radius_all(2)
-	sb.set_content_margin_all(8)
-	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.20 if not is_top else 0.35)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(2, 3)
+	sb.set_corner_radius_all(int(def.get("corner_radius", 2)))
+	sb.set_content_margin_all(int(def.get("padding", 8)))
+
+	var shadow_cfg: Dictionary = def.get("shadow", {})
+	var shadow_offset: Array = shadow_cfg.get("offset", [2.0, 3.0])
+	var shadow_alpha: float = float(shadow_cfg.get("alpha", 0.28))
+	sb.shadow_color = Color(0.0, 0.0, 0.0, shadow_alpha if not is_top else shadow_alpha + 0.1)
+	sb.shadow_size = int(shadow_cfg.get("size", 6))
+	sb.shadow_offset = Vector2(float(shadow_offset[0]), float(shadow_offset[1]))
 	card.add_theme_stylebox_override("panel", sb)
 
 	var vbox := VBoxContainer.new()
@@ -163,15 +174,16 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	card.add_child(vbox)
 
 	# 1. Header
+	var title_text: String = tr(palette.get("title_token", palette.get("title", "MEMO NOTE")))
 	var hdr := Label.new()
-	hdr.text = "%s • WK %02d" % [palette["title"], int(slip.get("tick", 1))]
+	hdr.text = "%s • WK %02d" % [title_text, int(slip.get("tick", 1))]
 	hdr.add_theme_font_override("font", mono_font)
 	hdr.add_theme_font_size_override("font_size", 9)
-	hdr.add_theme_color_override("font_color", palette["ink"])
+	hdr.add_theme_color_override("font_color", ink_color)
 	vbox.add_child(hdr)
 
 	var sep := HSeparator.new()
-	sep.modulate = palette["ink"]
+	sep.modulate = ink_color
 	sep.modulate.a = 0.25
 	vbox.add_child(sep)
 
@@ -190,13 +202,13 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	vbox.add_child(body)
 
 	# 3. Footer
-	var author: String = str(slip.get("author", "Runner Dispatch"))
+	var author: String = str(slip.get("author", TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")))
 	var ftr := Label.new()
 	ftr.text = "- %s" % author
 	ftr.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	ftr.add_theme_font_override("font", mono_font)
 	ftr.add_theme_font_size_override("font_size", 9)
-	ftr.add_theme_color_override("font_color", palette["ink"].lightened(0.2))
+	ftr.add_theme_color_override("font_color", ink_color.lightened(0.2))
 	vbox.add_child(ftr)
 
 	# 4. Interactive Destination Routing on Top Slip
@@ -208,14 +220,15 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		dest_opt.add_theme_font_override("font", mono_font)
 		dest_opt.add_theme_font_size_override("font_size", 9)
 		dest_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		dest_opt.add_item("📅 DIARY", 0)
+		dest_opt.add_item("📅 " + tr("UI_DEST_DIARY"), 0)
 		dest_opt.set_item_metadata(0, "DIARY")
-		dest_opt.add_item("📁 DOSSIER", 1)
+		dest_opt.add_item("📁 " + tr("UI_DEST_DOSSIER"), 1)
 		dest_opt.set_item_metadata(1, "DOSSIER")
-		dest_opt.add_item("👥 ROSTER", 2)
+		dest_opt.add_item("👥 " + tr("UI_DEST_ROSTER"), 2)
 		dest_opt.set_item_metadata(2, "ROSTER")
-		dest_opt.add_item("💷 ACCOUNTS", 3)
+		dest_opt.add_item("💷 " + tr("UI_DEST_ACCOUNTS"), 3)
 		dest_opt.set_item_metadata(3, "FINANCE")
+		
 		var requested_destination := str(slip.get("destination", "DIARY")).to_upper()
 		for option_index in range(dest_opt.item_count):
 			if str(dest_opt.get_item_metadata(option_index)).to_upper() == requested_destination:
@@ -224,7 +237,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		routing_box.add_child(dest_opt)
 
 		var btn_file := Button.new()
-		btn_file.text = "📌 File"
+		btn_file.text = "📌 " + tr("UI_BTN_FILE")
 		btn_file.focus_mode = Control.FOCUS_NONE
 		btn_file.add_theme_font_override("font", mono_font)
 		btn_file.add_theme_font_size_override("font_size", 9)
@@ -235,7 +248,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		routing_box.add_child(btn_file)
 
 		var btn_discard := Button.new()
-		btn_discard.text = "🗑 Discard"
+		btn_discard.text = "🗑 " + tr("UI_BTN_DISCARD")
 		btn_discard.focus_mode = Control.FOCUS_NONE
 		btn_discard.add_theme_font_override("font", mono_font)
 		btn_discard.add_theme_font_size_override("font_size", 9)
@@ -249,6 +262,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 
 func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
+	slip["destination"] = destination
 	slip_filed.emit(slip, destination)
 	top_card_action.emit("FILE", slip)
 	_refresh_display()

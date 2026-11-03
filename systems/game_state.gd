@@ -16,6 +16,8 @@ var world_state: Dictionary = {}
 ## Active UI Selection Pointer (kept in sync with world_state["selected_district_id"])
 var selected_district_id: String = ""
 
+const SystemLoggerScript = preload("res://systems/logger.gd")
+const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
 const DISTRICT_PERCEPTION_FILTER = preload("res://systems/multilayer_info_loop/district_perception_filter.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")

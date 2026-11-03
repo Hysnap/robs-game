@@ -4,12 +4,14 @@ extends CanvasLayer
 
 signal toggle_filofax_requested
 signal toggle_messages_inbox_requested
+signal end_turn_requested
 
 @onready var btn_main_menu: Button = $MarginContainer/TopBar/HBoxLeft/BtnMainMenu
 @onready var btn_toggle_filofax: Button = $MarginContainer/TopBar/HBoxLeft/BtnFilofax
+@onready var btn_messages_alert: Button = $MarginContainer/TopBar/HBoxLeft/BtnMessagesAlert
+@onready var btn_end_turn: Button = $MarginContainer/TopBar/HBoxRight/BtnEndTurn
 @onready var lbl_date_tick: Label = $MarginContainer/TopBar/HBoxRight/LblDateTick
 @onready var lbl_ticker_status: Label = $MarginContainer/BottomBar/LblTickerStatus
-@onready var btn_messages_alert: Button = $MarginContainer/TopBar/HBoxLeft/BtnMessagesAlert
 
 func _ready() -> void:
 	layer = 10
@@ -19,10 +21,18 @@ func _ready() -> void:
 		btn_main_menu.pressed.connect(_on_return_to_main_menu_pressed)
 		
 	if btn_toggle_filofax:
+		btn_toggle_filofax.text = tr("UI_HUD_BTN_FILOFAX")
 		btn_toggle_filofax.pressed.connect(func(): toggle_filofax_requested.emit())
 
 	if btn_messages_alert:
 		btn_messages_alert.pressed.connect(func(): toggle_messages_inbox_requested.emit())
+
+	if btn_end_turn:
+		btn_end_turn.text = tr("UI_HUD_BTN_END_TURN")
+		btn_end_turn.pressed.connect(func(): end_turn_requested.emit())
+
+	if lbl_ticker_status:
+		lbl_ticker_status.text = tr("UI_HUD_TICKER_STATUS_DEFAULT")
 
 	# Bind reactive timeline updates from GameState safely
 	var gs = ScenarioManifestManager.get_game_state()
@@ -67,7 +77,10 @@ func set_status_message(message: String) -> void:
 func update_unread_message_count(count: int) -> void:
 	if btn_messages_alert:
 		btn_messages_alert.visible = (count > 0)
-		btn_messages_alert.text = "📝 INBOX (%d)" % count
+		var tpl: String = tr("UI_HUD_BTN_INBOX")
+		if tpl == "UI_HUD_BTN_INBOX" or tpl.is_empty():
+			tpl = "📝 INBOX ({count})"
+		btn_messages_alert.text = tpl.replace("{count}", str(count))
 		# Visual alert tone
 		if count > 0:
 			btn_messages_alert.add_theme_color_override("font_color", Color("#fff9a6")) # Canary note yellow

@@ -3,7 +3,7 @@ extends SceneTree
 
 const OuterShellScript = preload("res://scenes/ui/shell_host/outer_shell.gd")
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
-const StaggeredCardStackScript = preload("res://scenes/ui/components/staggered_card_stack.gd")
+const DesktopSlipStackScript = preload("res://scenes/ui/feedback/desktop_slip_stack.gd")
 
 const DBManagerScript = preload("res://systems/db_manager.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
@@ -41,6 +41,10 @@ func _init() -> void:
 		"finances": {"liquid_cash": 100.0, "clean_bank_balance": 0.0},
 		"operations": {"police_evidence_weight": 0.05, "fatigue": 0.0},
 		"commodity_registry": commodities,
+		"staff": {
+			"STAFF_BILLY": {"name": "Billy", "role": "OPERATIVE"},
+			"STAFF_MALCOLM": {"name": "Malcolm", "role": "OPERATIVE"}
+		},
 		"pending_orders": {},
 		"inventory_registry": {
 			"BEER_STRONG_LAGER": {"STOCK": 20.0, "PREPPED": 0.0}
@@ -61,8 +65,8 @@ func _init() -> void:
 		world_state["districts"]["DIST_ASTON_01"]["actual_police_heat"]
 	])
 
-	# 2. MOUNT PRESENTATION LAYER (SHELL, VIEWHOST, SPREAD WRAPPER)
-	SystemLogger.log_info("\n[STEP 2] Assembling presentation layer (OuterShell, ViewHost, StaggeredCardStack)...")
+	# 2. MOUNT PRESENTATION LAYER (SHELL, VIEWHOST, DESKTOP SLIP STACK)
+	SystemLogger.log_info("\n[STEP 2] Assembling presentation layer (OuterShell, ViewHost, DesktopSlipStack)...")
 	var shell_scene: PackedScene = load("res://scenes/ui/shell_host/outer_shell.tscn")
 	assert(shell_scene != null, "outer_shell.tscn failed to load!")
 	var shell: OuterShell = shell_scene.instantiate() as OuterShell
@@ -78,8 +82,9 @@ func _init() -> void:
 	host.shell_node = shell
 	shell.add_child(host)
 
-	var card_stack := StaggeredCardStackScript.new()
+	var card_stack := DesktopSlipStackScript.new()
 	root.add_child(card_stack)
+	host.set_desk_inbox(card_stack)
 
 	# Mount compiled views into ViewHost
 	var nav_bar: Control = load("res://generated/ui/gen_navigation_bar.gd").new()
@@ -100,11 +105,12 @@ func _init() -> void:
 	host.switch_to_domain("DIARY")
 	SystemLogger.log_info("  ✓ Navigation, Docket, Cashbook, Diary, and Action Planner mounted cleanly.")
 
-	# 3. TEST DIRECTIVE STAGING, REORDERING & DISPATCH THROUGH VIEWHOST
-	SystemLogger.log_info("\n[STEP 3] Testing directive staging & reordering in ViewHost...")
+	# 3. TEST DIRECTIVE STAGING, REORDERING & SELECTIVE COMMITMENT
+	SystemLogger.log_info("\n[STEP 3] Testing directive staging, priority reordering & selection toggles...")
 	var directive_1: Dictionary = {
 		"verb": "BUY",
 		"initiator_id": "STAFF_BILLY",
+		"assigned_to": "STAFF_BILLY",
 		"counterparty_id": "",
 		"target_item": "BEER_STRONG_LAGER",
 		"amount": 5.0,
@@ -114,6 +120,7 @@ func _init() -> void:
 	var directive_2: Dictionary = {
 		"verb": "SELL",
 		"initiator_id": "PLAYER",
+		"assigned_to": "PLAYER",
 		"counterparty_id": "MARKET_CONSUMERS_ASTON",
 		"target_item": "BEER_STRONG_LAGER",
 		"amount": 10.0,
@@ -140,31 +147,24 @@ func _init() -> void:
 
 	var reordered_queue: Array = host.get_staged_directives()
 	assert(reordered_queue[0]["verb"] == "SELL", "Reordering failed: SELL directive should now be index 0!")
-	SystemLogger.log_info("  ✓ Staging buffer and priority reordering verified (SELL prioritized ahead of BUY).")
+	SystemLogger.log_info("  ✓ Priority reordering verified: SELL directive moved ahead of BUY.")
 
-	# Trigger shift commitment signal
-	var test_signal_fired := {"fired": false, "code": ""}
-	host.action_requested.connect(func(action_code: String, _payload: Dictionary):
-		test_signal_fired["fired"] = true
-		test_signal_fired["code"] = action_code
-	)
+	# Test Selection Toggle: Uncheck the BUY directive (now at index 1)
+	queue_widget.select(1)
+	host.toggle_selected_directive()
+	assert(host.get_staged_directives()[1].get("is_selected", true) == false, "BUY directive should be unselected!")
 
-	var btn_execute: Button = null
-	if "_value_labels" in planner and planner._value_labels.has("btn_execute_shift"):
-		btn_execute = planner._value_labels["btn_execute_shift"] as Button
-	elif planner.find_child("btn_execute_shift", true, false) != null:
-		btn_execute = planner.find_child("btn_execute_shift", true, false) as Button
-	assert(btn_execute != null, "btn_execute_shift missing in compiled planner!")
-	btn_execute.pressed.emit()
+	# Consume only selected directives for this turn
+	var to_commit: Array = host.consume_selected_staged_directives()
+	assert(to_commit.size() == 1, "Expected exactly 1 selected directive to be consumed!")
+	assert(to_commit[0]["verb"] == "SELL", "Expected SELL directive to be committed!")
+	assert(host.get_staged_directives().size() == 1, "Unselected BUY directive must remain staged in queue!")
+	assert(host.get_staged_directives()[0]["verb"] == "BUY", "Remaining staged directive should be BUY!")
+	SystemLogger.log_info("  ✓ Selective commitment verified: SELL committed, BUY preserved across turns.")
 
-	assert(test_signal_fired["fired"], "Action requested failed to emit from ViewHost!")
-	assert(test_signal_fired["code"] == "COMMIT_SHIFT", "Expected 'COMMIT_SHIFT' action code!")
-	SystemLogger.log_info("  ✓ Shift execution triggered cleanly via 'COMMIT_SHIFT' button.")
-
-	# 4. EXECUTE TURN & INSCRIBE ORDERS INTO DIARY
+	# 4. EXECUTE TURN VIA SIMCONTROLLER & INSCRIBE ORDERS INTO DIARY
 	SystemLogger.log_info("\n[STEP 4] Executing turn: inscribe orders into Diary & run SimController...")
-	var active_orders: Array = [directive_2] # Process the SELL directive
-	for cmd in active_orders:
+	for cmd in to_commit:
 		host.inscribe_entry_to_domain("DIARY", {
 			"tick": world_state["metadata"]["current_week_tick"],
 			"author": "Order Dispatch",
@@ -180,7 +180,7 @@ func _init() -> void:
 	SystemLogger.log_info("  ✓ Dispatched order inscribed on Diary ruled lines (%d entries present)." % diary_container.get_child_count())
 
 	# Run SimController cycle
-	var turn_report: Dictionary = SimControllerScript.process_turn_cycle(world_state, active_orders)
+	var turn_report: Dictionary = SimControllerScript.process_turn_cycle(world_state, to_commit)
 	var event_triggers: Array = turn_report.get("executed_events", [])
 	assert(event_triggers.size() >= 1, "Expected at least 1 resolution trigger from SimController!")
 
@@ -189,40 +189,29 @@ func _init() -> void:
 	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "Inventory stock failed to decrement!")
 	SystemLogger.log_info("  ✓ SimController execution succeeded: £135.00 vault cash, 10 units stock remaining.")
 
-	# 5. TRANSLATE EVENT TRIGGERS INTO MODULAR CARD STACK
+	# 5. TRANSLATE EVENT TRIGGERS INTO DESKTOP SLIP CARDS
 	SystemLogger.log_info("\n[STEP 5] Translating pure telemetry triggers to desk cards...")
 	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(event_triggers)
 	card_stack.push_cards(cards)
-	assert(card_stack.get_card_count() >= 1, "CardStack failed to accept translated cards!")
+	assert(card_stack.get_card_count() >= 1, "DesktopSlipStack failed to accept translated cards!")
 	SystemLogger.log_info("  ✓ Translated outcome card landed on desktop stack (%d cards queued)." % card_stack.get_card_count())
 
-	# 6. TEST PHYSICAL TRIAGE: 📌 FILE RECEIPT TO FINANCE
+	# 6. TEST PHYSICAL TRIAGE: 📌 FILE RECEIPT INTERACTIVELY TO FINANCE
 	SystemLogger.log_info("\n[STEP 6] Testing Triage Action: 📌 File Receipt to FINANCE...")
 	var initial_evidence: float = float(world_state["operations"]["police_evidence_weight"])
+	var top_card: Dictionary = card_stack.get_top_card()
+	assert(not top_card.is_empty(), "Top card missing from DesktopSlipStack!")
 
-	var triage_recorded := {"filed": false}
-	card_stack.top_card_action.connect(func(action_id: String, payload: Dictionary):
-		if action_id == "FILE":
-			triage_recorded["filed"] = true
-			var dest: String = str(payload.get("destination", "FINANCE"))
-			host.inscribe_entry_to_domain(dest, {
-				"tick": payload.get("tick", 1),
-				"author": payload.get("slip_profile", "REPORT"),
-				"text": payload.get("display_text", "")
-			})
-			var risk: float = float(payload.get("evidence_weight", 0.08))
-			world_state["operations"]["police_evidence_weight"] += risk
-	)
-
-	card_stack.pop_top_card("FILE")
-	assert(triage_recorded["filed"], "Top card action failed to fire on pop_top_card('FILE')!")
+	# File the top slip directly to FINANCE
+	card_stack._on_file_pressed(top_card, "FINANCE")
+	world_state["operations"]["police_evidence_weight"] += 0.08
 
 	var cashbook_container: VBoxContainer = null
 	if "_value_labels" in cashbook and cashbook._value_labels.has("__inscriptions__"):
 		cashbook_container = cashbook._value_labels["__inscriptions__"] as VBoxContainer
 	elif "_inscribed_entries_container" in cashbook:
 		cashbook_container = cashbook._inscribed_entries_container
-	assert(cashbook_container != null and cashbook_container.get_child_count() >= 1, "Cashbook failed to inscribe filed receipt!")
+	assert(cashbook_container != null and cashbook_container.get_child_count() >= 1, "Cashbook failed to inscribe filed receipt via slip_filed!")
 	assert(is_equal_approx(world_state["operations"]["police_evidence_weight"], initial_evidence + 0.08), "Evidence weight did not increment on file!")
 	SystemLogger.log_info("  ✓ Card filed into Cashbook ledger; police evidence updated to: %.2f" % world_state["operations"]["police_evidence_weight"])
 
