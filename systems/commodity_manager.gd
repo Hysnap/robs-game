@@ -152,3 +152,43 @@ static func _read_json(path: String) -> Dictionary:
 	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
 		return json.data
 	return {}
+
+## Retrieves all trade commodities available for a specific venue or store.
+## Respects the debug toggle `world_state["debug_rules"]["all_items_in_all_stores"]`.
+static func get_available_commodities_for_venue(venue_data: Dictionary, world_state: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var registry: Dictionary = world_state.get("commodity_registry", {})
+	if registry.is_empty():
+		return result
+
+	# Check debug rule override
+	var debug_rules: Dictionary = world_state.get("debug_rules", {})
+	var allow_all: bool = bool(debug_rules.get("all_items_in_all_stores", false))
+
+	if allow_all:
+		for item_id in registry.keys():
+			var item_def = registry[item_id]
+			if item_def is Dictionary:
+				result.append(item_def)
+		return result
+
+	# Standard filtering: match venue categories or archetype tags
+	var allowed_categories: Array = venue_data.get("trade_categories", [])
+	var venue_archetype: String = str(venue_data.get("archetype", "")).to_upper()
+
+	for item_id in registry.keys():
+		var item: Dictionary = registry[item_id]
+		var item_cat: String = str(item.get("category", "")).to_upper()
+		var item_subcat: String = str(item.get("sub_category", "")).to_upper()
+
+		if allowed_categories.is_empty():
+			if venue_archetype != "" and (item_cat == venue_archetype or item_subcat == venue_archetype):
+				result.append(item)
+		else:
+			for cat in allowed_categories:
+				var upper_cat: String = str(cat).to_upper()
+				if item_cat == upper_cat or item_subcat == upper_cat or str(item_id).to_upper() == upper_cat:
+					result.append(item)
+					break
+
+	return result
