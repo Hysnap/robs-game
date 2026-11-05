@@ -112,6 +112,8 @@ static func run(
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
+			assert(arch.has("sector_class"), "FATAL: Archetype '%s' with institution_profile is missing mandatory 'sector_class'!" % district_type)
+			var inst_sector: String = str(arch["sector_class"]).to_upper()
 			var display_label: String = str(arch.get("display_name", cat_name)).replace("'", "''")
 			var capacity: int = int(inst.get("default_capacity", 250))
 			var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_name)
@@ -127,7 +129,7 @@ static func run(
 			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id)
 			current_slot_id = expand_staffing_slots(
 				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
-				cat_name, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+				inst_sector, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 			)
 			est_id += 1
 
@@ -188,6 +190,8 @@ static func run(
 				var c_arch: Dictionary = archetypes.get(civic_key, {})
 				var c_inst: Dictionary = c_arch.get("institution_profile", {})
 				var c_cat_name: String = str(c_arch.get("establishment_category", civic_key.to_upper()))
+				assert(c_arch.has("sector_class"), "FATAL: Embedded civic archetype '%s' missing mandatory 'sector_class'!" % civic_key)
+				var c_sector: String = str(c_arch["sector_class"]).to_upper()
 				var c_display: String = str(c_arch.get("display_name", c_cat_name)).replace("'", "''")
 				var c_cap: int = int(c_inst.get("default_capacity", 250))
 				var c_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", c_cat_name)
@@ -203,7 +207,7 @@ static func run(
 				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id)
 				current_slot_id = expand_staffing_slots(
 					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
-					c_cat_name, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+					c_sector, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
 				)
 				est_id += 1
 
@@ -246,7 +250,7 @@ static func run(
 					total_tied_units_count += 1
 					est_id += 1
 
-		# 4. Units from building_allocations (Defensively handles Dictionary or Array housing profiles)
+		# 4. Units from building_allocations
 		var h_profiles: Array[Dictionary] = _extract_housing_profiles(arch)
 		var housing_prof: Dictionary = h_profiles[0] if not h_profiles.is_empty() else {}
 		var res_type_code: String = str(housing_prof.get("residence_type", "NONE"))
@@ -375,9 +379,11 @@ static func run(
 					_register_est_cat(by_cat, "COMMERCIAL", est_id, dist_id)
 
 					if is_vacant == 0:
+						assert(tenancy.has("sector"), "FATAL: Commercial tenancy '%s' missing mandatory 'sector' field!" % cat_code)
+						var comm_sector: String = str(tenancy["sector"]).to_upper()
 						current_slot_id = expand_staffing_slots(
 							available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
-							"COMMERCIAL", tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+							comm_sector, tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
 						)
 
 					est_id += 1
@@ -401,9 +407,11 @@ static func run(
 					_register_est_cat(by_cat, i_code, est_id, dist_id)
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
 
+					assert(ind_tenancy.has("sector"), "FATAL: Industrial tenancy '%s' missing mandatory 'sector' field!" % i_code)
+					var ind_sector: String = str(ind_tenancy["sector"]).to_upper()
 					current_slot_id = expand_staffing_slots(
 						available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
-						"INDUSTRIAL", ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+						ind_sector, ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
 					)
 					est_id += 1
 
@@ -471,7 +479,7 @@ static func expand_staffing_slots(
 	starting_slot_id: int,
 	estab_id: int, 
 	dist_id: String, 
-	category_code: String, 
+	sector_category_code: String, 
 	host_def: Dictionary, 
 	job_definitions: Dictionary,
 	sim_start_day: int,
@@ -481,15 +489,46 @@ static func expand_staffing_slots(
 	var slot_id_counter: int = starting_slot_id
 	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
 	var estab_bonus: float = float(host_def.get("wage_bonus", 0.0))
-	var default_schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
+
+	# Sector Category lookup - fail loud if missing or invalid
+	assert(not sector_category_code.is_empty(), "FATAL: Empty sector_category provided for establishment ID %d!" % estab_id)
+	var sector_category_id: int = DB_MANAGER.get_label_id("SECTOR_CATEGORY", sector_category_code)
+
+	# Extract canonical master roles dictionary
+	var master_roles: Dictionary = job_definitions.get("roles", job_definitions)
 
 	if host_def.has("staffing_roster"):
 		for item in host_def["staffing_roster"]:
-			var job_code: String = str(item.get("job_id", item.get("role_title", "COMMERCIAL_SERVICE")))
-			var master_job: Dictionary = job_definitions.get(job_code, {})
+			var job_code: String = str(item.get("job_id", item.get("role_title", "")))
+			assert(not job_code.is_empty(), "FATAL: Staffing roster entry missing 'job_id' or 'role_title' in establishment %d!" % estab_id)
+			assert(master_roles.has(job_code), "FATAL: Undefined job role '%s' referenced in staffing roster for establishment %d!" % [job_code, estab_id])
+			var master_job: Dictionary = master_roles[job_code]
 
-			var contract_class: String = str(item.get("contract_class", master_job.get("contract_class", "FORMAL_LEGAL")))
-			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "NO_FORMAL")))
+			# Resolve contract_type: Roster item override > Building Class override > Job definition baseline
+			var contract_type_code: String = ""
+			if item.has("contract_type"):
+				contract_type_code = str(item["contract_type"])
+			elif host_def.has("contract_type"):
+				contract_type_code = str(host_def["contract_type"])
+			elif master_job.has("contract_type"):
+				contract_type_code = str(master_job["contract_type"])
+			else:
+				assert(false, "FATAL: Job role '%s' (establishment %d) is missing mandatory 'contract_type' in roster item, building_classes, or job_definitions!" % [job_code, estab_id])
+
+			var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", contract_type_code)
+
+			var contract_class: String = str(item.get("contract_class", master_job.get("contract_class", "")))
+			assert(not contract_class.is_empty(), "FATAL: Role '%s' missing mandatory 'contract_class'!" % job_code)
+			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
+
+			var edu_req: String = str(item.get("education_required", master_job.get("education_required", "")))
+			assert(not edu_req.is_empty(), "FATAL: Role '%s' missing mandatory 'education_required'!" % job_code)
+			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
+
+			var schedule_code: String = str(item.get("schedule_window", master_job.get("schedule_window", "")))
+			assert(not schedule_code.is_empty(), "FATAL: Role '%s' missing mandatory 'schedule_window'!" % job_code)
+			var sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", schedule_code)
+
 			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
 			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
 			var tied_res: String = str(item.get("tied_accomodation", ""))
@@ -505,13 +544,12 @@ static func expand_staffing_slots(
 				resolved_rate = snappedf((base_rate * role_multiplier) + role_bonus, 0.05)
 			elif master_job.has("hourly_rate"):
 				resolved_rate = float(master_job["hourly_rate"])
+			else:
+				assert(false, "FATAL: No hourly rate or range declared for role '%s'!" % job_code)
 
 			var count_range: Array = item.get("target_count", [1, 1])
 			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
-
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", job_code)
-			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
-			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
 
 			for _i in range(count):
 				var s_id: int = slot_id_counter
@@ -521,10 +559,12 @@ static func expand_staffing_slots(
 					"slot_id": s_id,
 					"estab_id": estab_id,
 					"district_id": dist_id,
-					"cat": category_code,
-					"role": job_code,
-					"contract_class": contract_class,
-					"edu_req": edu_req,
+					"sector_category_id": sector_category_id,
+					"role_title_id": role_id,
+					"contract_class_id": class_id,
+					"contract_type_id": contract_type_id,
+					"min_education_level_id": edu_id,
+					"schedule_window_id": sched_id,
 					"rate": resolved_rate,
 					"hours": hours,
 					"is_field_worker": is_field,
@@ -533,33 +573,53 @@ static func expand_staffing_slots(
 
 				sql_inserts.append("""
 					INSERT INTO workplace_job_slots (
-						slot_id, establishment_id, role_title_id, contract_class_id,
-						min_education_level_id , schedule_window_id, weekly_hours, hourly_rate,
-						is_field_worker, is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+						slot_id, establishment_id, sector_category_id, role_title_id,
+						contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
+						weekly_hours, hourly_rate, is_field_worker,
+						is_filled, active_resident_id, valid_from, valid_to, change_reason_id
 					) VALUES (
 						%d, %d, %d, %d,
-						%d, %d, %.1f, %.2f,
-						%d, 0, NULL, %d, NULL, %d
+						%d, %d, %d, %d,
+						%.1f, %.2f, %d,
+						0, NULL, %d, NULL, %d
 					);
 				""" % [
-					s_id, estab_id, role_id, class_id,
-					edu_id, default_schedule_id, hours, resolved_rate,
-					1 if is_field else 0, sim_start_day, reason_id
+					s_id, estab_id, sector_category_id, role_id,
+					class_id, contract_type_id, edu_id, sched_id,
+					hours, resolved_rate, 1 if is_field else 0,
+					sim_start_day, reason_id
 				])
 
 	else:
 		var emp_range: Array = host_def.get("employee_range", host_def.get("default_employees", [1, 3]))
 		var count: int = rng.randi_range(int(emp_range[0]), int(emp_range[1]))
-		var fallback_job: String = "MANUAL_WORKS" if category_code == "INDUSTRIAL" else "COMMERCIAL_SERVICE"
-		var master: Dictionary = job_definitions.get(fallback_job, {})
-		
+		var fallback_job: String = "MANUAL_WORKS" if sector_category_code == "INDUSTRIAL" else "COMMERCIAL_SERVICE"
+		assert(master_roles.has(fallback_job), "FATAL: Standard fallback role '%s' missing in job_definitions!" % fallback_job)
+		var master: Dictionary = master_roles[fallback_job]
+
+		# Resolve contract_type: Building Class override > Fallback role baseline
+		var contract_type_code: String = ""
+		if host_def.has("contract_type"):
+			contract_type_code = str(host_def["contract_type"])
+		elif master.has("contract_type"):
+			contract_type_code = str(master["contract_type"])
+		else:
+			assert(false, "FATAL: Fallback role '%s' missing mandatory 'contract_type' in building_classes or job_definitions!" % fallback_job)
+
+		var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", contract_type_code)
+
+		var contract_class: String = str(master.get("contract_class", "FORMAL_LEGAL"))
+		var formal_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
+
 		var default_edu: String = str(master.get("education_required", "NO_FORMAL"))
+		var fallback_edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
+
+		var fallback_sched_code: String = str(master.get("schedule_window", "DAYTIME"))
+		var fallback_sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", fallback_sched_code)
+
 		var default_hours: float = float(master.get("weekly_hours", 37.5))
 		var r_range: Array = master.get("hourly_rate_range", [3.20, 3.80])
-		
 		var fallback_role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", fallback_job)
-		var formal_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", "FORMAL_LEGAL")
-		var fallback_edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
 
 		for _i in range(count):
 			var s_id: int = slot_id_counter
@@ -571,10 +631,12 @@ static func expand_staffing_slots(
 				"slot_id": s_id,
 				"estab_id": estab_id,
 				"district_id": dist_id,
-				"cat": category_code,
-				"role": fallback_job,
-				"contract_class": "FORMAL_LEGAL",
-				"edu_req": default_edu,
+				"sector_category_id": sector_category_id,
+				"role_title_id": fallback_role_id,
+				"contract_class_id": formal_class_id,
+				"contract_type_id": contract_type_id,
+				"min_education_level_id": fallback_edu_id,
+				"schedule_window_id": fallback_sched_id,
 				"rate": rate,
 				"hours": default_hours,
 				"is_field_worker": false,
@@ -583,17 +645,20 @@ static func expand_staffing_slots(
 
 			sql_inserts.append("""
 				INSERT INTO workplace_job_slots (
-					slot_id, establishment_id, role_title_id, contract_class_id,
-					min_education_level_id , schedule_window_id, weekly_hours, hourly_rate,
-					is_field_worker, is_filled, active_resident_id, valid_from, valid_to, change_reason_id
+					slot_id, establishment_id, sector_category_id, role_title_id,
+					contract_class_id, contract_type_id, min_education_level_id, schedule_window_id,
+					weekly_hours, hourly_rate, is_field_worker,
+					is_filled, active_resident_id, valid_from, valid_to, change_reason_id
 				) VALUES (
 					%d, %d, %d, %d,
-					%d, %d, %.1f, %.2f,
-					0, 0, NULL, %d, NULL, %d
+					%d, %d, %d, %d,
+					%.1f, %.2f, 0,
+					0, NULL, %d, NULL, %d
 				);
 			""" % [
-				s_id, estab_id, fallback_role_id, formal_class_id,
-				fallback_edu_id, default_schedule_id, default_hours, rate,
+				s_id, estab_id, sector_category_id, fallback_role_id,
+				formal_class_id, contract_type_id, fallback_edu_id, fallback_sched_id,
+				default_hours, rate,
 				sim_start_day, reason_id
 			])
 
@@ -614,7 +679,7 @@ static func pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionary
 			pool.append({"code": code, "display_name": item.get("display_name", code), "weight": item.get("weight", 5), "data": item})
 
 	if pool.is_empty():
-		return {"code": "COMMERCIAL", "display_name": "Local Retail Unit", "default_capacity": 10, "required_customer_threshold": 50, "customer_travel_distance_m": 500.0}
+		return {"code": "COMMERCIAL", "display_name": "Local Retail Unit", "sector": "COMMERCIAL", "default_capacity": 10, "required_customer_threshold": 50, "customer_travel_distance_m": 500.0}
 
 	var total_w := 0
 	for entry in pool:

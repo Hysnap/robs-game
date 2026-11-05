@@ -2,13 +2,14 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Master dictionary of baseline occupational roles, qualifications, hours, wage rates, and age boundaries."
   },
   "roles": {
     "COMMERCIAL_CLEANER": {
       "display_name": "Commercial / Domestic Cleaner",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "weekly_hours": 20.0,
       "hourly_rate_range": [2.6, 3.1],
@@ -20,6 +21,7 @@
     "SCHOOL_MEALS_STAFF": {
       "display_name": "School Meals Assistant / Dinner Lady",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "weekly_hours": 15.0,
       "hourly_rate_range": [2.7, 3.0],
@@ -31,6 +33,7 @@
     "SCHOOL_CARETAKER": {
       "display_name": "School Caretaker & Custodian",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "weekly_hours": 40.0,
       "hourly_rate_range": [3.4, 3.9],
@@ -42,6 +45,7 @@
     "CIVIC_CLERK_OR_OFFICIAL": {
       "display_name": "Clerical Officer / Administrator",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -54,6 +58,7 @@
     "CLERK": {
       "display_name": "Clerical Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -66,6 +71,7 @@
     "CIVIC_OFFICIAL": {
       "display_name": "Senior Executive Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "UNIVERSITY_DEGREE",
       "max_commute": 20000,
       "weekly_hours": 37.5,
@@ -78,6 +84,7 @@
     "COUNCIL_MANUAL_LABOUR": {
       "display_name": "Council Direct Labour / Dustman / Highways",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -90,6 +97,7 @@
     "MUNICIPAL_BUS_DRIVER": {
       "display_name": "Municipal Corporation Bus Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 42.0,
@@ -102,6 +110,7 @@
     "PRIMARY_TEACHER": {
       "display_name": "Primary School Teacher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 35.0,
@@ -114,6 +123,7 @@
     "TEACHER_OR_STAFF": {
       "display_name": "Comprehensive Secondary Teacher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 35.0,
@@ -126,6 +136,7 @@
     "LECTURER": {
       "display_name": "Higher Education Lecturer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 37.0,
@@ -138,6 +149,7 @@
     "LECTURER_OR_ADMIN": {
       "display_name": "Higher Education Lecturer / Administrator",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 37.0,
@@ -150,6 +162,7 @@
     "CONSULTANT": {
       "display_name": "NHS Senior Hospital Consultant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 45.0,
@@ -162,6 +175,7 @@
     "HOSPITAL_DOCTOR": {
       "display_name": "Hospital Physician",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 48.0,
@@ -174,6 +188,7 @@
     "HOSPITAL_RESIDENT_DOCTOR": {
       "display_name": "Hospital Registrar",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 5000,
       "weekly_hours": 54.0,
@@ -186,6 +201,7 @@
     "HOSPITAL_NURSE": {
       "display_name": "State Registered Nurse",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 20000,
       "weekly_hours": 37.5,
@@ -198,6 +214,7 @@
     "STUDENT_NURSE": {
       "display_name": "Student Nurse",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -210,6 +227,7 @@
     "HOSPITAL_SUPPORT_STAFF": {
       "display_name": "Hospital Orderly",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -222,6 +240,7 @@
     "AMBULANCE_CREW": {
       "display_name": "Ambulance Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -234,6 +253,7 @@
     "DHSS_OFFICER": {
       "display_name": "DHSS Executive Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.0,
@@ -246,6 +266,7 @@
     "PRISON_OFFICER": {
       "display_name": "HM Prison Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
@@ -258,6 +279,7 @@
     "POLICE_OFFICER": {
       "display_name": "Uniformed Police Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
@@ -270,6 +292,7 @@
     "POLICE_CONSTABLE": {
       "display_name": "Probationary Police Constable",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -282,6 +305,7 @@
     "DETECTIVE": {
       "display_name": "Plain Clothes Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
@@ -294,6 +318,7 @@
     "PARK_KEEPER": {
       "display_name": "Municipal Park Keeper & Gardener",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
@@ -306,6 +331,7 @@
     "GROUNDSMAN_OR_STEWARD": {
       "display_name": "Groundsman / Event Steward",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 18.0,
@@ -318,6 +344,7 @@
     "CLERGY": {
       "display_name": "Parish Minister",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 35.0,
@@ -330,6 +357,7 @@
     "CARETAKER": {
       "display_name": "Caretaker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -342,6 +370,7 @@
     "CLERGY_OR_CARETAKER": {
       "display_name": "Church Custodian",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 30.0,
@@ -354,6 +383,7 @@
     "PRACTICE_STAFF": {
       "display_name": "Medical Receptionist",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 35.0,
@@ -366,6 +396,7 @@
     "COMMERCIAL_SERVICE": {
       "display_name": "Shop Worker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -378,6 +409,7 @@
     "MANUAL_WORKS": {
       "display_name": "Site Laborer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -390,6 +422,7 @@
     "BUILDING_TRADESMAN": {
       "display_name": "Skilled Tradesman (Bricklayer / Joiner / Sparky)",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -402,6 +435,7 @@
     "DISPATCHER_OR_CONTROLLER": {
       "display_name": "Minicab Dispatcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 38.0,
@@ -414,6 +448,7 @@
     "CAB_DRIVER": {
       "display_name": "Private Hire Cab Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 44.0,
@@ -426,6 +461,7 @@
     "OFFICE_MANAGER": {
       "display_name": "Office Supervisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -438,6 +474,7 @@
     "DEPOT_MANAGER": {
       "display_name": "Foreman",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 40.0,
@@ -450,6 +487,7 @@
     "WORKS_CONVENOR": {
       "display_name": "Union Shop Steward",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 10000,
       "weekly_hours": 40.0,
@@ -462,6 +500,7 @@
     "VEHICLE_MECHANIC": {
       "display_name": "Commercial Fitter / Motor Mechanic",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -474,6 +513,7 @@
     "COACH_OR_LORRY_DRIVER": {
       "display_name": "HGV / Long-Distance Coach Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 42.0,
@@ -486,6 +526,7 @@
     "POSTAL_CLERK": {
       "display_name": "Postal Clerk",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -498,6 +539,7 @@
     "SPORTSMAN": {
       "display_name": "Sports Ground Staff / Athlete",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 25.0,
@@ -510,6 +552,7 @@
     "APPRENTICE_BAKER": {
       "display_name": "Apprentice Baker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
@@ -522,6 +565,7 @@
     "APPRENTICE_BUTCHER": {
       "display_name": "Apprentice Butcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
@@ -534,6 +578,7 @@
     "APPRENTICE_HAIRDRESSER": {
       "display_name": "Apprentice Hairdresser",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 36.0,
@@ -546,6 +591,7 @@
     "BAKER": {
       "display_name": "Baker / Master Confectioner",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -558,6 +604,7 @@
     "BANK_MANAGER": {
       "display_name": "Bank Branch Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 15000,
       "weekly_hours": 37.5,
@@ -570,6 +617,7 @@
     "BANK_TELLER": {
       "display_name": "Bank Cashier / Teller",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -582,6 +630,7 @@
     "BOOKMAKER": {
       "display_name": "Bookmaker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -594,6 +643,7 @@
     "BUSINESS_ADVISOR": {
       "display_name": "Commercial Business Advisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 10000,
       "weekly_hours": 37.5,
@@ -606,6 +656,7 @@
     "BUTCHER": {
       "display_name": "Master Butcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -618,6 +669,7 @@
     "COURT_CLERK_LEGAL": {
       "display_name": "Clerk to the Justices",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
       "weekly_hours": 37.5,
@@ -630,6 +682,7 @@
     "ESTATE_AGENT": {
       "display_name": "Estate Agent",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
       "weekly_hours": 38.0,
@@ -642,6 +695,7 @@
     "FIREFIGHTER": {
       "display_name": "Firefighter (Leading Fireman / Fireman)",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
       "weekly_hours": 42.0,
@@ -654,6 +708,7 @@
     "FIRE_OFFICER": {
       "display_name": "Station Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 12000,
       "weekly_hours": 42.0,
@@ -666,6 +721,7 @@
     "FORKLIFT_DRIVER": {
       "display_name": "Forklift Truck Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -678,6 +734,7 @@
     "HAIRDRESSER_OR_BARBER": {
       "display_name": "Stylist / Barber",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -690,6 +747,7 @@
     "INVESTMENT_ADVISOR": {
       "display_name": "Investment / Securities Advisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 15000,
       "weekly_hours": 37.5,
@@ -702,6 +760,7 @@
     "KITCHEN_STAFF": {
       "display_name": "Cook / Kitchen Porter",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
@@ -714,6 +773,7 @@
     "LAUNDRY_WORKER": {
       "display_name": "Launderette / Dry Cleaning Attendant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -726,6 +786,7 @@
     "LEGAL_EXECUTIVE": {
       "display_name": "Legal Executive",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 37.5,
@@ -738,6 +799,7 @@
     "LIBRARIAN": {
       "display_name": "Chartered Borough Librarian",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 10000,
       "weekly_hours": 37.0,
@@ -750,6 +812,7 @@
     "LIBRARY_ASSISTANT": {
       "display_name": "Library Assistant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 35.0,
@@ -762,6 +825,7 @@
     "LOANS_OFFICER": {
       "display_name": "Bank Advances & Loans Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 37.5,
@@ -774,6 +838,7 @@
     "PETROL_PUMP_ATTENDANT": {
       "display_name": "Forecourt Petrol Pump Attendant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -786,6 +851,7 @@
     "PHARMACIST": {
       "display_name": "Dispensing Chemist / MPS Pharmacist",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
       "weekly_hours": 39.0,
@@ -798,6 +864,7 @@
     "RESTAURANT_MANAGER": {
       "display_name": "Restaurant / Takeaway Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 44.0,
@@ -810,6 +877,7 @@
     "RETAIL_COUNTER_STAFF": {
       "display_name": "Counter Assistant / Shop Assistant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
@@ -822,6 +890,7 @@
     "SERVING_STAFF": {
       "display_name": "Waiter / Waitress / Table Service",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 30.0,
@@ -834,6 +903,7 @@
     "SHOP_MANAGER": {
       "display_name": "Retail Shop Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -846,6 +916,7 @@
     "SOLICITOR": {
       "display_name": "Practising Solicitor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 40.0,
@@ -858,6 +929,7 @@
     "TOOLMAKER_FITTER": {
       "display_name": "Precision Toolmaker / Fitter",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
       "weekly_hours": 40.0,
@@ -870,6 +942,7 @@
     "WAREHOUSE_OPERATIVE": {
       "display_name": "Warehouseman / Picker & Packer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
@@ -882,6 +955,7 @@
     "WELDER_FABRICATOR": {
       "display_name": "Plater / Welder / Fabricator",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
       "weekly_hours": 40.0,
@@ -894,6 +968,7 @@
     "HIGHER_ED_STUDENT": {
       "display_name": "Polytechnic / University Undergraduate",
       "contract_class": "ENCLAVE_STUDENT",
+      "contract_type": "PART_TIME",
       "education_required": "A_LEVELS",
       "max_commute": 5000,
       "weekly_hours": 20.0,
@@ -906,6 +981,7 @@
     "PRISON_INMATE": {
       "display_name": "Custodial Inmate",
       "contract_class": "CUSTODIAL_INMATE",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 500,
       "weekly_hours": 30.0,

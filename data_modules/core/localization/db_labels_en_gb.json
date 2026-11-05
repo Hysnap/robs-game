@@ -299,6 +299,7 @@
 	{ "domain": "SECTOR_CATEGORY", "code": "COMMERCIAL", "title": "Commercial Sector", "description": "Commercial Sector Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "INDUSTRIAL", "title": "Industrial Sector", "description": "Industrial Sector Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "CIVIC", "title": "Civic Sector", "description": "Civic Sector Jobs and other associated elements." },
+	{ "domain": "SECTOR_CATEGORY", "code": "CIVIL_SERVICE", "title": "Civil Service", "description": "Civil Service Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "SERVICE", "title": "Service Sector", "description": "Service Sector Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "INFORMAL", "title": "Informal Sector", "description": "Informal Sector Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "CRIMINAL", "title": "CRIMINAL Sector", "description": "Criminal Sector Jobs and other associated elements." },

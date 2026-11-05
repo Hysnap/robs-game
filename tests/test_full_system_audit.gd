@@ -63,7 +63,7 @@ func _init() -> void:
 
 	var archetypes: Dictionary = MANIFEST_MGR.load_module("archetypes")
 	var building_classes: Dictionary = MANIFEST_MGR.load_module("building_classes")
-	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
+	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions")
 	var cultural: Dictionary = MANIFEST_MGR.load_module("cultural_demographics")
 	var demographics: Dictionary = MANIFEST_MGR.load_module("demographics")
 	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon")
@@ -117,44 +117,7 @@ func _init() -> void:
 		}
 	}
 
-	# Seed test districts into SQLite districts table so views and FKs resolve
-	var dist_inserts: Array = []
-	for d_id in test_world["districts"].keys():
-		var d_data: Dictionary = test_world["districts"][d_id]
-		var coords: Vector2i = d_data.get("grid_coords", Vector2i.ZERO)
-		var size_vec: Vector2i = d_data.get("grid_size", Vector2i.ONE)
-		var anchor: Vector2 = d_data.get("spatial_anchor", Vector2.ZERO)
-		dist_inserts.append("""
-			INSERT INTO districts (
-				district_id, borough_id, display_name, district_type,
-				grid_x, grid_z, grid_width, grid_depth,
-				spatial_center_x, spatial_center_z,
-				target_building_count, actual_building_count,
-				expected_pop_min, expected_pop_max, base_unemployment_rate,
-				actual_police_heat, actual_unemployment_rate,
-				is_public_landmark, is_active
-			) VALUES (
-				'%s', NULL, '%s', '%s',
-				%d, %d, %d, %d,
-				%.1f, %.1f,
-				%d, %d,
-				%d, %d, %.2f,
-				0.0, %.2f,
-				0, 1
-			);
-		""" % [
-			d_id,
-			str(d_data.get("display_name", d_id)),
-			str(d_data.get("district_type", "residential")),
-			coords.x, coords.y, size_vec.x, size_vec.y,
-			anchor.x, anchor.y,
-			int(d_data.get("actual_building_count", 1)), int(d_data.get("actual_building_count", 1)),
-			int(d_data.get("expected_pop_min", 0)), int(d_data.get("expected_pop_max", 0)), float(d_data.get("unemployment_rate", 0.05)),
-			float(d_data.get("unemployment_rate", 0.05))
-		])
-	DB_MANAGER.execute_batch(dist_inserts)
-
-	# Run Pass 2: Workplace & Premises Generation
+	# Run Pass 2: Workplace & Premises Generation (authoritatively populates districts, establishments, and job slots)
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
 		test_world, archetypes, building_classes, job_defs, cultural, lexicon, rng, Callable()
 	)
@@ -162,15 +125,15 @@ func _init() -> void:
 	print("  ✓ Pass 2 Workplace Positions Generated: %d" % slots.size())
 
 	# Run Pass 3: Citizen Demographics & Job Hydration
+	var master_roles: Dictionary = job_defs.get("roles", job_defs)
 	await CITIZEN_HYDRATOR.run(
-		physical_state, demographics, cultural, lexicon, job_defs, rng, Callable()
+		physical_state, demographics, cultural, lexicon, master_roles, rng, Callable()
 	)
 
 	# -----------------------------------------------------------------
 	# STAGE 4: SYSTEM AUDITOR RUNTIME & RELATIONAL HEALTH CHECK
 	# -----------------------------------------------------------------
 	print("\n[STAGE 4] Executing SystemAuditor...")
-	# Populate population metric on test districts for auditor sanity
 	for dist_id in test_world["districts"].keys():
 		var res_rows: Array = DB_MANAGER.query_rows(
 			"SELECT COUNT(*) AS pop FROM residents r JOIN households h ON r.household_id = h.household_id JOIN establishments e ON h.establishment_id = e.establishment_id WHERE e.district_id = '%s';" % dist_id
