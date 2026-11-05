@@ -55,6 +55,8 @@ func _ready() -> void:
 	if game_hud != null:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
 		game_hud.end_turn_requested.connect(_on_end_turn_requested)
+		if game_hud.has_signal("toggle_messages_inbox_requested"):
+			game_hud.toggle_messages_inbox_requested.connect(_toggle_feedback_inbox_visibility)
 
 	# 4. Synchronize Seed & Visual Layout
 	var gs = ScenarioManifestManager.get_game_state()
@@ -176,6 +178,9 @@ func _setup_compiled_shell_host_views() -> void:
 		feedback_inbox.visible = false
 		feedback_inbox.z_index = 15
 		workspace_canvas.add_child(feedback_inbox)
+
+		if game_hud != null and feedback_inbox.has_signal("stack_count_changed"):
+			feedback_inbox.stack_count_changed.connect(game_hud.update_unread_message_count)
 
 		if view_host != null and feedback_inbox != null:
 			view_host.set_desk_inbox(feedback_inbox)
@@ -307,3 +312,13 @@ func _on_end_turn_requested() -> void:
 		elif view_host.has_method("get_staged_directives"):
 			staged = view_host.get_staged_directives()
 	OperationsControllerScript.execute_staged_cycle(staged, view_host)
+
+func _toggle_feedback_inbox_visibility() -> void:
+	if feedback_inbox == null or workspace_canvas == null:
+		return
+
+	# Ensure canvas layer is active
+	workspace_canvas.visible = true
+	feedback_inbox.visible = not feedback_inbox.visible
+	if feedback_inbox.visible:
+		feedback_inbox.move_to_front()

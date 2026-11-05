@@ -311,3 +311,15 @@ func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
 
 func _on_desk_top_card_action(action_id: String, payload: Dictionary) -> void:
 	triage_slip_action.emit(action_id, payload)
+
+## Presentation helper: Ensures the feedback desk stack is visible and brought to the front
+func show_feedback_inbox() -> void:
+	if _desk_inbox != null:
+		_desk_inbox.visible = true
+		_desk_inbox.move_to_front()
+		# Ensure parent canvas layer is visible if tucked inside a hidden canvas
+		var parent_node := _desk_inbox.get_parent()
+		if parent_node is CanvasLayer:
+			(parent_node as CanvasLayer).visible = true
+		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
+			(shell_node.get_parent() as CanvasLayer).visible = true

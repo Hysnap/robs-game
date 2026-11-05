@@ -13,7 +13,7 @@
   "format": "INTEGER",
   "decimals": 0,
   "min_value": 0,
-  "max_value": 500000,
+  "max_value": 2000000,
   "suffix": " households",
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
@@ -24,12 +24,34 @@
   "tuning": {
     "default_baseline": 1800,
     "minimum_floor": 0,
-    "maximum_ceiling": 500000
+    "maximum_ceiling": 2000000
   },
   "perception": {
-    "bucket_channel": {
+    "STEPPED_ROUNDING":{
+    "id": "headcount_stepped",
+    "source_field": "total_households",
+    "target_field": "total_households",
+    "mode": "STEPPED_ROUNDING",
+    "fuzz_jitter_min": -0.15,
+    "fuzz_jitter_max": 0.15,
+    "home_modifier": 0.10,
+    "error_floor": 0.02,
+    "default_step": 250,
+    "fallback_token": null,
+    "tiers": [
+      { "threshold": 10, "round_to": 1 },
+      { "threshold": 50, "round_to": 5 },
+      { "threshold": 250, "round_to": 25 },
+      { "threshold": 500, "round_to": 50 },
+      { "threshold": 1500, "round_to": 100 },
+      { "threshold": 5000, "round_to": 250 },
+      { "threshold": 10000, "round_to": 500 },
+      { "threshold": 999999, "round_to": 1000 }
+    ]
+  },
+    "BUCKET_CHANNEL": {
       "id": "households_bucket",
-      "source_field": "actual_households",
+      "source_field": "total_households",
       "target_field": "households_bucket_token",
       "mode": "N_BUCKET",
       "fuzz_jitter_min": -20.0,

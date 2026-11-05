@@ -69,9 +69,12 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 		state_file.close()
 
 	# 2. Save metadata header for load menus
+	var current_day: int = int(state_to_save.get("metadata", {}).get("current_sim_day", 29219))
 	var meta := {
 		"slot_id": slot_id,
 		"seed_id": state_to_save.get("metadata", {}).get("active_seed", "default"),
+		"current_sim_day": current_day,
+		"current_week_tick": state_to_save.get("metadata", {}).get("current_week_tick", 1),
 		"timestamp": Time.get_datetime_string_from_system(),
 		"district_count": state_to_save.get("districts", {}).size()
 	}
@@ -80,7 +83,12 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 		meta_file.store_string(JSON.stringify(meta, "\t"))
 		meta_file.close()
 	
-	# 3. Save City Visual Layout
+	# 3. Synchronize current_sim_day into SQLite world_metadata
+	DBManager.execute_batch([
+		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % current_day
+		])
+
+	# 4. Save City Visual Layout
 	if city_crafter_node != null and city_crafter_node.has_method("export_visual_layout"):
 		var layout = city_crafter_node.export_visual_layout()
 		var layout_file := FileAccess.open("%s/city_layout.json" % slot_dir, FileAccess.WRITE)
@@ -135,6 +143,12 @@ static func load_game(slot_id: String) -> bool:
 		push_error("[SaveManager] Failed to mount database from: %s" % db_path)
 		return false
 
+	# 4. Synchronize temporal clock in SQLite metadata
+	var loaded_day: int = int(parsed.get("metadata", {}).get("current_sim_day", 29219))
+	DBManager.execute_batch([
+		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % loaded_day
+	])
+
 	if catalogs_repaired:
 		var repaired_file := FileAccess.open(state_path, FileAccess.WRITE)
 		if repaired_file == null:
@@ -148,8 +162,9 @@ static func load_game(slot_id: String) -> bool:
 		repaired_file.close()
 		SystemLogger.log_info("[SaveManager] Persisted repaired registries for save '%s'." % slot_id)
 
-	SystemLogger.log_info("[SaveManager] Loaded game slot: %s (commodities=%d recipes=%d)." % [
+	SystemLogger.log_info("[SaveManager] Loaded game slot: %s (day=%d, commodities=%d, recipes=%d)." % [
 		slot_id,
+		loaded_day,
 		parsed.get("commodity_registry", {}).size(),
 		parsed.get("recipe_registry", {}).size()
 	])

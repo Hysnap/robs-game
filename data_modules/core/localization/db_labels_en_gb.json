@@ -22,6 +22,7 @@
 	{ "domain": "CONTRACT_TYPE", "code": "CASUAL_ON_CALL", "title": "Casual / Day Labor", "description": "Variable on-call labor engagement with no guaranteed hours." },
 	{ "domain": "CONTRACT_TYPE", "code": "APPRENTICESHIP", "title": "Indenture / Apprenticeship", "description": "Fixed-term training contract with reduced training allowance." },
 	{ "domain": "CONTRACT_TYPE", "code": "RETAINER", "title": "Professional Retainer", "description": "Ongoing retainer for exclusive availability or services." },
+	{ "domain": "CONTRACT_TYPE", "code": "SECONDARY", "title": "Secondary Role", "description": "A not so formal secondary career and contract, may not be legal." },
 
 	{ "domain": "CONTRACT_CLASS", "code": "FORMAL_LEGAL", "title": "Formal Taxed Employment", "description": "Standard PAYE employment subject to National Insurance." },
 	{ "domain": "CONTRACT_CLASS", "code": "INFORMAL_GREY", "title": "Informal / Off-the-Books", "description": "Unregistered cash-in-hand enterprise." },
@@ -279,6 +280,10 @@
 	{ "domain": "ROLE_TITLE", "code": "TOOLMAKER_FITTER", "title": "Precision Toolmaker / Fitter", "description": "Skilled toolmaker and precision engineering fitter." },
 	{ "domain": "ROLE_TITLE", "code": "WAREHOUSE_OPERATIVE", "title": "Warehouseman / Picker & Packer", "description": "Warehouse worker handling stock, picking, and packing." },
 	{ "domain": "ROLE_TITLE", "code": "WELDER_FABRICATOR", "title": "Plater / Welder / Fabricator", "description": "Skilled industrial metal fabricator and welder." },
+
+	{ "domain": "ROLE_TITLE", "code": "HANDLER", "title": "Handler", "description": "Criminal class handler" },
+	{ "domain": "ROLE_TITLE", "code": "RUNNER", "title": "Runner", "description": "Criminal class runner" },
+	{ "domain": "ROLE_TITLE", "code": "LEADER", "title": "Leader", "description": "Criminal master mind" },
 
 	{ "domain": "SECTOR_CATEGORY", "code": "COMMERCIAL", "title": "Commercial Sector", "description": "Commercial Sector Jobs and other associated elements." },
 	{ "domain": "SECTOR_CATEGORY", "code": "INDUSTRIAL", "title": "Industrial Sector", "description": "Industrial Sector Jobs and other associated elements." },

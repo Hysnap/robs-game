@@ -2,6 +2,8 @@
 class_name CityGenerationController
 extends RefCounted
 
+const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootstrapper.gd")
+
 signal progress_updated(percent: float, stage_title: String, detail_text: String)
 signal generation_completed(target_slot_id: String)
 signal generation_failed(error_message: String)
@@ -60,14 +62,29 @@ static func run_pipeline(
 		false,
 		func(curr, tot, desc):
 			if on_progress.is_valid():
-				var sub_pct = 50.0 + (float(curr) / float(tot)) * 40.0
+				var sub_pct = 50.0 + (float(curr) / float(tot)) * 30.0
 				on_progress.call(sub_pct, "SOCIETY", desc)
 	)
 
 	# Step D: Spatial Resolution of Home Ward & Universal Landmarks
+	if on_progress.is_valid():
+		on_progress.call(82.0, "DISTRICTS", "Locating Home Neighborhood...")
 	var home_id: String = CitySpatialAdapter.resolve_verified_home_district(GameState.world_state, gen_seed)
 	assert(not home_id.is_empty(), "FATAL: [CityGenerationController] Failed to resolve home district.")
 	GameState.set_home_district(home_id)
+
+	# Step D.2: Scout Autonomous Starting Crew & Bind Grey-Economy Contracts
+	if on_progress.is_valid():
+		on_progress.call(88.0, "ROSTER", "Recruiting Starting Operatives...")
+	var crew_ok: bool = CREW_SCOUT_BOOTSTRAPPER.scout_and_bind_starting_crew(GameState.world_state, home_id)
+	if not crew_ok:
+		SystemLogger.log_error("[CityGenerationController] Failed to scout and bind starting crew in %s." % home_id)
+		push_error("[CityGenerationController] Failed to scout and bind starting crew in %s." % home_id)
+		# Clean up generator before exit
+		if city_crafter.get_parent():
+			city_crafter.get_parent().remove_child(city_crafter)
+		city_crafter.queue_free()
+		return false
 
 	# Step E: Commit to Disk
 	if on_progress.is_valid():
@@ -77,6 +94,7 @@ static func run_pipeline(
 
 	var save_ok = SaveManager.save_game(target_slot_id, city_crafter)
 	SystemLogger.log_info("[CityGenerationController] City generation pipeline completed with save status: %s." % save_ok)
+
 	# Clean up temporary generator node from tree
 	if city_crafter.get_parent():
 		city_crafter.get_parent().remove_child(city_crafter)

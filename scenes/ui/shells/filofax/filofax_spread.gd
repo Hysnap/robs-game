@@ -3,7 +3,7 @@ class_name FilofaxSpread
 extends PanelContainer
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
-const StickyOrderPadScene = preload("res://scenes/ui/shells/filofax/sticky_order_pad.tscn")
+const StickyOrderPadScene = preload("res://scenes/ui/components/sticky_order_pad.tscn")
 
 @onready var nav_slot: Control = $SpreadHBox/NavSlot
 @onready var content_slot: Control = $SpreadHBox/LeftPageFrame/ContentSlot
