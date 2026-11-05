@@ -83,13 +83,65 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tadd_child(btn_" + r_id + ")\n")
 
 		"ITEM_LIST", "LIST":
-			lines.append("\tvar list_" + r_id + " := ItemList.new()")
+			var is_reorderable: bool = bool(row.get("reorderable", false))
 			var min_h: int = int(row.get("min_height", 120))
-			lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
-			lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
-			lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-			lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
-			lines.append("\tadd_child(list_" + r_id + ")\n")
+
+			if is_reorderable:
+				lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
+				lines.append("\tbox_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				lines.append("\tbox_" + r_id + ".add_theme_constant_override(\"separation\", 4)")
+				lines.append("\tvar list_" + r_id + " := ItemList.new()")
+				lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
+				lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tbox_" + r_id + ".add_child(list_" + r_id + ")")
+				lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
+
+				lines.append("\tvar bar_" + r_id + " := HBoxContainer.new()")
+				lines.append("\tbar_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				lines.append("\tbar_" + r_id + ".add_theme_constant_override(\"separation\", 6)")
+
+				# Button ▲ (Move Up)
+				lines.append("\tvar btn_up_" + r_id + " := Button.new()")
+				lines.append("\tbtn_up_" + r_id + ".text = \"▲\"")
+				lines.append("\tbtn_up_" + r_id + ".focus_mode = Control.FOCUS_NONE")
+				lines.append("\tbtn_up_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tbtn_up_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"MOVE_UP\"))")
+				lines.append("\tbar_" + r_id + ".add_child(btn_up_" + r_id + ")")
+
+				# Button ▼ (Move Down)
+				lines.append("\tvar btn_dn_" + r_id + " := Button.new()")
+				lines.append("\tbtn_dn_" + r_id + ".text = \"▼\"")
+				lines.append("\tbtn_dn_" + r_id + ".focus_mode = Control.FOCUS_NONE")
+				lines.append("\tbtn_dn_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tbtn_dn_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"MOVE_DOWN\"))")
+				lines.append("\tbar_" + r_id + ".add_child(btn_dn_" + r_id + ")")
+
+				# Button ✖ (Remove Order)
+				lines.append("\tvar btn_rm_" + r_id + " := Button.new()")
+				lines.append("\tbtn_rm_" + r_id + ".text = \"✖\"")
+				lines.append("\tbtn_rm_" + r_id + ".focus_mode = Control.FOCUS_NONE")
+				lines.append("\tbtn_rm_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tbtn_rm_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"REMOVE_ORDER\"))")
+				lines.append("\tbar_" + r_id + ".add_child(btn_rm_" + r_id + ")")
+
+				# Button ✓ (Toggle Select)
+				lines.append("\tvar btn_tg_" + r_id + " := Button.new()")
+				lines.append("\tbtn_tg_" + r_id + ".text = \"✓\"")
+				lines.append("\tbtn_tg_" + r_id + ".focus_mode = Control.FOCUS_NONE")
+				lines.append("\tbtn_tg_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\tbtn_tg_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"TOGGLE_SELECT\"))")
+				lines.append("\tbar_" + r_id + ".add_child(btn_tg_" + r_id + ")")
+
+				lines.append("\tbox_" + r_id + ".add_child(bar_" + r_id + ")")
+				lines.append("\tadd_child(box_" + r_id + ")\n")
+			else:
+				lines.append("\tvar list_" + r_id + " := ItemList.new()")
+				lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
+				lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
+				lines.append("\tadd_child(list_" + r_id + ")\n")
 
 		"OPTION_DROPDOWN", "DROPDOWN":
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")

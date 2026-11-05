@@ -66,22 +66,44 @@ func build_ui() -> void:
 	sec_staging_ledger.add_child(sep_staging_ledger)
 	add_child(sec_staging_ledger)
 
+	var box_queue_list := VBoxContainer.new()
+	box_queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box_queue_list.add_theme_constant_override("separation", 4)
 	var list_queue_list := ItemList.new()
-	list_queue_list.custom_minimum_size = Vector2(0, 120)
+	list_queue_list.custom_minimum_size = Vector2(0, 140)
 	list_queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list_queue_list.add_theme_font_override("font", mono_font)
+	box_queue_list.add_child(list_queue_list)
 	_value_labels["queue_list"] = list_queue_list
-	add_child(list_queue_list)
-
-	var btn_btn_toggle_select := Button.new()
-	btn_btn_toggle_select.text = tr("UI_BTN_TOGGLE_SELECT")
-	btn_btn_toggle_select.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_toggle_select.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_toggle_select.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_toggle_select.add_theme_font_override("font", mono_font)
-	btn_btn_toggle_select.pressed.connect(func(): action_clicked.emit("TOGGLE_SELECT"))
-	_value_labels["btn_toggle_select"] = btn_btn_toggle_select
-	add_child(btn_btn_toggle_select)
+	var bar_queue_list := HBoxContainer.new()
+	bar_queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar_queue_list.add_theme_constant_override("separation", 6)
+	var btn_up_queue_list := Button.new()
+	btn_up_queue_list.text = "▲"
+	btn_up_queue_list.focus_mode = Control.FOCUS_NONE
+	btn_up_queue_list.add_theme_font_override("font", mono_font)
+	btn_up_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_UP"))
+	bar_queue_list.add_child(btn_up_queue_list)
+	var btn_dn_queue_list := Button.new()
+	btn_dn_queue_list.text = "▼"
+	btn_dn_queue_list.focus_mode = Control.FOCUS_NONE
+	btn_dn_queue_list.add_theme_font_override("font", mono_font)
+	btn_dn_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_DOWN"))
+	bar_queue_list.add_child(btn_dn_queue_list)
+	var btn_rm_queue_list := Button.new()
+	btn_rm_queue_list.text = "✖"
+	btn_rm_queue_list.focus_mode = Control.FOCUS_NONE
+	btn_rm_queue_list.add_theme_font_override("font", mono_font)
+	btn_rm_queue_list.pressed.connect(func(): action_clicked.emit("REMOVE_ORDER"))
+	bar_queue_list.add_child(btn_rm_queue_list)
+	var btn_tg_queue_list := Button.new()
+	btn_tg_queue_list.text = "✓"
+	btn_tg_queue_list.focus_mode = Control.FOCUS_NONE
+	btn_tg_queue_list.add_theme_font_override("font", mono_font)
+	btn_tg_queue_list.pressed.connect(func(): action_clicked.emit("TOGGLE_SELECT"))
+	bar_queue_list.add_child(btn_tg_queue_list)
+	box_queue_list.add_child(bar_queue_list)
+	add_child(box_queue_list)
 
 	var btn_btn_select_all := Button.new()
 	btn_btn_select_all.text = tr("UI_BTN_SELECT_ALL")
@@ -92,36 +114,6 @@ func build_ui() -> void:
 	btn_btn_select_all.pressed.connect(func(): action_clicked.emit("SELECT_ALL"))
 	_value_labels["btn_select_all"] = btn_btn_select_all
 	add_child(btn_btn_select_all)
-
-	var btn_btn_move_up := Button.new()
-	btn_btn_move_up.text = tr("UI_BTN_MOVE_UP")
-	btn_btn_move_up.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_move_up.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_move_up.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_move_up.add_theme_font_override("font", mono_font)
-	btn_btn_move_up.pressed.connect(func(): action_clicked.emit("MOVE_UP"))
-	_value_labels["btn_move_up"] = btn_btn_move_up
-	add_child(btn_btn_move_up)
-
-	var btn_btn_move_down := Button.new()
-	btn_btn_move_down.text = tr("UI_BTN_MOVE_DOWN")
-	btn_btn_move_down.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_move_down.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_move_down.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_move_down.add_theme_font_override("font", mono_font)
-	btn_btn_move_down.pressed.connect(func(): action_clicked.emit("MOVE_DOWN"))
-	_value_labels["btn_move_down"] = btn_btn_move_down
-	add_child(btn_btn_move_down)
-
-	var btn_btn_remove_order := Button.new()
-	btn_btn_remove_order.text = tr("UI_BTN_REMOVE_ORDER")
-	btn_btn_remove_order.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_remove_order.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_remove_order.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_remove_order.add_theme_font_override("font", mono_font)
-	btn_btn_remove_order.pressed.connect(func(): action_clicked.emit("REMOVE_ORDER"))
-	_value_labels["btn_remove_order"] = btn_btn_remove_order
-	add_child(btn_btn_remove_order)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("queue_list") and data.has("staged_queue"):

@@ -4,7 +4,7 @@
     "extends": "VBoxContainer",
     "description": "Dossier and personnel register of recruited crew operatives and street confederates.",
     "signals": [
-      "operative_selected(operative_id)",
+      "item_selected(target_route, filter_key)",
       "route_requested(domain_token, target_page_name)"
     ]
   },
@@ -39,7 +39,7 @@
           "target_route": "OPERATIVE_DETAIL",
           "label_field": "name",
           "sublabel_field": "summary_line",
-          "action_signal": "operative_selected",
+          "action_signal": "item_selected",
           "autowrap": true
         }
       ]

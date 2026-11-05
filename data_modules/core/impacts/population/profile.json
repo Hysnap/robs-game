@@ -51,7 +51,7 @@
   },
   "BUCKET_CHANNEL":{
     "id": "population_bucket",
-    "source_field": "total_population",
+    "source_field": "active_population",
     "target_field": "population_bucket_token",
     "mode": "N_BUCKET",
     "fuzz_jitter_min": -50.0,

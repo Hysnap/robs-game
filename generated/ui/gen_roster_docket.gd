@@ -3,7 +3,7 @@
 class_name GenRosterDocket
 extends VBoxContainer
 
-signal operative_selected(operative_id)
+signal item_selected(target_route, filter_key)
 signal route_requested(domain_token, target_page_name)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
@@ -158,7 +158,7 @@ func bind_data(data: Dictionary) -> void:
 					btn.add_theme_font_override("font", mono_f)
 					btn.add_theme_font_size_override("font_size", 11)
 					btn.add_theme_color_override("font_color", clr_b)
-					btn.pressed.connect(func(): operative_selected.emit("OPERATIVE_DETAIL", key_val))
+					btn.pressed.connect(func(): item_selected.emit("OPERATIVE_DETAIL", key_val))
 					ctrl.add_child(btn)
 
 func inscribe_entry(entry: Dictionary) -> void:

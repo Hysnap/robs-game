@@ -237,7 +237,7 @@ static func get_district_census(district_id: String) -> Dictionary:
 	
 	var sql := """
 		SELECT 
-			COUNT(DISTINCT r.resident_id) AS total_population,
+			COUNT(DISTINCT r.resident_id) AS active_population,
 			COUNT(DISTINCT h.household_id) AS total_households,
 			COUNT(DISTINCT e.establishment_id) AS total_establishments
 		FROM establishments e
@@ -249,7 +249,7 @@ static func get_district_census(district_id: String) -> Dictionary:
 	var rows: Array = DBManager.query_rows(sql)
 	if rows.is_empty():
 		return {
-			"total_population": 0,
+			"active_population": 0,
 			"total_households": 0,
 			"total_establishments": 0
 		}
