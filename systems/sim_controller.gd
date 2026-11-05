@@ -6,6 +6,7 @@ const _VerbRouter = preload("res://systems/verb_router.gd")
 const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
+const _DBManager = preload("res://systems/db_manager.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -140,7 +141,12 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["current_day_of_week"] = dow
 	world_state["metadata"] = meta
 
-	# 3. Auto-Save Non-Ironman Granular Turn Snapshot
+	# 3. Synchronize Sim Day into SQLite Database in Lockstep
+	_DBManager.execute_batch([
+		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % current_day
+	])
+
+	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
 	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (week rollover=%s)." % [current_day, crossed_boundary])

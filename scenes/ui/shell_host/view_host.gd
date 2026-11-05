@@ -9,6 +9,8 @@ signal triage_slip_action(action_id: String, card_payload: Dictionary)
 signal item_selected(target_route: String, filter_key: Variant)
 signal slip_filed(slip_data: Dictionary, destination: String)
 
+const GenRosterDocketScript = preload("res://generated/ui/gen_roster_docket.gd")
+
 @export var shell_node: OuterShell
 
 # Generic map: domain_key (String) -> Control (Compiled View Instance)
@@ -24,10 +26,22 @@ var _staged_directives: Array[Dictionary] = []
 func _ready() -> void:
 	if shell_node == null:
 		shell_node = get_parent() as OuterShell
+	_ensure_default_views()
 	SystemLogger.log_info("[ViewHost] View host ready.")
 
 func _exit_tree() -> void:
 	cleanup()
+
+## Ensures core compiled views like ROSTER are instantiated if not provided externally
+func _ensure_default_views() -> void:
+	if not _views.has("ROSTER"):
+		var roster_instance: Control = GenRosterDocketScript.new()
+		roster_instance.name = "RosterDocketView"
+		register_view("ROSTER", roster_instance)
+		if roster_instance.has_signal("operative_selected"):
+			roster_instance.connect("operative_selected", func(op_id):
+				item_selected.emit("OPERATIVE_DETAIL", op_id)
+			)
 
 ## Mounts any compiled navigation widget into the shell's generic NAV slot
 func set_navigation_component(nav_bar: Control) -> void:
@@ -63,6 +77,51 @@ func switch_to_domain(domain_key: String) -> void:
 	_active_domain = domain_key
 	shell_node.mount_view("CONTENT", _views[domain_key])
 	route_changed.emit(domain_key)
+
+	# Auto-refresh domain data from GameState if applicable
+	_refresh_domain_data(domain_key)
+
+## Refreshes domain view data from ScenarioManifestManager GameState
+func _refresh_domain_data(domain_key: String) -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs == null or not ("world_state" in gs):
+		return
+	var ws: Dictionary = gs.world_state
+
+	match domain_key:
+		"ROSTER":
+			var staff_dict: Dictionary = ws.get("staff", {})
+			var home_id: String = str(ws.get("player_knowledge", {}).get("home_district_id", ""))
+			var dist_name: String = home_id
+			if ws.get("districts", {}).has(home_id):
+				dist_name = str(ws["districts"][home_id].get("display_name", home_id))
+
+			var members: Array = []
+			for slot_key in staff_dict.keys():
+				var m = staff_dict[slot_key]
+				if m is Dictionary:
+					var r_id: int = int(m.get("resident_id", 0))
+					var m_name: String = str(m.get("name", slot_key))
+					var age_val: int = int(m.get("age", 20))
+					var cash_val: float = float(m.get("pocket_cash", 0.0))
+					var daily_hrs: float = float(m.get("daily_operational_limit_hours", 8.0))
+					var summary: String = "Age %d • £%.2f Pocket • %.0fh max" % [age_val, cash_val, daily_hrs]
+
+					members.append({
+						"resident_id": r_id,
+						"name": m_name,
+						"summary_line": summary
+					})
+
+			var title_lbl: String = tr("UI_HDR_CREW_DOSSIER")
+			if title_lbl == "UI_HDR_CREW_DOSSIER":
+				title_lbl = "STREET CREW & ENTERPRISE ROSTER"
+
+			update_active_view_data({
+				"enterprise_title": title_lbl,
+				"home_district_name": dist_name,
+				"crew_members": members
+			})
 
 ## Pure Data Ingestion: Forwards arbitrary domain telemetry to active view's bind_data()
 func update_active_view_data(display_data: Dictionary) -> void:
@@ -171,7 +230,6 @@ func _get_selected_queue_index() -> int:
 		return -1
 	var list_ctrl := _planner_view.find_child("queue_list", true, false) as ItemList
 	if list_ctrl == null:
-		# Fallback checking dictionary map if compiled
 		if "_value_labels" in _planner_view and _planner_view._value_labels.has("queue_list"):
 			list_ctrl = _planner_view._value_labels["queue_list"] as ItemList
 	if list_ctrl and list_ctrl.is_anything_selected():
@@ -317,7 +375,6 @@ func show_feedback_inbox() -> void:
 	if _desk_inbox != null:
 		_desk_inbox.visible = true
 		_desk_inbox.move_to_front()
-		# Ensure parent canvas layer is visible if tucked inside a hidden canvas
 		var parent_node := _desk_inbox.get_parent()
 		if parent_node is CanvasLayer:
 			(parent_node as CanvasLayer).visible = true

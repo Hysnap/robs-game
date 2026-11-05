@@ -131,22 +131,42 @@ func _populate_staff_options(staff_dict: Dictionary) -> void:
 		return
 	opt_who.clear()
 
-	if staff_dict.is_empty():
-		var leader_lbl := tr("UI_STAFF_PLAYER_LEADER")
-		if leader_lbl == "UI_STAFF_PLAYER_LEADER":
-			leader_lbl = "Player (Leader)"
-		opt_who.add_item(leader_lbl, 0)
-		opt_who.set_item_metadata(0, "PLAYER")
-		return
-
 	var idx: int = 0
+
+	# 1. Always provide Player (Leader / Boss) at index 0
+	var leader_lbl := tr("UI_STAFF_PLAYER_LEADER")
+	if leader_lbl == "UI_STAFF_PLAYER_LEADER":
+		leader_lbl = "Player (Boss)"
+	opt_who.add_item(leader_lbl, idx)
+	opt_who.set_item_metadata(idx, {
+		"staff_id": "PLAYER",
+		"resident_id": 0,
+		"name": leader_lbl,
+		"pocket_cash": 0.0,
+		"daily_operational_limit_hours": 12.0
+	})
+	idx += 1
+
+	# 2. Add each scouted operative with pocket cash and daily operational capacity
 	for staff_id in staff_dict.keys():
-		var staff_member = staff_dict[staff_id]
-		if staff_member is Dictionary:
-			var s_name: String = str(staff_member.get("name", staff_id))
-			var s_role: String = str(staff_member.get("role", "OPERATIVE")).capitalize()
-			opt_who.add_item("%s (%s)" % [s_name, s_role], idx)
-			opt_who.set_item_metadata(idx, str(staff_id))
+		var member = staff_dict[staff_id]
+		if member is Dictionary:
+			var s_name: String = str(member.get("name", staff_id))
+			var cash: float = float(member.get("pocket_cash", 0.0))
+			var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
+			var r_id: int = int(member.get("resident_id", 0))
+
+			# Format display: Name (£X.XX | Yh max)
+			var item_text: String = "%s (£%.2f | %.0fh max)" % [s_name, cash, daily_hrs]
+
+			opt_who.add_item(item_text, idx)
+			opt_who.set_item_metadata(idx, {
+				"staff_id": str(staff_id),
+				"resident_id": r_id,
+				"name": s_name,
+				"pocket_cash": cash,
+				"daily_operational_limit_hours": daily_hrs
+			})
 			idx += 1
 
 func _refresh_targets_for_active_verb(ws: Dictionary) -> void:
@@ -354,12 +374,25 @@ func _on_pin_pressed() -> void:
 	var target_meta = opt_target.get_item_metadata(opt_target.selected) if opt_target and opt_target.item_count > 0 else {}
 	var loc_meta = opt_where.get_item_metadata(opt_where.selected) if opt_where and opt_where.item_count > 0 else {}
 	var contact_meta = opt_contact.get_item_metadata(opt_contact.selected) if opt_contact and opt_contact.item_count > 0 else ""
-	var who_meta = opt_who.get_item_metadata(opt_who.selected) if opt_who and opt_who.item_count > 0 else "PLAYER"
+	var who_meta = opt_who.get_item_metadata(opt_who.selected) if opt_who and opt_who.item_count > 0 else {}
+
+	var staff_id_str: String = "PLAYER"
+	var assigned_str: String = "Player"
+	var res_id: int = 0
+
+	if who_meta is Dictionary:
+		staff_id_str = str(who_meta.get("staff_id", "PLAYER"))
+		assigned_str = str(who_meta.get("name", "Player"))
+		res_id = int(who_meta.get("resident_id", 0))
+	elif who_meta != null:
+		staff_id_str = str(who_meta)
+		assigned_str = opt_who.get_item_text(opt_who.selected)
 
 	var form_data: Dictionary = {
 		"verb": _get_active_verb(),
-		"initiator_id": str(who_meta),
-		"assigned_to": opt_who.get_item_text(opt_who.selected) if opt_who and opt_who.item_count > 0 else "Player",
+		"initiator_id": staff_id_str,
+		"assigned_to": assigned_str,
+		"resident_id": res_id,
 		"counterparty_id": str(contact_meta) if contact_meta != null else "",
 		"target_item": str(target_meta.get("id", "")) if target_meta is Dictionary else str(target_meta),
 		"amount": float(spin_amount.value) if spin_amount else 1.0,
