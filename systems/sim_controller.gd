@@ -6,6 +6,7 @@ const _VerbRouter = preload("res://systems/verb_router.gd")
 const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
+const _DBManager = preload("res://systems/db_manager.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -20,7 +21,8 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 		for metric_key in deltas.keys():
 			var delta_val: float = float(deltas[metric_key])
 			var scope: String = _ImpactRouter.get_metric_scope(metric_key)
-			# Scope Routing:# Personal/Actor metrics route to the initiator.
+			# Scope Routing:
+			# Personal/Actor metrics route to the initiator.
 			# Environmental/Spatial metrics route to the target location.
 			var recipient_id: String = target_node_id
 			if scope == "ACTOR":
@@ -50,14 +52,37 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		if cfg.load(BUSINESS_RULES_PATH) == OK:
 			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
 
+	var halted_agents: Dictionary = {}
+
 	if not staged_directives.is_empty():
 		for i in range(staged_directives.size()):
 			var directive: Dictionary = staged_directives[i]
+			var author_str: String = _resolve_directive_author(world_state, directive)
+			var agent_key: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", "PLAYER"))))
+
+			# Check if this specific agent's pipeline is already halted due to prior failure
+			if strict_halt and halted_agents.has(agent_key):
+				executed_events.append({
+					"trigger_type": "ACTION_ABORTED",
+					"day_offset": current_day,
+					"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
+					"week": current_week,
+					"day_of_week": _CalendarHelper.day_of_week(current_day),
+					"verb": directive.get("verb", TranslationServer.translate("DEFAULT_VERB_TOKEN")),
+					"target_item": directive.get("target_item", ""),
+					"success": false,
+					"message": TranslationServer.translate("FEEDBACK_TASK_ABORTED_PIPELINE_HALTED"),
+					"author": author_str,
+					"target_node_id": directive.get("target_node_id", ""),
+					"staged_index": i,
+					"directive_snapshot": directive.duplicate(true)
+				})
+				diary_memos.append(TranslationServer.translate("DIARY_TASK_ABORTED_PIPELINE_HALTED"))
+				continue
+
 			var res: Dictionary = execute_directive(world_state, directive)
 			var success: bool = res.get("success", false)
-			# Resolve author cleanly: counterparty -> initiator -> localized role fallback
-			var author_str: String = _resolve_directive_author(world_state, directive)
-			
+
 			var event_record := {
 				"trigger_type": "ACTION_RESOLUTION",
 				"day_offset": current_day,
@@ -76,29 +101,9 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			executed_events.append(event_record)
 			diary_memos.append(res.get("message", TranslationServer.translate("DIARY_TASK_GENERIC_SUCCESS_MESSAGE")))
 
-			# Strict FIFO Failure Halting
+			# If this directive failed, halt subsequent tasks ONLY for this agent
 			if not success and strict_halt:
-				for j in range(i + 1, staged_directives.size()):
-					var blocked_directive: Dictionary = staged_directives[j]
-					var blocked_author: String = _resolve_directive_author(world_state, blocked_directive)
-
-					executed_events.append({
-						"trigger_type": "ACTION_ABORTED",
-						"day_offset": current_day,
-						"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
-						"week": current_week,
-						"day_of_week": _CalendarHelper.day_of_week(current_day),
-						"verb": blocked_directive.get("verb", TranslationServer.translate("DEFAULT_VERB_TOKEN")),
-						"target_item": blocked_directive.get("target_item", ""),
-						"success": false,
-						"message": TranslationServer.translate("FEEDBACK_TASK_ABORTED_PIPELINE_HALTED"),
-						"author": blocked_author,
-						"target_node_id": blocked_directive.get("target_node_id", ""),
-						"staged_index": j,
-						"directive_snapshot": blocked_directive.duplicate(true)
-					})
-					diary_memos.append(TranslationServer.translate("DIARY_TASK_ABORTED_PIPELINE_HALTED"))
-				break
+				halted_agents[agent_key] = true
 	else:
 		executed_events.append({
 			"trigger_type": "IDLE",
@@ -136,7 +141,12 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["current_day_of_week"] = dow
 	world_state["metadata"] = meta
 
-	# 3. Auto-Save Non-Ironman Granular Turn Snapshot
+	# 3. Synchronize Sim Day into SQLite Database in Lockstep
+	_DBManager.execute_batch([
+		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % current_day
+	])
+
+	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
 	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (week rollover=%s)." % [current_day, crossed_boundary])

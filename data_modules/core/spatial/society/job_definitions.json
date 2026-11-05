@@ -2,889 +2,993 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.0.0",
-    "description": "Master dictionary of baseline occupational roles, qualifications, hours, and wage rate ranges."
+    "version": "1.2.0",
+    "description": "Master dictionary of baseline occupational roles, qualifications, hours, wage rates, and age boundaries."
   },
   "roles": {
     "COMMERCIAL_CLEANER": {
       "display_name": "Commercial / Domestic Cleaner",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "weekly_hours": 20.0,
-      "hourly_rate_range": [
-        2.6,
-        3.1
-      ],
+      "hourly_rate_range": [2.6, 3.1],
       "schedule_window": "EVENING",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "SCHOOL_MEALS_STAFF": {
       "display_name": "School Meals Assistant / Dinner Lady",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "weekly_hours": 15.0,
-      "hourly_rate_range": [
-        2.7,
-        3.0
-      ],
+      "hourly_rate_range": [2.7, 3.0],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 62,
       "is_field_worker": false
     },
     "SCHOOL_CARETAKER": {
       "display_name": "School Caretaker & Custodian",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.4,
-        3.9
-      ],
+      "hourly_rate_range": [3.4, 3.9],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "CIVIC_CLERK_OR_OFFICIAL": {
       "display_name": "Clerical Officer / Administrator",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.4,
-        4.1
-      ],
+      "hourly_rate_range": [3.4, 4.1],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "CLERK": {
       "display_name": "Clerical Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.4,
-        4.1
-      ],
+      "hourly_rate_range": [3.4, 4.1],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "CIVIC_OFFICIAL": {
       "display_name": "Senior Executive Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "UNIVERSITY_DEGREE",
       "max_commute": 20000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        5.0,
-        6.5
-      ],
+      "hourly_rate_range": [5.0, 6.5],
       "schedule_window": "DAYTIME",
+      "age_min": 28,
+      "age_max": 65,
       "is_field_worker": false
     },
     "COUNCIL_MANUAL_LABOUR": {
       "display_name": "Council Direct Labour / Dustman / Highways",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": true
     },
     "MUNICIPAL_BUS_DRIVER": {
       "display_name": "Municipal Corporation Bus Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 42.0,
-      "hourly_rate_range": [
-        3.8,
-        4.4
-      ],
+      "hourly_rate_range": [3.8, 4.4],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": true
     },
     "PRIMARY_TEACHER": {
       "display_name": "Primary School Teacher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 35.0,
-      "hourly_rate_range": [
-        4.0,
-        4.6
-      ],
+      "hourly_rate_range": [4.0, 4.6],
       "schedule_window": "DAYTIME",
+      "age_min": 22,
+      "age_max": 65,
       "is_field_worker": false
     },
     "TEACHER_OR_STAFF": {
       "display_name": "Comprehensive Secondary Teacher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 35.0,
-      "hourly_rate_range": [
-        4.2,
-        5.0
-      ],
+      "hourly_rate_range": [4.2, 5.0],
       "schedule_window": "DAYTIME",
+      "age_min": 22,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LECTURER": {
       "display_name": "Higher Education Lecturer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 37.0,
-      "hourly_rate_range": [
-        5.0,
-        6.2
-      ],
+      "hourly_rate_range": [5.0, 6.2],
       "schedule_window": "DAYTIME",
+      "age_min": 26,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "LECTURER_OR_ADMIN": {
+      "display_name": "Higher Education Lecturer / Administrator",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 20000,
+      "weekly_hours": 37.0,
+      "hourly_rate_range": [4.5, 6.2],
+      "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "CONSULTANT": {
+      "display_name": "NHS Senior Hospital Consultant",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 20000,
+      "weekly_hours": 45.0,
+      "hourly_rate_range": [8.5, 12.0],
+      "schedule_window": "DAYTIME",
+      "age_min": 35,
+      "age_max": 65,
       "is_field_worker": false
     },
     "HOSPITAL_DOCTOR": {
-      "display_name": "Hospital Physician / Registrar",
+      "display_name": "Hospital Physician",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 48.0,
-      "hourly_rate_range": [
-        6.2,
-        7.8
-      ],
+      "hourly_rate_range": [6.2, 7.8],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 25,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "HOSPITAL_RESIDENT_DOCTOR": {
+      "display_name": "Hospital Registrar",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 5000,
+      "weekly_hours": 54.0,
+      "hourly_rate_range": [5.5, 6.8],
+      "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 23,
+      "age_max": 34,
       "is_field_worker": false
     },
     "HOSPITAL_NURSE": {
       "display_name": "State Registered Nurse",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 20000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        4.2,
-        5.1
-      ],
+      "hourly_rate_range": [4.2, 5.1],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 60,
+      "is_field_worker": false
+    },
+    "STUDENT_NURSE": {
+      "display_name": "Student Nurse",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 5000,
+      "weekly_hours": 37.5,
+      "hourly_rate_range": [2.6, 3.2],
+      "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 18,
+      "age_max": 25,
       "is_field_worker": false
     },
     "HOSPITAL_SUPPORT_STAFF": {
-      "display_name": "Hospital Porter / Orderly",
+      "display_name": "Hospital Orderly",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.0,
-        3.5
-      ],
+      "hourly_rate_range": [3.0, 3.5],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "AMBULANCE_CREW": {
-      "display_name": "Emergency Ambulance Driver / Attendant",
+      "display_name": "Ambulance Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.8,
-        4.4
-      ],
+      "hourly_rate_range": [3.8, 4.4],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": true
     },
     "DHSS_OFFICER": {
-      "display_name": "DHSS / Jobcentre Executive Officer",
+      "display_name": "DHSS Executive Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.0,
-      "hourly_rate_range": [
-        3.5,
-        4.2
-      ],
+      "hourly_rate_range": [3.5, 4.2],
       "schedule_window": "DAYTIME",
+      "age_min": 19,
+      "age_max": 65,
       "is_field_worker": false
     },
     "PRISON_OFFICER": {
-      "display_name": "HM Prison Discipline Officer",
+      "display_name": "HM Prison Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 60,
       "is_field_worker": false
     },
     "POLICE_OFFICER": {
       "display_name": "Uniformed Police Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 60,
+      "is_field_worker": true
+    },
+    "POLICE_CONSTABLE": {
+      "display_name": "Probationary Police Constable",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 5000,
+      "weekly_hours": 40.0,
+      "hourly_rate_range": [3.5, 4.2],
+      "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 18,
+      "age_max": 28,
       "is_field_worker": true
     },
     "DETECTIVE": {
       "display_name": "Plain Clothes Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 39.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 24,
+      "age_max": 60,
       "is_field_worker": true
     },
     "PARK_KEEPER": {
       "display_name": "Municipal Park Keeper & Gardener",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        3.0,
-        3.4
-      ],
+      "hourly_rate_range": [3.0, 3.4],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": true
     },
     "GROUNDSMAN_OR_STEWARD": {
       "display_name": "Groundsman / Event Steward",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 18.0,
-      "hourly_rate_range": [
-        3.0,
-        3.4
-      ],
+      "hourly_rate_range": [3.0, 3.4],
       "schedule_window": "WEEKEND",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
-    "CLERGY_OR_CARETAKER": {
-      "display_name": "Parish Minister / Church Custodian",
+    "CLERGY": {
+      "display_name": "Parish Minister",
       "contract_class": "FORMAL_LEGAL",
-      "education_required": "O_LEVELS_CSE",
-      "max_commute": 5000,
-      "weekly_hours": 30.0,
-      "hourly_rate_range": [
-        2.8,
-        3.3
-      ],
-      "schedule_window": "DAYTIME",
-      "is_field_worker": false
-    },
-    "PRACTICE_STAFF": {
-      "display_name": "Medical Receptionist / Clinic Assistant",
-      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 35.0,
-      "hourly_rate_range": [
-        3.2,
-        3.7
-      ],
+      "hourly_rate_range": [3.2, 4.0],
       "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 70,
       "is_field_worker": false
     },
-    "COMMERCIAL_SERVICE": {
-      "display_name": "Retail Assistant / Bar Staff / Shop Worker",
+    "CARETAKER": {
+      "display_name": "Caretaker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.2,
-        3.8
-      ],
+      "hourly_rate_range": [3.0, 3.6],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "CLERGY_OR_CARETAKER": {
+      "display_name": "Church Custodian",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 5000,
+      "weekly_hours": 30.0,
+      "hourly_rate_range": [2.8, 3.3],
+      "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 70,
+      "is_field_worker": false
+    },
+    "PRACTICE_STAFF": {
+      "display_name": "Medical Receptionist",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 5000,
+      "weekly_hours": 35.0,
+      "hourly_rate_range": [3.2, 3.7],
+      "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "COMMERCIAL_SERVICE": {
+      "display_name": "Shop Worker",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "weekly_hours": 37.5,
+      "hourly_rate_range": [3.2, 3.8],
+      "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "MANUAL_WORKS": {
-      "display_name": "Factory Machine Hand / Site Laborer",
+      "display_name": "Site Laborer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.8,
-        4.6
-      ],
+      "hourly_rate_range": [3.8, 4.6],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BUILDING_TRADESMAN": {
       "display_name": "Skilled Tradesman (Bricklayer / Joiner / Sparky)",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.2,
-        5.2
-      ],
+      "hourly_rate_range": [4.2, 5.2],
       "schedule_window": "DAYTIME",
+      "age_min": 20,
+      "age_max": 65,
       "is_field_worker": true
     },
     "DISPATCHER_OR_CONTROLLER": {
-      "display_name": "Minicab Radio Controller / Dispatcher",
+      "display_name": "Minicab Dispatcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        3.2,
-        3.7
-      ],
+      "hourly_rate_range": [3.2, 3.7],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "CAB_DRIVER": {
       "display_name": "Private Hire Cab Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 44.0,
-      "hourly_rate_range": [
-        2.9,
-        3.6
-      ],
+      "hourly_rate_range": [2.9, 3.6],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 21,
+      "age_max": 70,
       "is_field_worker": true
     },
     "OFFICE_MANAGER": {
-      "display_name": "Office / Operations Supervisor",
+      "display_name": "Office Supervisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.8,
-        4.4
-      ],
+      "hourly_rate_range": [3.8, 4.4],
       "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 65,
       "is_field_worker": false
     },
     "DEPOT_MANAGER": {
-      "display_name": "Depot Superintendent / Foreman",
+      "display_name": "Foreman",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.5,
-        5.4
-      ],
+      "hourly_rate_range": [4.5, 5.4],
       "schedule_window": "DAYTIME",
+      "age_min": 28,
+      "age_max": 65,
       "is_field_worker": false
     },
     "WORKS_CONVENOR": {
-      "display_name": "Union Shop Steward/ Works Convenor",
+      "display_name": "Union Shop Steward",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 10000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.5,
-        5.4
-      ],
+      "hourly_rate_range": [4.5, 5.4],
       "schedule_window": "DAYTIME",
+      "age_min": 30,
+      "age_max": 65,
       "is_field_worker": false
     },
     "VEHICLE_MECHANIC": {
       "display_name": "Commercial Fitter / Motor Mechanic",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.1,
-        4.8
-      ],
+      "hourly_rate_range": [4.1, 4.8],
       "schedule_window": "DAYTIME",
+      "age_min": 19,
+      "age_max": 65,
       "is_field_worker": false
     },
     "COACH_OR_LORRY_DRIVER": {
       "display_name": "HGV / Long-Distance Coach Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 42.0,
-      "hourly_rate_range": [
-        3.8,
-        4.5
-      ],
+      "hourly_rate_range": [3.8, 4.5],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": true
-    },
-    "LECTURER_OR_ADMIN": {
-      "display_name": "Higher Education Lecturer / Administrator",
-      "contract_class": "FORMAL_LEGAL",
-      "education_required": "DEGREE_OR_HIGHER",
-      "max_commute": 20000,
-      "weekly_hours": 37.0,
-      "hourly_rate_range": [
-        4.5,
-        6.2
-      ],
-      "schedule_window": "DAYTIME",
-      "is_field_worker": false
     },
     "POSTAL_CLERK": {
       "display_name": "Postal Clerk",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.4,
-        4.1
-      ],
+      "hourly_rate_range": [3.4, 4.1],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "SPORTSMAN": {
       "display_name": "Sports Ground Staff / Athlete",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 25.0,
-      "hourly_rate_range": [
-        3.0,
-        4.0
-      ],
+      "hourly_rate_range": [3.0, 4.0],
       "schedule_window": "WEEKEND",
+      "age_min": 18,
+      "age_max": 35,
       "is_field_worker": true
     },
     "APPRENTICE_BAKER": {
       "display_name": "Apprentice Baker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        2.1,
-        2.6
-      ],
+      "hourly_rate_range": [2.1, 2.6],
       "schedule_window": "MORNING",
+      "age_min": 16,
+      "age_max": 20,
       "is_field_worker": false
     },
     "APPRENTICE_BUTCHER": {
       "display_name": "Apprentice Butcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        2.1,
-        2.6
-      ],
+      "hourly_rate_range": [2.1, 2.6],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 20,
       "is_field_worker": false
     },
     "APPRENTICE_HAIRDRESSER": {
       "display_name": "Apprentice Hairdresser",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 36.0,
-      "hourly_rate_range": [
-        1.9,
-        2.4
-      ],
+      "hourly_rate_range": [1.9, 2.4],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 20,
       "is_field_worker": false
     },
     "BAKER": {
       "display_name": "Baker / Master Confectioner",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "MORNING",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BANK_MANAGER": {
       "display_name": "Bank Branch Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 15000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        6.2,
-        8.5
-      ],
+      "hourly_rate_range": [6.2, 8.5],
       "schedule_window": "DAYTIME",
+      "age_min": 30,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BANK_TELLER": {
       "display_name": "Bank Cashier / Teller",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.2,
-        3.8
-      ],
+      "hourly_rate_range": [3.2, 3.8],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BOOKMAKER": {
-      "display_name": "Bookmaker / Turf Accountant Manager",
+      "display_name": "Bookmaker",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.8,
-        4.5
-      ],
+      "hourly_rate_range": [3.8, 4.5],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BUSINESS_ADVISOR": {
       "display_name": "Commercial Business Advisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 10000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        4.8,
-        6.0
-      ],
+      "hourly_rate_range": [4.8, 6.0],
       "schedule_window": "DAYTIME",
+      "age_min": 25,
+      "age_max": 65,
       "is_field_worker": false
     },
     "BUTCHER": {
       "display_name": "Master Butcher",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.7,
-        4.4
-      ],
+      "hourly_rate_range": [3.7, 4.4],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": false
     },
     "COURT_CLERK_LEGAL": {
-      "display_name": "Clerk to the Justices / Legal Advisor",
+      "display_name": "Clerk to the Justices",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        5.5,
-        7.2
-      ],
+      "hourly_rate_range": [5.5, 7.2],
       "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 65,
       "is_field_worker": false
     },
     "ESTATE_AGENT": {
-      "display_name": "Estate Agent / Property Valuer",
+      "display_name": "Estate Agent",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        4.2,
-        5.5
-      ],
+      "hourly_rate_range": [4.2, 5.5],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": true
     },
     "FIREFIGHTER": {
       "display_name": "Firefighter (Leading Fireman / Fireman)",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
       "weekly_hours": 42.0,
-      "hourly_rate_range": [
-        3.9,
-        4.6
-      ],
+      "hourly_rate_range": [3.9, 4.6],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 19,
+      "age_max": 55,
       "is_field_worker": true
     },
     "FIRE_OFFICER": {
-      "display_name": "Station Officer / Sub-Officer",
+      "display_name": "Station Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 12000,
       "weekly_hours": 42.0,
-      "hourly_rate_range": [
-        4.8,
-        5.8
-      ],
+      "hourly_rate_range": [4.8, 5.8],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 26,
+      "age_max": 55,
       "is_field_worker": true
     },
     "FORKLIFT_DRIVER": {
-      "display_name": "Forklift Truck Driver / Yard Operator",
+      "display_name": "Forklift Truck Driver",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.6,
-        4.3
-      ],
+      "hourly_rate_range": [3.6, 4.3],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "HAIRDRESSER_OR_BARBER": {
       "display_name": "Stylist / Barber",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        3.0,
-        3.8
-      ],
+      "hourly_rate_range": [3.0, 3.8],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "INVESTMENT_ADVISOR": {
       "display_name": "Investment / Securities Advisor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 15000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        5.0,
-        6.5
-      ],
+      "hourly_rate_range": [5.0, 6.5],
       "schedule_window": "DAYTIME",
+      "age_min": 23,
+      "age_max": 65,
       "is_field_worker": false
     },
     "KITCHEN_STAFF": {
       "display_name": "Cook / Kitchen Porter",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 38.0,
-      "hourly_rate_range": [
-        2.8,
-        3.4
-      ],
+      "hourly_rate_range": [2.8, 3.4],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LAUNDRY_WORKER": {
       "display_name": "Launderette / Dry Cleaning Attendant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        2.7,
-        3.2
-      ],
+      "hourly_rate_range": [2.7, 3.2],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LEGAL_EXECUTIVE": {
-      "display_name": "Managing Clerk / Legal Executive",
+      "display_name": "Legal Executive",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        4.5,
-        5.8
-      ],
+      "hourly_rate_range": [4.5, 5.8],
       "schedule_window": "DAYTIME",
+      "age_min": 21,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LIBRARIAN": {
       "display_name": "Chartered Borough Librarian",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 10000,
       "weekly_hours": 37.0,
-      "hourly_rate_range": [
-        4.6,
-        5.6
-      ],
+      "hourly_rate_range": [4.6, 5.6],
       "schedule_window": "DAYTIME",
+      "age_min": 23,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LIBRARY_ASSISTANT": {
       "display_name": "Library Assistant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 35.0,
-      "hourly_rate_range": [
-        3.1,
-        3.6
-      ],
+      "hourly_rate_range": [3.1, 3.6],
       "schedule_window": "DAYTIME",
+      "age_min": 17,
+      "age_max": 65,
       "is_field_worker": false
     },
     "LOANS_OFFICER": {
       "display_name": "Bank Advances & Loans Officer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        4.6,
-        5.8
-      ],
+      "hourly_rate_range": [4.6, 5.8],
       "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 65,
       "is_field_worker": false
     },
     "PETROL_PUMP_ATTENDANT": {
       "display_name": "Forecourt Petrol Pump Attendant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        2.8,
-        3.3
-      ],
+      "hourly_rate_range": [2.8, 3.3],
       "schedule_window": "SHIFTS_ROTATING",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "PHARMACIST": {
       "display_name": "Dispensing Chemist / MPS Pharmacist",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
       "weekly_hours": 39.0,
-      "hourly_rate_range": [
-        5.5,
-        7.2
-      ],
+      "hourly_rate_range": [5.5, 7.2],
       "schedule_window": "DAYTIME",
+      "age_min": 23,
+      "age_max": 65,
       "is_field_worker": false
     },
     "RESTAURANT_MANAGER": {
       "display_name": "Restaurant / Takeaway Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 44.0,
-      "hourly_rate_range": [
-        3.8,
-        4.8
-      ],
+      "hourly_rate_range": [3.8, 4.8],
       "schedule_window": "EVENING",
+      "age_min": 23,
+      "age_max": 65,
       "is_field_worker": false
     },
     "RETAIL_COUNTER_STAFF": {
       "display_name": "Counter Assistant / Shop Assistant",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 37.5,
-      "hourly_rate_range": [
-        2.8,
-        3.4
-      ],
+      "hourly_rate_range": [2.8, 3.4],
       "schedule_window": "DAYTIME",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "SERVING_STAFF": {
       "display_name": "Waiter / Waitress / Table Service",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 30.0,
-      "hourly_rate_range": [
-        2.7,
-        3.3
-      ],
+      "hourly_rate_range": [2.7, 3.3],
       "schedule_window": "EVENING",
+      "age_min": 16,
+      "age_max": 65,
       "is_field_worker": false
     },
     "SHOP_MANAGER": {
       "display_name": "Retail Shop Manager",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.8,
-        4.6
-      ],
+      "hourly_rate_range": [3.8, 4.6],
       "schedule_window": "DAYTIME",
+      "age_min": 22,
+      "age_max": 65,
       "is_field_worker": false
     },
     "SOLICITOR": {
       "display_name": "Practising Solicitor",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        6.5,
-        9.0
-      ],
+      "hourly_rate_range": [6.5, 9.0],
       "schedule_window": "DAYTIME",
+      "age_min": 24,
+      "age_max": 68,
       "is_field_worker": false
     },
     "TOOLMAKER_FITTER": {
       "display_name": "Precision Toolmaker / Fitter",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.4,
-        5.4
-      ],
+      "hourly_rate_range": [4.4, 5.4],
       "schedule_window": "DAYTIME",
+      "age_min": 20,
+      "age_max": 65,
       "is_field_worker": false
     },
     "WAREHOUSE_OPERATIVE": {
       "display_name": "Warehouseman / Picker & Packer",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        3.3,
-        3.9
-      ],
+      "hourly_rate_range": [3.3, 3.9],
       "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 65,
       "is_field_worker": false
     },
     "WELDER_FABRICATOR": {
       "display_name": "Plater / Welder / Fabricator",
       "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
       "weekly_hours": 40.0,
-      "hourly_rate_range": [
-        4.3,
-        5.2
-      ],
+      "hourly_rate_range": [4.3, 5.2],
       "schedule_window": "DAYTIME",
+      "age_min": 19,
+      "age_max": 65,
+      "is_field_worker": false
+    },
+    "HIGHER_ED_STUDENT": {
+      "display_name": "Polytechnic / University Undergraduate",
+      "contract_class": "ENCLAVE_STUDENT",
+      "contract_type": "PART_TIME",
+      "education_required": "A_LEVELS",
+      "max_commute": 5000,
+      "weekly_hours": 20.0,
+      "hourly_rate_range": [1.5, 2.5],
+      "schedule_window": "DAYTIME",
+      "age_min": 18,
+      "age_max": 24,
+      "is_field_worker": false
+    },
+    "PRISON_INMATE": {
+      "display_name": "Custodial Inmate",
+      "contract_class": "CUSTODIAL_INMATE",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 500,
+      "weekly_hours": 30.0,
+      "hourly_rate_range": [0.5, 1.2],
+      "schedule_window": "DAYTIME",
+      "age_min": 17,
+      "age_max": 65,
       "is_field_worker": false
     }
   }

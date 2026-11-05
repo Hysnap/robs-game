@@ -63,7 +63,7 @@ func _init() -> void:
 
 	var archetypes: Dictionary = MANIFEST_MGR.load_module("archetypes")
 	var building_classes: Dictionary = MANIFEST_MGR.load_module("building_classes")
-	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
+	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions")
 	var cultural: Dictionary = MANIFEST_MGR.load_module("cultural_demographics")
 	var demographics: Dictionary = MANIFEST_MGR.load_module("demographics")
 	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon")
@@ -117,23 +117,23 @@ func _init() -> void:
 		}
 	}
 
-	# Run Pass 2: Workplace & Premises Generation
+	# Run Pass 2: Workplace & Premises Generation (authoritatively populates districts, establishments, and job slots)
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
-		test_world, archetypes, building_classes, job_defs, cultural, rng, Callable()
+		test_world, archetypes, building_classes, job_defs, cultural, lexicon, rng, Callable()
 	)
 	var slots: Array = physical_state.get("available_job_slots", [])
 	print("  ✓ Pass 2 Workplace Positions Generated: %d" % slots.size())
 
 	# Run Pass 3: Citizen Demographics & Job Hydration
+	var master_roles: Dictionary = job_defs.get("roles", job_defs)
 	await CITIZEN_HYDRATOR.run(
-		physical_state, demographics, lexicon, job_defs, rng, Callable()
+		physical_state, demographics, cultural, lexicon, master_roles, rng, Callable()
 	)
 
 	# -----------------------------------------------------------------
 	# STAGE 4: SYSTEM AUDITOR RUNTIME & RELATIONAL HEALTH CHECK
 	# -----------------------------------------------------------------
 	print("\n[STAGE 4] Executing SystemAuditor...")
-	# Populate population metric on test districts for auditor sanity
 	for dist_id in test_world["districts"].keys():
 		var res_rows: Array = DB_MANAGER.query_rows(
 			"SELECT COUNT(*) AS pop FROM residents r JOIN households h ON r.household_id = h.household_id JOIN establishments e ON h.establishment_id = e.establishment_id WHERE e.district_id = '%s';" % dist_id
@@ -142,7 +142,7 @@ func _init() -> void:
 
 	var auditor_report: Dictionary = SYSTEM_AUDITOR.audit_generation_health(test_world, DB_MANAGER)
 	print("  ✓ Total Districts Audited:    %s" % str(auditor_report["metrics"].get("total_districts", 0)))
-	print("  ✓ Total Living Population:    %s" % str(auditor_report["metrics"].get("total_population", 0)))
+	print("  ✓ Total Living Population:    %s" % str(auditor_report["metrics"].get("active_population", 0)))
 	print("  ✓ Total Establishments in DB: %s" % str(auditor_report["metrics"].get("total_establishments", 0)))
 	print("  ✓ Total Households in DB:     %s" % str(auditor_report["metrics"].get("total_households", 0)))
 
@@ -169,9 +169,9 @@ func _init() -> void:
 
 	var view_check: Array = DB_MANAGER.query_rows("SELECT COUNT(*) as count FROM v_workplace_jobs;")
 	assert(int(view_check[0]["count"]) > 0, "FAILED: v_workplace_jobs view returned 0 rows!")
-	print("  ✓ v_workplace_jobs virtual view query operational.")
+	print("  ✓ v_workplace_jobs virtual view query operational (%d rows surfaced)." % int(view_check[0]["count"]))
 
 	print("\n=======================================================")
 	print("     ALL FULL-SYSTEM & AUDIT CHECKS PASSED (100%)      ")
-	print("=======================================================\n")
+	print("=======================================================")
 	quit()

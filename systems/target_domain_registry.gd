@@ -55,7 +55,7 @@ static func get_target_categories(verb_code: String) -> Array[Dictionary]:
 			categories.append(c)
 	return categories
 
-## Resolves a normalized list of target candidates [{ "id": String, "label_token": String, "unit_cost": float }]
+## Resolves a normalized list of target candidates [{ "id": String, "label_token": String, "unit_cost": float, ... }]
 ## Emits pure semantic tokens; translation via tr() is deferred to the presentation layer.
 static func resolve_targets(verb_code: String, world_state: Dictionary, category_id: String = "") -> Array[Dictionary]:
 	var categories: Array[Dictionary] = get_target_categories(verb_code)
@@ -79,18 +79,20 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 	var domain: String = str(target_cat.get("domain", "NONE")).to_upper()
 	var catalog_source: String = str(target_cat.get("catalog_source", ""))
 
-	SystemLogger.log_info("[DEBUG TARGETS] Verb: %s | Categories: %s | WorldState has catalog: %s" % [
-    	verb_code, 
-    	categories.size(), 
-    	world_state.has(catalog_source) if not catalog_source.is_empty() else false
-		])
-
 	match domain:
 		"NONE":
+			assert(target_cat.has("id") and not str(target_cat["id"]).is_empty(),
+				"FATAL: [TargetDomainRegistry] Category in verb '%s' with domain 'NONE' must define an 'id'." % verb_code)
+			assert(target_cat.has("label_token") and not str(target_cat["label_token"]).is_empty(),
+				"FATAL: [TargetDomainRegistry] Category '%s' in verb '%s' must define a 'label_token'." % [target_cat.get("id"), verb_code])
+
 			return [{
-				"id": str(target_cat.get("id", "DEFAULT")),
-				"label_token": str(target_cat.get("label_token", "UI_TARGET_NONE")),
-				"unit_cost": 0.0
+				"id": str(target_cat["id"]),
+				"label_token": str(target_cat["label_token"]),
+				"unit_cost": float(target_cat.get("unit_cost", 0.0)),
+				"category": "",
+				"sub_category": "",
+				"taxonomy_path": []
 			}]
 
 		"COMMODITY", "RECIPE":
@@ -110,13 +112,26 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 				var item_data = catalog[item_id]
 				var token: String = str(item_id)
 				var cost: float = 0.0
+				var cat: String = ""
+				var subcat: String = ""
+				var tax_path: Array = []
+
 				if item_data is Dictionary:
 					token = str(item_data.get("display_name", item_id))
-					cost = float(item_data.get("base_cost", 0.0))
+					cost = float(item_data.get("base_cost", item_data.get("unit_cost", 0.0)))
+					cat = str(item_data.get("category", "GENERAL")).strip_edges().to_upper()
+					assert(not cat.is_empty(),
+						"FATAL: [TargetDomainRegistry] Item '%s' in catalog '%s' has an empty category!" % [item_id, catalog_source])
+					subcat = str(item_data.get("sub_category", "")).strip_edges().to_upper()
+					tax_path = item_data.get("taxonomy_path", [])
+
 				results.append({
 					"id": str(item_id),
 					"label_token": token,
-					"unit_cost": cost
+					"unit_cost": cost,
+					"category": cat,
+					"sub_category": subcat,
+					"taxonomy_path": tax_path
 				})
 			return results
 
@@ -124,7 +139,10 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 			return [{
 				"id": "CONTACT_SELECTED",
 				"label_token": str(target_cat.get("label_token", "UI_TARGET_CONTACT")),
-				"unit_cost": 0.0
+				"unit_cost": 0.0,
+				"category": "CONTACT",
+				"sub_category": "",
+				"taxonomy_path": []
 			}]
 
 		_:

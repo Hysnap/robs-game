@@ -55,6 +55,8 @@ func _ready() -> void:
 	if game_hud != null:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
 		game_hud.end_turn_requested.connect(_on_end_turn_requested)
+		if game_hud.has_signal("toggle_messages_inbox_requested"):
+			game_hud.toggle_messages_inbox_requested.connect(_toggle_feedback_inbox_visibility)
 
 	# 4. Synchronize Seed & Visual Layout
 	var gs = ScenarioManifestManager.get_game_state()
@@ -79,6 +81,15 @@ func _ready() -> void:
 	
 	# 5. Index District Nodes and Mount Visual Indicators
 	call_deferred("_initialize_spatial_ground_indicators")
+
+func _exit_tree() -> void:
+	if is_instance_valid(view_host):
+		view_host.cleanup()
+	for indicator in _district_indicators.values():
+		if is_instance_valid(indicator):
+			indicator.queue_free()
+	_district_indicators.clear()
+	_district_ground_nodes.clear()
 
 func _load_spatial_indicator_rules() -> void:
 	assert(ScenarioManifestManager.has_module("fog_of_war"),
@@ -154,7 +165,11 @@ func _setup_compiled_shell_host_views() -> void:
 	if diary_class:
 		view_host.register_view("DIARY", diary_class.new())
 
-	# Sub-Docket Inspection Views (Option A - Driven dynamically by schema route)
+	var roster_class = load("res://generated/ui/gen_roster_docket.gd")
+	if roster_class:
+		view_host.register_view("ROSTER", roster_class.new())
+
+	# Sub-Docket Inspection Views
 	var estab_class = load("res://generated/ui/gen_establishment_docket.gd")
 	if estab_class:
 		view_host.register_view("ESTABLISHMENT_DOCKET", estab_class.new())
@@ -177,19 +192,24 @@ func _setup_compiled_shell_host_views() -> void:
 		feedback_inbox.z_index = 15
 		workspace_canvas.add_child(feedback_inbox)
 
-		if view_host != null and feedback_inbox != null:
+		if game_hud != null and feedback_inbox.has_signal("stack_count_changed"):
+			feedback_inbox.stack_count_changed.connect(game_hud.update_unread_message_count)
+
+		if view_host != null:
 			view_host.set_desk_inbox(feedback_inbox)
 
 	# F. Query active spread for its era-specific composer modal (duck-typed)
-	var era_modal: Control = outer_shell.get_slot("MODAL")
+	directive_modal = outer_shell.get_slot("MODAL")
+	if directive_modal != null and directive_modal.has_signal("directive_committed"):
+		if action_planner_view != null and action_planner_view.has_method("add_directive"):
+			directive_modal.directive_committed.connect(action_planner_view.add_directive)
 
 	# G. Connect ViewHost signals
 	if view_host:
-		if action_planner_view:
-			view_host.attach_action_system(action_planner_view, feedback_inbox, era_modal)
 		view_host.action_requested.connect(_on_view_host_action_requested)
 		view_host.triage_slip_action.connect(_on_view_host_slip_triage)
 		view_host.item_selected.connect(_on_view_host_item_selected)
+		view_host.route_changed.connect(_on_view_host_route_changed)
 
 	view_host.switch_to_domain("DOSSIER")
 
@@ -198,7 +218,6 @@ func _setup_shell_customizer() -> void:
 	if customizer_res and workspace_canvas:
 		shell_customizer = customizer_res.instantiate()
 		
-		# Set filter directly from registry without hardcoded checks
 		var active_shell_id: String = ShellRegistryScript.get_configured_shell_id()
 		if "target_shell" in shell_customizer:
 			shell_customizer.target_shell = active_shell_id
@@ -214,6 +233,56 @@ func _setup_shell_customizer() -> void:
 					shell_customizer.move_to_front()
 		)
 
+func _on_view_host_route_changed(domain_key: String) -> void:
+	match domain_key:
+		"ROSTER":
+			_hydrate_roster_view()
+		"DOSSIER":
+			var gs = ScenarioManifestManager.get_game_state()
+			var active_id: String = ""
+			if gs != null and "world_state" in gs:
+				active_id = str(gs.world_state.get("selected_district_id", ""))
+			if not active_id.is_empty() and gs.has_method("get_district_view"):
+				view_host.update_active_view_data(gs.get_district_view(active_id))
+
+func _hydrate_roster_view() -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs == null or not "world_state" in gs or view_host == null:
+		return
+
+	var ws: Dictionary = gs.world_state
+	var staff_dict: Dictionary = ws.get("staff", {})
+	var districts: Dictionary = ws.get("districts", {})
+	var home_id: String = str(ws.get("operations", {}).get("home_district_id", "block_0_0"))
+	var home_name: String = str(districts.get(home_id, {}).get("display_name", "Headquarters Area"))
+
+	var crew_members: Array[Dictionary] = []
+	for staff_id in staff_dict.keys():
+		var member = staff_dict[staff_id]
+		if member is Dictionary:
+			var r_id: int = int(member.get("resident_id", 0))
+			var name_str: String = str(member.get("name", staff_id))
+			var cash_val: float = float(member.get("pocket_cash", 0.0))
+			var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
+
+			var age_val: int = 25
+			if r_id > 0:
+				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(r_id)
+				age_val = int(demo.get("age", 25))
+
+			var summary: String = "Age %d • £%.2f Pocket • %.0fh max" % [age_val, cash_val, daily_hrs]
+
+			# Include staff_id as fallback key identifier
+			crew_members.append({
+				"resident_id": r_id if r_id > 0 else staff_id,
+				"name": name_str,
+				"summary_line": summary,
+				"staff_id": staff_id,
+				"assigned_district": str(member.get("current_district_id", home_id))
+			})
+
+	view_host.update_active_view_data({"crew_roster": crew_members})
+
 func _on_view_host_action_requested(action_code: String, _payload: Dictionary) -> void:
 	var gs = ScenarioManifestManager.get_game_state()
 	var target_district: String = ""
@@ -222,7 +291,8 @@ func _on_view_host_action_requested(action_code: String, _payload: Dictionary) -
 
 	match action_code:
 		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
-			view_host.open_composer({"target_district_id": target_district})
+			if directive_modal != null and directive_modal.has_method("open_for_context"):
+				directive_modal.open_for_context({"target_district_id": target_district})
 		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
 			_on_end_turn_requested()
 
@@ -233,11 +303,62 @@ func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> v
 		SystemLogger.log_info("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
 
 func _on_view_host_item_selected(target_route: String, filter_key: Variant) -> void:
-	var estab_id: int = int(filter_key)
-	var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
-	if view_host != null:
-		view_host.switch_to_domain(target_route)
-		view_host.update_active_view_data(docket_data)
+	match target_route:
+		"OPERATIVE_DETAIL":
+			var gs = ScenarioManifestManager.get_game_state()
+			var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
+			var staff_dict: Dictionary = ws.get("staff", {})
+
+			var res_id: int = 0
+			var staff_info: Dictionary = {}
+
+			# Resolve whether filter_key is integer resident_id or String staff_id
+			if typeof(filter_key) == TYPE_INT or (typeof(filter_key) == TYPE_STRING and str(filter_key).is_valid_int()):
+				res_id = int(filter_key)
+			else:
+				var s_id: String = str(filter_key)
+				if staff_dict.has(s_id):
+					staff_info = staff_dict[s_id]
+					res_id = int(staff_info.get("resident_id", 0))
+
+			# 1. Primary Route: If resident has an established home address in SQLite
+			if res_id > 0:
+				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(res_id)
+				var home_estab: int = int(demo.get("home_establishment_id", demo.get("establishment_id", 0)))
+				if home_estab > 0:
+					var res_data: Dictionary = SocietyQueriesScript.get_establishment_docket(home_estab)
+					view_host.switch_to_domain("RESIDENTIAL_DOCKET")
+					view_host.update_active_view_data(res_data)
+					return
+
+			# 2. Resilient Fallback: Route to the Operative's Operating District Dossier
+			var target_district: String = ""
+			if not staff_info.is_empty():
+				target_district = str(staff_info.get("current_district_id", ""))
+			else:
+				# Find operative record in staff_dict by resident_id
+				for s_key in staff_dict.keys():
+					var s_entry = staff_dict[s_key]
+					if s_entry is Dictionary and int(s_entry.get("resident_id", -1)) == res_id:
+						target_district = str(s_entry.get("current_district_id", ""))
+						break
+
+			if target_district.is_empty():
+				target_district = str(ws.get("player_knowledge", {}).get("home_district_id", ""))
+
+			if not target_district.is_empty() and gs != null and gs.has_method("get_district_view"):
+				var district_data: Dictionary = gs.get_district_view(target_district)
+				view_host.switch_to_domain("DOSSIER")
+				view_host.update_active_view_data(district_data)
+
+		"RESIDENTIAL_DOCKET", "ESTABLISHMENT_DOCKET":
+			var estab_id: int = int(filter_key)
+			var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
+			view_host.switch_to_domain(target_route)
+			view_host.update_active_view_data(docket_data)
+
+		_:
+			view_host.switch_to_domain(target_route)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -270,20 +391,17 @@ func _toggle_workspace_visibility() -> void:
 
 	workspace_canvas.visible = not workspace_canvas.visible
 	if workspace_canvas.visible:
-		# Anti-lost protection: ensure outer_shell is on-screen and accessible below the HUD
 		if outer_shell != null:
 			outer_shell.move_to_front()
 			var vp_size: Vector2 = get_viewport().get_visible_rect().size
 			var shell_size: Vector2 = outer_shell.size
 			
-			# If unpositioned or dragged off-screen / under HUD, clamp safely
-			var min_y: float = 60.0 # Clear HUD top-bar margin
+			var min_y: float = 60.0
 			var max_x: float = maxf(20.0, vp_size.x - shell_size.x - 20.0)
 			var max_y: float = maxf(min_y, vp_size.y - 80.0)
 			
 			if outer_shell.global_position.x < 0.0 or outer_shell.global_position.x > max_x \
 			or outer_shell.global_position.y < min_y or outer_shell.global_position.y > max_y:
-				# Recenter on screen if lost
 				outer_shell.global_position = Vector2(
 					maxf(20.0, (vp_size.x - shell_size.x) * 0.5),
 					maxf(min_y, (vp_size.y - shell_size.y) * 0.5)
@@ -301,9 +419,21 @@ func _toggle_workspace_visibility() -> void:
 
 func _on_end_turn_requested() -> void:
 	var staged: Array = []
-	if view_host != null:
-		if view_host.has_method("consume_selected_staged_directives"):
-			staged = view_host.consume_selected_staged_directives()
-		elif view_host.has_method("get_staged_directives"):
-			staged = view_host.get_staged_directives()
+	var planner_node: Control = outer_shell.get_slot("ACTION")
+	if planner_node != null and planner_node.get_child_count() > 0:
+		var active_planner = planner_node.get_child(0)
+		if active_planner.has_method("consume_selected_directives"):
+			staged = active_planner.consume_selected_directives()
+		elif active_planner.has_method("get_staged_directives"):
+			staged = active_planner.get_staged_directives()
+
 	OperationsControllerScript.execute_staged_cycle(staged, view_host)
+
+func _toggle_feedback_inbox_visibility() -> void:
+	if feedback_inbox == null or workspace_canvas == null:
+		return
+
+	workspace_canvas.visible = true
+	feedback_inbox.visible = not feedback_inbox.visible
+	if feedback_inbox.visible:
+		feedback_inbox.move_to_front()

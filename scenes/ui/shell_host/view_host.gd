@@ -14,12 +14,7 @@ signal slip_filed(slip_data: Dictionary, destination: String)
 # Generic map: domain_key (String) -> Control (Compiled View Instance)
 var _views: Dictionary = {}
 var _active_domain: String = ""
-var _planner_view: Control = null
 var _desk_inbox: Control = null
-var _composer_modal: Control = null
-
-# Staged turn directives buffer
-var _staged_directives: Array[Dictionary] = []
 
 func _ready() -> void:
 	if shell_node == null:
@@ -54,6 +49,9 @@ func register_view(domain_key: String, view_control: Control) -> void:
 		if view_control.has_signal("route_requested"):
 			if not view_control.is_connected("route_requested", Callable(self, "_on_nav_route_requested")):
 				view_control.connect("route_requested", Callable(self, "_on_nav_route_requested"))
+		if view_control.has_signal("action_clicked"):
+			if not view_control.is_connected("action_clicked", Callable(self, "_on_view_action_clicked")):
+				view_control.connect("action_clicked", Callable(self, "_on_view_action_clicked"))
 
 ## Swaps whatever view is currently mounted in CONTENT slot
 func switch_to_domain(domain_key: String) -> void:
@@ -88,46 +86,7 @@ func inscribe_entry_to_domain(domain_key: String, entry_data: Dictionary) -> voi
 		SystemLogger.log_warn("[ViewHost] Cannot inscribe entry: unknown domain '%s'." % domain_key)
 		push_warning("[ViewHost] Cannot inscribe entry: unknown domain '%s'" % domain_key)
 
-## Connects the Action Planner, Desktop Feedback Inbox, and optional Era Composer Modal
-func attach_action_system(planner: Control, inbox: Control, composer_modal: Control = null) -> void:
-	_planner_view = planner
-	_desk_inbox = inbox
-	_composer_modal = composer_modal
-
-	if _planner_view and _planner_view.has_signal("action_clicked"):
-		_planner_view.connect("action_clicked", func(action_code: String):
-			match action_code:
-				"MOVE_UP":
-					move_staged_directive(-1)
-				"MOVE_DOWN":
-					move_staged_directive(1)
-				"REMOVE_ORDER":
-					remove_staged_directive()
-				"TOGGLE_SELECT":
-					toggle_selected_directive()
-				"SELECT_ALL":
-					toggle_all_directives()
-				_:
-					action_requested.emit(action_code, {})
-		)
-
-	if _composer_modal and _composer_modal.has_signal("directive_committed"):
-		_composer_modal.connect("directive_committed", func(directive: Dictionary):
-			add_staged_directive(directive)
-		)
-
-	if _desk_inbox and _desk_inbox.has_signal("top_card_action"):
-		_desk_inbox.connect("top_card_action", func(action_id: String, payload: Dictionary):
-			triage_slip_action.emit(action_id, payload)
-		)
-
-## Adds a newly committed directive to the staged queue buffer
-func add_staged_directive(directive: Dictionary) -> void:
-	if not directive.has("is_selected"):
-		directive["is_selected"] = true
-	_staged_directives.append(directive)
-	_refresh_planner_queue_display(_staged_directives.size() - 1)
-
+## Mounts the feedback desk inbox and connects its filing and triage signals
 func set_desk_inbox(inbox_control: Control) -> void:
 	_desk_inbox = inbox_control
 	if _desk_inbox != null:
@@ -138,100 +97,21 @@ func set_desk_inbox(inbox_control: Control) -> void:
 			if not _desk_inbox.top_card_action.is_connected(_on_desk_top_card_action):
 				_desk_inbox.top_card_action.connect(_on_desk_top_card_action)
 
-## Moves the currently selected directive up (-1) or down (+1) in the staging queue
-func move_staged_directive(direction: int) -> void:
-	var selected_idx := _get_selected_queue_index()
-	if selected_idx == -1:
-		return
-
-	var target_idx := selected_idx + direction
-	if target_idx < 0 or target_idx >= _staged_directives.size():
-		return
-
-	var temp := _staged_directives[selected_idx]
-	_staged_directives[selected_idx] = _staged_directives[target_idx]
-	_staged_directives[target_idx] = temp
-
-	_refresh_planner_queue_display(target_idx)
-
-## Discards the currently selected directive from the staging queue
-func remove_staged_directive() -> void:
-	var selected_idx := _get_selected_queue_index()
-	if selected_idx == -1 or selected_idx >= _staged_directives.size():
-		return
-
-	_staged_directives.remove_at(selected_idx)
-	var new_select := clampi(selected_idx, 0, _staged_directives.size() - 1)
-	if _staged_directives.is_empty():
-		new_select = -1
-	_refresh_planner_queue_display(new_select)
-
-func _get_selected_queue_index() -> int:
-	if _planner_view == null:
-		return -1
-	var list_ctrl := _planner_view.find_child("queue_list", true, false) as ItemList
-	if list_ctrl == null:
-		# Fallback checking dictionary map if compiled
-		if "_value_labels" in _planner_view and _planner_view._value_labels.has("queue_list"):
-			list_ctrl = _planner_view._value_labels["queue_list"] as ItemList
-	if list_ctrl and list_ctrl.is_anything_selected():
-		var sel = list_ctrl.get_selected_items()
-		if not sel.is_empty():
-			return sel[0]
-	return -1
-
-func _refresh_planner_queue_display(select_index: int = -1) -> void:
-	if _planner_view == null:
-		return
-
-	var display_queue: Array = []
-	for i in range(_staged_directives.size()):
-		var d: Dictionary = _staged_directives[i]
-		var is_checked: bool = d.get("is_selected", true)
-		var check_marker: String = "[✓]" if is_checked else "[  ]"
-
-		var verb: String = str(d.get("verb", "ORDER"))
-		var item: String = str(d.get("target_item", ""))
-		var qty: float = float(d.get("amount", 0.0))
-		var assignee: String = str(d.get("assigned_to", d.get("initiator_id", "Player")))
-		var target_node: String = str(d.get("target_node_id", ""))
-		var contact: String = str(d.get("counterparty_id", ""))
-
-		var line := "%d. %s [%s] %s x%.0f @ %s (Assigned: %s)" % [
-			i + 1, check_marker, verb, item, qty, target_node, assignee
-		]
-		if not contact.is_empty():
-			line += " [Contact: %s]" % contact
-		display_queue.append(line)
-
-	if _planner_view.has_method("bind_data"):
-		_planner_view.bind_data({"staged_queue": display_queue})
-
-	if select_index >= 0:
-		var list_ctrl := _planner_view.find_child("queue_list", true, false) as ItemList
-		if list_ctrl == null and "_value_labels" in _planner_view and _planner_view._value_labels.has("queue_list"):
-			list_ctrl = _planner_view._value_labels["queue_list"] as ItemList
-		if list_ctrl and select_index < list_ctrl.item_count:
-			list_ctrl.select(select_index)
-
-## Presentation helper: Opens the mounted composer modal with caller context
-func open_composer(context_payload: Dictionary = {}) -> void:
-	if _composer_modal and _composer_modal.has_method("open_for_context"):
-		_composer_modal.open_for_context(context_payload)
-
 ## Presentation helper: Dispatches raw slip cards to the desk inbox
 func push_feedback_slips(cards: Array) -> void:
 	if _desk_inbox and _desk_inbox.has_method("push_cards"):
 		_desk_inbox.push_cards(cards)
 
-## Presentation helper: Gets staged directives from planner
-func get_staged_directives() -> Array:
-	return _staged_directives.duplicate(true)
-
-## Presentation helper: Clears staged directives in planner
-func clear_staged_directives() -> void:
-	_staged_directives.clear()
-	_refresh_planner_queue_display()
+## Presentation helper: Ensures the feedback desk stack is visible and brought to the front
+func show_feedback_inbox() -> void:
+	if _desk_inbox != null:
+		_desk_inbox.visible = true
+		_desk_inbox.move_to_front()
+		var parent_node := _desk_inbox.get_parent()
+		if parent_node is CanvasLayer:
+			(parent_node as CanvasLayer).visible = true
+		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
+			(shell_node.get_parent() as CanvasLayer).visible = true
 
 ## Cleanly frees all registered view instances and clears cached references
 func cleanup() -> void:
@@ -243,67 +123,19 @@ func cleanup() -> void:
 			v.free()
 	_views.clear()
 	_active_domain = ""
-	_staged_directives.clear()
-
-	if is_instance_valid(_planner_view) and _planner_view.get_parent() == null:
-		_planner_view.free()
-	_planner_view = null
 
 	if is_instance_valid(_desk_inbox) and _desk_inbox.get_parent() == null:
 		_desk_inbox.free()
 	_desk_inbox = null
 
-	if is_instance_valid(_composer_modal) and _composer_modal.get_parent() == null:
-		_composer_modal.free()
-	_composer_modal = null
-
 func _on_view_item_selected(target_route: String, filter_key: Variant) -> void:
 	item_selected.emit(target_route, filter_key)
 
+func _on_view_action_clicked(action_code: String) -> void:
+	action_requested.emit(action_code, {})
+
 func _on_nav_route_requested(domain_token: String, _target_page: String) -> void:
 	switch_to_domain(domain_token)
-
-## Toggles the commitment selection for the currently highlighted directive
-func toggle_selected_directive() -> void:
-	var selected_idx := _get_selected_queue_index()
-	if selected_idx < 0 or selected_idx >= _staged_directives.size():
-		return
-	var current_state: bool = _staged_directives[selected_idx].get("is_selected", true)
-	_staged_directives[selected_idx]["is_selected"] = not current_state
-	_refresh_planner_queue_display(selected_idx)
-
-## Toggles all directives: if all are selected, uncheck all; otherwise, check all
-func toggle_all_directives() -> void:
-	if _staged_directives.is_empty():
-		return
-
-	var all_selected := true
-	for d in _staged_directives:
-		if not d.get("is_selected", true):
-			all_selected = false
-			break
-
-	var target_state := not all_selected
-	for d in _staged_directives:
-		d["is_selected"] = target_state
-
-	var sel_idx := _get_selected_queue_index()
-	_refresh_planner_queue_display(sel_idx)
-
-## Extracts and removes selected directives to execute for this turn, preserving unselected ones
-func consume_selected_staged_directives() -> Array:
-	var to_execute: Array = []
-	var remaining: Array[Dictionary] = []
-
-	for d in _staged_directives:
-		if d.get("is_selected", true):
-			to_execute.append(d)
-		else:
-			remaining.append(d)
-
-	_staged_directives = remaining
-	_refresh_planner_queue_display(-1)
-	return to_execute
 
 func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
 	inscribe_entry_to_domain(destination, slip_data)

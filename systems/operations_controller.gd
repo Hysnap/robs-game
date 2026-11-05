@@ -4,6 +4,7 @@ extends RefCounted
 
 const SimControllerScript = preload("res://systems/sim_controller.gd")
 const StationeryRegistryScript = preload("res://scenes/ui/feedback/stationery_registry.gd")
+const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
 
 ## Executes staged directives through SimController, updates world state, and returns UI payloads
 static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = null) -> Dictionary:
@@ -21,24 +22,9 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 	# 1. Run pure simulation cycle
 	var report: Dictionary = SimControllerScript.process_turn_cycle(gs.world_state, staged_orders)
 
-	# 2. Ingest outcome slips and format into stationery payloads
-	StationeryRegistryScript.initialize()
+	# 2. Ingest outcome slips via FeedbackTranslator
 	var events: Array = report.get("executed_events", [])
-	var cards: Array = []
-
-	for ev in events:
-		var verb: String = ev.get("verb", "")
-		var binding: Dictionary = StationeryRegistryScript.get_verb_binding(verb)
-		var card_payload := {
-			"stationery_profile": binding.get("default_definition", "STICKY_NOTE"),
-			"destination": binding.get("default_filing_domain", "DIARY"),
-			"display_text": ev.get("message", "Task settled."),
-			"tick": ev.get("tick", 1),
-			"week": ev.get("week", 1),
-			"success": ev.get("success", false),
-			"author": ev.get("author", "Runner Dispatch")
-		}
-		cards.append(card_payload)
+	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(events)
 
 	# 3. If a ViewHost is present, update the UI layers
 	if view_host != null:

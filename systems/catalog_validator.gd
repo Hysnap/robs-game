@@ -693,16 +693,25 @@ static func validate_society_manifests() -> Dictionary:
 			report["archetypes_scanned"] += 1
 			var arch: Dictionary = archetypes[arch_key]
 
-			var housing: Dictionary = arch.get("housing_profile", {})
-			var res_type: String = str(housing.get("residence_type", "NONE"))
-			if res_type != "NONE" and not has_label.call("RESIDENCE_TYPE", res_type):
-				report["errors"].append("Archetype '%s' references unknown RESIDENCE_TYPE '%s'!" % [arch_key, res_type])
-				report["is_clean"] = false
+			# Normalize housing profiles (can be Dictionary or Array of Dictionaries)
+			var raw_housing = arch.get("housing_profile", {})
+			var housing_list: Array = []
+			if raw_housing is Dictionary and not raw_housing.is_empty():
+				housing_list.append(raw_housing)
+			elif raw_housing is Array:
+				housing_list.append_array(raw_housing)
 
-			var tenure: String = str(housing.get("tenure_type", "NONE"))
-			if tenure != "NONE" and not has_label.call("TENURE_TYPE", tenure):
-				report["errors"].append("Archetype '%s' references unknown TENURE_TYPE '%s'!" % [arch_key, tenure])
-				report["is_clean"] = false
+			for housing in housing_list:
+				if housing is Dictionary:
+					var res_type: String = str(housing.get("residence_type", "NONE"))
+					if res_type != "NONE" and not has_label.call("RESIDENCE_TYPE", res_type):
+						report["errors"].append("Archetype '%s' references unknown RESIDENCE_TYPE '%s'!" % [arch_key, res_type])
+						report["is_clean"] = false
+
+					var tenure: String = str(housing.get("tenure_type", "NONE"))
+					if tenure != "NONE" and not has_label.call("TENURE_TYPE", tenure):
+						report["errors"].append("Archetype '%s' references unknown TENURE_TYPE '%s'!" % [arch_key, tenure])
+						report["is_clean"] = false
 
 			if arch.has("institution_profile"):
 				var inst: Dictionary = arch["institution_profile"]
@@ -715,9 +724,6 @@ static func validate_society_manifests() -> Dictionary:
 				var serves: String = str(inst.get("serves_role", ""))
 				if not serves.is_empty() and not has_label.call("ROLE_TITLE", serves):
 					report["warnings"].append("Archetype '%s' serves_role '%s' not explicitly in db_labels ROLE_TITLE." % [arch_key, serves])
-	else:
-		report["errors"].append("Scenario manifest missing 'archetypes' module declaration!")
-		report["is_clean"] = false
 
 	# 4. Audit Building Classes against Job Definitions
 	if MANIFEST_MGR.has_module("building_classes"):

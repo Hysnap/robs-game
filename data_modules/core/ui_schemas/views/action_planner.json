@@ -35,15 +35,9 @@
           "type": "ITEM_LIST",
           "token": "UI_LBL_QUEUED",
           "default_text": "Queued Directives",
-          "field": "staged_queue"
-        },
-        {
-          "id": "btn_toggle_select",
-          "type": "BUTTON",
-          "token": "UI_BTN_TOGGLE_SELECT",
-          "default_text": "☑ Toggle Selection",
-          "action_signal": "action_clicked",
-          "emit_args": "\"TOGGLE_SELECT\""
+          "field": "staged_queue",
+          "reorderable": true,
+          "min_height": 140
         },
         {
           "id": "btn_select_all",
@@ -52,30 +46,6 @@
           "default_text": "✓ Select / Deselect All",
           "action_signal": "action_clicked",
           "emit_args": "\"SELECT_ALL\""
-        },
-        {
-          "id": "btn_move_up",
-          "type": "BUTTON",
-          "token": "UI_BTN_MOVE_UP",
-          "default_text": "▲ Prioritize Task (Move Up)",
-          "action_signal": "action_clicked",
-          "emit_args": "\"MOVE_UP\""
-        },
-        {
-          "id": "btn_move_down",
-          "type": "BUTTON",
-          "token": "UI_BTN_MOVE_DOWN",
-          "default_text": "▼ Delay Task (Move Down)",
-          "action_signal": "action_clicked",
-          "emit_args": "\"MOVE_DOWN\""
-        },
-        {
-          "id": "btn_remove_order",
-          "type": "BUTTON",
-          "token": "UI_BTN_REMOVE_ORDER",
-          "default_text": "✖ Cancel Task (Remove)",
-          "action_signal": "action_clicked",
-          "emit_args": "\"REMOVE_ORDER\""
         }
       ]
     }

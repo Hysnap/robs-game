@@ -3,7 +3,8 @@ extends SceneTree
 
 const OuterShellScript = preload("res://scenes/ui/shell_host/outer_shell.gd")
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
-const DesktopSlipStackScript = preload("res://scenes/ui/feedback/desktop_slip_stack.gd")
+const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
+const ActionQueuePresenterScript = preload("res://scenes/ui/components/action_queue_presenter.gd")
 
 const DBManagerScript = preload("res://systems/db_manager.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
@@ -82,7 +83,8 @@ func _init() -> void:
 	host.shell_node = shell
 	shell.add_child(host)
 
-	var card_stack := DesktopSlipStackScript.new()
+	# Instantiate packed scene so internal node hierarchy is present
+	var card_stack: Control = DesktopSlipStackScene.instantiate() as Control
 	root.add_child(card_stack)
 	host.set_desk_inbox(card_stack)
 
@@ -99,14 +101,21 @@ func _init() -> void:
 	host.register_view("FINANCE", cashbook)
 	host.register_view("DIARY", diary)
 
-	# Mount Action Planner into ACTION slot and attach
+	# Mount Action Planner into ACTION slot
 	shell.mount_view("ACTION", planner)
-	host.attach_action_system(planner, card_stack, null)
 	host.switch_to_domain("DIARY")
 	SystemLogger.log_info("  ✓ Navigation, Docket, Cashbook, Diary, and Action Planner mounted cleanly.")
 
 	# 3. TEST DIRECTIVE STAGING, REORDERING & SELECTIVE COMMITMENT
 	SystemLogger.log_info("\n[STEP 3] Testing directive staging, priority reordering & selection toggles...")
+	var queue_presenter = ActionQueuePresenterScript.new()
+
+	# Connect queue updates to the Action Planner's bind_data
+	queue_presenter.queue_changed.connect(func(lines: Array, sel_idx: int):
+		if planner.has_method("bind_data"):
+			planner.bind_data({"staged_queue": lines})
+	)
+
 	var directive_1: Dictionary = {
 		"verb": "BUY",
 		"initiator_id": "STAFF_BILLY",
@@ -129,37 +138,29 @@ func _init() -> void:
 		"config": {"unit_price": 3.50, "exposure_modifier": 1.0}
 	}
 
-	host.add_staged_directive(directive_1)
-	host.add_staged_directive(directive_2)
-	assert(host.get_staged_directives().size() == 2, "Expected 2 directives staged in ViewHost!")
-	assert(host.get_staged_directives()[0]["verb"] == "BUY", "First directive should be BUY")
+	queue_presenter.add_directive(directive_1)
+	queue_presenter.add_directive(directive_2)
+	assert(queue_presenter.size() == 2, "Expected 2 directives staged in ActionQueuePresenter!")
+	assert(queue_presenter.get_staged_directives()[0]["verb"] == "BUY", "First directive should be BUY")
 
-	# Reorder: select second item and move UP
-	var queue_widget: ItemList = null
-	if "_value_labels" in planner and planner._value_labels.has("queue_list"):
-		queue_widget = planner._value_labels["queue_list"] as ItemList
-	elif planner.find_child("queue_list", true, false) != null:
-		queue_widget = planner.find_child("queue_list", true, false) as ItemList
-	assert(queue_widget != null, "queue_list ItemList missing in Action Planner!")
+	# Reorder: move second item UP (-1)
+	var new_idx: int = queue_presenter.move_directive(1, -1)
+	assert(new_idx == 0, "Reorder failed to move item to index 0!")
 
-	queue_widget.select(1)
-	host.move_staged_directive(-1)
-
-	var reordered_queue: Array = host.get_staged_directives()
+	var reordered_queue: Array = queue_presenter.get_staged_directives()
 	assert(reordered_queue[0]["verb"] == "SELL", "Reordering failed: SELL directive should now be index 0!")
 	SystemLogger.log_info("  ✓ Priority reordering verified: SELL directive moved ahead of BUY.")
 
 	# Test Selection Toggle: Uncheck the BUY directive (now at index 1)
-	queue_widget.select(1)
-	host.toggle_selected_directive()
-	assert(host.get_staged_directives()[1].get("is_selected", true) == false, "BUY directive should be unselected!")
+	queue_presenter.toggle_selection(1)
+	assert(queue_presenter.get_staged_directives()[1].get("is_selected", true) == false, "BUY directive should be unselected!")
 
 	# Consume only selected directives for this turn
-	var to_commit: Array = host.consume_selected_staged_directives()
+	var to_commit: Array = queue_presenter.consume_selected_directives()
 	assert(to_commit.size() == 1, "Expected exactly 1 selected directive to be consumed!")
 	assert(to_commit[0]["verb"] == "SELL", "Expected SELL directive to be committed!")
-	assert(host.get_staged_directives().size() == 1, "Unselected BUY directive must remain staged in queue!")
-	assert(host.get_staged_directives()[0]["verb"] == "BUY", "Remaining staged directive should be BUY!")
+	assert(queue_presenter.size() == 1, "Unselected BUY directive must remain staged in queue!")
+	assert(queue_presenter.get_staged_directives()[0]["verb"] == "BUY", "Remaining staged directive should be BUY!")
 	SystemLogger.log_info("  ✓ Selective commitment verified: SELL committed, BUY preserved across turns.")
 
 	# 4. EXECUTE TURN VIA SIMCONTROLLER & INSCRIBE ORDERS INTO DIARY

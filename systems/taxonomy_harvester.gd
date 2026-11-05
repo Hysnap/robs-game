@@ -31,11 +31,20 @@ static func _harvest_archetypes(out_list: Array[Dictionary], seen: Dictionary) -
 			continue
 		var arch: Dictionary = archetypes[arch_key]
 
-		# 1. Residence Type from housing_profile
-		var h_prof: Dictionary = arch.get("housing_profile", {})
-		if h_prof.has("residence_type"):
-			var res_code: String = str(h_prof["residence_type"]).to_upper()
-			_add_token(out_list, seen, "RESIDENCE_TYPE", res_code, res_code.capitalize().replace("_", " "))
+		# 1. Residence Type from housing_profile (Supports either Dictionary or Array[Dictionary])
+		var housing_profiles: Array = []
+		if arch.has("housing_profile"):
+			var raw_hp = arch["housing_profile"]
+			if raw_hp is Array:
+				housing_profiles = raw_hp
+			elif raw_hp is Dictionary and not raw_hp.is_empty():
+				housing_profiles.append(raw_hp)
+
+		for h_prof in housing_profiles:
+			if h_prof is Dictionary and h_prof.has("residence_type"):
+				var res_code: String = str(h_prof["residence_type"]).to_upper()
+				if res_code != "NONE":
+					_add_token(out_list, seen, "RESIDENCE_TYPE", res_code, res_code.capitalize().replace("_", " "))
 
 		# 2. Establishment Category from archetype root
 		if arch.has("establishment_category"):
@@ -43,7 +52,7 @@ static func _harvest_archetypes(out_list: Array[Dictionary], seen: Dictionary) -
 			var cat_title: String = str(arch.get("display_name", cat_code.capitalize().replace("_", " ")))
 			_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", cat_code, cat_title)
 
-		# 3. Roles from institution_profile
+		# 3. Roles and Categories from institution_profile
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			if inst.has("client_profile") and inst["client_profile"].has("role_title"):
@@ -53,6 +62,12 @@ static func _harvest_archetypes(out_list: Array[Dictionary], seen: Dictionary) -
 			if inst.has("staff_profile") and inst["staff_profile"].has("role_title"):
 				var s_code: String = str(inst["staff_profile"]["role_title"]).to_upper()
 				_add_token(out_list, seen, "ROLE_TITLE", s_code, s_code.capitalize().replace("_", " "))
+
+			if inst.has("staffing_roster"):
+				for roster_entry in inst["staffing_roster"]:
+					if roster_entry is Dictionary and roster_entry.has("job_id"):
+						var job_code: String = str(roster_entry["job_id"]).to_upper()
+						_add_token(out_list, seen, "ROLE_TITLE", job_code, job_code.capitalize().replace("_", " "))
 
 static func _harvest_cultural_demographics(out_list: Array[Dictionary], seen: Dictionary) -> void:
 	var cult_data: Dictionary = MANIFEST_MANAGER.load_module("cultural_demographics")
@@ -102,13 +117,11 @@ static func _harvest_demographics(out_list: Array[Dictionary], seen: Dictionary)
 
 	# Deep Cohort Profile Roles (Fixed, Labor Market, and Probabilistic Branches)
 	for c in demo_data.get("cohort_profiles", []):
-		# 1. Top-level roles
 		for role_field in ["role", "unemployed_role", "commercial_role", "industrial_role"]:
 			if c.has(role_field):
 				var r_code: String = str(c[role_field]).to_upper()
 				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_code.capitalize().replace("_", " "))
 
-		# 2. Nested strategy branches (handles APPRENTICE, STUDENT, etc.)
 		for branch_key in ["if_true", "if_false"]:
 			if c.has(branch_key) and c[branch_key] is Dictionary:
 				var branch: Dictionary = c[branch_key]
@@ -152,3 +165,8 @@ static func _harvest_building_classes(out_list: Array[Dictionary], seen: Diction
 			if t_data.has("staff_roles"):
 				for r_code in t_data["staff_roles"]:
 					_add_token(out_list, seen, "ROLE_TITLE", str(r_code), str(r_code).capitalize().replace("_", " "))
+			if t_data.has("staffing_roster"):
+				for roster_entry in t_data["staffing_roster"]:
+					if roster_entry is Dictionary and roster_entry.has("job_id"):
+						var j_code: String = str(roster_entry["job_id"]).to_upper()
+						_add_token(out_list, seen, "ROLE_TITLE", j_code, j_code.capitalize().replace("_", " "))

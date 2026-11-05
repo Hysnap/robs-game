@@ -340,7 +340,7 @@ static func _create_society_schema() -> void:
 			-- Demographics
 			COUNT(DISTINCT r.resident_id) AS total_residents,
 			COUNT(DISTINCT r.household_id) AS total_households,
-			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_living_population,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_population,
 			
 			-- Dynamic Age Cohorts (Computed against world_metadata without hardcoded ages)
 			COUNT(DISTINCT CASE 
@@ -450,7 +450,7 @@ static func _create_society_schema() -> void:
 			-- Demographics
 			COUNT(DISTINCT r.resident_id) AS total_residents,
 			COUNT(DISTINCT r.household_id) AS total_households,
-			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_living_population,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_population,
 			
 			-- Dynamic Age Cohorts
 			COUNT(DISTINCT CASE 

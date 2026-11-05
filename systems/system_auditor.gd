@@ -25,17 +25,17 @@ static func audit_generation_health(world_state: Dictionary, db_manager) -> Dict
 		report["errors"].append("CRITICAL: world_state has zero districts registered.")
 		report["is_healthy"] = false
 	else:
-		var total_pop: int = 0
+		var active_pop: int = 0
 		var zero_pop_count: int = 0
 		for dist_id in districts.keys():
 			var d: Dictionary = districts[dist_id]
-			var pop: int = int(d.get("population", 0))
-			total_pop += pop
+			var pop: int = int(d.get("active_population", d.get("population", 0)))
+			active_pop += pop
 			if pop == 0 and not str(d.get("district_type", "")).begins_with("local_government") and not str(d.get("district_type", "")).begins_with("sports_arena"):
 				zero_pop_count += 1
 				
 		report["metrics"]["total_districts"] = districts.size()
-		report["metrics"]["total_population"] = total_pop
+		report["metrics"]["active_population"] = active_pop
 		
 		if zero_pop_count * 2 > districts.size():
 			report["warnings"].append("Unusually high number of zero-population residential districts: %d" % zero_pop_count)

@@ -7,6 +7,7 @@ const GENERATED_DIR := "res://generated/ui/"
 # Explicit preloads to guarantee availability in headless CLI mode
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const OuterShellScript = preload("res://scenes/ui/shell_host/outer_shell.gd")
+const ActionQueuePresenterScript = preload("res://scenes/ui/components/action_queue_presenter.gd")
 
 func _init() -> void:
 	SystemLogger.log_info("\n=======================================================")
@@ -79,13 +80,54 @@ func _init() -> void:
 
 	SystemLogger.log_info("  ✓ All registered views cycled through ContentSlot and ingested data cleanly.")
 
-	# 5. Clean teardown: purge views and slots before removing root
+	# 5. Test Agnostic Signal Forwarding
+	var signal_capture := {"action": "", "target_route": "", "filter_key": null}
+	host.action_requested.connect(func(code: String, _payload: Dictionary): signal_capture["action"] = code)
+	host.item_selected.connect(func(route: String, key: Variant):
+		signal_capture["target_route"] = route
+		signal_capture["filter_key"] = key
+	)
+
+	# Create a dummy control to test standard auto-wiring
+	var test_dummy := Control.new()
+	test_dummy.add_user_signal("action_clicked", [{"name": "action_code", "type": TYPE_STRING}])
+	test_dummy.add_user_signal("item_selected", [{"name": "target_route", "type": TYPE_STRING}, {"name": "filter_key", "type": TYPE_INT}])
+	host.register_view("DUMMY_TEST", test_dummy)
+
+	test_dummy.emit_signal("action_clicked", "EXECUTE_TEST")
+	assert(signal_capture["action"] == "EXECUTE_TEST", "FAIL: ViewHost failed to forward action_clicked to action_requested.")
+
+	test_dummy.emit_signal("item_selected", "OPERATIVE_DETAIL", 42)
+	assert(signal_capture["target_route"] == "OPERATIVE_DETAIL" and signal_capture["filter_key"] == 42, "FAIL: ViewHost failed to forward item_selected.")
+	SystemLogger.log_info("  ✓ ViewHost purely relays action_clicked and item_selected outward.")
+
+	# 6. Verify Reusable ActionQueuePresenter Component Headlessly
+	var qp = ActionQueuePresenterScript.new()
+	qp.add_directive({"verb": "BUY", "target_item": "BEER", "amount": 10})
+	qp.add_directive({"verb": "SELL", "target_item": "CIGS", "amount": 5})
+	assert(qp.size() == 2, "FAIL: ActionQueuePresenter failed to ingest directives.")
+
+	# Reorder (move index 1 up to index 0)
+	var new_idx = qp.move_directive(1, -1)
+	assert(new_idx == 0, "FAIL: Move directive UP failed.")
+	var lines = qp.get_display_lines()
+	assert(lines[0].contains("SELL"), "FAIL: Top item should now be SELL.")
+
+	# Toggle selection & consume
+	qp.toggle_selection(1) # uncheck BUY
+	var executable = qp.consume_selected_directives()
+	assert(executable.size() == 1 and executable[0]["verb"] == "SELL", "FAIL: Executable directives extraction mismatch.")
+	assert(qp.size() == 1 and qp.get_staged_directives()[0]["verb"] == "BUY", "FAIL: Unselected draft directive was not preserved.")
+	SystemLogger.log_info("  ✓ Reusable ActionQueuePresenter passed all standalone queue mechanics.")
+
+	# 7. Clean teardown: purge views and slots before removing root
+	test_dummy.free()
 	host.cleanup()
 	nav_bar.free()
-	root.remove_child(shell)
+	root.remove_child
 	shell.free()
 
 	SystemLogger.log_info("\n=======================================================")
-	SystemLogger.log_info("   ALL VIEW HOST ARCHITECTURAL RULES VERIFIED")
+	SystemLogger.log_info("   ALL VIEW HOST & QUEUE PRESENTER RULES VERIFIED")
 	SystemLogger.log_info("=======================================================\n")
 	quit(0)

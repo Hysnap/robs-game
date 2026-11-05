@@ -16,7 +16,7 @@ SELECT
     district_id,
     district_name,
     total_households,
-    active_living_population AS active_population,
+    active_population AS active_population,
     formally_employed_count,
     street_informal_count,
     incarcerated_count
@@ -29,7 +29,7 @@ SELECT
     borough_name,
     total_districts,
     total_households,
-    active_living_population AS active_population,
+    active_population AS active_population,
     formally_employed_count,
     street_informal_count,
     incarcerated_count
