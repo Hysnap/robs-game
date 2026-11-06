@@ -78,7 +78,14 @@ func _init() -> void:
 	# 4. RUN PASS 2 (Generate Physical Establishments & Job Slots)
 	print("\n[STEP 3] Running Pass 2 (Premises & Staffing Expansion)...")
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
-		world_state, archetypes, building_classes, job_defs, cultural, rng, Callable()
+		world_state, 
+		archetypes, 
+		building_classes, 
+		job_defs, 
+		lexicon,
+		cultural, 
+		rng, 
+		Callable()
 	)
 
 	var in_memory_slots: Array = physical_state.get("available_job_slots", [])
@@ -105,7 +112,13 @@ func _init() -> void:
 	# 5. RUN PASS 3 (Hydrate Citizens & Allocate Contracts)
 	print("\n[STEP 4] Running Pass 3 (Citizen Hydration & Job Allocation)...")
 	await CITIZEN_HYDRATOR.run(
-		physical_state, demographics, lexicon, job_defs, rng, Callable()
+		physical_state,
+		demographics, 
+		lexicon, 
+		job_defs,
+		cultural, 
+		rng, 
+		Callable()
 	)
 
 	# 6. VERIFY SQL VIEW: v_workplace_jobs

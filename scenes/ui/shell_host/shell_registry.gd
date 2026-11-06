@@ -48,11 +48,7 @@ static func get_shell_manifest(shell_id: String) -> Dictionary:
 	if _manifests.has(shell_id.to_lower()):
 		return _manifests[shell_id.to_lower()]
 	
-	# Fallback to filofax if requested ID is missing
-	if _manifests.has("filofax"):
-		return _manifests["filofax"]
-		
-	# Fallback to the first available manifest if filofax isn't found
+	# Fallback to the first available manifest if requester isn't found
 	if not _manifests.is_empty():
 		return _manifests[_manifests.keys()[0]]
 

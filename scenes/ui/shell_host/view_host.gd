@@ -15,6 +15,7 @@ signal slip_filed(slip_data: Dictionary, destination: String)
 var _views: Dictionary = {}
 var _active_domain: String = ""
 var _desk_inbox: Control = null
+var _desk_order_control: Control = null
 
 func _ready() -> void:
 	if shell_node == null:
@@ -97,6 +98,13 @@ func set_desk_inbox(inbox_control: Control) -> void:
 			if not _desk_inbox.top_card_action.is_connected(_on_desk_top_card_action):
 				_desk_inbox.top_card_action.connect(_on_desk_top_card_action)
 
+func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
+	inscribe_entry_to_domain(destination, slip_data)
+	slip_filed.emit(slip_data, destination)
+
+func _on_desk_top_card_action(action_id: String, payload: Dictionary) -> void:
+	triage_slip_action.emit(action_id, payload)
+
 ## Presentation helper: Dispatches raw slip cards to the desk inbox
 func push_feedback_slips(cards: Array) -> void:
 	if _desk_inbox and _desk_inbox.has_method("push_cards"):
@@ -108,6 +116,28 @@ func show_feedback_inbox() -> void:
 		_desk_inbox.visible = true
 		_desk_inbox.move_to_front()
 		var parent_node := _desk_inbox.get_parent()
+		if parent_node is CanvasLayer:
+			(parent_node as CanvasLayer).visible = true
+		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
+			(shell_node.get_parent() as CanvasLayer).visible = true
+
+# Mounts the order compiler ui element
+func set_order_compiler(order_control: Control) -> void:
+	_desk_order_control = order_control
+	if _desk_order_control != null:
+		if _desk_order_control.has_signal("slip_filed"):
+			if not _desk_order_control.slip_filed.is_connected(_on_desk_slip_filed):
+				_desk_order_control.slip_filed.connect(_on_desk_slip_filed)
+		if _desk_order_control.has_signal("top_card_action"):
+			if not _desk_order_control.top_card_action.is_connected(_on_desk_top_card_action):
+				_desk_order_control.top_card_action.connect(_on_desk_top_card_action)
+
+## Presentation helper: Ensures the order control is visible and brought to the front
+func show_order_control() -> void:
+	if _desk_order_control != null:
+		_desk_order_control.visible = true
+		_desk_order_control.move_to_front()
+		var parent_node := _desk_order_control.get_parent()
 		if parent_node is CanvasLayer:
 			(parent_node as CanvasLayer).visible = true
 		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
@@ -137,9 +167,3 @@ func _on_view_action_clicked(action_code: String) -> void:
 func _on_nav_route_requested(domain_token: String, _target_page: String) -> void:
 	switch_to_domain(domain_token)
 
-func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
-	inscribe_entry_to_domain(destination, slip_data)
-	slip_filed.emit(slip_data, destination)
-
-func _on_desk_top_card_action(action_id: String, payload: Dictionary) -> void:
-	triage_slip_action.emit(action_id, payload)

@@ -140,9 +140,9 @@ static func run(
 				if res_type == "NONE":
 					continue
 
-				var res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type)
-				var tenure_type: String = str(h_prof.get("tenure_type", "EMPLOYMENT_TIED"))
-				var wealth_bracket: int = int(h_prof.get("wealth_bracket", 3))
+				var int_res_type_id: int = DB_MANAGER.get_label_id("RESIDENCE_TYPE", res_type)
+				var int_tenure_type: String = str(h_prof.get("tenure_type", "EMPLOYMENT_TIED"))
+				var int_wealth_bracket: int = int(h_prof.get("wealth_bracket", 3))
 
 				var units_to_generate: int = 1
 				if h_prof.has("capacity"):
@@ -167,7 +167,7 @@ static func run(
 							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
 						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 2, 1, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, unit_door, tenure_type,
+						est_id, dist_id, unit_door, int_tenure_type,
 						unit_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
 					])
 
@@ -175,9 +175,9 @@ static func run(
 						"establishment_id": est_id,
 						"district_id": dist_id,
 						"residence_type": res_type,
-						"residence_type_id": res_type_id,
-						"wealth_bracket_id": wealth_bracket,
-						"tenure_type": tenure_type,
+						"residence_type_id": int_res_type_id,
+						"wealth_bracket_id": int_wealth_bracket,
+						"tenure_type": int_tenure_type,
 						"parent_workplace_id": institution_estab_id
 					})
 
@@ -560,9 +560,12 @@ static func expand_staffing_slots(
 					"estab_id": estab_id,
 					"district_id": dist_id,
 					"sector_category_id": sector_category_id,
+					"role_title": job_code,
 					"role_title_id": role_id,
+					"contract_class": contract_class,
 					"contract_class_id": class_id,
 					"contract_type_id": contract_type_id,
+					"edu_req": edu_req,
 					"min_education_level_id": edu_id,
 					"schedule_window_id": sched_id,
 					"rate": resolved_rate,
@@ -632,9 +635,12 @@ static func expand_staffing_slots(
 				"estab_id": estab_id,
 				"district_id": dist_id,
 				"sector_category_id": sector_category_id,
+				"role_title": fallback_job,
 				"role_title_id": fallback_role_id,
+				"contract_class": contract_class,
 				"contract_class_id": formal_class_id,
 				"contract_type_id": contract_type_id,
+				"edu_req": default_edu,
 				"min_education_level_id": fallback_edu_id,
 				"schedule_window_id": fallback_sched_id,
 				"rate": rate,

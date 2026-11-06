@@ -1,6 +1,10 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+.tmp.drivedownload/
+.tmp.driveupload/
+.vscode/
+.addons/citycrafter/assets/
 # SQLite Database & Runtime Files
 *.db
 *.db-shm

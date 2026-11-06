@@ -62,8 +62,8 @@ static func run(
 
 	var pass3_start_ms: int = Time.get_ticks_msec()
 	var chunk_start_ms: int = pass3_start_ms
-	var db_accum_ms: int = 0
-	var gen_accum_ms: int = 0
+	var _db_accum_ms: int = 0
+	var _gen_accum_ms: int = 0
 
 	# Tracking for tied housing cohort peer weaving: Array of { resident_id, estab_id, workplace_id, res_type_id, age }
 	var tied_occupants: Array[Dictionary] = []
@@ -147,6 +147,8 @@ static func run(
 			var weekly_hours: float = float(demo_profile["weekly_hours"])
 			var compensation_rate: float = float(demo_profile["compensation_rate"])
 			var assigned_est_id: int = 0
+			var active_contract_class_id: int = -1
+			var active_role_title_id: int = -1
 
 			if occ_title == "HOME_MAKER":
 				assigned_est_id = home_estab_id
@@ -165,10 +167,19 @@ static func run(
 				)
 
 				if not slot.is_empty():
+					assert(slot.has("estab_id"), "FATAL: Slot missing mandatory 'estab_id'!")
+					assert(slot.has("role_title"), "FATAL: Slot missing mandatory 'role_title'!")
+					assert(slot.has("role_title_id"), "FATAL: Slot missing mandatory 'role_title_id'!")
+					assert(slot.has("contract_class_id"), "FATAL: Slot missing mandatory 'contract_class_id'!")
+					assert(slot.has("hours"), "FATAL: Slot missing mandatory 'hours'!")
+					assert(slot.has("rate"), "FATAL: Slot missing mandatory 'rate'!")
+
 					assigned_est_id = int(slot["estab_id"])
-					occ_title = slot["role"]
-					weekly_hours = slot["hours"]
-					compensation_rate = slot["rate"]
+					occ_title = str(slot["role_title"])
+					weekly_hours = float(slot["hours"])
+					compensation_rate = float(slot["rate"])
+					active_contract_class_id = int(slot["contract_class_id"])
+					active_role_title_id = int(slot["role_title_id"])
 
 					if slot.has("slot_id"):
 						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
@@ -223,8 +234,8 @@ static func run(
 			if assigned_est_id <= 0:
 				assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
 
-			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
-			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
+			var class_id: int = active_contract_class_id if active_contract_class_id > 0 else DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
+			var role_id: int = active_role_title_id if active_role_title_id > 0 else DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
 
 			contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
@@ -254,7 +265,7 @@ static func run(
 		# Flush batches every 500 households
 		if hh_idx % 500 == 0:
 			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
-			gen_accum_ms += gen_time
+			_gen_accum_ms += gen_time
 
 			var db_t0: int = Time.get_ticks_msec()
 			DB_MANAGER.execute_batch(resident_inserts)
@@ -271,7 +282,7 @@ static func run(
 				resident_updates.clear()
 
 			var db_time: int = Time.get_ticks_msec() - db_t0
-			db_accum_ms += db_time
+			_db_accum_ms += db_time
 
 			SystemLogger.log_info("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
 				hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
@@ -327,7 +338,13 @@ static func run(
 			var r_id: int = current_resident_id
 			current_resident_id += 1
 
-			var role_key: String = str(slot["role"])
+			assert(slot.has("role_title"), "FATAL: Influx slot missing mandatory 'role_title'!")
+			assert(slot.has("role_title_id"), "FATAL: Influx slot missing mandatory 'role_title_id'!")
+			assert(slot.has("contract_class_id"), "FATAL: Influx slot missing mandatory 'contract_class_id'!")
+			assert(slot.has("hours"), "FATAL: Influx slot missing mandatory 'hours'!")
+			assert(slot.has("rate"), "FATAL: Influx slot missing mandatory 'rate'!")
+
+			var role_key: String = str(slot["role_title"])
 			var master_def: Dictionary = job_definitions.get(role_key, {})
 			var age_min: int = int(master_def.get("age_min", 20))
 			var age_max: int = int(master_def.get("age_max", 30))
@@ -359,9 +376,9 @@ static func run(
 
 			influx_hh_inserts.append("""
 				INSERT INTO households (
-									household_id, establishment_id, residence_type_id,
-									wealth_bracket_id, local_pub_id, ethnicity_id, religion_id,
-									valid_from, valid_to, change_reason_id
+					household_id, establishment_id, residence_type_id,
+					wealth_bracket_id, local_pub_id, ethnicity_id, religion_id,
+					valid_from, valid_to, change_reason_id
 				) VALUES (%d, %d, %d, %d, NULL, %d, %d, %d, NULL, %d);
 			""" % [
 				tied_h_id, tied_est_id, tied_res_type_id,
@@ -381,8 +398,8 @@ static func run(
 				dob_day, gender_id, edu_id, eth_id, rel_id, sim_start_day, reason_world_gen_id
 			])
 
-			var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", str(slot["contract_class"]))
-			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", role_key)
+			var class_id: int = int(slot["contract_class_id"])
+			var role_id: int = int(slot["role_title_id"])
 
 			influx_contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
