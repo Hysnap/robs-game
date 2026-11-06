@@ -35,15 +35,17 @@
           "type": "ITEM_LIST",
           "token": "UI_LBL_QUEUED",
           "default_text": "Queued Directives",
-          "field": "staged_queue"
+          "field": "staged_queue",
+          "reorderable": true,
+          "min_height": 140
         },
         {
-          "id": "btn_execute_shift",
+          "id": "btn_select_all",
           "type": "BUTTON",
-          "token": "UI_BTN_EXECUTE_SHIFT",
-          "default_text": "📅 Complete Day Shift (End Day)",
+          "token": "UI_BTN_SELECT_ALL",
+          "default_text": "✓ Select / Deselect All",
           "action_signal": "action_clicked",
-          "emit_args": "\"COMMIT_SHIFT\""
+          "emit_args": "\"SELECT_ALL\""
         }
       ]
     }
