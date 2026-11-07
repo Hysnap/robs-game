@@ -38,6 +38,7 @@ func build_ui() -> void:
 	add_child(sec_vault_summary)
 
 	var row_liquid_cash := HBoxContainer.new()
+	row_liquid_cash.name = "liquid_cash"
 	row_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_liquid_cash := Label.new()
 	lbl_liquid_cash.text = tr("UI_LBL_LIQUID_CASH")
@@ -47,6 +48,7 @@ func build_ui() -> void:
 	lbl_liquid_cash.add_theme_color_override("font_color", clr_muted)
 	row_liquid_cash.add_child(lbl_liquid_cash)
 	var val_liquid_cash := Label.new()
+	val_liquid_cash.name = "liquid_cash_value"
 	val_liquid_cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -57,6 +59,7 @@ func build_ui() -> void:
 	add_child(row_liquid_cash)
 
 	var row_filed_receipts_total := HBoxContainer.new()
+	row_filed_receipts_total.name = "filed_receipts_total"
 	row_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_filed_receipts_total := Label.new()
 	lbl_filed_receipts_total.text = tr("UI_LBL_EXPENSE_TOTAL")
@@ -66,6 +69,7 @@ func build_ui() -> void:
 	lbl_filed_receipts_total.add_theme_color_override("font_color", clr_muted)
 	row_filed_receipts_total.add_child(lbl_filed_receipts_total)
 	var val_filed_receipts_total := Label.new()
+	val_filed_receipts_total.name = "filed_receipts_total_value"
 	val_filed_receipts_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -75,34 +79,34 @@ func build_ui() -> void:
 	_value_labels["filed_receipts_total"] = val_filed_receipts_total
 	add_child(row_filed_receipts_total)
 
-	# --- Inscriptions Container ---
-	var hdr_insc := Label.new()
-	hdr_insc.text = "[ " + tr("UI_SEC_FILED_RECEIPTS").to_upper() + " ]"
-	hdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hdr_insc.add_theme_font_override("font", mono_font)
-	hdr_insc.add_theme_color_override("font_color", clr_blue)
-	add_child(hdr_insc)
-	var insc_list := VBoxContainer.new()
-	insc_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_value_labels["__inscriptions__"] = insc_list
-	add_child(insc_list)
+	# --- Inscriptions Container: receipts_inscriptions ---
+	var hdr_receipts_inscriptions := Label.new()
+	hdr_receipts_inscriptions.text = "[ " + tr("UI_SEC_FILED_RECEIPTS").to_upper() + " ]"
+	hdr_receipts_inscriptions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_receipts_inscriptions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_receipts_inscriptions.add_theme_font_override("font", mono_font)
+	hdr_receipts_inscriptions.add_theme_color_override("font_color", clr_blue)
+	add_child(hdr_receipts_inscriptions)
+	var insc_list_receipts_inscriptions := VBoxContainer.new()
+	insc_list_receipts_inscriptions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_receipts_inscriptions
+	add_child(insc_list_receipts_inscriptions)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("liquid_cash") and data.has("reported_cash"):
+	if _value_labels.has("liquid_cash"):
 		var ctrl = _value_labels["liquid_cash"]
-		if data["reported_cash"] == null:
+		if not data.has("reported_cash") or data["reported_cash"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			var num_str := String.num(float(data["reported_cash"]), 2)
-			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + ""
-	if _value_labels.has("filed_receipts_total") and data.has("total_filed_expenses"):
+			var val_str := "%.2f" % float(data["reported_cash"])
+			ctrl.text = tr("FMT_CURRENCY").replace("{val}", val_str) + ""
+	if _value_labels.has("filed_receipts_total"):
 		var ctrl = _value_labels["filed_receipts_total"]
-		if data["total_filed_expenses"] == null:
+		if not data.has("total_filed_expenses") or data["total_filed_expenses"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			var num_str := String.num(float(data["total_filed_expenses"]), 2)
-			ctrl.text = tr("FMT_CURRENCY").replace("{val}", num_str) + ""
+			var val_str := "%.2f" % float(data["total_filed_expenses"])
+			ctrl.text = tr("FMT_CURRENCY").replace("{val}", val_str) + ""
 
 func inscribe_entry(entry: Dictionary) -> void:
 	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):

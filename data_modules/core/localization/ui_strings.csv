@@ -12,6 +12,8 @@
 "FEEDBACK_CYCLE_IDLE","Standby shift logged.","Standby shift logged.","Standby shift logged.","Bereitschaftsschicht protokolliert.","Quart en attente consigné.","Turno en espera registrado.", "Turno en espera registrado."
 "FMT_CURRENCY","£{val}","£{val}","${val}","{val} €","{val} €","{val} €","${val}"
 "FMT_PERCENT","{val}%","{val}%","{val}%","{val} %","{val} %","{val} %","{val}%"
+"FMT_FLOAT","{val}","{val}","{val}","{val}","{val}","{val}","{val}"
+"FMT_INT","{val}","{val}","{val}","{val}","{val}","{val}","{val}"
 "FMT_DATE_NUMERIC","{day}/{month}/{year}","{day}/{month}/{year}","{month}/{day}/{year}","{day}.{month}.{year}","{day}/{month}/{year}","{day}/{month}/{year}","{month}/{day}/{year}"
 "FMT_DATE_SHORT","{day} {month} {year}","{day} {month} {year}","{month} {day}, {year}","{day}. {month} {year}","{day} {month} {year}","{day} {month} {year}","{month} {day}, {year}"
 "LOADER_TITLE","ESTABLISHING CITY & SOCIETY","ESTABLISHING CITY & SOCIETY","ESTABLISHING CITY & SOCIETY","ESTABLISHING CITY & SOCIETY","ÉTABLISSEMENT DE LA VILLE ET DE LA SOCIÉTÉ","ESTABLECIENDO CIUDAD Y SOCIEDAD","ESTABLECIENDO CIUDAD Y SOCIEDAD"

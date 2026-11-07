@@ -26,9 +26,16 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 	var events: Array = report.get("executed_events", [])
 	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(events)
 
-	# 3. If a ViewHost is present, update the UI layers
+	# 3. If a ViewHost is present, update the UI layers using the typed mount contract
 	if view_host != null:
-		view_host.clear_staged_directives()
+		# Pipeline Rules 6 & 9: Route explicit reset to the active generated view in the ACTION slot
+		if view_host.has_method("get_mounted_view"):
+			var planner_view = view_host.get_mounted_view("ACTION")
+			if planner_view != null and planner_view.has_method("clear_staged_directives"):
+				planner_view.clear_staged_directives()
+		# Fallback if ViewHost still uses legacy method during transition
+		elif view_host.has_method("clear_staged_directives"):
+			view_host.clear_staged_directives()
 
 		var current_date_str: String = report.get("calendar_date", "Shift Report")
 		for memo in report.get("diary_memos", []):
@@ -56,7 +63,7 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 	SystemLogger.log_info("[OperationsController] Operational cycle produced %d feedback cards." % cards.size())
 	return report
 
-## Files a card slip into the appropriate ledger domain
+## Files a card slip into the appropriate ledger domain (Pipeline Rule 5: single semantic slip_filed event endpoint)
 static func file_card_slip(card_payload: Dictionary, view_host: ViewHost = null) -> void:
 	var dest: String = card_payload.get("destination", "DIARY")
 	if view_host != null:

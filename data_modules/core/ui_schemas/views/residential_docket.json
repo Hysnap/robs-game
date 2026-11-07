@@ -15,7 +15,6 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
-          "default_text": "⬅ Back to District Dossier",
           "action_signal": "route_requested",
           "emit_args": "\"DOSSIER\", \"\""
         }
@@ -39,14 +38,12 @@
     {
       "id": "tenancy_details",
       "header_token": "UI_HDR_TENANCY_STATUS",
-      "header_default": "DOMESTIC TENANCY & HOUSEHOLD STATUS",
       "rows": [
         {
           "id": "door_num",
           "field": "unit_door_number",
           "type": "TEXT_METRIC",
           "token": "UI_LBL_DOOR_NUMBER",
-          "default_text": "Door / Flat Number",
           "autowrap": true
         },
         {
@@ -54,7 +51,6 @@
           "field": "district_name",
           "type": "TEXT_METRIC",
           "token": "UI_LBL_DISTRICT_WARD",
-          "default_text": "Registered Ward",
           "autowrap": true
         },
         {
@@ -62,7 +58,6 @@
           "field": "local_pub_name",
           "type": "TEXT_METRIC",
           "token": "UI_LBL_LOCAL_TAPROOM",
-          "default_text": "Local Taproom Affinity",
           "autowrap": true
         }
       ]
@@ -70,7 +65,6 @@
     {
       "id": "residents_roster",
       "header_token": "UI_HDR_HOUSEHOLD_RESIDENTS",
-      "header_default": "RECORDED HOUSEHOLD OCCUPANTS",
       "rows": [
         {
           "id": "occupants_list",

@@ -10,6 +10,7 @@ signal action_clicked(action_code)
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 var _value_labels: Dictionary = {}
+var _queue: ActionQueuePresenter = ActionQueuePresenter.new()
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -82,25 +83,45 @@ func build_ui() -> void:
 	btn_up_queue_list.text = "▲"
 	btn_up_queue_list.focus_mode = Control.FOCUS_NONE
 	btn_up_queue_list.add_theme_font_override("font", mono_font)
-	btn_up_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_UP"))
+	btn_up_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.move_directive(sel[0], -1)
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_up_queue_list)
 	var btn_dn_queue_list := Button.new()
 	btn_dn_queue_list.text = "▼"
 	btn_dn_queue_list.focus_mode = Control.FOCUS_NONE
 	btn_dn_queue_list.add_theme_font_override("font", mono_font)
-	btn_dn_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_DOWN"))
+	btn_dn_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.move_directive(sel[0], 1)
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_dn_queue_list)
 	var btn_rm_queue_list := Button.new()
 	btn_rm_queue_list.text = "✖"
 	btn_rm_queue_list.focus_mode = Control.FOCUS_NONE
 	btn_rm_queue_list.add_theme_font_override("font", mono_font)
-	btn_rm_queue_list.pressed.connect(func(): action_clicked.emit("REMOVE_ORDER"))
+	btn_rm_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.remove_directive(sel[0])
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_rm_queue_list)
 	var btn_tg_queue_list := Button.new()
 	btn_tg_queue_list.text = "✓"
 	btn_tg_queue_list.focus_mode = Control.FOCUS_NONE
 	btn_tg_queue_list.add_theme_font_override("font", mono_font)
-	btn_tg_queue_list.pressed.connect(func(): action_clicked.emit("TOGGLE_SELECT"))
+	btn_tg_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			self._queue.toggle_selection(sel[0])
+			list_queue_list.select(sel[0])
+	)
 	bar_queue_list.add_child(btn_tg_queue_list)
 	box_queue_list.add_child(bar_queue_list)
 	add_child(box_queue_list)
@@ -111,9 +132,11 @@ func build_ui() -> void:
 	btn_btn_select_all.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_select_all.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	btn_btn_select_all.add_theme_font_override("font", mono_font)
-	btn_btn_select_all.pressed.connect(func(): action_clicked.emit("SELECT_ALL"))
+	btn_btn_select_all.pressed.connect(func(): if "_queue" in self: self._queue.toggle_all())
 	_value_labels["btn_select_all"] = btn_btn_select_all
 	add_child(btn_btn_select_all)
+
+	_queue.queue_changed.connect(_on_queue_changed)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("queue_list") and data.has("staged_queue"):
@@ -123,3 +146,23 @@ func bind_data(data: Dictionary) -> void:
 			var items: Array = data.get("staged_queue", [])
 			for item in items:
 				ctrl.add_item(str(item))
+
+func add_directive(directive: Dictionary) -> void:
+	_queue.add_directive(directive)
+
+func get_staged_directives() -> Array[Dictionary]:
+	return _queue.get_staged_directives()
+
+func consume_selected_directives() -> Array[Dictionary]:
+	return _queue.consume_selected_directives()
+
+func clear_staged_directives() -> void:
+	_queue.clear()
+
+func _on_queue_changed(display_lines: Array, _selected_index: int) -> void:
+	if _value_labels.has("queue_list"):
+		var lst = _value_labels["queue_list"]
+		if lst is ItemList:
+			lst.clear()
+			for line in display_lines:
+				lst.add_item(line)

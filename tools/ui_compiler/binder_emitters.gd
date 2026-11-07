@@ -17,30 +17,41 @@ static func emit_binding_logic(row: Dictionary) -> Array[String]:
 
 	# 1. Specialized Control: HEADER_BLOCK
 	if r_type == "HEADER_BLOCK":
-		lines.append("\tif _value_labels.has(\"" + r_id + "_title\") and data.has(\"" + f_name + "\"):")
-		lines.append("\t\t_value_labels[\"" + r_id + "_title\"].text = str(data.get(\"" + f_name + "\", \"--- UNNAMED ---\")).to_upper()")
+		lines.append("\tif _value_labels.has(\"" + r_id + "_title\"):")
+		lines.append("\t\tif data.has(\"" + f_name + "\") and data[\"" + f_name + "\"] != null:")
+		lines.append("\t\t\t_value_labels[\"" + r_id + "_title\"].text = str(data[\"" + f_name + "\"]).to_upper()")
+		lines.append("\t\telse:")
+		lines.append("\t\t\t_value_labels[\"" + r_id + "_title\"].text = \"--- UNNAMED ---\"")
+
 		if row.has("subtitle_field"):
 			var sub_field := str(row.get("subtitle_field"))
-			lines.append("\tif _value_labels.has(\"" + r_id + "_subtitle\") and data.has(\"" + sub_field + "\"):")
-			lines.append("\t\t_value_labels[\"" + r_id + "_subtitle\"].text = str(data.get(\"" + sub_field + "\", \"\")).to_upper()")
+			lines.append("\tif _value_labels.has(\"" + r_id + "_subtitle\"):")
+			lines.append("\t\tif data.has(\"" + sub_field + "\") and data[\"" + sub_field + "\"] != null:")
+			lines.append("\t\t\t_value_labels[\"" + r_id + "_subtitle\"].text = str(data[\"" + sub_field + "\"]).to_upper()")
+			lines.append("\t\telse:")
+			lines.append("\t\t\t_value_labels[\"" + r_id + "_subtitle\"].text = \"\"")
 		return lines
 
-	lines.append("\tif _value_labels.has(\"" + r_id + "\") and data.has(\"" + f_name + "\"):")
+	lines.append("\tif _value_labels.has(\"" + r_id + "\"):")
 	lines.append("\t\tvar ctrl = _value_labels[\"" + r_id + "\"]")
 
 	# 2. Specialized Control: SPIN_INPUT
 	if r_type == "SPIN_INPUT":
 		lines.append("\t\tif ctrl is SpinBox:")
-		lines.append("\t\t\tctrl.value = float(data[\"" + f_name + "\"])")
+		lines.append("\t\t\tif data.has(\"" + f_name + "\") and data[\"" + f_name + "\"] != null:")
+		lines.append("\t\t\t\tctrl.value = float(data[\"" + f_name + "\"])")
+		lines.append("\t\t\telse:")
+		lines.append("\t\t\t\tctrl.value = " + str(row.get("default_value", 0)))
 		return lines
 
 	# 3. Specialized Control: ITEM_LIST / LIST
 	if r_type == "ITEM_LIST" or r_type == "LIST":
 		lines.append("\t\tif ctrl is ItemList:")
 		lines.append("\t\t\tctrl.clear()")
-		lines.append("\t\t\tvar items: Array = data.get(\"" + f_name + "\", [])")
-		lines.append("\t\t\tfor item in items:")
-		lines.append("\t\t\t\tctrl.add_item(str(item))")
+		lines.append("\t\t\tif data.has(\"" + f_name + "\") and data[\"" + f_name + "\"] is Array:")
+		lines.append("\t\t\t\tvar items: Array = data[\"" + f_name + "\"]")
+		lines.append("\t\t\t\tfor item in items:")
+		lines.append("\t\t\t\t\tctrl.add_item(str(item))")
 		return lines
 
 	# 4. Specialized Control: LINKED_LIST / CIVIC_SUMMARY
@@ -95,23 +106,25 @@ static func emit_binding_logic(row: Dictionary) -> Array[String]:
 		lines.append("\t\t\t\t\tctrl.add_child(btn)")
 		return lines
 
-	# 5. Null Guard for Standard Controls
-	lines.append("\t\tif data[\"" + f_name + "\"] == null:")
+	# 5. Null or Missing Guard for Standard Metric Controls (Snapshot Reset)
+	lines.append("\t\tif not data.has(\"" + f_name + "\") or data[\"" + f_name + "\"] == null:")
 	lines.append("\t\t\tctrl.text = tr(\"UI_INTEL_MASKED_BLANK\")")
 	lines.append("\t\telse:")
 
-	# 6. Dynamic Locale & Era-Driven Formats
+	# 6. Dynamic Locale & Era-Driven Formats (delegated to ui_strings.csv)
 	match fmt:
 		"CURRENCY":
-			lines.append("\t\t\tvar num_str := String.num(float(data[\"" + f_name + "\"]), 2)")
-			lines.append("\t\t\tctrl.text = tr(\"FMT_CURRENCY\").replace(\"{val}\", num_str) + \"" + suffix + "\"")
+			lines.append("\t\t\tvar val_str := \"%.2f\" % float(data[\"" + f_name + "\"])")
+			lines.append("\t\t\tctrl.text = tr(\"FMT_CURRENCY\").replace(\"{val}\", val_str) + \"" + suffix + "\"")
 		"PERCENT":
-			lines.append("\t\t\tvar pct_str := String.num(float(data[\"" + f_name + "\"]) * 100.0, 1)")
-			lines.append("\t\t\tctrl.text = tr(\"FMT_PERCENT\").replace(\"{val}\", pct_str) + \"" + suffix + "\"")
+			lines.append("\t\t\tvar val_str := String.num(float(data[\"" + f_name + "\"]) * 100.0, 1)")
+			lines.append("\t\t\tctrl.text = tr(\"FMT_PERCENT\").replace(\"{val}\", val_str) + \"" + suffix + "\"")
 		"INT":
-			lines.append("\t\t\tctrl.text = str(int(data[\"" + f_name + "\"])) + \"" + suffix + "\"")
+			lines.append("\t\t\tvar val_str := str(int(data[\"" + f_name + "\"]))")
+			lines.append("\t\t\tctrl.text = tr(\"FMT_INT\").replace(\"{val}\", val_str) + \"" + suffix + "\"")
 		"FLOAT":
-			lines.append("\t\t\tctrl.text = String.num(float(data[\"" + f_name + "\"]), 1) + \"" + suffix + "\"")
+			lines.append("\t\t\tvar val_str := String.num(float(data[\"" + f_name + "\"]), 1)")
+			lines.append("\t\t\tctrl.text = tr(\"FMT_FLOAT\").replace(\"{val}\", val_str) + \"" + suffix + "\"")
 		"DATE":
 			lines.append("\t\t\tvar raw_date = data[\"" + f_name + "\"]")
 			lines.append("\t\t\tif raw_date is int or raw_date is float:")

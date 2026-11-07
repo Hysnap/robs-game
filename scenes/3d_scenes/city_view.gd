@@ -149,39 +149,40 @@ func _setup_compiled_shell_host_views() -> void:
 
 	# B. Mount Navigation Spine
 	var nav_class = load("res://generated/ui/gen_navigation_bar.gd")
-	if nav_class:
-		view_host.set_navigation_component(nav_class.new())
+	assert(nav_class != null, "FATAL: [CityView] Generated UI missing: gen_navigation_bar.gd")
+	view_host.set_navigation_component(nav_class.new())
 
 	# C. Register Compiled Content Views
 	var docket_class = load("res://generated/ui/gen_district_docket.gd")
-	if docket_class:
-		view_host.register_view("DOSSIER", docket_class.new())
+	assert(docket_class != null, "FATAL: [CityView] Generated UI missing: gen_district_docket.gd")
+	view_host.register_view("DOSSIER", docket_class.new())
 
 	var cashbook_class = load("res://generated/ui/gen_cashbook_ledger.gd")
-	if cashbook_class:
-		view_host.register_view("FINANCE", cashbook_class.new())
+	assert(cashbook_class != null, "FATAL: [CityView] Generated UI missing: gen_cashbook_ledger.gd")
+	view_host.register_view("FINANCE", cashbook_class.new())
 
 	var diary_class = load("res://generated/ui/gen_diary_log.gd")
-	if diary_class:
-		view_host.register_view("DIARY", diary_class.new())
+	assert(diary_class != null, "FATAL: [CityView] Generated UI missing: gen_diary_log.gd")
+	view_host.register_view("DIARY", diary_class.new())
 
 	var roster_class = load("res://generated/ui/gen_roster_docket.gd")
-	if roster_class:
-		view_host.register_view("ROSTER", roster_class.new())
+	assert(roster_class != null, "FATAL: [CityView] Generated UI missing: gen_roster_docket.gd")
+	view_host.register_view("ROSTER", roster_class.new())
 
 	# Sub-Docket Inspection Views
 	var estab_class = load("res://generated/ui/gen_establishment_docket.gd")
-	if estab_class:
-		view_host.register_view("ESTABLISHMENT_DOCKET", estab_class.new())
+	assert(estab_class != null, "FATAL: [CityView] Generated UI missing: gen_establishment_docket.gd")
+	view_host.register_view("ESTABLISHMENT_DOCKET", estab_class.new())
 
 	var res_class = load("res://generated/ui/gen_residential_docket.gd")
-	if res_class:
-		view_host.register_view("RESIDENTIAL_DOCKET", res_class.new())
+	assert(res_class != null, "FATAL: [CityView] Generated UI missing: gen_residential_docket.gd")
+	view_host.register_view("RESIDENTIAL_DOCKET", res_class.new())
 
 	# D. Mount Interactive Action Planner into ACTION slot
 	var action_planner_view: Control = null
 	var planner_class = load("res://generated/ui/gen_action_planner.gd")
-	if planner_class and outer_shell:
+	assert(planner_class != null, "FATAL: [CityView] Generated UI missing: gen_action_planner.gd")
+	if outer_shell:
 		action_planner_view = planner_class.new()
 		outer_shell.mount_view("ACTION", action_planner_view)
 
@@ -252,9 +253,7 @@ func _hydrate_roster_view() -> void:
 
 	var ws: Dictionary = gs.world_state
 	var staff_dict: Dictionary = ws.get("staff", {})
-	var districts: Dictionary = ws.get("districts", {})
 	var home_id: String = str(ws.get("operations", {}).get("home_district_id", "block_0_0"))
-	var home_name: String = str(districts.get(home_id, {}).get("display_name", "Headquarters Area"))
 
 	var crew_members: Array[Dictionary] = []
 	for staff_id in staff_dict.keys():

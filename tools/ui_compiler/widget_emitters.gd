@@ -17,9 +17,11 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			var sub_sz: int = int(row.get("subtitle_font_size", 12))
 			lines.append("\t# --- Header Block ---")
 			lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
+			lines.append("\tbox_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\tbox_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tbox_" + r_id + ".add_theme_constant_override(\"separation\", 0)")
 			lines.append("\tvar title_" + r_id + " := Label.new()")
+			lines.append("\ttitle_" + r_id + ".name = \"" + r_id + "_title\"")
 			lines.append("\ttitle_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			if wrap_enabled:
 				lines.append("\ttitle_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
@@ -31,6 +33,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			
 			if row.has("subtitle_field"):
 				lines.append("\tvar sub_" + r_id + " := Label.new()")
+				lines.append("\tsub_" + r_id + ".name = \"" + r_id + "_subtitle\"")
 				lines.append("\tsub_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 				if wrap_enabled:
 					lines.append("\tsub_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
@@ -46,6 +49,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"BADGE_STATUS":
 			lines.append("\tvar badge_" + r_id + " := PanelContainer.new()")
+			lines.append("\tbadge_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\tbadge_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar val_" + r_id + " := Label.new()")
 			lines.append("\tval_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
@@ -60,6 +64,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"CIVIC_SUMMARY", "LINKED_LIST":
 			lines.append("\tvar civic_box_" + r_id + " := VBoxContainer.new()")
+			lines.append("\tcivic_box_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\tcivic_box_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tcivic_box_" + r_id + ".add_theme_constant_override(\"separation\", 2)")
 			lines.append("\t_value_labels[\"" + r_id + "\"] = civic_box_" + r_id)
@@ -67,6 +72,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"BUTTON":
 			lines.append("\tvar btn_" + r_id + " := Button.new()")
+			lines.append("\tbtn_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\tbtn_" + r_id + ".text = tr(\"" + r_token + "\")")
 			lines.append("\tbtn_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tbtn_" + r_id + ".alignment = HORIZONTAL_ALIGNMENT_LEFT")
@@ -75,10 +81,14 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tbtn_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			var action_signal: String = row.get("action_signal", "action_clicked")
 			var emit_args: String = str(row.get("emit_args", ""))
-			if not emit_args.is_empty():
+			
+			if emit_args == "\"SELECT_ALL\"":
+				lines.append("\tbtn_" + r_id + ".pressed.connect(func(): if \"_queue\" in self: self._queue.toggle_all())")
+			elif not emit_args.is_empty():
 				lines.append("\tbtn_" + r_id + ".pressed.connect(func(): " + action_signal + ".emit(" + emit_args + "))")
 			else:
 				lines.append("\tbtn_" + r_id + ".pressed.connect(func(): " + action_signal + ".emit())")
+				
 			lines.append("\t_value_labels[\"" + r_id + "\"] = btn_" + r_id)
 			lines.append("\tadd_child(btn_" + r_id + ")\n")
 
@@ -88,9 +98,11 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 			if is_reorderable:
 				lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
+				lines.append("\tbox_" + r_id + ".name = \"" + r_id + "\"")
 				lines.append("\tbox_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 				lines.append("\tbox_" + r_id + ".add_theme_constant_override(\"separation\", 4)")
 				lines.append("\tvar list_" + r_id + " := ItemList.new()")
+				lines.append("\tlist_" + r_id + ".name = \"" + r_id + "_list\"")
 				lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
 				lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 				lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
@@ -106,7 +118,12 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 				lines.append("\tbtn_up_" + r_id + ".text = \"▲\"")
 				lines.append("\tbtn_up_" + r_id + ".focus_mode = Control.FOCUS_NONE")
 				lines.append("\tbtn_up_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-				lines.append("\tbtn_up_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"MOVE_UP\"))")
+				lines.append("\tbtn_up_" + r_id + ".pressed.connect(func():")
+				lines.append("\t\tvar sel = list_" + r_id + ".get_selected_items()")
+				lines.append("\t\tif sel.size() > 0 and \"_queue\" in self:")
+				lines.append("\t\t\tvar n_idx = self._queue.move_directive(sel[0], -1)")
+				lines.append("\t\t\tif n_idx >= 0: list_" + r_id + ".select(n_idx)")
+				lines.append("\t)")
 				lines.append("\tbar_" + r_id + ".add_child(btn_up_" + r_id + ")")
 
 				# Button ▼ (Move Down)
@@ -114,7 +131,12 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 				lines.append("\tbtn_dn_" + r_id + ".text = \"▼\"")
 				lines.append("\tbtn_dn_" + r_id + ".focus_mode = Control.FOCUS_NONE")
 				lines.append("\tbtn_dn_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-				lines.append("\tbtn_dn_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"MOVE_DOWN\"))")
+				lines.append("\tbtn_dn_" + r_id + ".pressed.connect(func():")
+				lines.append("\t\tvar sel = list_" + r_id + ".get_selected_items()")
+				lines.append("\t\tif sel.size() > 0 and \"_queue\" in self:")
+				lines.append("\t\t\tvar n_idx = self._queue.move_directive(sel[0], 1)")
+				lines.append("\t\t\tif n_idx >= 0: list_" + r_id + ".select(n_idx)")
+				lines.append("\t)")
 				lines.append("\tbar_" + r_id + ".add_child(btn_dn_" + r_id + ")")
 
 				# Button ✖ (Remove Order)
@@ -122,7 +144,12 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 				lines.append("\tbtn_rm_" + r_id + ".text = \"✖\"")
 				lines.append("\tbtn_rm_" + r_id + ".focus_mode = Control.FOCUS_NONE")
 				lines.append("\tbtn_rm_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-				lines.append("\tbtn_rm_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"REMOVE_ORDER\"))")
+				lines.append("\tbtn_rm_" + r_id + ".pressed.connect(func():")
+				lines.append("\t\tvar sel = list_" + r_id + ".get_selected_items()")
+				lines.append("\t\tif sel.size() > 0 and \"_queue\" in self:")
+				lines.append("\t\t\tvar n_idx = self._queue.remove_directive(sel[0])")
+				lines.append("\t\t\tif n_idx >= 0: list_" + r_id + ".select(n_idx)")
+				lines.append("\t)")
 				lines.append("\tbar_" + r_id + ".add_child(btn_rm_" + r_id + ")")
 
 				# Button ✓ (Toggle Select)
@@ -130,13 +157,19 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 				lines.append("\tbtn_tg_" + r_id + ".text = \"✓\"")
 				lines.append("\tbtn_tg_" + r_id + ".focus_mode = Control.FOCUS_NONE")
 				lines.append("\tbtn_tg_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
-				lines.append("\tbtn_tg_" + r_id + ".pressed.connect(func(): action_clicked.emit(\"TOGGLE_SELECT\"))")
+				lines.append("\tbtn_tg_" + r_id + ".pressed.connect(func():")
+				lines.append("\t\tvar sel = list_" + r_id + ".get_selected_items()")
+				lines.append("\t\tif sel.size() > 0 and \"_queue\" in self:")
+				lines.append("\t\t\tself._queue.toggle_selection(sel[0])")
+				lines.append("\t\t\tlist_" + r_id + ".select(sel[0])")
+				lines.append("\t)")
 				lines.append("\tbar_" + r_id + ".add_child(btn_tg_" + r_id + ")")
 
 				lines.append("\tbox_" + r_id + ".add_child(bar_" + r_id + ")")
 				lines.append("\tadd_child(box_" + r_id + ")\n")
 			else:
 				lines.append("\tvar list_" + r_id + " := ItemList.new()")
+				lines.append("\tlist_" + r_id + ".name = \"" + r_id + "\"")
 				lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
 				lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 				lines.append("\tlist_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
@@ -145,6 +178,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"OPTION_DROPDOWN", "DROPDOWN":
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
+			lines.append("\trow_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\trow_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
@@ -155,6 +189,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
 			lines.append("\tvar opt_" + r_id + " := OptionButton.new()")
+			lines.append("\topt_" + r_id + ".name = \"" + r_id + "_opt\"")
 			lines.append("\topt_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\topt_" + r_id + ".add_theme_font_override(\"font\", mono_font)")
 			var opts: Array = row.get("options", [])
@@ -166,6 +201,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		"SPIN_INPUT":
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
+			lines.append("\trow_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\trow_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
@@ -176,6 +212,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
 			lines.append("\tvar spin_" + r_id + " := SpinBox.new()")
+			lines.append("\tspin_" + r_id + ".name = \"" + r_id + "_spin\"")
 			lines.append("\tspin_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tspin_" + r_id + ".min_value = " + str(row.get("min", 1)))
 			lines.append("\tspin_" + r_id + ".max_value = " + str(row.get("max", 100)))
@@ -187,6 +224,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 
 		_: # Default: TEXT_METRIC
 			lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
+			lines.append("\trow_" + r_id + ".name = \"" + r_id + "\"")
 			lines.append("\trow_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 			lines.append("\tvar lbl_" + r_id + " := Label.new()")
 			lines.append("\tlbl_" + r_id + ".text = tr(\"" + r_token + "\")")
@@ -197,6 +235,7 @@ static func emit_widget_build(row: Dictionary) -> Array[String]:
 			lines.append("\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", clr_muted)")
 			lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
 			lines.append("\tvar val_" + r_id + " := Label.new()")
+			lines.append("\tval_" + r_id + ".name = \"" + r_id + "_value\"")
 			lines.append("\tval_" + r_id + ".horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT")
 			if wrap_enabled:
 				lines.append("\tval_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")

@@ -1,8 +1,7 @@
+# res://scenes/ui/feedback/desktop_slip_stack.gd
 class_name DesktopSlipStack
 extends PanelContainer
 
-signal slip_filed(slip_data: Dictionary, destination: String)
-signal slip_discarded(slip_data: Dictionary)
 signal top_card_action(action_id: String, slip_data: Dictionary)
 signal stack_count_changed(unread_count: int)
 
@@ -176,7 +175,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	# 1. Header
 	var title_text: String = tr(palette.get("title_token", palette.get("title", "MEMO NOTE")))
 	var hdr := Label.new()
-	hdr.text = "%s • WK %02d" % [title_text, int(slip.get("tick", 1))]
+	hdr.text = "%s 窶｢ WK %02d" % [title_text, int(slip.get("tick", 1))]
 	hdr.add_theme_font_override("font", mono_font)
 	hdr.add_theme_font_size_override("font_size", 9)
 	hdr.add_theme_color_override("font_color", ink_color)
@@ -220,13 +219,13 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		dest_opt.add_theme_font_override("font", mono_font)
 		dest_opt.add_theme_font_size_override("font_size", 9)
 		dest_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		dest_opt.add_item("📅 " + tr("UI_DEST_DIARY"), 0)
+		dest_opt.add_item("套 " + tr("UI_DEST_DIARY"), 0)
 		dest_opt.set_item_metadata(0, "DIARY")
-		dest_opt.add_item("📁 " + tr("UI_DEST_DOSSIER"), 1)
+		dest_opt.add_item("刀 " + tr("UI_DEST_DOSSIER"), 1)
 		dest_opt.set_item_metadata(1, "DOSSIER")
-		dest_opt.add_item("👥 " + tr("UI_DEST_ROSTER"), 2)
+		dest_opt.add_item("則 " + tr("UI_DEST_ROSTER"), 2)
 		dest_opt.set_item_metadata(2, "ROSTER")
-		dest_opt.add_item("💷 " + tr("UI_DEST_ACCOUNTS"), 3)
+		dest_opt.add_item("長 " + tr("UI_DEST_ACCOUNTS"), 3)
 		dest_opt.set_item_metadata(3, "FINANCE")
 		
 		var requested_destination := str(slip.get("destination", "DIARY")).to_upper()
@@ -237,7 +236,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		routing_box.add_child(dest_opt)
 
 		var btn_file := Button.new()
-		btn_file.text = "📌 " + tr("UI_BTN_FILE")
+		btn_file.text = "東 " + tr("UI_BTN_FILE")
 		btn_file.focus_mode = Control.FOCUS_NONE
 		btn_file.add_theme_font_override("font", mono_font)
 		btn_file.add_theme_font_size_override("font_size", 9)
@@ -248,7 +247,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		routing_box.add_child(btn_file)
 
 		var btn_discard := Button.new()
-		btn_discard.text = "🗑 " + tr("UI_BTN_DISCARD")
+		btn_discard.text = "卵 " + tr("UI_BTN_DISCARD")
 		btn_discard.focus_mode = Control.FOCUS_NONE
 		btn_discard.add_theme_font_override("font", mono_font)
 		btn_discard.add_theme_font_size_override("font_size", 9)
@@ -263,14 +262,12 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
 	slip["destination"] = destination
-	slip_filed.emit(slip, destination)
 	top_card_action.emit("FILE", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 
 func _on_discard_pressed(slip: Dictionary) -> void:
 	_pending_slips.pop_front()
-	slip_discarded.emit(slip)
 	top_card_action.emit("DISCARD", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
