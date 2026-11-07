@@ -44,20 +44,21 @@ func _init() -> void:
 	assert(occupants_list != null, "occupants_list missing in hierarchy!")
 	SystemLogger.log_info("  ✓ GenResidentialDocket instantiated and all control nodes resolved.")
 
-	# 3. Test Signal Routing on Back Button
+	# 3. Test Signal Routing on Back Button (Fixed Lambda Scope Tracking)
 	SystemLogger.log_info("\n[STEP 3] Testing route_requested signal dispatch on back button...")
-	var signal_received := false
-	var received_domain := ""
-	var received_page := ""
+	var tracker := { "received": false, "domain": "", "page": "" }
+	
 	view.route_requested.connect(func(domain: String, page: String):
-		signal_received = true
-		received_domain = domain
-		received_page = page
+		tracker["received"] = true
+		tracker["domain"] = domain
+		tracker["page"] = page
 	)
+	
 	back_btn.pressed.emit()
-	assert(signal_received, "Failed to receive route_requested signal when back button pressed!")
-	assert(received_domain == "DOSSIER", "Expected domain 'DOSSIER', got: %s" % received_domain)
-	assert(received_page == "", "Expected empty target page, got: %s" % received_page)
+	
+	assert(tracker["received"], "Failed to receive route_requested signal when back button pressed!")
+	assert(tracker["domain"] == "DOSSIER", "Expected domain 'DOSSIER', got: %s" % tracker["domain"])
+	assert(tracker["page"] == "", "Expected empty target page, got: %s" % tracker["page"])
 	SystemLogger.log_info("  ✓ Back button route signal emitted cleanly ('DOSSIER').")
 
 	# 4. Test Snapshot Data Binding
@@ -107,3 +108,4 @@ func _deep_free_node(node: Node) -> void:
 	for child in node.get_children():
 		_deep_free_node(child)
 	node.free()
+	

@@ -1,10 +1,7 @@
 {
   "_meta": {
     "target_class": "GenNavBar",
-    "extends": "VBoxContainer",
-    "signals": [
-      "action_clicked(action_code: String, payload: Dictionary)"
-    ]
+    "extends": "VBoxContainer"
   },
   "sections": [
     {
@@ -14,7 +11,6 @@
           "id": "diary",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_DIARY",
-          "default_text": "DIARY",
           "action_signal": "action_clicked",
           "emit_args": "\"NAV_ROUTE\", {\"domain\": \"DIARY\"}"
         },
@@ -22,7 +18,6 @@
           "id": "dossier",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_DOSSIER",
-          "default_text": "DOSSIER",
           "action_signal": "action_clicked",
           "emit_args": "\"NAV_ROUTE\", {\"domain\": \"DOSSIER\"}"
         },
@@ -30,7 +25,6 @@
           "id": "roster",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_ROSTER",
-          "default_text": "ROSTER",
           "action_signal": "action_clicked",
           "emit_args": "\"NAV_ROUTE\", {\"domain\": \"ROSTER\"}"
         },
@@ -38,10 +32,16 @@
           "id": "finance",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_FINANCE",
-          "default_text": "ACCOUNTS",
           "action_signal": "action_clicked",
           "emit_args": "\"NAV_ROUTE\", {\"domain\": \"FINANCE\"}"
         }
+      ]
+    },
+    {
+      "id": "nav_bar_signals",
+      "type": "SIGNALS",
+      "signals": [
+        "action_clicked(action_code: String, payload: Dictionary)"
       ]
     }
   ]

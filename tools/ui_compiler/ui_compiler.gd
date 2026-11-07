@@ -43,19 +43,22 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	var target_filename := "gen_" + schema_path.get_file().replace(".json", ".gd")
 	var out_path := OUTPUT_DIR + target_filename
 
-	# 1. Harvest and Deduplicate Signals
+	# 1. Harvest and Deduplicate Signals from Sections (NO _meta access)
 	var declared_signals: Dictionary = {}
 	var signal_defs: Array[String] = []
 
-	for sig in meta.get("signals", []):
-		var sig_str: String = str(sig).strip_edges()
-		var base_name: String = sig_str.split("(")[0].strip_edges()
-		if not declared_signals.has(base_name):
-			declared_signals[base_name] = true
-			signal_defs.append(sig_str)
+	var sections: Array = schema.get("sections", [])
+	for sec in sections:
+		var s_type: String = sec.get("type", "").to_upper()
+		if s_type == "SIGNALS":
+			for sig in sec.get("signals", []):
+				var sig_str: String = str(sig).strip_edges()
+				var base_name: String = sig_str.split("(")[0].strip_edges()
+				if not declared_signals.has(base_name):
+					declared_signals[base_name] = true
+					signal_defs.append(sig_str)
 
 	# Auto-discover signals needed by interactive primitives
-	var sections: Array = schema.get("sections", [])
 	for sec in sections:
 		for row in sec.get("rows", []):
 			var r_type: String = row.get("type", "").to_upper()
@@ -106,6 +109,11 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	for sec in sections:
 		var s_id: String = sec.get("id", "sec")
 		var s_type: String = sec.get("type", "").to_upper()
+		
+		# Skip signal sections during visual UI construction
+		if s_type == "SIGNALS":
+			continue
+
 		var s_token: String = sec.get("header_token", "")
 		var s_def: String = sec.get("header_default", s_id.capitalize())
 
@@ -166,6 +174,8 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	lines.append("func bind_data(data: Dictionary) -> void:")
 	var binding_lines: Array[String] = []
 	for sec in sections:
+		if sec.get("type", "").to_upper() == "SIGNALS":
+			continue
 		for row in sec.get("rows", []):
 			binding_lines.append_array(UI_BINDER_EMITTERS.emit_binding_logic(row))
 

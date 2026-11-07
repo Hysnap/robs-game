@@ -44,16 +44,12 @@ func build_ui() -> void:
 	lbl_liquid_cash.text = tr("UI_LBL_LIQUID_CASH")
 	lbl_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_liquid_cash.add_theme_font_override("font", mono_font)
-	lbl_liquid_cash.add_theme_color_override("font_color", clr_muted)
 	row_liquid_cash.add_child(lbl_liquid_cash)
 	var val_liquid_cash := Label.new()
 	val_liquid_cash.name = "liquid_cash_value"
 	val_liquid_cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_liquid_cash.add_theme_font_override("font", mono_font)
-	val_liquid_cash.add_theme_color_override("font_color", clr_black)
 	row_liquid_cash.add_child(val_liquid_cash)
 	_value_labels["liquid_cash"] = val_liquid_cash
 	add_child(row_liquid_cash)
@@ -65,16 +61,12 @@ func build_ui() -> void:
 	lbl_filed_receipts_total.text = tr("UI_LBL_EXPENSE_TOTAL")
 	lbl_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_filed_receipts_total.add_theme_font_override("font", mono_font)
-	lbl_filed_receipts_total.add_theme_color_override("font_color", clr_muted)
 	row_filed_receipts_total.add_child(lbl_filed_receipts_total)
 	var val_filed_receipts_total := Label.new()
 	val_filed_receipts_total.name = "filed_receipts_total_value"
 	val_filed_receipts_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_filed_receipts_total.add_theme_font_override("font", mono_font)
-	val_filed_receipts_total.add_theme_color_override("font_color", clr_black)
 	row_filed_receipts_total.add_child(val_filed_receipts_total)
 	_value_labels["filed_receipts_total"] = val_filed_receipts_total
 	add_child(row_filed_receipts_total)

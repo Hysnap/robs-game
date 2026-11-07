@@ -44,16 +44,12 @@ func build_ui() -> void:
 	lbl_current_week.text = tr("UI_LBL_CURRENT_WEEK")
 	lbl_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_current_week.add_theme_font_override("font", mono_font)
-	lbl_current_week.add_theme_color_override("font_color", clr_muted)
 	row_current_week.add_child(lbl_current_week)
 	var val_current_week := Label.new()
 	val_current_week.name = "current_week_value"
 	val_current_week.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_current_week.add_theme_font_override("font", mono_font)
-	val_current_week.add_theme_color_override("font_color", clr_black)
 	row_current_week.add_child(val_current_week)
 	_value_labels["current_week"] = val_current_week
 	add_child(row_current_week)
@@ -65,16 +61,12 @@ func build_ui() -> void:
 	lbl_dispatched_count.text = tr("UI_LBL_DISPATCH_COUNT")
 	lbl_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_dispatched_count.add_theme_font_override("font", mono_font)
-	lbl_dispatched_count.add_theme_color_override("font_color", clr_muted)
 	row_dispatched_count.add_child(lbl_dispatched_count)
 	var val_dispatched_count := Label.new()
 	val_dispatched_count.name = "dispatched_count_value"
 	val_dispatched_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_dispatched_count.add_theme_font_override("font", mono_font)
-	val_dispatched_count.add_theme_color_override("font_color", clr_black)
 	row_dispatched_count.add_child(val_dispatched_count)
 	_value_labels["dispatched_count"] = val_dispatched_count
 	add_child(row_dispatched_count)

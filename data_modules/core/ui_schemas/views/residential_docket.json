@@ -2,10 +2,7 @@
   "_meta": {
     "target_class": "GenResidentialDocket",
     "extends": "VBoxContainer",
-    "description": "Domestic tenancy and household census docket inspector",
-    "signals": [
-      "route_requested(domain_token: String, target_page_name: String)"
-    ]
+    "description": "Domestic tenancy and household census docket inspector"
   },
   "sections": [
     {
@@ -27,11 +24,7 @@
           "id": "tenancy_header",
           "type": "HEADER_BLOCK",
           "field": "name",
-          "subtitle_field": "residence_type",
-          "title_font_size": 18,
-          "subtitle_font_size": 12,
-          "show_separator": true,
-          "autowrap": true
+          "subtitle_field": "residence_type"
         }
       ]
     },
@@ -73,6 +66,13 @@
           "min_height": 120
         }
       ]
-    }
+    },
+    {
+    "id": "residential_doc_signals",
+    "type": "SIGNALS",
+    "signals": [
+    "route_requested(domain_token: String, target_page_name: String)"
+    ]
+  }
   ]
 }

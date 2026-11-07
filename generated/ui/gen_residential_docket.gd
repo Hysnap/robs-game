@@ -30,8 +30,7 @@ func build_ui() -> void:
 	btn_btn_back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_back.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_back.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_back.add_theme_font_override("font", mono_font)
-	btn_btn_back.pressed.connect(func(): route_requested.emit("DOSSIER", ""))
+	btn_btn_back.pressed.connect(func(): self.route_requested.emit("DOSSIER", ""))
 	_value_labels["btn_back"] = btn_btn_back
 	add_child(btn_btn_back)
 
@@ -43,19 +42,15 @@ func build_ui() -> void:
 	var title_tenancy_header := Label.new()
 	title_tenancy_header.name = "tenancy_header_title"
 	title_tenancy_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_tenancy_header.theme_type_variation = &"HeaderTitle"
 	title_tenancy_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title_tenancy_header.add_theme_font_override("font", mono_font)
-	title_tenancy_header.add_theme_font_size_override("font_size", 18)
-	title_tenancy_header.add_theme_color_override("font_color", clr_blue)
 	box_tenancy_header.add_child(title_tenancy_header)
 	_value_labels["tenancy_header_title"] = title_tenancy_header
 	var sub_tenancy_header := Label.new()
 	sub_tenancy_header.name = "tenancy_header_subtitle"
 	sub_tenancy_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sub_tenancy_header.theme_type_variation = &"HeaderSubtitle"
 	sub_tenancy_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub_tenancy_header.add_theme_font_override("font", mono_font)
-	sub_tenancy_header.add_theme_font_size_override("font_size", 12)
-	sub_tenancy_header.add_theme_color_override("font_color", clr_muted)
 	box_tenancy_header.add_child(sub_tenancy_header)
 	_value_labels["tenancy_header_subtitle"] = sub_tenancy_header
 	box_tenancy_header.add_child(HSeparator.new())
@@ -83,16 +78,12 @@ func build_ui() -> void:
 	lbl_door_num.text = tr("UI_LBL_DOOR_NUMBER")
 	lbl_door_num.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_door_num.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_door_num.add_theme_font_override("font", mono_font)
-	lbl_door_num.add_theme_color_override("font_color", clr_muted)
 	row_door_num.add_child(lbl_door_num)
 	var val_door_num := Label.new()
 	val_door_num.name = "door_num_value"
 	val_door_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_door_num.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_door_num.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_door_num.add_theme_font_override("font", mono_font)
-	val_door_num.add_theme_color_override("font_color", clr_black)
 	row_door_num.add_child(val_door_num)
 	_value_labels["door_num"] = val_door_num
 	add_child(row_door_num)
@@ -104,16 +95,12 @@ func build_ui() -> void:
 	lbl_ward.text = tr("UI_LBL_DISTRICT_WARD")
 	lbl_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_ward.add_theme_font_override("font", mono_font)
-	lbl_ward.add_theme_color_override("font_color", clr_muted)
 	row_ward.add_child(lbl_ward)
 	var val_ward := Label.new()
 	val_ward.name = "ward_value"
 	val_ward.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_ward.add_theme_font_override("font", mono_font)
-	val_ward.add_theme_color_override("font_color", clr_black)
 	row_ward.add_child(val_ward)
 	_value_labels["ward"] = val_ward
 	add_child(row_ward)
@@ -125,16 +112,12 @@ func build_ui() -> void:
 	lbl_local_pub.text = tr("UI_LBL_LOCAL_TAPROOM")
 	lbl_local_pub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_local_pub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_local_pub.add_theme_font_override("font", mono_font)
-	lbl_local_pub.add_theme_color_override("font_color", clr_muted)
 	row_local_pub.add_child(lbl_local_pub)
 	var val_local_pub := Label.new()
 	val_local_pub.name = "local_pub_value"
 	val_local_pub.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_local_pub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_local_pub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_local_pub.add_theme_font_override("font", mono_font)
-	val_local_pub.add_theme_color_override("font_color", clr_black)
 	row_local_pub.add_child(val_local_pub)
 	_value_labels["local_pub"] = val_local_pub
 	add_child(row_local_pub)
@@ -158,7 +141,6 @@ func build_ui() -> void:
 	list_occupants_list.name = "occupants_list"
 	list_occupants_list.custom_minimum_size = Vector2(0, 120)
 	list_occupants_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list_occupants_list.add_theme_font_override("font", mono_font)
 	_value_labels["occupants_list"] = list_occupants_list
 	add_child(list_occupants_list)
 

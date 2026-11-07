@@ -30,8 +30,7 @@ func build_ui() -> void:
 	btn_diary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_diary.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_diary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_diary.add_theme_font_override("font", mono_font)
-	btn_diary.pressed.connect(func(): action_clicked.emit("NAV_ROUTE", {"domain": "DIARY"}))
+	btn_diary.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "DIARY"}))
 	_value_labels["diary"] = btn_diary
 	add_child(btn_diary)
 
@@ -41,8 +40,7 @@ func build_ui() -> void:
 	btn_dossier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_dossier.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_dossier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_dossier.add_theme_font_override("font", mono_font)
-	btn_dossier.pressed.connect(func(): action_clicked.emit("NAV_ROUTE", {"domain": "DOSSIER"}))
+	btn_dossier.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "DOSSIER"}))
 	_value_labels["dossier"] = btn_dossier
 	add_child(btn_dossier)
 
@@ -52,8 +50,7 @@ func build_ui() -> void:
 	btn_roster.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_roster.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_roster.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_roster.add_theme_font_override("font", mono_font)
-	btn_roster.pressed.connect(func(): action_clicked.emit("NAV_ROUTE", {"domain": "ROSTER"}))
+	btn_roster.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "ROSTER"}))
 	_value_labels["roster"] = btn_roster
 	add_child(btn_roster)
 
@@ -63,8 +60,7 @@ func build_ui() -> void:
 	btn_finance.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_finance.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_finance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_finance.add_theme_font_override("font", mono_font)
-	btn_finance.pressed.connect(func(): action_clicked.emit("NAV_ROUTE", {"domain": "FINANCE"}))
+	btn_finance.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "FINANCE"}))
 	_value_labels["finance"] = btn_finance
 	add_child(btn_finance)
 

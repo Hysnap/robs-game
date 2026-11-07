@@ -2,14 +2,9 @@
   "_meta": {
     "module_type": "ACTION_PLANNER",
     "target_class": "GenActionPlanner",
-    "extends": "VBoxContainer",
-    "has_action_queue": true,
-    "signals": [
-      "directive_staged(directive)",
-      "execute_shift_requested(staged_directives)",
-      "action_clicked(action_code)"
-    ]
+    "extends": "VBoxContainer"
   },
+  "has_action_queue": true,
   "sections": [
     {
       "id": "operational_docket",
@@ -44,6 +39,14 @@
           "emit_args": "\"SELECT_ALL\""
         }
       ]
+    },
+    {
+      "id": "action_planner_signals",
+      "signals": [
+      "directive_staged(directive)",
+      "execute_shift_requested(staged_directives)",
+      "action_clicked(action_code)"
+    ]
     }
   ]
 }
