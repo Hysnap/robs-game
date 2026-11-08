@@ -10,6 +10,7 @@ signal action_clicked(action_code)
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 var _value_labels: Dictionary = {}
+var _queue: ActionQueuePresenter = ActionQueuePresenter.new()
 
 func _init() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -132,6 +133,8 @@ func build_ui() -> void:
 	_value_labels["btn_select_all"] = btn_btn_select_all
 	add_child(btn_btn_select_all)
 
+	_queue.queue_changed.connect(_on_queue_changed)
+
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("queue_list"):
 		var ctrl = _value_labels["queue_list"]
@@ -141,3 +144,23 @@ func bind_data(data: Dictionary) -> void:
 				var items: Array = data["staged_queue"]
 				for item in items:
 					ctrl.add_item(str(item))
+
+func add_directive(directive: Dictionary) -> void:
+	_queue.add_directive(directive)
+
+func get_staged_directives() -> Array[Dictionary]:
+	return _queue.get_staged_directives()
+
+func consume_selected_directives() -> Array[Dictionary]:
+	return _queue.consume_selected_directives()
+
+func clear_staged_directives() -> void:
+	_queue.clear()
+
+func _on_queue_changed(display_lines: Array, _selected_index: int) -> void:
+	if _value_labels.has("queue_list"):
+		var lst = _value_labels["queue_list"]
+		if lst is ItemList:
+			lst.clear()
+			for line in display_lines:
+				lst.add_item(line)

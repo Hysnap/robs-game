@@ -221,6 +221,10 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		push_error("[DirectiveComposerController REJECTED] Target node ID (location) cannot be empty.")
 		return {}
 
+	var target_node_name: String = str(form_data.get("target_node_name", "")).strip_edges()
+	if target_node_name.is_empty():
+		target_node_name = target_node_id
+
 	var initiator_id: String = str(form_data.get("initiator_id", "PLAYER")).strip_edges()
 	if initiator_id.is_empty():
 		initiator_id = "PLAYER"
@@ -233,6 +237,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		"target_item": target_item,
 		"amount": amount,
 		"target_node_id": target_node_id,
+		"target_node_name": target_node_name,
 		"target_scope": str(form_data.get("target_scope", "DISTRICT")),
 		"config": {
 			"unit_cost": float(form_data.get("unit_cost", 0.0)),

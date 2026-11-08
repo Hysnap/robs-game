@@ -7,6 +7,8 @@ static func emit_build(row: Dictionary) -> Array[String]:
 	var lines: Array[String] = []
 	var r_id: String = row.get("id", "widget")
 	var wrap_enabled: bool = bool(row.get("autowrap", true))
+	var title_color_token: String = str(row.get("title_color", "")).strip_edges()
+	var subtitle_color_token: String = str(row.get("subtitle_color", "")).strip_edges()
 
 	lines.append("\t# --- Header Block ---")
 	lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
@@ -18,6 +20,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 	lines.append("\ttitle_" + r_id + ".name = \"" + r_id + "_title\"")
 	lines.append("\ttitle_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 	lines.append("\ttitle_" + r_id + ".theme_type_variation = &\"HeaderTitle\"")
+	if not title_color_token.is_empty():
+		lines.append(
+        	"\ttitle_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + title_color_token + "\"))"
+    	)
 	if wrap_enabled:
 		lines.append("\ttitle_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 	lines.append("\tbox_" + r_id + ".add_child(title_" + r_id + ")")
@@ -28,6 +34,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 		lines.append("\tsub_" + r_id + ".name = \"" + r_id + "_subtitle\"")
 		lines.append("\tsub_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 		lines.append("\tsub_" + r_id + ".theme_type_variation = &\"HeaderSubtitle\"")
+		if not subtitle_color_token.is_empty():
+			lines.append(
+	        	"\tsub_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + subtitle_color_token + "\"))"
+    		)
 		if wrap_enabled:
 			lines.append("\tsub_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 		lines.append("\tbox_" + r_id + ".add_child(sub_" + r_id + ")")

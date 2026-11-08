@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_CHEQUE",
+    "description": "Bank Cheque"
+  },
+  "id": "CHEQUE",
+  "display_name": "Cheque",
+  "base_cost": 1
+}

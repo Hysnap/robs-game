@@ -2,8 +2,8 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 4,
-    "scope_id": "CRIME_DURABLES_CASH_CHEQUES",
-    "display_scope": "Crime -> Durables -> Cash -> Cheques",
-    "description": "Establishes baseline properties for the Crime -> Durables -> Cash -> Cheques commodity scope."
+    "scope_id": "CORE_DURABLES_CASH_CHEQUES",
+    "display_scope": "CORE -> Durables -> Cash -> Cheques",
+    "description": "Establishes baseline properties for the Cheques commodity scope."
   }
 }

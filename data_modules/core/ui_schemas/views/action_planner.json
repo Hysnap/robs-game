@@ -9,6 +9,7 @@
     {
       "id": "operational_docket",
       "header_token": "UI_HDR_OPERATIONS",
+      "color": "body",
       "rows": [
         {
           "id": "btn_open_order_pad",
@@ -22,12 +23,14 @@
     {
       "id": "staging_ledger",
       "header_token": "UI_HDR_STAGED_QUEUE",
+      "color": "body",
       "rows": [
         {
           "id": "queue_list",
           "type": "ITEM_LIST",
           "token": "UI_LBL_QUEUED",
           "field": "staged_queue",
+          "has_action_queue": true,
           "reorderable": true,
           "min_height": 140
         },

@@ -8,12 +8,17 @@ static func emit_build(row: Dictionary) -> Array[String]:
 	var r_id: String = row.get("id", "widget")
 	var r_token: String = row.get("token", "")
 	var wrap_enabled: bool = bool(row.get("autowrap", true))
+	var color_token: String = str(row.get("color", "")).strip_edges()
 
 	lines.append("\tvar btn_" + r_id + " := Button.new()")
 	lines.append("\tbtn_" + r_id + ".name = \"" + r_id + "\"")
 	lines.append("\tbtn_" + r_id + ".text = tr(\"" + r_token + "\")")
 	lines.append("\tbtn_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
 	lines.append("\tbtn_" + r_id + ".alignment = HORIZONTAL_ALIGNMENT_LEFT")
+	if not color_token.is_empty():
+		lines.append(
+            "\tval_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + color_token + "\"))"
+        )
 	if wrap_enabled:
 		lines.append("\tbtn_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 	

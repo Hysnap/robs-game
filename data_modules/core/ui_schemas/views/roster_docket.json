@@ -8,11 +8,14 @@
     {
       "id": "header_section",
       "header_token": "UI_HDR_CREW_DOSSIER",
+      "color": "body",
       "rows": [
         {
           "id": "crew_header",
           "type": "HEADER_BLOCK",
           "field": "enterprise_title",
+          "title_color": "body",
+          "subtitle_color": "body",
           "subtitle_field": "home_district_name",
           "show_separator": true,
           "autowrap": true
@@ -22,6 +25,7 @@
     {
       "id": "operative_list_section",
       "header_token": "UI_HDR_ACTIVE_OPERATIVES",
+      "color": "body",
       "rows": [
         {
           "id": "operative_cards",

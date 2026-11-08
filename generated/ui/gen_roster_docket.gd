@@ -48,6 +48,7 @@ func build_ui() -> void:
 	title_crew_header.name = "crew_header_title"
 	title_crew_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_crew_header.theme_type_variation = &"HeaderTitle"
+	title_crew_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	title_crew_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_crew_header.add_child(title_crew_header)
 	_value_labels["crew_header_title"] = title_crew_header
@@ -55,6 +56,7 @@ func build_ui() -> void:
 	sub_crew_header.name = "crew_header_subtitle"
 	sub_crew_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sub_crew_header.theme_type_variation = &"HeaderSubtitle"
+	sub_crew_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	sub_crew_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_crew_header.add_child(sub_crew_header)
 	_value_labels["crew_header_subtitle"] = sub_crew_header

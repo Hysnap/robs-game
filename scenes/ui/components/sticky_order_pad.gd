@@ -384,6 +384,7 @@ func _on_pin_pressed() -> void:
 		"target_item": str(target_meta.get("id", "")) if target_meta is Dictionary else str(target_meta),
 		"amount": float(spin_amount.value) if spin_amount else 1.0,
 		"target_node_id": str(loc_meta.get("id", "")) if loc_meta is Dictionary else "",
+		"target_node_name": str(loc_meta.get("display", loc_meta.get("id", ""))) if loc_meta is Dictionary else "",
 		"target_scope": str(loc_meta.get("type", "DISTRICT")) if loc_meta is Dictionary else "DISTRICT",
 		"unit_cost": float(target_meta.get("unit_cost", 0.0)) if target_meta is Dictionary else 0.0,
 		"exposure_modifier": 1.0

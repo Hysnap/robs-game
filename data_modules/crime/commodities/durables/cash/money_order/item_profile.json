@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_MONEY_ORDER",
+    "description": "Money Order"
+  },
+  "id": "MONEY_ORDER",
+  "display_name": "Money Order",
+  "base_cost": 1
+}

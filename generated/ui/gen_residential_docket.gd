@@ -77,11 +77,13 @@ func build_ui() -> void:
 	var lbl_door_num := Label.new()
 	lbl_door_num.text = tr("UI_LBL_DOOR_NUMBER")
 	lbl_door_num.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_door_num.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_door_num.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_door_num.add_child(lbl_door_num)
 	var val_door_num := Label.new()
 	val_door_num.name = "door_num_value"
 	val_door_num.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_door_num.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_door_num.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_door_num.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_door_num.add_child(val_door_num)
@@ -94,11 +96,13 @@ func build_ui() -> void:
 	var lbl_ward := Label.new()
 	lbl_ward.text = tr("UI_LBL_DISTRICT_WARD")
 	lbl_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_ward.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_ward.add_child(lbl_ward)
 	var val_ward := Label.new()
 	val_ward.name = "ward_value"
 	val_ward.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_ward.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_ward.add_child(val_ward)
@@ -111,11 +115,13 @@ func build_ui() -> void:
 	var lbl_local_pub := Label.new()
 	lbl_local_pub.text = tr("UI_LBL_LOCAL_TAPROOM")
 	lbl_local_pub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_local_pub.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_local_pub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_local_pub.add_child(lbl_local_pub)
 	var val_local_pub := Label.new()
 	val_local_pub.name = "local_pub_value"
 	val_local_pub.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_local_pub.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_local_pub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_local_pub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_local_pub.add_child(val_local_pub)

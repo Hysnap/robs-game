@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_COINS",
+    "description": "Coin"
+  },
+  "id": "COINS",
+  "display_name": "Coin",
+  "base_cost": 1
+}

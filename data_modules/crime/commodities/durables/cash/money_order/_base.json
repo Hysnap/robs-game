@@ -2,8 +2,8 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 4,
-    "scope_id": "CRIME_DURABLES_CASH_MONEY_ORDER",
-    "display_scope": "Crime -> Durables -> Cash -> Money Order",
-    "description": "Establishes baseline properties for the Crime -> Durables -> Cash -> Money Order commodity scope."
+    "scope_id": "CORE_DURABLES_CASH_MONEY_ORDER",
+    "display_scope": "Core -> Durables -> Cash -> Money Order",
+    "description": "Establishes baseline properties for the Money Order commodity scope."
   }
 }

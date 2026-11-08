@@ -2,8 +2,8 @@
   "_meta": {
     "schema_version": "1.0.0",
     "tier_level": 4,
-    "scope_id": "CRIME_DURABLES_CASH_BANK_NOTES",
-    "display_scope": "Crime -> Durables -> Cash -> Bank Notes",
-    "description": "Establishes baseline properties for the Crime -> Durables -> Cash -> Bank Notes commodity scope."
+    "scope_id": "CORE_DURABLES_CASH_BANK_NOTES",
+    "display_scope": "CORE -> Durables -> Cash -> Bank Notes",
+    "description": "Establishes baseline properties for the Bank Notes commodity scope."
   }
 }

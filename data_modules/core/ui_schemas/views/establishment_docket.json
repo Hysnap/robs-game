@@ -23,6 +23,7 @@
         {
           "id": "estab_header",
           "type": "HEADER_BLOCK",
+          "color": "body",
           "field": "name",
           "subtitle_field": "category_title",
           "autowrap": true
@@ -32,12 +33,13 @@
     {
       "id": "location_and_scale",
       "header_token": "UI_HDR_VENUE_LOCATION",
-      "header_default": "MUNICIPAL REGISTRATION & CAPACITY",
+      "color": "body",
       "rows": [
         {
           "id": "ward",
           "field": "district_name",
           "type": "TEXT_METRIC",
+          "color": "body",
           "token": "UI_LBL_DISTRICT_WARD",
           "autowrap": true
         },
@@ -45,6 +47,7 @@
           "id": "capacity",
           "field": "capacity",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "INT",
           "token": "UI_LBL_VENUE_CAPACITY",
           "autowrap": true
@@ -54,11 +57,13 @@
     {
       "id": "catchment_overview",
       "header_token": "UI_HDR_MARKET_CATCHMENT",
+      "color": "body",
       "rows": [
         {
           "id": "catchment_pop",
           "field": "total_catchment_population",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "INT",
           "token": "UI_LBL_CATCHMENT_POPULATION",
           "autowrap": true
@@ -67,6 +72,7 @@
           "id": "catchment_hh",
           "field": "total_catchment_households",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "INT",
           "token": "UI_LBL_CATCHMENT_HOUSEHOLDS",
           "autowrap": true
@@ -75,6 +81,7 @@
           "id": "catchment_income",
           "field": "avg_neighbor_disposable_income",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "CURRENCY",
           "token": "UI_LBL_NEIGHBORHOOD_INCOME",
           "autowrap": true
@@ -84,7 +91,7 @@
     {
       "id": "personnel_overview",
       "header_token": "UI_HDR_ACTIVE_CONTRACTS",
-      "header_default": "ACTIVE PERSONNEL & LIVELIHOOD CONTRACTS",
+      "color": "body",
       "rows": [
         {
           "id": "personnel_list",
