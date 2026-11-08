@@ -36,10 +36,10 @@ static func get_verb_scope_definition(verb_code: String) -> Dictionary:
 	_cached_scopes[clean_code] = parsed
 	return parsed
 
-## Returns the array of allowed spatial/entity scopes (e.g. ["DISTRICT", "ESTABLISHMENT"])
+## Returns the array of allowed spatial/entity scopes (e.g. ["DISTRICT", "ESTABLISHMENT", "STAFF"])
 static func get_allowed_scopes(verb_code: String) -> Array[String]:
 	var def: Dictionary = get_verb_scope_definition(verb_code)
-	var raw_scopes: Array = def.get("target_scopes", [])
+	var raw_scopes: Array = def.get("allowed_scopes", def.get("target_scopes", []))
 	var scopes: Array[String] = []
 	for s in raw_scopes:
 		scopes.append(str(s).to_upper())
@@ -62,89 +62,96 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 	if categories.is_empty():
 		return []
 
-	# If category_id is specified, locate that category; otherwise use the first category
-	var target_cat: Dictionary = {}
-	if not category_id.is_empty():
+	var requested_cat := category_id.strip_edges().to_upper()
+	var cats_to_process: Array[Dictionary] = []
+
+	if not requested_cat.is_empty() and requested_cat != "ALL":
 		for cat in categories:
-			if str(cat.get("id", "")).to_upper() == category_id.to_upper():
-				target_cat = cat
+			if str(cat.get("id", "")).to_upper() == requested_cat:
+				cats_to_process.append(cat)
 				break
-	else:
-		target_cat = categories[0]
-
-	if target_cat.is_empty():
-		push_warning("[TargetDomainRegistry] Category '%s' not found for verb '%s'." % [category_id, verb_code])
-		return []
-
-	var domain: String = str(target_cat.get("domain", "NONE")).to_upper()
-	var catalog_source: String = str(target_cat.get("catalog_source", ""))
-
-	match domain:
-		"NONE":
-			assert(target_cat.has("id") and not str(target_cat["id"]).is_empty(),
-				"FATAL: [TargetDomainRegistry] Category in verb '%s' with domain 'NONE' must define an 'id'." % verb_code)
-			assert(target_cat.has("label_token") and not str(target_cat["label_token"]).is_empty(),
-				"FATAL: [TargetDomainRegistry] Category '%s' in verb '%s' must define a 'label_token'." % [target_cat.get("id"), verb_code])
-
-			return [{
-				"id": str(target_cat["id"]),
-				"label_token": str(target_cat["label_token"]),
-				"unit_cost": float(target_cat.get("unit_cost", 0.0)),
-				"category": "",
-				"sub_category": "",
-				"taxonomy_path": []
-			}]
-
-		"COMMODITY", "RECIPE":
-			if catalog_source.is_empty():
-				push_error("[TargetDomainRegistry] Verb '%s' category '%s' missing required 'catalog_source'." % [verb_code, target_cat.get("id")])
-				return []
-
-			var catalog: Dictionary = world_state.get(catalog_source, {})
-			if catalog.is_empty():
-				push_warning("[TargetDomainRegistry] Catalog '%s' in world_state is empty for verb '%s'." % [catalog_source, verb_code])
-				return []
-
-			var results: Array[Dictionary] = []
-			var sorted_keys: Array = catalog.keys()
-			sorted_keys.sort()
-			for item_id in sorted_keys:
-				var item_data = catalog[item_id]
-				var token: String = str(item_id)
-				var cost: float = 0.0
-				var cat: String = ""
-				var subcat: String = ""
-				var tax_path: Array = []
-
-				if item_data is Dictionary:
-					token = str(item_data.get("display_name", item_id))
-					cost = float(item_data.get("base_cost", item_data.get("unit_cost", 0.0)))
-					cat = str(item_data.get("category", "GENERAL")).strip_edges().to_upper()
-					assert(not cat.is_empty(),
-						"FATAL: [TargetDomainRegistry] Item '%s' in catalog '%s' has an empty category!" % [item_id, catalog_source])
-					subcat = str(item_data.get("sub_category", "")).strip_edges().to_upper()
-					tax_path = item_data.get("taxonomy_path", [])
-
-				results.append({
-					"id": str(item_id),
-					"label_token": token,
-					"unit_cost": cost,
-					"category": cat,
-					"sub_category": subcat,
-					"taxonomy_path": tax_path
-				})
-			return results
-
-		"CONTACT":
-			return [{
-				"id": "CONTACT_SELECTED",
-				"label_token": str(target_cat.get("label_token", "UI_TARGET_CONTACT")),
-				"unit_cost": 0.0,
-				"category": "CONTACT",
-				"sub_category": "",
-				"taxonomy_path": []
-			}]
-
-		_:
-			push_warning("[TargetDomainRegistry] Unhandled domain '%s' on verb '%s'." % [domain, verb_code])
+		if cats_to_process.is_empty():
+			push_warning("[TargetDomainRegistry] Category '%s' not found for verb '%s'." % [category_id, verb_code])
 			return []
+	else:
+		cats_to_process = categories
+
+	var aggregated_results: Array[Dictionary] = []
+	for target_cat in cats_to_process:
+		var domain: String = str(target_cat.get("domain", target_cat.get("id", "NONE"))).to_upper()
+		var catalog_source: String = str(target_cat.get("catalog_source", "commodities"))
+
+		match domain:
+			"CURRENCY":
+				aggregated_results.append({
+					"id": "CASH",
+					"label_token": str(target_cat.get("label_token", "UI_CAT_CURRENCY")),
+					"unit_cost": 1.0,
+					"category": "CURRENCY",
+					"sub_category": "CASH",
+					"taxonomy_path": []
+				})
+
+			"NONE":
+				assert(target_cat.has("id") and not str(target_cat["id"]).is_empty(),
+					"FATAL: [TargetDomainRegistry] Category in verb '%s' with domain 'NONE' must define an 'id'." % verb_code)
+				assert(target_cat.has("label_token") and not str(target_cat["label_token"]).is_empty(),
+					"FATAL: [TargetDomainRegistry] Category '%s' in verb '%s' must define a 'label_token'." % [target_cat.get("id"), verb_code])
+
+				aggregated_results.append({
+					"id": str(target_cat["id"]),
+					"label_token": str(target_cat["label_token"]),
+					"unit_cost": float(target_cat.get("unit_cost", 0.0)),
+					"category": str(target_cat.get("id", "")).to_upper(),
+					"sub_category": "",
+					"taxonomy_path": []
+				})
+
+			"COMMODITY", "RECIPE":
+				var catalog: Dictionary = world_state.get(catalog_source, {})
+				if catalog.is_empty():
+					push_warning("[TargetDomainRegistry] Catalog '%s' in world_state is empty for verb '%s'." % [catalog_source, verb_code])
+					continue
+
+				var sorted_keys: Array = catalog.keys()
+				sorted_keys.sort()
+				for item_id in sorted_keys:
+					var item_data = catalog[item_id]
+					var token: String = str(item_id)
+					var cost: float = 0.0
+					var cat: String = ""
+					var subcat: String = ""
+					var tax_path: Array = []
+
+					if item_data is Dictionary:
+						token = str(item_data.get("display_name", item_id))
+						cost = float(item_data.get("base_cost", item_data.get("unit_cost", 0.0)))
+						cat = str(item_data.get("category", "GENERAL")).strip_edges().to_upper()
+						assert(not cat.is_empty(),
+							"FATAL: [TargetDomainRegistry] Item '%s' in catalog '%s' has an empty category!" % [item_id, catalog_source])
+						subcat = str(item_data.get("sub_category", "")).strip_edges().to_upper()
+						tax_path = item_data.get("taxonomy_path", [])
+
+					aggregated_results.append({
+						"id": str(item_id),
+						"label_token": token,
+						"unit_cost": cost,
+						"category": cat,
+						"sub_category": subcat,
+						"taxonomy_path": tax_path
+					})
+
+			"CONTACT":
+				aggregated_results.append({
+					"id": "CONTACT_SELECTED",
+					"label_token": str(target_cat.get("label_token", "UI_TARGET_CONTACT")),
+					"unit_cost": 0.0,
+					"category": "CONTACT",
+					"sub_category": "",
+					"taxonomy_path": []
+				})
+
+			_:
+				push_warning("[TargetDomainRegistry] Unhandled domain '%s' on verb '%s'." % [domain, verb_code])
+
+	return aggregated_results

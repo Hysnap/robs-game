@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope": "LEAF_BANK_NOTE",
+    "description": "Crinkly Cash"
+  },
+  "id": "BANK_NOTE",
+  "display_name": "Bank Notes",
+  "base_cost": 1
+}

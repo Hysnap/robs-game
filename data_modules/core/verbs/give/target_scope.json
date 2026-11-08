@@ -1,0 +1,18 @@
+{
+  "verb": "GIVE",
+  "allowed_scopes": [
+    "STAFF",
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [
+    {
+      "id": "CURRENCY",
+      "label_token": "UI_CAT_CURRENCY"
+    },
+    {
+      "id": "COMMODITY",
+      "label_token": "UI_CAT_COMMODITIES"
+    }
+  ]
+}
