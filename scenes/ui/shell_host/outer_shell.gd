@@ -1,4 +1,4 @@
-# res://scenes/ui/filofax/outer_shell.gd
+# res://scenes/ui/shell_host/outer_shell.gd
 class_name OuterShell
 extends PanelContainer
 
@@ -63,7 +63,7 @@ func mount_view(slot_name: String, view_node: Control) -> void:
 
 	for child in target_slot.get_children():
 		target_slot.remove_child(child)
-		 # child.queue_free()
+		child.queue_free()
 
 	target_slot.add_child(view_node)
 

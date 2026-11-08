@@ -13,10 +13,7 @@ static func initialize() -> void:
 		return
 
 	var dir := DirAccess.open(SHELLS_DIR)
-	if not dir:
-		SystemLogger.log_error("[ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
-		push_error("[ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
-		return
+	assert(dir != null, "FATAL: [ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
 
 	dir.list_dir_begin()
 	var entry := dir.get_next()
@@ -32,38 +29,35 @@ static func initialize() -> void:
 						_manifests[str(parsed["id"]).to_lower()] = parsed
 		entry = dir.get_next()
 	dir.list_dir_end()
+	
+	assert(not _manifests.is_empty(), "FATAL: [ShellRegistry] No valid shell manifests discovered in %s" % SHELLS_DIR)
 
 ## Returns the active shell ID configured in business_rules.cfg
 static func get_configured_shell_id() -> String:
-	var target_shell := "filofax"
-	if FileAccess.file_exists(BUSINESS_RULES_PATH):
-		var cfg := ConfigFile.new()
-		if cfg.load(BUSINESS_RULES_PATH) == OK:
-			target_shell = str(cfg.get_value("workspace_device", "active_shell", "filofax")).to_lower()
-	return target_shell
+	assert(FileAccess.file_exists(BUSINESS_RULES_PATH), "FATAL: [ShellRegistry] Missing configuration file: %s" % BUSINESS_RULES_PATH)
+	
+	var cfg := ConfigFile.new()
+	var err := cfg.load(BUSINESS_RULES_PATH)
+	assert(err == OK, "FATAL: [ShellRegistry] Failed to load config at %s" % BUSINESS_RULES_PATH)
+	
+	var target_shell: String = str(cfg.get_value("workspace_device", "active_shell", ""))
+	assert(not target_shell.is_empty(), "FATAL: [ShellRegistry] 'active_shell' is missing or empty in business_rules.cfg")
+	
+	return target_shell.to_lower()
 
-## Returns the manifest for a given shell or falls back safely
+## Returns the manifest for a given shell, asserting it exists in the registry
 static func get_shell_manifest(shell_id: String) -> Dictionary:
 	initialize()
-	if _manifests.has(shell_id.to_lower()):
-		return _manifests[shell_id.to_lower()]
-	
-	# Fallback to the first available manifest if requester isn't found
-	if not _manifests.is_empty():
-		return _manifests[_manifests.keys()[0]]
-
-	SystemLogger.log_critical("[ShellRegistry FATAL] No valid shell manifests discovered in %s" % SHELLS_DIR)
-	push_error("[ShellRegistry FATAL] No valid shell manifests discovered in %s" % SHELLS_DIR)
-	return {}
+	var lower_id := shell_id.to_lower()
+	assert(_manifests.has(lower_id), "FATAL: [ShellRegistry] Requested shell manifest '%s' does not exist in registry." % lower_id)
+	return _manifests[lower_id]
 
 ## Returns the path to the active inbox stationery manifest declared in the active shell manifest
 static func get_active_inbox_manifest_path() -> String:
 	var shell_id := get_configured_shell_id()
 	var manifest := get_shell_manifest(shell_id)
 	var inbox_path: String = str(manifest.get("inbox_manifest", ""))
-	if inbox_path.is_empty():
-		push_warning("[ShellRegistry] Shell '%s' manifest missing 'inbox_manifest'. Using default filofax inbox." % shell_id)
-		return "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_inbox.json"
+	assert(not inbox_path.is_empty(), "FATAL: [ShellRegistry] Shell '%s' manifest missing 'inbox_manifest'." % shell_id)
 	return inbox_path
 
 ## Returns the path to the active order compilation manifest declared in the active shell manifest
@@ -71,9 +65,7 @@ static func get_active_order_composer_manifest_path() -> String:
 	var shell_id := get_configured_shell_id()
 	var manifest := get_shell_manifest(shell_id)
 	var composer_path: String = str(manifest.get("order_composer_manifest", ""))
-	if composer_path.is_empty():
-		push_warning("[ShellRegistry] Shell '%s' manifest missing 'order_composer_manifest'. Using default filofax order pad." % shell_id)
-		return "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_order_pad.json"
+	assert(not composer_path.is_empty(), "FATAL: [ShellRegistry] Shell '%s' manifest missing 'order_composer_manifest'." % shell_id)
 	return composer_path
 
 ## Instantiates and returns the spread wrapper scene for the active shell
@@ -81,9 +73,9 @@ static func instantiate_active_spread() -> Control:
 	var shell_id := get_configured_shell_id()
 	var manifest := get_shell_manifest(shell_id)
 	var scene_path: String = manifest.get("spread_scene", "")
-	
-	assert(!scene_path.is_empty() and ResourceLoader.exists(scene_path), 
+
+	assert(not scene_path.is_empty() and ResourceLoader.exists(scene_path), 
 		"FATAL: Shell manifest '%s' points to invalid scene: '%s'" % [shell_id, scene_path])
-	
+
 	var scene: PackedScene = load(scene_path)
 	return scene.instantiate() as Control
