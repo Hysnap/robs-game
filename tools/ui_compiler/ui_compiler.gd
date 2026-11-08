@@ -81,8 +81,17 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 
 	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")\n")
 	lines.append("var _value_labels: Dictionary = {}")
+	
 
-	var has_action_queue: bool = bool(meta.get("has_action_queue", false))
+	# Auto-discover action queue capability from row definitions (NOT _meta)
+	var has_action_queue: bool = false
+	for sec in sections:
+		for row in sec.get("rows", []):
+			if bool(row.get("has_action_queue", false)):
+				has_action_queue = true
+				break
+		if has_action_queue:
+			break
 	if has_action_queue:
 		lines.append("var _queue: ActionQueuePresenter = ActionQueuePresenter.new()")
 	lines.append("")

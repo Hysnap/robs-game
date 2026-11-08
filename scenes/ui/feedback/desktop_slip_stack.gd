@@ -219,13 +219,13 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		dest_opt.add_theme_font_override("font", mono_font)
 		dest_opt.add_theme_font_size_override("font_size", 9)
 		dest_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		dest_opt.add_item("套 " + tr("UI_DEST_DIARY"), 0)
+		dest_opt.add_item("# " + tr("UI_DEST_DIARY"), 0)
 		dest_opt.set_item_metadata(0, "DIARY")
-		dest_opt.add_item("刀 " + tr("UI_DEST_DOSSIER"), 1)
+		dest_opt.add_item("# " + tr("UI_DEST_DOSSIER"), 1)
 		dest_opt.set_item_metadata(1, "DOSSIER")
-		dest_opt.add_item("則 " + tr("UI_DEST_ROSTER"), 2)
+		dest_opt.add_item("# " + tr("UI_DEST_ROSTER"), 2)
 		dest_opt.set_item_metadata(2, "ROSTER")
-		dest_opt.add_item("長 " + tr("UI_DEST_ACCOUNTS"), 3)
+		dest_opt.add_item(" " + tr("UI_DEST_ACCOUNTS"), 3)
 		dest_opt.set_item_metadata(3, "FINANCE")
 		
 		var requested_destination := str(slip.get("destination", "DIARY")).to_upper()
@@ -247,7 +247,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		routing_box.add_child(btn_file)
 
 		var btn_discard := Button.new()
-		btn_discard.text = "卵 " + tr("UI_BTN_DISCARD")
+		btn_discard.text = "X " + tr("UI_BTN_DISCARD")
 		btn_discard.focus_mode = Control.FOCUS_NONE
 		btn_discard.add_theme_font_override("font", mono_font)
 		btn_discard.add_theme_font_size_override("font_size", 9)

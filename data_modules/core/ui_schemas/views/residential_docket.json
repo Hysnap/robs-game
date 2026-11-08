@@ -23,6 +23,7 @@
         {
           "id": "tenancy_header",
           "type": "HEADER_BLOCK",
+          "color": "body",
           "field": "name",
           "subtitle_field": "residence_type"
         }
@@ -36,6 +37,7 @@
           "id": "door_num",
           "field": "unit_door_number",
           "type": "TEXT_METRIC",
+          "color": "body",
           "token": "UI_LBL_DOOR_NUMBER",
           "autowrap": true
         },
@@ -43,6 +45,7 @@
           "id": "ward",
           "field": "district_name",
           "type": "TEXT_METRIC",
+          "color": "body",
           "token": "UI_LBL_DISTRICT_WARD",
           "autowrap": true
         },
@@ -50,6 +53,7 @@
           "id": "local_pub",
           "field": "local_pub_name",
           "type": "TEXT_METRIC",
+          "color": "body",
           "token": "UI_LBL_LOCAL_TAPROOM",
           "autowrap": true
         }

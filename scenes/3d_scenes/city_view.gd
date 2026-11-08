@@ -201,11 +201,14 @@ func _setup_compiled_shell_host_views() -> void:
 		if view_host != null:
 			view_host.set_desk_inbox(feedback_inbox)
 
-	# F. Query active spread for its era-specific composer modal (duck-typed)
+	# F. Query active spread for its era-specific composer modal and bind to action planner
 	directive_modal = outer_shell.get_slot("MODAL")
-	if directive_modal != null and directive_modal.has_signal("directive_committed"):
-		if action_planner_view != null and action_planner_view.has_method("add_directive"):
-			directive_modal.directive_committed.connect(action_planner_view.add_directive)
+	assert(directive_modal != null, "FATAL: [CityView] Active spread did not supply a MODAL slot.")
+	assert(directive_modal.has_signal("directive_committed"), "FATAL: [CityView] Modal slot does not expose 'directive_committed' signal.")
+	assert(action_planner_view != null and action_planner_view.has_method("add_directive"), "FATAL: [CityView] Action planner view is missing 'add_directive' contract.")
+	
+	if not directive_modal.directive_committed.is_connected(action_planner_view.add_directive):
+		directive_modal.directive_committed.connect(action_planner_view.add_directive)
 
 	# G. Connect ViewHost signals
 	if view_host:
@@ -307,9 +310,16 @@ func _toggle_workspace_visibility() -> void:
 
 func _on_end_turn_requested() -> void:
 	var staged: Array = []
-	var planner_node: Control = outer_shell.get_slot("ACTION")
-	if planner_node != null and planner_node.get_child_count() > 0:
-		var active_planner = planner_node.get_child(0)
+	var active_planner: Control = null
+	if view_host != null:
+		active_planner = view_host.get_action_component()
+
+	if active_planner == null:
+		var planner_node: Control = outer_shell.get_slot("ACTION")
+		if planner_node != null and planner_node.get_child_count() > 0:
+			active_planner = planner_node.get_child(0)
+
+	if active_planner != null:
 		if active_planner.has_method("consume_selected_directives"):
 			staged = active_planner.consume_selected_directives()
 		elif active_planner.has_method("get_staged_directives"):

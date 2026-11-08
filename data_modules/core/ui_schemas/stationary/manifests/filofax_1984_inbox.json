@@ -17,11 +17,11 @@
   ],
   "verb_bindings": {
     "BUY": {
-      "default_definition": "TORN_RECEIPT",
+      "default_definition": "STICKY_NOTE",
       "default_filing_domain": "FINANCE"
     },
     "SELL": {
-      "default_definition": "TORN_RECEIPT",
+      "default_definition": "STICKY_NOTE",
       "default_filing_domain": "FINANCE"
     },
     "MAKE": {

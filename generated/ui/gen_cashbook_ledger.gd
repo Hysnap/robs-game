@@ -43,11 +43,13 @@ func build_ui() -> void:
 	var lbl_liquid_cash := Label.new()
 	lbl_liquid_cash.text = tr("UI_LBL_LIQUID_CASH")
 	lbl_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_liquid_cash.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_liquid_cash.add_child(lbl_liquid_cash)
 	var val_liquid_cash := Label.new()
 	val_liquid_cash.name = "liquid_cash_value"
 	val_liquid_cash.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_liquid_cash.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_liquid_cash.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_liquid_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_liquid_cash.add_child(val_liquid_cash)
@@ -60,11 +62,13 @@ func build_ui() -> void:
 	var lbl_filed_receipts_total := Label.new()
 	lbl_filed_receipts_total.text = tr("UI_LBL_EXPENSE_TOTAL")
 	lbl_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_filed_receipts_total.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_filed_receipts_total.add_child(lbl_filed_receipts_total)
 	var val_filed_receipts_total := Label.new()
 	val_filed_receipts_total.name = "filed_receipts_total_value"
 	val_filed_receipts_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_filed_receipts_total.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_filed_receipts_total.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_filed_receipts_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_filed_receipts_total.add_child(val_filed_receipts_total)

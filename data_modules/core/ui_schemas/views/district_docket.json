@@ -13,6 +13,8 @@
           "type": "HEADER_BLOCK",
           "field": "display_name",
           "subtitle_field": "type_title",
+          "title_color": "body",
+          "subtitle_color": "body",
           "title_font_size": 18,
           "subtitle_font_size": 12,
           "show_separator": true,
@@ -23,13 +25,14 @@
     {
       "id": "intel_status_header",
       "header_token": "UI_HDR_SURVEY_INTELLIGENCE",
-      "header_default": "WARD SURVEY & INTELLIGENCE AUDIT",
+      "color": "body",
       "rows": [
         {
           "id": "survey_badge",
           "field": "intel_status_token",
           "type": "BADGE_STATUS",
           "format": "TOKEN",
+          "color": "body",
           "token": "UI_LBL_INTEL_STATUS",
           "default_text": "INTELLIGENCE STATUS",
           "autowrap": true
@@ -39,12 +42,13 @@
     {
       "id": "demographics_overview",
       "header_token": "UI_HDR_WARD_DEMOGRAPHICS",
-      "header_default": "DISTRICT DEMOGRAPHICS & CENSUS",
+      "color": "body",
       "rows": [
         {
           "id": "pop",
           "field": "active_population",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "INT",
           "suffix": " citizens",
           "token": "UI_LBL_ACTIVE_POPULATION",
@@ -55,6 +59,7 @@
           "id": "households",
           "field": "total_households",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "INT",
           "suffix": " households",
           "token": "UI_LBL_TOTAL_HOUSEHOLDS",
@@ -65,6 +70,7 @@
           "id": "unemployment_tier",
           "field": "unemployment_bucket_token",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_UNEMPLOYMENT_TIER",
           "autowrap": true
@@ -73,6 +79,7 @@
           "id": "income",
           "field": "income_bucket_token",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_DISPOSABLE_INCOME",
           "autowrap": true
@@ -101,12 +108,13 @@
     {
       "id": "security_environment",
       "header_token": "UI_HDR_SECURITY_ENVIRONMENT",
-      "header_default": "CIVIL ORDER & POLICE SCRUTINY",
+      "color": "body",
       "rows": [
         {
           "id": "zhi",
           "field": "zone_health_bucket_token",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_ZONE_HEALTH",
           "autowrap": true
@@ -115,6 +123,7 @@
           "id": "heat",
           "field": "heat_bucket_token",
           "type": "TEXT_METRIC",
+          "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_POLICE_HEAT",
           "autowrap": true
@@ -124,7 +133,7 @@
     {
       "id": "field_observations",
       "header_token": "UI_SEC_FIELD_OBSERVATIONS",
-      "header_default": "INSCRIBED FIELD OBSERVATIONS",
+      "color": "body",
       "rows": [
         {
           "id": "observations_box",

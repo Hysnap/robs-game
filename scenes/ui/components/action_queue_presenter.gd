@@ -116,7 +116,9 @@ func get_display_lines() -> Array[String]:
 		var item: String = str(d.get("target_item", ""))
 		var qty: float = float(d.get("amount", 0.0))
 		var assignee: String = str(d.get("assigned_to", d.get("initiator_id", "Player")))
-		var target_node: String = str(d.get("target_node_id", ""))
+		var target_node: String = str(d.get("target_node_name", d.get("target_node_id", "")))
+		if target_node.is_empty():
+			target_node = str(d.get("target_node_id", ""))
 		var contact: String = str(d.get("counterparty_id", ""))
 
 		var line := "%d. %s [%s] %s x%.0f @ %s (Assigned: %s)" % [

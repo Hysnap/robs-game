@@ -33,6 +33,7 @@ func build_ui() -> void:
 	title_docket_header.name = "docket_header_title"
 	title_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_docket_header.theme_type_variation = &"HeaderTitle"
+	title_docket_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	title_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_docket_header.add_child(title_docket_header)
 	_value_labels["docket_header_title"] = title_docket_header
@@ -40,6 +41,7 @@ func build_ui() -> void:
 	sub_docket_header.name = "docket_header_subtitle"
 	sub_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sub_docket_header.theme_type_variation = &"HeaderSubtitle"
+	sub_docket_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	sub_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_docket_header.add_child(sub_docket_header)
 	_value_labels["docket_header_subtitle"] = sub_docket_header
@@ -68,6 +70,7 @@ func build_ui() -> void:
 	val_survey_badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_survey_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	val_survey_badge.theme_type_variation = &"BadgeStatus"
+	val_survey_badge.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_survey_badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	badge_survey_badge.add_child(val_survey_badge)
 	_value_labels["survey_badge"] = val_survey_badge
@@ -94,11 +97,13 @@ func build_ui() -> void:
 	var lbl_pop := Label.new()
 	lbl_pop.text = tr("UI_LBL_ACTIVE_POPULATION")
 	lbl_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_pop.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_pop.add_child(lbl_pop)
 	var val_pop := Label.new()
 	val_pop.name = "pop_value"
 	val_pop.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_pop.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_pop.add_child(val_pop)
@@ -111,11 +116,13 @@ func build_ui() -> void:
 	var lbl_households := Label.new()
 	lbl_households.text = tr("UI_LBL_TOTAL_HOUSEHOLDS")
 	lbl_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_households.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_households.add_child(lbl_households)
 	var val_households := Label.new()
 	val_households.name = "households_value"
 	val_households.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_households.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_households.add_child(val_households)
@@ -128,11 +135,13 @@ func build_ui() -> void:
 	var lbl_unemployment_tier := Label.new()
 	lbl_unemployment_tier.text = tr("UI_LBL_UNEMPLOYMENT_TIER")
 	lbl_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_unemployment_tier.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_unemployment_tier.add_child(lbl_unemployment_tier)
 	var val_unemployment_tier := Label.new()
 	val_unemployment_tier.name = "unemployment_tier_value"
 	val_unemployment_tier.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_unemployment_tier.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_unemployment_tier.add_child(val_unemployment_tier)
@@ -145,11 +154,13 @@ func build_ui() -> void:
 	var lbl_income := Label.new()
 	lbl_income.text = tr("UI_LBL_DISPOSABLE_INCOME")
 	lbl_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_income.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_income.add_child(lbl_income)
 	var val_income := Label.new()
 	val_income.name = "income_value"
 	val_income.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_income.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_income.add_child(val_income)
@@ -199,11 +210,13 @@ func build_ui() -> void:
 	var lbl_zhi := Label.new()
 	lbl_zhi.text = tr("UI_LBL_ZONE_HEALTH")
 	lbl_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_zhi.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_zhi.add_child(lbl_zhi)
 	var val_zhi := Label.new()
 	val_zhi.name = "zhi_value"
 	val_zhi.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_zhi.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_zhi.add_child(val_zhi)
@@ -216,11 +229,13 @@ func build_ui() -> void:
 	var lbl_heat := Label.new()
 	lbl_heat.text = tr("UI_LBL_POLICE_HEAT")
 	lbl_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_heat.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	lbl_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_heat.add_child(lbl_heat)
 	var val_heat := Label.new()
 	val_heat.name = "heat_value"
 	val_heat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_heat.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	val_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_heat.add_child(val_heat)
