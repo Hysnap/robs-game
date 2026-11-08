@@ -2,10 +2,7 @@
   "_meta": {
     "target_class": "GenEstablishmentDocket",
     "extends": "VBoxContainer",
-    "description": "Commercial, civic, and industrial establishment docket inspector view",
-    "signals": [
-      "route_requested(domain_token: String, target_page_name: String)"
-    ]
+    "description": "Commercial, civic, and industrial establishment docket inspector view"
   },
   "sections": [
     {
@@ -15,7 +12,6 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
-          "default_text": "⬅ Back to District Dossier",
           "action_signal": "route_requested",
           "emit_args": "\"DOSSIER\", \"\""
         }
@@ -29,9 +25,6 @@
           "type": "HEADER_BLOCK",
           "field": "name",
           "subtitle_field": "category_title",
-          "title_font_size": 18,
-          "subtitle_font_size": 12,
-          "show_separator": true,
           "autowrap": true
         }
       ]
@@ -46,7 +39,6 @@
           "field": "district_name",
           "type": "TEXT_METRIC",
           "token": "UI_LBL_DISTRICT_WARD",
-          "default_text": "Registered Ward",
           "autowrap": true
         },
         {
@@ -55,8 +47,6 @@
           "type": "TEXT_METRIC",
           "format": "INT",
           "token": "UI_LBL_VENUE_CAPACITY",
-          "default_text": "Operational Capacity",
-          "suffix": " units",
           "autowrap": true
         }
       ]
@@ -64,16 +54,13 @@
     {
       "id": "catchment_overview",
       "header_token": "UI_HDR_MARKET_CATCHMENT",
-      "header_default": "LOCAL TRADE CATCHMENT (SURROUNDING 9 BLOCKS)",
       "rows": [
         {
           "id": "catchment_pop",
           "field": "total_catchment_population",
           "type": "TEXT_METRIC",
           "format": "INT",
-          "suffix": " residents",
           "token": "UI_LBL_CATCHMENT_POPULATION",
-          "default_text": "Potential Customers",
           "autowrap": true
         },
         {
@@ -81,9 +68,7 @@
           "field": "total_catchment_households",
           "type": "TEXT_METRIC",
           "format": "INT",
-          "suffix": " households",
           "token": "UI_LBL_CATCHMENT_HOUSEHOLDS",
-          "default_text": "Customer Base",
           "autowrap": true
         },
         {
@@ -92,7 +77,6 @@
           "type": "TEXT_METRIC",
           "format": "CURRENCY",
           "token": "UI_LBL_NEIGHBORHOOD_INCOME",
-          "default_text": "Avg Neighbor Income",
           "autowrap": true
         }
       ]
@@ -109,6 +93,13 @@
           "min_height": 100
         }
       ]
+    },
+    {
+      "id": "establishment_docket_signals",
+      "type": "SIGNALS",
+      "signals": [
+      "route_requested(domain_token: String, target_page_name: String)"
+    ]
     }
   ]
 }

@@ -30,6 +30,10 @@ window/stretch/aspect="expand"
 
 enabled=PackedStringArray("res://addons/citycrafter/plugin.cfg", "res://addons/godot-sqlite/plugin.cfg")
 
+[gui]
+
+theme/default_font_hinting=2
+
 [internationalization]
 
 locale/translations=PackedStringArray("res://data_modules/core/localization/ui_strings.en.translation")

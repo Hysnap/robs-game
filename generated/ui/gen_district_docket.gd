@@ -26,22 +26,21 @@ func build_ui() -> void:
 
 	# --- Header Block ---
 	var box_docket_header := VBoxContainer.new()
+	box_docket_header.name = "docket_header"
 	box_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box_docket_header.add_theme_constant_override("separation", 0)
 	var title_docket_header := Label.new()
+	title_docket_header.name = "docket_header_title"
 	title_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_docket_header.theme_type_variation = &"HeaderTitle"
 	title_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title_docket_header.add_theme_font_override("font", mono_font)
-	title_docket_header.add_theme_font_size_override("font_size", 18)
-	title_docket_header.add_theme_color_override("font_color", clr_blue)
 	box_docket_header.add_child(title_docket_header)
 	_value_labels["docket_header_title"] = title_docket_header
 	var sub_docket_header := Label.new()
+	sub_docket_header.name = "docket_header_subtitle"
 	sub_docket_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sub_docket_header.theme_type_variation = &"HeaderSubtitle"
 	sub_docket_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub_docket_header.add_theme_font_override("font", mono_font)
-	sub_docket_header.add_theme_font_size_override("font_size", 12)
-	sub_docket_header.add_theme_color_override("font_color", clr_muted)
 	box_docket_header.add_child(sub_docket_header)
 	_value_labels["docket_header_subtitle"] = sub_docket_header
 	box_docket_header.add_child(HSeparator.new())
@@ -63,13 +62,13 @@ func build_ui() -> void:
 	add_child(sec_intel_status_header)
 
 	var badge_survey_badge := PanelContainer.new()
+	badge_survey_badge.name = "survey_badge"
 	badge_survey_badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var val_survey_badge := Label.new()
 	val_survey_badge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	val_survey_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	val_survey_badge.theme_type_variation = &"BadgeStatus"
 	val_survey_badge.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	val_survey_badge.add_theme_font_override("font", mono_font)
-	val_survey_badge.add_theme_color_override("font_color", clr_blue)
 	badge_survey_badge.add_child(val_survey_badge)
 	_value_labels["survey_badge"] = val_survey_badge
 	add_child(badge_survey_badge)
@@ -90,77 +89,69 @@ func build_ui() -> void:
 	add_child(sec_demographics_overview)
 
 	var row_pop := HBoxContainer.new()
+	row_pop.name = "pop"
 	row_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_pop := Label.new()
 	lbl_pop.text = tr("UI_LBL_ACTIVE_POPULATION")
 	lbl_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_pop.add_theme_font_override("font", mono_font)
-	lbl_pop.add_theme_color_override("font_color", clr_muted)
 	row_pop.add_child(lbl_pop)
 	var val_pop := Label.new()
+	val_pop.name = "pop_value"
 	val_pop.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_pop.add_theme_font_override("font", mono_font)
-	val_pop.add_theme_color_override("font_color", clr_black)
 	row_pop.add_child(val_pop)
 	_value_labels["pop"] = val_pop
 	add_child(row_pop)
 
 	var row_households := HBoxContainer.new()
+	row_households.name = "households"
 	row_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_households := Label.new()
 	lbl_households.text = tr("UI_LBL_TOTAL_HOUSEHOLDS")
 	lbl_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_households.add_theme_font_override("font", mono_font)
-	lbl_households.add_theme_color_override("font_color", clr_muted)
 	row_households.add_child(lbl_households)
 	var val_households := Label.new()
+	val_households.name = "households_value"
 	val_households.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_households.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_households.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_households.add_theme_font_override("font", mono_font)
-	val_households.add_theme_color_override("font_color", clr_black)
 	row_households.add_child(val_households)
 	_value_labels["households"] = val_households
 	add_child(row_households)
 
 	var row_unemployment_tier := HBoxContainer.new()
+	row_unemployment_tier.name = "unemployment_tier"
 	row_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_unemployment_tier := Label.new()
 	lbl_unemployment_tier.text = tr("UI_LBL_UNEMPLOYMENT_TIER")
 	lbl_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_unemployment_tier.add_theme_font_override("font", mono_font)
-	lbl_unemployment_tier.add_theme_color_override("font_color", clr_muted)
 	row_unemployment_tier.add_child(lbl_unemployment_tier)
 	var val_unemployment_tier := Label.new()
+	val_unemployment_tier.name = "unemployment_tier_value"
 	val_unemployment_tier.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_unemployment_tier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_unemployment_tier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_unemployment_tier.add_theme_font_override("font", mono_font)
-	val_unemployment_tier.add_theme_color_override("font_color", clr_black)
 	row_unemployment_tier.add_child(val_unemployment_tier)
 	_value_labels["unemployment_tier"] = val_unemployment_tier
 	add_child(row_unemployment_tier)
 
 	var row_income := HBoxContainer.new()
+	row_income.name = "income"
 	row_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_income := Label.new()
 	lbl_income.text = tr("UI_LBL_DISPOSABLE_INCOME")
 	lbl_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_income.add_theme_font_override("font", mono_font)
-	lbl_income.add_theme_color_override("font_color", clr_muted)
 	row_income.add_child(lbl_income)
 	var val_income := Label.new()
+	val_income.name = "income_value"
 	val_income.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_income.add_theme_font_override("font", mono_font)
-	val_income.add_theme_color_override("font_color", clr_black)
 	row_income.add_child(val_income)
 	_value_labels["income"] = val_income
 	add_child(row_income)
@@ -181,6 +172,7 @@ func build_ui() -> void:
 	add_child(sec_civic_infrastructure)
 
 	var civic_box_civic_features := VBoxContainer.new()
+	civic_box_civic_features.name = "civic_features"
 	civic_box_civic_features.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	civic_box_civic_features.add_theme_constant_override("separation", 2)
 	_value_labels["civic_features"] = civic_box_civic_features
@@ -202,39 +194,35 @@ func build_ui() -> void:
 	add_child(sec_security_environment)
 
 	var row_zhi := HBoxContainer.new()
+	row_zhi.name = "zhi"
 	row_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_zhi := Label.new()
 	lbl_zhi.text = tr("UI_LBL_ZONE_HEALTH")
 	lbl_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_zhi.add_theme_font_override("font", mono_font)
-	lbl_zhi.add_theme_color_override("font_color", clr_muted)
 	row_zhi.add_child(lbl_zhi)
 	var val_zhi := Label.new()
+	val_zhi.name = "zhi_value"
 	val_zhi.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_zhi.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_zhi.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_zhi.add_theme_font_override("font", mono_font)
-	val_zhi.add_theme_color_override("font_color", clr_black)
 	row_zhi.add_child(val_zhi)
 	_value_labels["zhi"] = val_zhi
 	add_child(row_zhi)
 
 	var row_heat := HBoxContainer.new()
+	row_heat.name = "heat"
 	row_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_heat := Label.new()
 	lbl_heat.text = tr("UI_LBL_POLICE_HEAT")
 	lbl_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_heat.add_theme_font_override("font", mono_font)
-	lbl_heat.add_theme_color_override("font_color", clr_muted)
 	row_heat.add_child(lbl_heat)
 	var val_heat := Label.new()
+	val_heat.name = "heat_value"
 	val_heat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_heat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_heat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_heat.add_theme_font_override("font", mono_font)
-	val_heat.add_theme_color_override("font_color", clr_black)
 	row_heat.add_child(val_heat)
 	_value_labels["heat"] = val_heat
 	add_child(row_heat)
@@ -254,77 +242,67 @@ func build_ui() -> void:
 	sec_field_observations.add_child(sep_field_observations)
 	add_child(sec_field_observations)
 
-	var row_observations_box := HBoxContainer.new()
-	row_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lbl_observations_box := Label.new()
-	lbl_observations_box.text = tr("")
-	lbl_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_observations_box.add_theme_font_override("font", mono_font)
-	lbl_observations_box.add_theme_color_override("font_color", clr_muted)
-	row_observations_box.add_child(lbl_observations_box)
-	var val_observations_box := Label.new()
-	val_observations_box.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	val_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_observations_box.add_theme_font_override("font", mono_font)
-	val_observations_box.add_theme_color_override("font_color", clr_black)
-	row_observations_box.add_child(val_observations_box)
-	_value_labels["observations_box"] = val_observations_box
-	add_child(row_observations_box)
+	# --- Inscriptions Container ---
+	var insc_box_observations_box := VBoxContainer.new()
+	insc_box_observations_box.name = "observations_box"
+	insc_box_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_box_observations_box
+	add_child(insc_box_observations_box)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("docket_header_title") and data.has("display_name"):
-		_value_labels["docket_header_title"].text = str(data.get("display_name", "--- UNNAMED ---")).to_upper()
-	if _value_labels.has("docket_header_subtitle") and data.has("type_title"):
-		_value_labels["docket_header_subtitle"].text = str(data.get("type_title", "")).to_upper()
-	if _value_labels.has("survey_badge") and data.has("intel_status_token"):
+	if _value_labels.has("docket_header_title"):
+		if data.has("display_name") and data["display_name"] != null:
+			_value_labels["docket_header_title"].text = str(data["display_name"]).to_upper()
+		else:
+			_value_labels["docket_header_title"].text = "--- UNNAMED ---"
+	if _value_labels.has("docket_header_subtitle"):
+		if data.has("type_title") and data["type_title"] != null:
+			_value_labels["docket_header_subtitle"].text = str(data["type_title"]).to_upper()
+		else:
+			_value_labels["docket_header_subtitle"].text = ""
+	if _value_labels.has("survey_badge"):
 		var ctrl = _value_labels["survey_badge"]
-		if data["intel_status_token"] == null:
+		if not data.has("intel_status_token") or data["intel_status_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["intel_status_token"])) + ""
-	if _value_labels.has("pop") and data.has("active_population"):
+	if _value_labels.has("pop"):
 		var ctrl = _value_labels["pop"]
-		if data["active_population"] == null:
+		if not data.has("active_population") or data["active_population"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = str(int(data["active_population"])) + " citizens"
-	if _value_labels.has("households") and data.has("total_households"):
+			var val_str := str(int(data["active_population"]))
+			ctrl.text = tr("FMT_INT").replace("{val}", val_str) + " citizens"
+	if _value_labels.has("households"):
 		var ctrl = _value_labels["households"]
-		if data["total_households"] == null:
+		if not data.has("total_households") or data["total_households"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = str(int(data["total_households"])) + " households"
-	if _value_labels.has("unemployment_tier") and data.has("unemployment_bucket_token"):
+			var val_str := str(int(data["total_households"]))
+			ctrl.text = tr("FMT_INT").replace("{val}", val_str) + " households"
+	if _value_labels.has("unemployment_tier"):
 		var ctrl = _value_labels["unemployment_tier"]
-		if data["unemployment_bucket_token"] == null:
+		if not data.has("unemployment_bucket_token") or data["unemployment_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["unemployment_bucket_token"])) + ""
-	if _value_labels.has("income") and data.has("income_bucket_token"):
+	if _value_labels.has("income"):
 		var ctrl = _value_labels["income"]
-		if data["income_bucket_token"] == null:
+		if not data.has("income_bucket_token") or data["income_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["income_bucket_token"])) + ""
-	if _value_labels.has("civic_features") and data.has("establishments_summary"):
+	if _value_labels.has("civic_features"):
 		var ctrl = _value_labels["civic_features"]
 		if ctrl is Container:
 			for c in ctrl.get_children():
-				c.queue_free()
+				c.free()
 			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
 			var clr_b: Color = RETRO_THEME.get_ink_color("body")
 			var mono_f: Font = RETRO_THEME.get_monospace_font()
 			var items: Array = data.get("establishments_summary", [])
 			if items.is_empty():
-				var empty_lbl := Label.new()
-				empty_lbl.text = tr("UI_INTEL_MASKED_BLANK")
-				empty_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				empty_lbl.add_theme_font_override("font", mono_f)
-				empty_lbl.add_theme_color_override("font_color", clr_m)
-				ctrl.add_child(empty_lbl)
+				pass
 			else:
 				for item in items:
 					assert(item is Dictionary, "[UI CONTRACT ERROR] Expected Dictionary in list payload for: establishments_summary")
@@ -348,15 +326,15 @@ func bind_data(data: Dictionary) -> void:
 						dest_route = "ESTABLISHMENT_DOCKET"
 					btn.pressed.connect(func(): item_selected.emit(dest_route, key_val))
 					ctrl.add_child(btn)
-	if _value_labels.has("zhi") and data.has("zone_health_bucket_token"):
+	if _value_labels.has("zhi"):
 		var ctrl = _value_labels["zhi"]
-		if data["zone_health_bucket_token"] == null:
+		if not data.has("zone_health_bucket_token") or data["zone_health_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["zone_health_bucket_token"])) + ""
-	if _value_labels.has("heat") and data.has("heat_bucket_token"):
+	if _value_labels.has("heat"):
 		var ctrl = _value_labels["heat"]
-		if data["heat_bucket_token"] == null:
+		if not data.has("heat_bucket_token") or data["heat_bucket_token"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["heat_bucket_token"])) + ""

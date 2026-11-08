@@ -1,4 +1,4 @@
-# res://scenes/ui/filofax/outer_shell.gd
+# res://scenes/ui/shell_host/outer_shell.gd
 class_name OuterShell
 extends PanelContainer
 
@@ -49,7 +49,11 @@ func get_slot(slot_name: String) -> Control:
 	return null
 
 ## Mounts a Control node into a named slot, clearing existing children immediately
-func mount_view(slot_name: String, view_node: Control) -> void:
+func mount_view(
+    slot_name: String,
+    view_node: Control,
+    free_existing: bool = true
+	) -> void:
 	var target_slot: Control = get_slot(slot_name)
 	if target_slot == null:
 		push_error("[OuterShell] Unknown or missing slot: %s" % slot_name)
@@ -63,7 +67,8 @@ func mount_view(slot_name: String, view_node: Control) -> void:
 
 	for child in target_slot.get_children():
 		target_slot.remove_child(child)
-		 # child.queue_free()
+		if free_existing:
+			child.queue_free()
 
 	target_slot.add_child(view_node)
 

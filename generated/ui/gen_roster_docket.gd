@@ -4,7 +4,6 @@ class_name GenRosterDocket
 extends VBoxContainer
 
 signal item_selected(target_route, filter_key)
-signal route_requested(domain_token, target_page_name)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
@@ -42,22 +41,21 @@ func build_ui() -> void:
 
 	# --- Header Block ---
 	var box_crew_header := VBoxContainer.new()
+	box_crew_header.name = "crew_header"
 	box_crew_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box_crew_header.add_theme_constant_override("separation", 0)
 	var title_crew_header := Label.new()
+	title_crew_header.name = "crew_header_title"
 	title_crew_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_crew_header.theme_type_variation = &"HeaderTitle"
 	title_crew_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title_crew_header.add_theme_font_override("font", mono_font)
-	title_crew_header.add_theme_font_size_override("font_size", 18)
-	title_crew_header.add_theme_color_override("font_color", clr_blue)
 	box_crew_header.add_child(title_crew_header)
 	_value_labels["crew_header_title"] = title_crew_header
 	var sub_crew_header := Label.new()
+	sub_crew_header.name = "crew_header_subtitle"
 	sub_crew_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sub_crew_header.theme_type_variation = &"HeaderSubtitle"
 	sub_crew_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sub_crew_header.add_theme_font_override("font", mono_font)
-	sub_crew_header.add_theme_font_size_override("font_size", 12)
-	sub_crew_header.add_theme_color_override("font_color", clr_muted)
 	box_crew_header.add_child(sub_crew_header)
 	_value_labels["crew_header_subtitle"] = sub_crew_header
 	box_crew_header.add_child(HSeparator.new())
@@ -79,67 +77,47 @@ func build_ui() -> void:
 	add_child(sec_operative_list_section)
 
 	var civic_box_operative_cards := VBoxContainer.new()
+	civic_box_operative_cards.name = "operative_cards"
 	civic_box_operative_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	civic_box_operative_cards.add_theme_constant_override("separation", 2)
 	_value_labels["operative_cards"] = civic_box_operative_cards
 	add_child(civic_box_operative_cards)
 
-	# --- Section: dossier_notes_section ---
-	var sec_dossier_notes_section := VBoxContainer.new()
-	sec_dossier_notes_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sec_dossier_notes_section.add_theme_constant_override("separation", 2)
+	# --- Inscriptions Container: dossier_notes_section ---
 	var hdr_dossier_notes_section := Label.new()
 	hdr_dossier_notes_section.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
 	hdr_dossier_notes_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hdr_dossier_notes_section.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_dossier_notes_section.add_theme_font_override("font", mono_font)
 	hdr_dossier_notes_section.add_theme_color_override("font_color", clr_blue)
-	sec_dossier_notes_section.add_child(hdr_dossier_notes_section)
-	var sep_dossier_notes_section := HSeparator.new()
-	sec_dossier_notes_section.add_child(sep_dossier_notes_section)
-	add_child(sec_dossier_notes_section)
-
-	var row_observations_box := HBoxContainer.new()
-	row_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lbl_observations_box := Label.new()
-	lbl_observations_box.text = tr("")
-	lbl_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_observations_box.add_theme_font_override("font", mono_font)
-	lbl_observations_box.add_theme_color_override("font_color", clr_muted)
-	row_observations_box.add_child(lbl_observations_box)
-	var val_observations_box := Label.new()
-	val_observations_box.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val_observations_box.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	val_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_observations_box.add_theme_font_override("font", mono_font)
-	val_observations_box.add_theme_color_override("font_color", clr_black)
-	row_observations_box.add_child(val_observations_box)
-	_value_labels["observations_box"] = val_observations_box
-	add_child(row_observations_box)
+	add_child(hdr_dossier_notes_section)
+	var insc_list_dossier_notes_section := VBoxContainer.new()
+	insc_list_dossier_notes_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_dossier_notes_section
+	add_child(insc_list_dossier_notes_section)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("crew_header_title") and data.has("enterprise_title"):
-		_value_labels["crew_header_title"].text = str(data.get("enterprise_title", "--- UNNAMED ---")).to_upper()
-	if _value_labels.has("crew_header_subtitle") and data.has("home_district_name"):
-		_value_labels["crew_header_subtitle"].text = str(data.get("home_district_name", "")).to_upper()
-	if _value_labels.has("operative_cards") and data.has("crew_members"):
+	if _value_labels.has("crew_header_title"):
+		if data.has("enterprise_title") and data["enterprise_title"] != null:
+			_value_labels["crew_header_title"].text = str(data["enterprise_title"]).to_upper()
+		else:
+			_value_labels["crew_header_title"].text = "--- UNNAMED ---"
+	if _value_labels.has("crew_header_subtitle"):
+		if data.has("home_district_name") and data["home_district_name"] != null:
+			_value_labels["crew_header_subtitle"].text = str(data["home_district_name"]).to_upper()
+		else:
+			_value_labels["crew_header_subtitle"].text = ""
+	if _value_labels.has("operative_cards"):
 		var ctrl = _value_labels["operative_cards"]
 		if ctrl is Container:
 			for c in ctrl.get_children():
-				c.queue_free()
+				c.free()
 			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
 			var clr_b: Color = RETRO_THEME.get_ink_color("body")
 			var mono_f: Font = RETRO_THEME.get_monospace_font()
 			var items: Array = data.get("crew_members", [])
 			if items.is_empty():
-				var empty_lbl := Label.new()
-				empty_lbl.text = tr("UI_INTEL_MASKED_BLANK")
-				empty_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				empty_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-				empty_lbl.add_theme_font_override("font", mono_f)
-				empty_lbl.add_theme_color_override("font_color", clr_m)
-				ctrl.add_child(empty_lbl)
+				pass
 			else:
 				for item in items:
 					assert(item is Dictionary, "[UI CONTRACT ERROR] Expected Dictionary in list payload for: crew_members")

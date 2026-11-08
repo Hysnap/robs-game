@@ -2,10 +2,7 @@
   "_meta": {
     "target_class": "GenDistrictDocket",
     "extends": "VBoxContainer",
-    "description": "District intelligence dossier inspector view",
-    "signals": [
-      "item_selected(target_route, filter_key)"
-    ]
+    "description": "District intelligence dossier inspector view"
   },
   "sections": [
     {
@@ -70,7 +67,6 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_UNEMPLOYMENT_TIER",
-          "default_text": "Workforce Tension",
           "autowrap": true
         },
         {
@@ -79,7 +75,6 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_DISPOSABLE_INCOME",
-          "default_text": "Avg Disposable Income",
           "autowrap": true
         }
       ]
@@ -87,7 +82,6 @@
     {
       "id": "civic_infrastructure",
       "header_token": "UI_HDR_CIVIC_FEATURES",
-      "header_default": "CIVIC LANDMARKS & NOTABLE VENUES",
       "rows": [
         {
           "id": "civic_features",
@@ -97,7 +91,6 @@
           "label_field": "name",
           "sublabel_field": "category_title",
           "token": "UI_LBL_CIVIC_SUMMARY",
-          "default_text": "Key Establishments",
           "action_signal": "item_selected",
           "route_field": "detail_route",
           "target_route": "ESTABLISHMENT_DOCKET",
@@ -116,7 +109,6 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_ZONE_HEALTH",
-          "default_text": "Zone Health Index",
           "autowrap": true
         },
         {
@@ -125,7 +117,6 @@
           "type": "TEXT_METRIC",
           "format": "TOKEN",
           "token": "UI_LBL_POLICE_HEAT",
-          "default_text": "Constabulary Scrutiny",
           "autowrap": true
         }
       ]
@@ -140,6 +131,13 @@
           "type": "INSCRIPTIONS_CONTAINER"
         }
       ]
+    },
+    {
+      "id": "district_docket_signals",
+      "type": "SIGNALS",
+      "signals": [
+      "item_selected(target_route, filter_key)"
+    ]
     }
   ]
 }

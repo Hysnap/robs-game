@@ -42,12 +42,12 @@ func build_ui() -> void:
 	add_child(sec_operational_docket)
 
 	var btn_btn_open_order_pad := Button.new()
+	btn_btn_open_order_pad.name = "btn_open_order_pad"
 	btn_btn_open_order_pad.text = tr("UI_BTN_OPEN_ORDER_PAD")
 	btn_btn_open_order_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_open_order_pad.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_open_order_pad.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_open_order_pad.add_theme_font_override("font", mono_font)
-	btn_btn_open_order_pad.pressed.connect(func(): action_clicked.emit("OPEN_PAD"))
+	btn_btn_open_order_pad.pressed.connect(func(): self.action_clicked.emit("OPEN_PAD"))
 	_value_labels["btn_open_order_pad"] = btn_btn_open_order_pad
 	add_child(btn_btn_open_order_pad)
 
@@ -67,12 +67,13 @@ func build_ui() -> void:
 	add_child(sec_staging_ledger)
 
 	var box_queue_list := VBoxContainer.new()
+	box_queue_list.name = "queue_list"
 	box_queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box_queue_list.add_theme_constant_override("separation", 4)
 	var list_queue_list := ItemList.new()
+	list_queue_list.name = "queue_list_list"
 	list_queue_list.custom_minimum_size = Vector2(0, 140)
 	list_queue_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list_queue_list.add_theme_font_override("font", mono_font)
 	box_queue_list.add_child(list_queue_list)
 	_value_labels["queue_list"] = list_queue_list
 	var bar_queue_list := HBoxContainer.new()
@@ -81,45 +82,62 @@ func build_ui() -> void:
 	var btn_up_queue_list := Button.new()
 	btn_up_queue_list.text = "▲"
 	btn_up_queue_list.focus_mode = Control.FOCUS_NONE
-	btn_up_queue_list.add_theme_font_override("font", mono_font)
-	btn_up_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_UP"))
+	btn_up_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.move_directive(sel[0], -1)
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_up_queue_list)
 	var btn_dn_queue_list := Button.new()
 	btn_dn_queue_list.text = "▼"
 	btn_dn_queue_list.focus_mode = Control.FOCUS_NONE
-	btn_dn_queue_list.add_theme_font_override("font", mono_font)
-	btn_dn_queue_list.pressed.connect(func(): action_clicked.emit("MOVE_DOWN"))
+	btn_dn_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.move_directive(sel[0], 1)
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_dn_queue_list)
 	var btn_rm_queue_list := Button.new()
 	btn_rm_queue_list.text = "✖"
 	btn_rm_queue_list.focus_mode = Control.FOCUS_NONE
-	btn_rm_queue_list.add_theme_font_override("font", mono_font)
-	btn_rm_queue_list.pressed.connect(func(): action_clicked.emit("REMOVE_ORDER"))
+	btn_rm_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			var n_idx = self._queue.remove_directive(sel[0])
+			if n_idx >= 0: list_queue_list.select(n_idx)
+	)
 	bar_queue_list.add_child(btn_rm_queue_list)
 	var btn_tg_queue_list := Button.new()
 	btn_tg_queue_list.text = "✓"
 	btn_tg_queue_list.focus_mode = Control.FOCUS_NONE
-	btn_tg_queue_list.add_theme_font_override("font", mono_font)
-	btn_tg_queue_list.pressed.connect(func(): action_clicked.emit("TOGGLE_SELECT"))
+	btn_tg_queue_list.pressed.connect(func():
+		var sel = list_queue_list.get_selected_items()
+		if sel.size() > 0 and "_queue" in self:
+			self._queue.toggle_selection(sel[0])
+			list_queue_list.select(sel[0])
+	)
 	bar_queue_list.add_child(btn_tg_queue_list)
 	box_queue_list.add_child(bar_queue_list)
 	add_child(box_queue_list)
 
 	var btn_btn_select_all := Button.new()
+	btn_btn_select_all.name = "btn_select_all"
 	btn_btn_select_all.text = tr("UI_BTN_SELECT_ALL")
 	btn_btn_select_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_select_all.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_select_all.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_select_all.add_theme_font_override("font", mono_font)
-	btn_btn_select_all.pressed.connect(func(): action_clicked.emit("SELECT_ALL"))
+	btn_btn_select_all.pressed.connect(func(): if "_queue" in self: self._queue.toggle_all())
 	_value_labels["btn_select_all"] = btn_btn_select_all
 	add_child(btn_btn_select_all)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("queue_list") and data.has("staged_queue"):
+	if _value_labels.has("queue_list"):
 		var ctrl = _value_labels["queue_list"]
 		if ctrl is ItemList:
 			ctrl.clear()
-			var items: Array = data.get("staged_queue", [])
-			for item in items:
-				ctrl.add_item(str(item))
+			if data.has("staged_queue") and data["staged_queue"] is Array:
+				var items: Array = data["staged_queue"]
+				for item in items:
+					ctrl.add_item(str(item))

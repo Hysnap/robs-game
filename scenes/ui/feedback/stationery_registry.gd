@@ -2,12 +2,20 @@
 class_name StationeryRegistry
 extends RefCounted
 
+const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
+
 static var _cached_definitions: Dictionary = {} # "STICKY_NOTE" -> Dictionary
 static var _active_manifest: Dictionary = {}
-static var _initialized: bool = false
+static var _active_manifest_path: String = ""
 
-static func initialize(manifest_path: String = "res://data_modules/core/ui_schemas/stationary/manifests/filofax_1984_inbox.json") -> void:
-	if _initialized:
+## Initializes or re-initializes the registry if the active shell manifest has changed
+static func initialize(manifest_path: String = "") -> void:
+	# 1. Resolve dynamic inbox manifest from the active shell directly
+	if manifest_path.is_empty():
+		manifest_path = ShellRegistryScript.get_active_inbox_manifest_path()
+
+	# 2. Prevent redundant loads, but allow dynamic theme/shell switching
+	if _active_manifest_path == manifest_path and not _cached_definitions.is_empty():
 		return
 
 	if not FileAccess.file_exists(manifest_path):
@@ -20,6 +28,8 @@ static func initialize(manifest_path: String = "res://data_modules/core/ui_schem
 	f.close()
 
 	_cached_definitions.clear()
+	_active_manifest_path = manifest_path
+	
 	var allowed_files: Array = _active_manifest.get("allowed_stationery", [])
 	
 	for file_path in allowed_files:
@@ -32,8 +42,7 @@ static func initialize(manifest_path: String = "res://data_modules/core/ui_schem
 				var id: String = str(parsed["_meta"].get("id", "")).to_upper()
 				_cached_definitions[id] = parsed
 				
-	_initialized = true
-	SystemLogger.log_info("[StationeryRegistry] Ingested %d stationery definitions for shell manifest." % _cached_definitions.size())
+	SystemLogger.log_info("[StationeryRegistry] Ingested %d stationery definitions for shell manifest: %s" % [_cached_definitions.size(), manifest_path])
 
 static func get_definition(def_id: String) -> Dictionary:
 	initialize()

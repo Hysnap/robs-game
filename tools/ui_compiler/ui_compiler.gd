@@ -43,19 +43,22 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	var target_filename := "gen_" + schema_path.get_file().replace(".json", ".gd")
 	var out_path := OUTPUT_DIR + target_filename
 
-	# 1. Harvest and Deduplicate Signals
+	# 1. Harvest and Deduplicate Signals from Sections (NO _meta access)
 	var declared_signals: Dictionary = {}
 	var signal_defs: Array[String] = []
 
-	for sig in meta.get("signals", []):
-		var sig_str: String = str(sig).strip_edges()
-		var base_name: String = sig_str.split("(")[0].strip_edges()
-		if not declared_signals.has(base_name):
-			declared_signals[base_name] = true
-			signal_defs.append(sig_str)
+	var sections: Array = schema.get("sections", [])
+	for sec in sections:
+		var s_type: String = sec.get("type", "").to_upper()
+		if s_type == "SIGNALS":
+			for sig in sec.get("signals", []):
+				var sig_str: String = str(sig).strip_edges()
+				var base_name: String = sig_str.split("(")[0].strip_edges()
+				if not declared_signals.has(base_name):
+					declared_signals[base_name] = true
+					signal_defs.append(sig_str)
 
 	# Auto-discover signals needed by interactive primitives
-	var sections: Array = schema.get("sections", [])
 	for sec in sections:
 		for row in sec.get("rows", []):
 			var r_type: String = row.get("type", "").to_upper()
@@ -77,7 +80,12 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 		lines.append("")
 
 	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")\n")
-	lines.append("var _value_labels: Dictionary = {}\n")
+	lines.append("var _value_labels: Dictionary = {}")
+
+	var has_action_queue: bool = bool(meta.get("has_action_queue", false))
+	if has_action_queue:
+		lines.append("var _queue: ActionQueuePresenter = ActionQueuePresenter.new()")
+	lines.append("")
 
 	# _init()
 	lines.append("func _init() -> void:")
@@ -96,15 +104,42 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	lines.append("\tvar clr_muted: Color = RETRO_THEME.get_ink_color(\"muted\")")
 	lines.append("\tvar clr_black: Color = RETRO_THEME.get_ink_color(\"body\")\n")
 
-	var has_inscriptions_container: bool = bool(meta.get("has_inscriptions", false))
+	var has_inscriptions_container: bool = false
 
 	for sec in sections:
 		var s_id: String = sec.get("id", "sec")
+		var s_type: String = sec.get("type", "").to_upper()
+		
+		# Skip signal sections during visual UI construction
+		if s_type == "SIGNALS":
+			continue
+
 		var s_token: String = sec.get("header_token", "")
 		var s_def: String = sec.get("header_default", s_id.capitalize())
 
 		if not s_token.is_empty():
 			out_tokens[s_token] = s_def
+
+		# First-class section: INSCRIPTIONS
+		if s_type == "INSCRIPTIONS":
+			has_inscriptions_container = true
+			lines.append("\t# --- Inscriptions Container: " + s_id + " ---")
+			if not s_token.is_empty():
+				lines.append("\tvar hdr_" + s_id + " := Label.new()")
+				lines.append("\thdr_" + s_id + ".text = \"[ \" + tr(\"" + s_token + "\").to_upper() + \" ]\"")
+				lines.append("\thdr_" + s_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+				lines.append("\thdr_" + s_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
+				lines.append("\thdr_" + s_id + ".add_theme_font_override(\"font\", mono_font)")
+				lines.append("\thdr_" + s_id + ".add_theme_color_override(\"font_color\", clr_blue)")
+				lines.append("\tadd_child(hdr_" + s_id + ")")
+			lines.append("\tvar insc_list_" + s_id + " := VBoxContainer.new()")
+			lines.append("\tinsc_list_" + s_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+			lines.append("\t_value_labels[\"__inscriptions__\"] = insc_list_" + s_id)
+			lines.append("\tadd_child(insc_list_" + s_id + ")\n")
+			continue
+
+		# Standard section with header
+		if not s_token.is_empty():
 			lines.append("\t# --- Section: " + s_id + " ---")
 			lines.append("\tvar sec_" + s_id + " := VBoxContainer.new()")
 			lines.append("\tsec_" + s_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
@@ -132,13 +167,15 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 
 			lines.append_array(UI_WIDGET_EMITTERS.emit_widget_build(row))
 
-	if meta.get("has_inscriptions", false):
-		_emit_inscriptions_block(lines, meta, out_tokens)
+	if has_action_queue:
+		lines.append("\t_queue.queue_changed.connect(_on_queue_changed)\n")
 
 	# bind_data()
 	lines.append("func bind_data(data: Dictionary) -> void:")
 	var binding_lines: Array[String] = []
 	for sec in sections:
+		if sec.get("type", "").to_upper() == "SIGNALS":
+			continue
 		for row in sec.get("rows", []):
 			binding_lines.append_array(UI_BINDER_EMITTERS.emit_binding_logic(row))
 
@@ -168,6 +205,31 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 		lines.append("\tnote_lbl.add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"body\"))")
 		lines.append("\ttarget_box.add_child(note_lbl)")
 
+	# --- INJECT QUEUE API ---
+	if has_action_queue:
+		lines.append_array([
+			"",
+			"func add_directive(directive: Dictionary) -> void:",
+			"\t_queue.add_directive(directive)",
+			"",
+			"func get_staged_directives() -> Array[Dictionary]:",
+			"\treturn _queue.get_staged_directives()",
+			"",
+			"func consume_selected_directives() -> Array[Dictionary]:",
+			"\treturn _queue.consume_selected_directives()",
+			"",
+			"func clear_staged_directives() -> void:",
+			"\t_queue.clear()",
+			"",
+			"func _on_queue_changed(display_lines: Array, _selected_index: int) -> void:",
+			"\tif _value_labels.has(\"queue_list\"):",
+			"\t\tvar lst = _value_labels[\"queue_list\"]",
+			"\t\tif lst is ItemList:",
+			"\t\t\tlst.clear()",
+			"\t\t\tfor line in display_lines:",
+			"\t\t\t\tlst.add_item(line)"
+		])
+
 	var out_file := FileAccess.open(out_path, FileAccess.WRITE)
 	assert(out_file != null, "[UICompiler FATAL] Could not write output file: " + out_path)
 	out_file.store_string("\n".join(lines) + "\n")
@@ -187,29 +249,15 @@ static func _validate_generated_view(out_path: String, expected_signals: Diction
 	for sig_name in expected_signals.keys():
 		assert(instance.has_signal(sig_name), "[UIValidator FATAL] Generated view missing declared signal '%s' in %s" % [sig_name, out_path])
 	
-	# Cleanly free all constructed child nodes to prevent CanvasItem / ObjectDB leaks
 	if instance is Node:
-		for child in instance.get_children():
-			child.free()
-	instance.free()
+		_deep_free_node(instance)
+	else:
+		instance.free()
 
-static func _emit_inscriptions_block(lines: Array[String], meta: Dictionary, out_tokens: Dictionary) -> void:
-	var h_token: String = meta.get("inscriptions_header_token", "UI_SEC_INSCRIBED_NOTES")
-	var h_def: String = meta.get("inscriptions_header_default", "INSCRIBED NOTES")
-	out_tokens[h_token] = h_def
-
-	lines.append("\t# --- Inscriptions Container ---")
-	lines.append("\tvar hdr_insc := Label.new()")
-	lines.append("\thdr_insc.text = \"[ \" + tr(\"" + h_token + "\").to_upper() + \" ]\"")
-	lines.append("\thdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL")
-	lines.append("\thdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
-	lines.append("\thdr_insc.add_theme_font_override(\"font\", mono_font)")
-	lines.append("\thdr_insc.add_theme_color_override(\"font_color\", clr_blue)")
-	lines.append("\tadd_child(hdr_insc)")
-	lines.append("\tvar insc_list := VBoxContainer.new()")
-	lines.append("\tinsc_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL")
-	lines.append("\t_value_labels[\"__inscriptions__\"] = insc_list")
-	lines.append("\tadd_child(insc_list)\n")
+static func _deep_free_node(node: Node) -> void:
+	for child in node.get_children():
+		_deep_free_node(child)
+	node.free()
 
 static func sync_localization_tokens(tokens_to_sync: Dictionary) -> void:
 	if not FileAccess.file_exists(UI_STRINGS_PATH):

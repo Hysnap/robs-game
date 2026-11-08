@@ -38,69 +38,67 @@ func build_ui() -> void:
 	add_child(sec_diary_header)
 
 	var row_current_week := HBoxContainer.new()
+	row_current_week.name = "current_week"
 	row_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_current_week := Label.new()
 	lbl_current_week.text = tr("UI_LBL_CURRENT_WEEK")
 	lbl_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_current_week.add_theme_font_override("font", mono_font)
-	lbl_current_week.add_theme_color_override("font_color", clr_muted)
 	row_current_week.add_child(lbl_current_week)
 	var val_current_week := Label.new()
+	val_current_week.name = "current_week_value"
 	val_current_week.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_current_week.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_current_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_current_week.add_theme_font_override("font", mono_font)
-	val_current_week.add_theme_color_override("font_color", clr_black)
 	row_current_week.add_child(val_current_week)
 	_value_labels["current_week"] = val_current_week
 	add_child(row_current_week)
 
 	var row_dispatched_count := HBoxContainer.new()
+	row_dispatched_count.name = "dispatched_count"
 	row_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var lbl_dispatched_count := Label.new()
 	lbl_dispatched_count.text = tr("UI_LBL_DISPATCH_COUNT")
 	lbl_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl_dispatched_count.add_theme_font_override("font", mono_font)
-	lbl_dispatched_count.add_theme_color_override("font_color", clr_muted)
 	row_dispatched_count.add_child(lbl_dispatched_count)
 	var val_dispatched_count := Label.new()
+	val_dispatched_count.name = "dispatched_count_value"
 	val_dispatched_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_dispatched_count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_dispatched_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	val_dispatched_count.add_theme_font_override("font", mono_font)
-	val_dispatched_count.add_theme_color_override("font_color", clr_black)
 	row_dispatched_count.add_child(val_dispatched_count)
 	_value_labels["dispatched_count"] = val_dispatched_count
 	add_child(row_dispatched_count)
 
-	# --- Inscriptions Container ---
-	var hdr_insc := Label.new()
-	hdr_insc.text = "[ " + tr("UI_SEC_DISPATCH_INSCRIPTIONS").to_upper() + " ]"
-	hdr_insc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hdr_insc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	hdr_insc.add_theme_font_override("font", mono_font)
-	hdr_insc.add_theme_color_override("font_color", clr_blue)
-	add_child(hdr_insc)
-	var insc_list := VBoxContainer.new()
-	insc_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_value_labels["__inscriptions__"] = insc_list
-	add_child(insc_list)
+	# --- Inscriptions Container: inscriptions ---
+	var hdr_inscriptions := Label.new()
+	hdr_inscriptions.text = "[ " + tr("UI_SEC_DISPATCH_INSCRIPTIONS").to_upper() + " ]"
+	hdr_inscriptions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_inscriptions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_inscriptions.add_theme_font_override("font", mono_font)
+	hdr_inscriptions.add_theme_color_override("font_color", clr_blue)
+	add_child(hdr_inscriptions)
+	var insc_list_inscriptions := VBoxContainer.new()
+	insc_list_inscriptions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_inscriptions
+	add_child(insc_list_inscriptions)
 
 func bind_data(data: Dictionary) -> void:
-	if _value_labels.has("current_week") and data.has("current_week_tick"):
+	if _value_labels.has("current_week"):
 		var ctrl = _value_labels["current_week"]
-		if data["current_week_tick"] == null:
+		if not data.has("current_week_tick") or data["current_week_tick"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = str(int(data["current_week_tick"])) + ""
-	if _value_labels.has("dispatched_count") and data.has("total_dispatched_orders"):
+			var val_str := str(int(data["current_week_tick"]))
+			ctrl.text = tr("FMT_INT").replace("{val}", val_str) + ""
+	if _value_labels.has("dispatched_count"):
 		var ctrl = _value_labels["dispatched_count"]
-		if data["total_dispatched_orders"] == null:
+		if not data.has("total_dispatched_orders") or data["total_dispatched_orders"] == null:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
-			ctrl.text = str(int(data["total_dispatched_orders"])) + " directives"
+			var val_str := str(int(data["total_dispatched_orders"]))
+			ctrl.text = tr("FMT_INT").replace("{val}", val_str) + ""
 
 func inscribe_entry(entry: Dictionary) -> void:
 	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
