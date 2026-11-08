@@ -64,5 +64,15 @@ func build_ui() -> void:
 	_value_labels["finance"] = btn_finance
 	add_child(btn_finance)
 
+	var btn_styles := Button.new()
+	btn_styles.name = "styles"
+	btn_styles.text = tr("UI_TAB_MACRO_STYLES")
+	btn_styles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_styles.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_styles.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_styles.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "STYLES"}))
+	_value_labels["styles"] = btn_styles
+	add_child(btn_styles)
+
 func bind_data(data: Dictionary) -> void:
 	pass

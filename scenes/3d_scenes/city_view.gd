@@ -15,6 +15,7 @@ const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
 
+
 var view_host: ViewHost = null
 var shell_customizer: Control = null
 var feedback_inbox: Control = null
@@ -185,6 +186,7 @@ func _setup_compiled_shell_host_views() -> void:
 	if outer_shell:
 		action_planner_view = planner_class.new()
 		outer_shell.mount_view("ACTION", action_planner_view)
+		view_host.set_action_component(action_planner_view)
 
 	# E. Mount Feedback Inbox Shell onto Canvas
 	if workspace_canvas and feedback_inbox == null:
@@ -207,12 +209,25 @@ func _setup_compiled_shell_host_views() -> void:
 
 	# G. Connect ViewHost signals
 	if view_host:
-		view_host.action_requested.connect(_on_view_host_action_requested)
-		view_host.triage_slip_action.connect(_on_view_host_slip_triage)
-		view_host.item_selected.connect(_on_view_host_item_selected)
-		view_host.route_changed.connect(_on_view_host_route_changed)
+		view_host.ui_command_dispatched.connect(_on_ui_command_dispatched)
 
 	view_host.switch_to_domain("DOSSIER")
+
+func _on_ui_command_dispatched(command: UIActionCommand) -> void:
+	if command.type == UIActionCommand.CommandType.ROUTE_REQUEST \
+	and command.domain == "STYLES":
+		shell_customizer.visible = not shell_customizer.visible
+		if shell_customizer.visible:
+			shell_customizer.move_to_front()
+
+	OperationsControllerScript.dispatch_ui_command(
+		command,
+		view_host,
+		{
+			"directive_modal": directive_modal,
+			"action_planner": view_host.get_action_component()
+		}
+	)
 
 func _setup_shell_customizer() -> void:
 	var customizer_res = load("res://scenes/ui/shell_host/shell_customizer.tscn")
@@ -227,137 +242,11 @@ func _setup_shell_customizer() -> void:
 		shell_customizer.z_index = 20
 		workspace_canvas.add_child(shell_customizer)
 
-		view_host.route_changed.connect(func(domain_key: String):
-			if domain_key == "STYLES":
-				shell_customizer.visible = not shell_customizer.visible
-				if shell_customizer.visible:
-					shell_customizer.move_to_front()
-		)
-
-func _on_view_host_route_changed(domain_key: String) -> void:
-	match domain_key:
-		"ROSTER":
-			_hydrate_roster_view()
-		"DOSSIER":
-			var gs = ScenarioManifestManager.get_game_state()
-			var active_id: String = ""
-			if gs != null and "world_state" in gs:
-				active_id = str(gs.world_state.get("selected_district_id", ""))
-			if not active_id.is_empty() and gs.has_method("get_district_view"):
-				view_host.update_active_view_data(gs.get_district_view(active_id))
-
-func _hydrate_roster_view() -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	if gs == null or not "world_state" in gs or view_host == null:
-		return
-
-	var ws: Dictionary = gs.world_state
-	var staff_dict: Dictionary = ws.get("staff", {})
-	var home_id: String = str(ws.get("operations", {}).get("home_district_id", "block_0_0"))
-
-	var crew_members: Array[Dictionary] = []
-	for staff_id in staff_dict.keys():
-		var member = staff_dict[staff_id]
-		if member is Dictionary:
-			var r_id: int = int(member.get("resident_id", 0))
-			var name_str: String = str(member.get("name", staff_id))
-			var cash_val: float = float(member.get("pocket_cash", 0.0))
-			var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
-
-			var age_val: int = 25
-			if r_id > 0:
-				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(r_id)
-				age_val = int(demo.get("age", 25))
-
-			var summary: String = "Age %d • £%.2f Pocket • %.0fh max" % [age_val, cash_val, daily_hrs]
-
-			# Include staff_id as fallback key identifier
-			crew_members.append({
-				"resident_id": r_id if r_id > 0 else staff_id,
-				"name": name_str,
-				"summary_line": summary,
-				"staff_id": staff_id,
-				"assigned_district": str(member.get("current_district_id", home_id))
-			})
-
-	view_host.update_active_view_data({"crew_roster": crew_members})
-
-func _on_view_host_action_requested(action_code: String, _payload: Dictionary) -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	var target_district: String = ""
-	if gs != null and "world_state" in gs:
-		target_district = str(gs.world_state.get("selected_district_id", ""))
-
-	match action_code:
-		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
-			if directive_modal != null and directive_modal.has_method("open_for_context"):
-				directive_modal.open_for_context({"target_district_id": target_district})
-		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
-			_on_end_turn_requested()
-
 func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> void:
 	if action_id == "FILE":
 		OperationsControllerScript.file_card_slip(card_payload, view_host)
 	else:
 		SystemLogger.log_info("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
-
-func _on_view_host_item_selected(target_route: String, filter_key: Variant) -> void:
-	match target_route:
-		"OPERATIVE_DETAIL":
-			var gs = ScenarioManifestManager.get_game_state()
-			var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
-			var staff_dict: Dictionary = ws.get("staff", {})
-
-			var res_id: int = 0
-			var staff_info: Dictionary = {}
-
-			# Resolve whether filter_key is integer resident_id or String staff_id
-			if typeof(filter_key) == TYPE_INT or (typeof(filter_key) == TYPE_STRING and str(filter_key).is_valid_int()):
-				res_id = int(filter_key)
-			else:
-				var s_id: String = str(filter_key)
-				if staff_dict.has(s_id):
-					staff_info = staff_dict[s_id]
-					res_id = int(staff_info.get("resident_id", 0))
-
-			# 1. Primary Route: If resident has an established home address in SQLite
-			if res_id > 0:
-				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(res_id)
-				var home_estab: int = int(demo.get("home_establishment_id", demo.get("establishment_id", 0)))
-				if home_estab > 0:
-					var res_data: Dictionary = SocietyQueriesScript.get_establishment_docket(home_estab)
-					view_host.switch_to_domain("RESIDENTIAL_DOCKET")
-					view_host.update_active_view_data(res_data)
-					return
-
-			# 2. Resilient Fallback: Route to the Operative's Operating District Dossier
-			var target_district: String = ""
-			if not staff_info.is_empty():
-				target_district = str(staff_info.get("current_district_id", ""))
-			else:
-				# Find operative record in staff_dict by resident_id
-				for s_key in staff_dict.keys():
-					var s_entry = staff_dict[s_key]
-					if s_entry is Dictionary and int(s_entry.get("resident_id", -1)) == res_id:
-						target_district = str(s_entry.get("current_district_id", ""))
-						break
-
-			if target_district.is_empty():
-				target_district = str(ws.get("player_knowledge", {}).get("home_district_id", ""))
-
-			if not target_district.is_empty() and gs != null and gs.has_method("get_district_view"):
-				var district_data: Dictionary = gs.get_district_view(target_district)
-				view_host.switch_to_domain("DOSSIER")
-				view_host.update_active_view_data(district_data)
-
-		"RESIDENTIAL_DOCKET", "ESTABLISHMENT_DOCKET":
-			var estab_id: int = int(filter_key)
-			var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
-			view_host.switch_to_domain(target_route)
-			view_host.update_active_view_data(docket_data)
-
-		_:
-			view_host.switch_to_domain(target_route)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:

@@ -134,6 +134,7 @@
     },
     {
       "id": "district_docket_signals",
+      "type": "SIGNALS",
       "signals": [
       "item_selected(target_route, filter_key)"
     ]

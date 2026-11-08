@@ -42,6 +42,7 @@
     },
     {
       "id": "action_planner_signals",
+      "type": "SIGNALS",
       "signals": [
       "directive_staged(directive)",
       "execute_shift_requested(staged_directives)",

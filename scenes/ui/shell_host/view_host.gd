@@ -2,7 +2,6 @@
 class_name ViewHost
 extends Node
 
-const UIActionCommand = preload("res://scenes/ui/shell_host/ui_action_command.gd")
 
 ## Unified signal emitting structured UIActionCommand objects
 signal ui_command_dispatched(command: UIActionCommand)
@@ -14,7 +13,7 @@ signal slip_filed(slip_data: Dictionary, destination: String)
 var _views: Dictionary = {}
 var _active_domain: String = ""
 var _desk_inbox: Control = null
-var _desk_order_control: Control = null
+var _action_component: Control = null
 
 func _ready() -> void:
 	if shell_node == null:
@@ -24,13 +23,45 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	cleanup()
 
+func set_action_component(action_control: Control) -> void:
+	_action_component = action_control
+
+	if action_control != null \
+	and action_control.has_signal("action_clicked"):
+		var callback := Callable(self, "_on_view_action_clicked")
+		if not action_control.is_connected("action_clicked", callback):
+			action_control.connect("action_clicked", callback)
+
+func get_action_component() -> Control:
+	return _action_component
+
 ## Mounts any compiled navigation widget into the shell's generic NAV slot
 func set_navigation_component(nav_bar: Control) -> void:
 	if shell_node:
 		shell_node.mount_view("NAV", nav_bar)
-		if nav_bar.has_signal("route_requested"):
-			if not nav_bar.is_connected("route_requested", Callable(self, "_on_nav_route_requested")):
-				nav_bar.connect("route_requested", Callable(self, "_on_nav_route_requested"))
+
+	if nav_bar.has_signal("action_clicked"):
+		var callback := Callable(self, "_on_navigation_action_clicked")
+		if not nav_bar.is_connected("action_clicked", callback):
+			nav_bar.connect("action_clicked", callback)
+
+func _on_navigation_action_clicked(
+	action_code: String,
+	payload: Dictionary
+) -> void:
+	if action_code != "NAV_ROUTE":
+		return
+
+	var domain_token := str(payload.get("domain", "")).strip_edges()
+	if domain_token.is_empty():
+		push_warning("[ViewHost] Navigation action did not provide a domain.")
+		return
+
+	var cmd := UIActionCommand.new(
+		UIActionCommand.CommandType.ROUTE_REQUEST,
+		domain_token
+	)
+	ui_command_dispatched.emit(cmd)
 
 ## Registers any compiled UI view to an arbitrary string key from configuration
 func register_view(domain_key: String, view_control: Control) -> void:
@@ -47,9 +78,6 @@ func register_view(domain_key: String, view_control: Control) -> void:
 		if view_control.has_signal("item_selected"):
 			if not view_control.is_connected("item_selected", Callable(self, "_on_view_item_selected")):
 				view_control.connect("item_selected", Callable(self, "_on_view_item_selected"))
-		if view_control.has_signal("route_requested"):
-			if not view_control.is_connected("route_requested", Callable(self, "_on_nav_route_requested")):
-				view_control.connect("route_requested", Callable(self, "_on_nav_route_requested"))
 		if view_control.has_signal("action_clicked"):
 			if not view_control.is_connected("action_clicked", Callable(self, "_on_view_action_clicked")):
 				view_control.connect("action_clicked", Callable(self, "_on_view_action_clicked"))
@@ -57,10 +85,19 @@ func register_view(domain_key: String, view_control: Control) -> void:
 ## Swaps whatever view is currently mounted in CONTENT slot
 func switch_to_domain(domain_key: String) -> void:
 	if not _views.has(domain_key) or shell_node == null:
-		SystemLogger.log_warn("[ViewHost] Cannot switch to unavailable domain '%s'." % domain_key)
+		SystemLogger.log_warn(
+			"[ViewHost] Cannot switch to unavailable domain '%s'." % domain_key
+		)
 		return
+
+	var target_view = _views[domain_key]
+	if not is_instance_valid(target_view):
+		push_error("[ViewHost] Registered view '%s' has already been freed." % domain_key)
+		_views.erase(domain_key)
+		return
+
 	_active_domain = domain_key
-	shell_node.mount_view("CONTENT", _views[domain_key])
+	shell_node.mount_view("CONTENT", target_view, false)
 
 ## Pure Data Ingestion: Forwards arbitrary domain telemetry to active view's bind_data()
 func update_active_view_data(display_data: Dictionary) -> void:
@@ -126,28 +163,6 @@ func show_feedback_inbox() -> void:
 		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
 			(shell_node.get_parent() as CanvasLayer).visible = true
 
-# Mounts the order compiler ui element
-func set_order_compiler(order_control: Control) -> void:
-	_desk_order_control = order_control
-	if _desk_order_control != null:
-		if _desk_order_control.has_signal("slip_filed"):
-			if not _desk_order_control.slip_filed.is_connected(_on_desk_slip_filed):
-				_desk_order_control.slip_filed.connect(_on_desk_slip_filed)
-		if _desk_order_control.has_signal("top_card_action"):
-			if not _desk_order_control.top_card_action.is_connected(_on_desk_top_card_action):
-				_desk_order_control.top_card_action.connect(_on_desk_top_card_action)
-
-## Presentation helper: Ensures the order control is visible and brought to the front
-func show_order_control() -> void:
-	if _desk_order_control != null:
-		_desk_order_control.visible = true
-		_desk_order_control.move_to_front()
-		var parent_node := _desk_order_control.get_parent()
-		if parent_node is CanvasLayer:
-			(parent_node as CanvasLayer).visible = true
-		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
-			(shell_node.get_parent() as CanvasLayer).visible = true
-
 ## Cleanly frees all registered view instances and clears cached references
 func cleanup() -> void:
 	for domain_key in _views.keys():
@@ -158,6 +173,7 @@ func cleanup() -> void:
 			v.free()
 	_views.clear()
 	_active_domain = ""
+	_action_component = null
 
 	if is_instance_valid(_desk_inbox) and _desk_inbox.get_parent() == null:
 		_desk_inbox.free()
@@ -171,7 +187,12 @@ func _on_view_action_clicked(action_code: String) -> void:
 	var cmd = UIActionCommand.new(UIActionCommand.CommandType.ACTION_CLICKED, _active_domain, action_code)
 	ui_command_dispatched.emit(cmd)
 
-func _on_nav_route_requested(domain_token: String, _target_page: String) -> void:
-	switch_to_domain(domain_token)
-	var cmd = UIActionCommand.new(UIActionCommand.CommandType.ROUTE_REQUEST, domain_token)
+func _on_nav_route_requested(
+	domain_token: String,
+	_target_page: String
+	) -> void:
+	var cmd := UIActionCommand.new(
+		UIActionCommand.CommandType.ROUTE_REQUEST,
+		domain_token
+	)
 	ui_command_dispatched.emit(cmd)

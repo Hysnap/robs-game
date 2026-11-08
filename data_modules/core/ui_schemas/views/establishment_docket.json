@@ -96,6 +96,7 @@
     },
     {
       "id": "establishment_docket_signals",
+      "type": "SIGNALS",
       "signals": [
       "route_requested(domain_token: String, target_page_name: String)"
     ]

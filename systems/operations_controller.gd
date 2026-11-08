@@ -56,7 +56,7 @@ static func _handle_route_request(domain_key: String, view_host: ViewHost) -> vo
 					})
 
 			view_host.switch_to_domain("ROSTER")
-			view_host.update_active_view_data({"crew_roster": crew_members})
+			view_host.update_active_view_data({"crew_members": crew_members})
 			
 		"DOSSIER":
 			view_host.switch_to_domain("DOSSIER")
@@ -171,12 +171,9 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 
 	# 3. If a ViewHost is present, update the UI layers using the typed mount contract
 	if view_host != null:
-		if view_host.has_method("get_mounted_view"):
-			var planner_view = view_host.get_mounted_view("ACTION")
-			if planner_view != null and planner_view.has_method("clear_staged_directives"):
-				planner_view.clear_staged_directives()
-		elif view_host.has_method("clear_staged_directives"):
-			view_host.clear_staged_directives()
+		var planner_view: Control = view_host.get_action_component()
+		if is_instance_valid(planner_view) and planner_view.has_method("clear_staged_directives"):
+			planner_view.clear_staged_directives()
 
 		var current_date_str: String = report.get("calendar_date", "Shift Report")
 		for memo in report.get("diary_memos", []):

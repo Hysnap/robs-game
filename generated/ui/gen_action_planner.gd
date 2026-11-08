@@ -3,6 +3,10 @@
 class_name GenActionPlanner
 extends VBoxContainer
 
+signal directive_staged(directive)
+signal execute_shift_requested(staged_directives)
+signal action_clicked(action_code)
+
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 var _value_labels: Dictionary = {}

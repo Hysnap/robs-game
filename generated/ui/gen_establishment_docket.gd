@@ -3,6 +3,8 @@
 class_name GenEstablishmentDocket
 extends VBoxContainer
 
+signal route_requested(domain_token: String, target_page_name: String)
+
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 var _value_labels: Dictionary = {}
