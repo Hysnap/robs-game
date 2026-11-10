@@ -6,7 +6,7 @@ const ROUTER = preload("res://systems/impacts/impact_router.gd")
 
 ## Evaluates natural commodity decay across all inventory lanes on ambient tick
 static func process_inventory_decay(world_state: Dictionary) -> void:
-	var inventory = world_state.get("inventory_registry", {})
+	var inventory = world_state.get("inventory", {})
 	var commodity_registry = world_state.get("commodity_registry", {})
 	var container_registry = world_state.get("container_registry", {})
 

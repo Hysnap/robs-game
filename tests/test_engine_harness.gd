@@ -52,7 +52,7 @@ func _init() -> void:
 		"inventory_batches": {},
 		
 		# Player Inventory: Each commodity requires a Dictionary containing STOCK and PREPPED
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": {"STOCK": 0.0, "PREPPED": 0.0},
 			"ROLLING_TOBACCO": {"STOCK": 10.0, "PREPPED": 0.0},
 			"ROLLING_PAPERS": {"STOCK": 20.0, "PREPPED": 0.0},
@@ -101,11 +101,11 @@ func _init() -> void:
 	var buy_result = SimControllerScript.execute_directive(world_state, buy_directive)
 	print("  ✓ Buy Result: ", buy_result.get("message", "OK"))
 	print("  ✓ Cash Remaining: £%.2f" % world_state["finances"]["liquid_cash"])
-	print("  ✓ Stock In Vault: ", world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"])
+	print("  ✓ Stock In Vault: ", world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"])
 	
 	assert(buy_result.get("success", false), "ERROR: BUY action failed!")
 	assert(world_state["finances"]["liquid_cash"] == 76.0, "ERROR: Vault cash calculation incorrect on BUY!")
-	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 20.0, "ERROR: Stock failed to increment on BUY!")
+	assert(world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"] == 20.0, "ERROR: Stock failed to increment on BUY!")
 
 	# STEP 3B: SELL DIRECTIVE
 	print("\n[STEP 3B] Executing SELL to 'MARKET_CONSUMERS_ASTON'...")
@@ -121,11 +121,11 @@ func _init() -> void:
 	var sell_result = SimControllerScript.execute_directive(world_state, sell_directive)
 	print("  ✓ Sell Result: ", sell_result.get("message", "OK"))
 	print("  ✓ Cash After Sale: £%.2f" % world_state["finances"]["liquid_cash"])
-	print("  ✓ Stock Remaining: ", world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"])
+	print("  ✓ Stock Remaining: ", world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"])
 	
 	assert(sell_result.get("success", false), "ERROR: SELL action failed!")
 	assert(world_state["finances"]["liquid_cash"] == 111.0, "ERROR: Vault cash did not credit on SELL!")
-	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "ERROR: Stock failed to decrement on SELL!")
+	assert(world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "ERROR: Stock failed to decrement on SELL!")
 
 	var aston = world_state["districts"]["DIST_ASTON_01"]
 	var heat_post_sale: float = float(aston["actual_police_heat"])
@@ -162,14 +162,14 @@ func _init() -> void:
 
 	var make_result = SimControllerScript.execute_directive(world_state, make_directive)
 	print("  ✓ Make Result: ", make_result.get("message", "OK"))
-	print("  ✓ Consumed Tobacco (Remaining): ", world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"], "g")
-	print("  ✓ Consumed Papers (Remaining): ", world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"])
-	print("  ✓ Yielded Rollups in Staging: ", world_state["inventory_registry"]["ROLLUP"]["PREPPED"])
+	print("  ✓ Consumed Tobacco (Remaining): ", world_state["inventory"]["ROLLING_TOBACCO"]["STOCK"], "g")
+	print("  ✓ Consumed Papers (Remaining): ", world_state["inventory"]["ROLLING_PAPERS"]["STOCK"])
+	print("  ✓ Yielded Rollups in Staging: ", world_state["inventory"]["ROLLUP"]["PREPPED"])
 	
 	assert(make_result.get("success", false), "ERROR: MAKE directive failed!")
-	assert(world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"] == 2.0, "ERROR: Tobacco math incorrect (10 - 8 = 2)!")
-	assert(world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"] == 10.0, "ERROR: Paper math incorrect (20 - 10 = 10)!")
-	assert(world_state["inventory_registry"]["ROLLUP"]["PREPPED"] == 10.0, "ERROR: Output yield did not reach PREPPED lane!")
+	assert(world_state["inventory"]["ROLLING_TOBACCO"]["STOCK"] == 2.0, "ERROR: Tobacco math incorrect (10 - 8 = 2)!")
+	assert(world_state["inventory"]["ROLLING_PAPERS"]["STOCK"] == 10.0, "ERROR: Paper math incorrect (20 - 10 = 10)!")
+	assert(world_state["inventory"]["ROLLUP"]["PREPPED"] == 10.0, "ERROR: Output yield did not reach PREPPED lane!")
 
 	print("\n=======================================================")
 	print("   ALL SYSTEMS OPERATIONAL: HARNESS COMPLETED")

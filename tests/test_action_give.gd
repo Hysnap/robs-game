@@ -30,7 +30,7 @@ func _create_mock_world_state() -> Dictionary:
 			"vault_cash": 500.0,
 			"liquid_cash": 500.0
 		},
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": 50.0
 		},
 		"commodities": {
@@ -130,7 +130,7 @@ func test_execute_commodity_transfer() -> bool:
 		printerr("FAIL: ActionGive commodity transfer rejected: ", result.get("message"))
 		return false
 
-	var player_stock: float = float(ws["inventory_registry"]["BEER_STRONG_LAGER"])
+	var player_stock: float = float(ws["inventory"]["BEER_STRONG_LAGER"])
 	var staff_stock: float = float(ws["staff"]["staff_01"]["inventory"]["BEER_STRONG_LAGER"])
 
 	if not is_equal_approx(player_stock, 40.0) or not is_equal_approx(staff_stock, 12.0):

@@ -55,9 +55,9 @@ static func apply_delta(world_state: Dictionary, target_id: String, delta: float
 			lane = parts[1]
 
 	# Resolve master inventory registry container
-	if not world_state.has("inventory_registry"):
-		world_state["inventory_registry"] = {}
-	var registry: Dictionary = world_state["inventory_registry"]
+	if not world_state.has("inventory"):
+		world_state["inventory"] = {}
+	var registry: Dictionary = world_state["inventory"]
 
 	if not registry.has(item_id):
 		registry[item_id] = {"STOCK": 0.0, "PREPPED": 0.0}

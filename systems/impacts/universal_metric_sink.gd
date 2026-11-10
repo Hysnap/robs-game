@@ -170,7 +170,7 @@ func _apply_inventory(world_state: Dictionary, target_id: String, delta: float) 
 		if parts.size() > 1 and not parts[1].is_empty():
 			lane = parts[1]
 
-	var inv_reg: Dictionary = world_state.get("inventory_registry", {})
+	var inv_reg: Dictionary = world_state.get("inventory", {})
 	if not inv_reg.has(item_id):
 		inv_reg[item_id] = {"STOCK": 0.0, "PREPPED": 0.0}
 

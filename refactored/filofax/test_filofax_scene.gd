@@ -25,7 +25,7 @@ func _ready() -> void:
 		"recipe_registry": recipes,
 		"pending_orders": {},
 		"completed_orders": {},
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": {"STOCK": 0.0, "PREPPED": 0.0},
 			"TOBACCO_ROLLING": {"STOCK": 20.0, "PREPPED": 0.0},
 			"ROLLING_PAPERS": {"STOCK": 50.0, "PREPPED": 0.0},

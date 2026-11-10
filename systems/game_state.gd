@@ -13,6 +13,9 @@ signal world_state_reset
 ## The Canonical World State (Single Source of Truth)
 var world_state: Dictionary = {}
 
+## Staged initial establishment inventory awaiting home district / establishment binding
+var _pending_starting_inventory: Dictionary = {}
+
 ## Active UI Selection Pointer (kept in sync with world_state["selected_district_id"])
 var selected_district_id: String = ""
 
@@ -34,10 +37,13 @@ func initialize_fresh_state() -> void:
 	var scenario: Dictionary = ScenarioManifestManager.load_module("startpoint")
 	assert(not scenario.is_empty(), "FATAL: [GAME_STATE] Loaded startpoint definition is empty.")
 
+	# Cache starting inventory to inject into the leader's home establishment once resolved
+	_pending_starting_inventory = scenario.get("starting_inventory", {}).duplicate(true)
+
 	# 1. Establish clean baseline structure from startpoint definition
 	world_state = {
 		"metadata": scenario.get("starting_metadata", {}).duplicate(true),
-		"finances": scenario.get("starting_finances", {}).duplicate(true),
+		"obligations": scenario.get("starting_obligations", []).duplicate(true),
 		"operations": scenario.get("starting_operations", {}).duplicate(true),
 		"debug_rules": scenario.get("debug_rules", {}).duplicate(true),
 		"player_knowledge": {
@@ -47,7 +53,7 @@ func initialize_fresh_state() -> void:
 			"district_survey_ticks": {}
 		},
 		"staff": scenario.get("starting_staff", {}).duplicate(true),
-		"inventory_registry": {},
+		"inventory": {},
 		"commodity_registry": {},
 		"recipe_registry": {},
 		"pending_orders": {},
@@ -61,14 +67,13 @@ func initialize_fresh_state() -> void:
 	var err := config.load(active_rules_path)
 	if err == OK:
 		_load_section_into_state(config, "starting_metadata", "metadata")
-		_load_section_into_state(config, "starting_finances", "finances")
 		_load_section_into_state(config, "starting_operations", "operations")
 		SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
 	else:
 		SystemLogger.log_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
 		push_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
 		world_state["metadata"] = {"calendar_year": 1980, "current_week_tick": 1, "current_day_tick": 1, "active_seed": "default-city"}
-		world_state["finances"] = {"liquid_cash": 0.0, "clean_bank_balance": 0.0}
+		world_state["obligations"] = []
 		world_state["operations"] = {"fatigue": 0.0}
 
 	# 3. Dynamic Catalog Ingestion via CommodityManager (Rule 1 & Rule 8)
@@ -89,7 +94,7 @@ func initialize_fresh_state() -> void:
 	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()
 
-## Pure State Setter: Records the confirmed home district resolved by CitySpatialAdapter
+## Pure State Setter: Records the confirmed home district and seeds the leader's home establishment
 func set_home_district(district_id: String) -> void:
 	assert(not district_id.is_empty(), "FATAL: [GAME_STATE] Cannot set empty home district.")
 	if not world_state.has("player_knowledge"):
@@ -113,7 +118,42 @@ func set_home_district(district_id: String) -> void:
 		if staff_dict[staff_id] is Dictionary:
 			staff_dict[staff_id]["current_district_id"] = district_id
 
+	# Physically anchor pending starting inventory into the leader's residence
+	_anchor_starting_inventory_to_home(district_id)
+
 	district_updated.emit(district_id)
+
+## Internal helper: Deposits initial enterprise commodities into the leader's residential establishment
+func _anchor_starting_inventory_to_home(district_id: String) -> void:
+	if _pending_starting_inventory.is_empty():
+		return
+
+	# Identify leader establishment if bound, or seed the home district's primary residential venue
+	var districts: Dictionary = world_state.get("districts", {})
+	if not districts.has(district_id):
+		return
+
+	var venues: Dictionary = districts[district_id].get("venues", {})
+	var target_venue_id: String = ""
+
+	# Check if crew_0 has an explicit establishment ID assigned
+	var leader_data: Dictionary = world_state.get("staff", {}).get("crew_0", {})
+	var res_est_id: String = str(leader_data.get("establishment_id", leader_data.get("residence_establishment_id", "")))
+	
+	if not res_est_id.is_empty() and venues.has(res_est_id):
+		target_venue_id = res_est_id
+	elif not venues.is_empty():
+		target_venue_id = str(venues.keys()[0])
+
+	if not target_venue_id.is_empty():
+		var target_venue: Dictionary = venues[target_venue_id]
+		if not target_venue.has("inventory"):
+			target_venue["inventory"] = {}
+		for item_k in _pending_starting_inventory.keys():
+			var qty: float = float(_pending_starting_inventory[item_k])
+			target_venue["inventory"][item_k] = float(target_venue["inventory"].get(item_k, 0.0)) + qty
+		SystemLogger.log_info("[GAME_STATE] Anchored starting inventory into establishment '%s' in '%s'." % [target_venue_id, district_id])
+		_pending_starting_inventory.clear()
 
 ## Helper to dynamically map all keys in a config section without hardcoding property names
 func _load_section_into_state(config: ConfigFile, section_name: String, target_dict_key: String) -> void:
