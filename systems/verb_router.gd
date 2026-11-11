@@ -1,6 +1,7 @@
 # res://systems/verb_router.gd
 class_name VerbRouter extends RefCounted
 
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 const EngineResultScript = preload("res://systems/engine_result.gd")
 const ActionPipelineRunnerScript = preload("res://systems/action_pipeline/action_pipeline_runner.gd")
 
@@ -80,42 +81,21 @@ static func dispatch(world_state: Dictionary, action_directive: Dictionary) -> D
 		"Invalid executable definition for verb."
 	).to_dict()
 
-## Scans directories recursively, prioritizing verb_definition.json over legacy action_*.gd files
+## Scans directories recursively using FileSystemCrawler, mounting all declarative verb_definition.json files
 static func _scan_and_mount_verbs(verbs_root_dir: String) -> void:
 	if not DirAccess.dir_exists_absolute(verbs_root_dir):
 		return
 
-	var dir: DirAccess = DirAccess.open(verbs_root_dir)
-	if not dir:
-		return
-
-	dir.list_dir_begin()
-	var entry: String = dir.get_next()
-	while entry != "":
-		var full_path: String = verbs_root_dir.path_join(entry)
-		if dir.current_is_dir() and not entry.begins_with("."):
-			# Check first for declarative verb_definition.json in this folder
-			var json_path: String = full_path.path_join("verb_definition.json")
-			if FileAccess.file_exists(json_path):
-				var file := FileAccess.open(json_path, FileAccess.READ)
-				if file != null:
-					var parsed = JSON.parse_string(file.get_as_text())
-					if parsed is Dictionary:
-						var token: String = str(parsed.get("_meta", {}).get("verb_token", entry)).to_upper().strip_edges()
-						_registry[token] = parsed
-			
-			# Recurse into subfolders
-			_scan_and_mount_verbs(full_path)
-		elif entry.ends_with(".gd") and entry.begins_with("action_"):
-			var verb_token: String = entry.replace("action_", "").replace(".gd", "").to_upper()
-			# Mount legacy script only if a declarative JSON definition has not already claimed the token
-			if not _registry.has(verb_token):
-				var script_res = load(full_path)
-				if script_res and script_res.has_method("execute"):
-					_registry[verb_token] = script_res
-
-		entry = dir.get_next()
-	dir.list_dir_end()
+	var verb_files: Array[String] = FileSystemCrawlerScript.find_files_recursive(verbs_root_dir, "verb_definition.json")
+	for file_path in verb_files:
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if file != null:
+			var parsed = JSON.parse_string(file.get_as_text())
+			file.close()
+			if parsed is Dictionary:
+				var default_slug: String = file_path.get_base_dir().get_file()
+				var token: String = str(parsed.get("_meta", {}).get("verb_token", default_slug)).to_upper().strip_edges()
+				_registry[token] = parsed
 
 ## Ingests alias translations from JSON
 static func _load_verb_mappings(path: String) -> void:
@@ -124,6 +104,7 @@ static func _load_verb_mappings(path: String) -> void:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var parsed = JSON.parse_string(file.get_as_text())
+		file.close()
 		if parsed is Dictionary:
 			_verb_mappings.merge(parsed, true)
 

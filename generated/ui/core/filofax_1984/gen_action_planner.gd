@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
-# Compiled from: res://data_modules/core/ui_schemas/views/action_planner.json
-class_name GenActionPlanner
+# Compiled from: res://data_modules/core/ui_schemas/views/filofax_1984/action_planner.json
 extends VBoxContainer
 
 signal directive_staged(directive)

@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
-# Compiled from: res://data_modules/core/ui_schemas/views/diary_log.json
-class_name GenDiaryLog
+# Compiled from: res://data_modules/core/ui_schemas/views/filofax_1984/diary_log.json
 extends VBoxContainer
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")

@@ -73,15 +73,15 @@ static func execute_move_actor(world_state: Dictionary, directive: Dictionary, p
 	var actor_id: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("actor", ""), directive, world_state))
 	var dest_district: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("destination", ""), directive, world_state))
 
-	var staff_dict: Dictionary = world_state.get("staff", {})
-	if not staff_dict.has(actor_id):
-		push_error("[ActionPrimitives] FAIL_LOUD: MOVE_ACTOR cannot find staff '%s' at step '%s'" % [actor_id, step_id])
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	if not residents_dict.has(actor_id):
+		push_error("[ActionPrimitives] FAIL_LOUD: MOVE_ACTOR cannot find resident '%s' at step '%s'" % [actor_id, step_id])
 		return { "success": false }
 
-	var staff_entry: Dictionary = staff_dict[actor_id]
-	var origin_district: String = str(staff_entry.get("current_district_id", ""))
+	var resident_entry: Dictionary = residents_dict[actor_id]
+	var origin_district: String = str(resident_entry.get("current_district_id", ""))
 	if origin_district != dest_district and not dest_district.is_empty():
-		staff_entry["current_district_id"] = dest_district
+		resident_entry["current_district_id"] = dest_district
 
 	return { "success": true }
 

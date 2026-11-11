@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
-# Compiled from: res://data_modules/core/ui_schemas/views/district_docket.json
-class_name GenDistrictDocket
+# Compiled from: res://data_modules/core/ui_schemas/views/filofax_1984/district_docket.json
 extends VBoxContainer
 
 signal item_selected(target_route, filter_key)

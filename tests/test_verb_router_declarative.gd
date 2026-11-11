@@ -22,7 +22,7 @@ func _init() -> void:
 
 func _create_fixture_state() -> Dictionary:
 	return {
-		"staff": {
+		"residents": {
 			"op_01": {
 				"name": "Mick Jenkins",
 				"current_district_id": "DISTRICT_MARKET",
@@ -39,9 +39,10 @@ func _create_fixture_state() -> Dictionary:
 				}
 			}
 		},
-		"counterparties": {
+		"establishments": {
 			"supplier_01": {
 				"name": "Digbeth Wholesalers",
+				"district_id": "DISTRICT_MARKET",
 				"inventory": {
 					"CASH": 200.0,
 					"BEER_KEG": 20.0
@@ -49,6 +50,7 @@ func _create_fixture_state() -> Dictionary:
 			},
 			"buyer_01": {
 				"name": "The Crown Pub",
+				"district_id": "DISTRICT_MARKET",
 				"inventory": {
 					"CASH": 150.0,
 					"BEER_KEG": 0.0
@@ -56,8 +58,8 @@ func _create_fixture_state() -> Dictionary:
 			}
 		},
 		"districts": {
-			"DISTRICT_MARKET": { "venues": {} },
-			"DISTRICT_HQ": { "venues": {} }
+			"DISTRICT_MARKET": {},
+			"DISTRICT_HQ": {}
 		}
 	}
 
@@ -92,10 +94,10 @@ func test_verb_router_dispatch_buy() -> bool:
 		printerr("FAIL: VerbRouter BUY dispatch failed: ", res.get("message"))
 		return false
 
-	var op_cash: float = float(ws["staff"]["op_01"]["inventory"].get("CASH", 0.0))
-	var op_beer: float = float(ws["staff"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
-	var sup_cash: float = float(ws["counterparties"]["supplier_01"]["inventory"].get("CASH", 0.0))
-	var sup_beer: float = float(ws["counterparties"]["supplier_01"]["inventory"].get("BEER_KEG", 0.0))
+	var op_cash: float = float(ws["residents"]["op_01"]["inventory"].get("CASH", 0.0))
+	var op_beer: float = float(ws["residents"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
+	var sup_cash: float = float(ws["establishments"]["supplier_01"]["inventory"].get("CASH", 0.0))
+	var sup_beer: float = float(ws["establishments"]["supplier_01"]["inventory"].get("BEER_KEG", 0.0))
 
 	# op_01 started with 100 CASH, 4 BEER -> 60 CASH, 6 BEER
 	# supplier_01 started with 200 CASH, 20 BEER -> 240 CASH, 18 BEER
@@ -126,10 +128,10 @@ func test_verb_router_dispatch_sell() -> bool:
 		printerr("FAIL: VerbRouter SELL dispatch failed: ", res.get("message"))
 		return false
 
-	var op_cash: float = float(ws["staff"]["op_01"]["inventory"].get("CASH", 0.0))
-	var op_beer: float = float(ws["staff"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
-	var buyer_cash: float = float(ws["counterparties"]["buyer_01"]["inventory"].get("CASH", 0.0))
-	var buyer_beer: float = float(ws["counterparties"]["buyer_01"]["inventory"].get("BEER_KEG", 0.0))
+	var op_cash: float = float(ws["residents"]["op_01"]["inventory"].get("CASH", 0.0))
+	var op_beer: float = float(ws["residents"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
+	var buyer_cash: float = float(ws["establishments"]["buyer_01"]["inventory"].get("CASH", 0.0))
+	var buyer_beer: float = float(ws["establishments"]["buyer_01"]["inventory"].get("BEER_KEG", 0.0))
 
 	# op_01 started with 100 CASH, 4 BEER -> 170 CASH, 2 BEER
 	# buyer_01 started with 150 CASH, 0 BEER -> 80 CASH, 2 BEER

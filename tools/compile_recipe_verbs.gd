@@ -29,7 +29,7 @@ func _init() -> void:
 		if _compile_recipe_to_disk(recipe_data):
 			compiled_count += 1
 
-	print("--- [CompileRecipeVerbs] Successfully wrote %d static verb definitions to %s ---\n" % [compiled_count, OUTPUT_BASE_DIR])
+	print("--- [CompileRecipeVerbs] Successfully wrote %d static verb definitions and target scopes to %s ---\n" % [compiled_count, OUTPUT_BASE_DIR])
 	quit(0)
 
 static func _compile_recipe_to_disk(recipe: Dictionary) -> bool:
@@ -44,15 +44,36 @@ static func _compile_recipe_to_disk(recipe: Dictionary) -> bool:
 	if not DirAccess.dir_exists_absolute(target_folder):
 		DirAccess.make_dir_recursive_absolute(target_folder)
 
-	var out_path: String = target_folder.path_join("verb_definition.json")
-	var file := FileAccess.open(out_path, FileAccess.WRITE)
-	if file == null:
-		push_error("[CompileRecipeVerbs] Failed to write verb definition at: %s" % out_path)
+	# 1. Write verb_definition.json
+	var def_path: String = target_folder.path_join("verb_definition.json")
+	var def_file := FileAccess.open(def_path, FileAccess.WRITE)
+	if def_file == null:
+		push_error("[CompileRecipeVerbs] Failed to write verb definition at: %s" % def_path)
 		return false
 
-	file.store_string(JSON.stringify(verb_def, "  "))
-	file.close()
-	print("  • Compiled %-24s -> %s" % [verb_token, out_path])
+	def_file.store_string(JSON.stringify(verb_def, "  "))
+	def_file.close()
+
+	# 2. Write co-located target_scope.json with is_recipe_verb: true
+	var scope_def: Dictionary = {
+		"_meta": {
+			"verb_token": verb_token,
+			"version": 1,
+			"description": "Compiled recipe sub-verb; executed via primary MAKE."
+		},
+		"is_recipe_verb": true
+	}
+
+	var scope_path: String = target_folder.path_join("target_scope.json")
+	var scope_file := FileAccess.open(scope_path, FileAccess.WRITE)
+	if scope_file == null:
+		push_error("[CompileRecipeVerbs] Failed to write target scope at: %s" % scope_path)
+		return false
+
+	scope_file.store_string(JSON.stringify(scope_def, "  "))
+	scope_file.close()
+
+	print("  • Compiled %-24s -> %s (with target_scope.json)" % [verb_token, target_folder])
 	return true
 
 ## Pure functional transformation of a recipe dictionary into a declarative verb_definition Dictionary

@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
-# Compiled from: res://data_modules/core/ui_schemas/views/establishment_docket.json
-class_name GenEstablishmentDocket
+# Compiled from: res://data_modules/core/ui_schemas/views/filofax_1984/establishment_docket.json
 extends VBoxContainer
 
 signal route_requested(domain_token: String, target_page_name: String)

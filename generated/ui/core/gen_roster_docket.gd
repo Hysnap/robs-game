@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
 # Compiled from: res://data_modules/core/ui_schemas/views/roster_docket.json
-class_name GenRosterDocket
 extends VBoxContainer
 
 signal item_selected(target_route, filter_key)

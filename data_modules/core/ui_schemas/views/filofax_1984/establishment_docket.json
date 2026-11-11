@@ -1,0 +1,112 @@
+{
+  "_meta": {
+    "target_class": "GenEstablishmentDocket",
+    "extends": "VBoxContainer",
+    "description": "Commercial, civic, and industrial establishment docket inspector view"
+  },
+  "sections": [
+    {
+      "id": "nav_controls",
+      "rows": [
+        {
+          "id": "btn_back",
+          "type": "BUTTON",
+          "token": "UI_BTN_BACK_DOSSIER",
+          "action_signal": "route_requested",
+          "emit_args": "\"DOSSIER\", \"\""
+        }
+      ]
+    },
+    {
+      "id": "establishment_identity",
+      "rows": [
+        {
+          "id": "estab_header",
+          "type": "HEADER_BLOCK",
+          "color": "body",
+          "field": "name",
+          "subtitle_field": "category_title",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "location_and_scale",
+      "header_token": "UI_HDR_VENUE_LOCATION",
+      "color": "body",
+      "rows": [
+        {
+          "id": "ward",
+          "field": "district_name",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "token": "UI_LBL_DISTRICT_WARD",
+          "autowrap": true
+        },
+        {
+          "id": "capacity",
+          "field": "capacity",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "INT",
+          "token": "UI_LBL_VENUE_CAPACITY",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "catchment_overview",
+      "header_token": "UI_HDR_MARKET_CATCHMENT",
+      "color": "body",
+      "rows": [
+        {
+          "id": "catchment_pop",
+          "field": "total_catchment_population",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "INT",
+          "token": "UI_LBL_CATCHMENT_POPULATION",
+          "autowrap": true
+        },
+        {
+          "id": "catchment_hh",
+          "field": "total_catchment_households",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "INT",
+          "token": "UI_LBL_CATCHMENT_HOUSEHOLDS",
+          "autowrap": true
+        },
+        {
+          "id": "catchment_income",
+          "field": "avg_neighbor_disposable_income",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "CURRENCY",
+          "token": "UI_LBL_NEIGHBORHOOD_INCOME",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "personnel_overview",
+      "header_token": "UI_HDR_ACTIVE_CONTRACTS",
+      "color": "body",
+      "rows": [
+        {
+          "id": "personnel_list",
+          "type": "ITEM_LIST",
+          "field": "personnel_summary",
+          "min_height": 100
+        }
+      ]
+    },
+    {
+      "id": "establishment_docket_signals",
+      "type": "SIGNALS",
+      "signals": [
+      "route_requested(domain_token: String, target_page_name: String)"
+    ]
+    }
+  ]
+}

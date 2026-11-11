@@ -1,43 +1,8 @@
 {
   "_meta": {
+    "description": "Compiled recipe sub-verb; executed via primary MAKE.",
     "verb_token": "MAKE_ROLL_CIGARETTE",
-    "version": 2,
-    "description": "Form layout, target scopes, and field mapping configuration for MAKE_ROLL_CIGARETTE directives."
+    "version": 1
   },
-  "allowed_scopes": [
-    "DISTRICT",
-    "ESTABLISHMENT"
-  ],
-  "target_categories": [],
-  "visible_in_composer": false,
-  "form_layout": {
-    "target_section": {
-      "visible": false,
-      "required": false,
-      "label_token": null,
-      "mapped_field": null
-    },
-    "amount_section": {
-      "visible": true,
-      "required": true,
-      "label_token": "UI_LBL_QUANTITY",
-      "default_value": 1.0,
-      "min_value": 1.0,
-      "max_value": 50.0,
-      "step": 1.0,
-      "mapped_field": "amount"
-    },
-    "location_section": {
-      "visible": true,
-      "required": true,
-      "label_token": "UI_LBL_LOCATION",
-      "mapped_field": "target_node_id"
-    },
-    "contact_section": {
-      "visible": false,
-      "required": false,
-      "label_token": null,
-      "mapped_field": null
-    }
-  }
+  "is_recipe_verb": true
 }

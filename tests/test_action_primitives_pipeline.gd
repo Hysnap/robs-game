@@ -26,7 +26,7 @@ func _init() -> void:
 
 func _create_fixture_state() -> Dictionary:
 	return {
-		"staff": {
+		"residents": {
 			"op_01": {
 				"name": "Mick Jenkins",
 				"current_district_id": "DISTRICT_MARKET",
@@ -45,9 +45,10 @@ func _create_fixture_state() -> Dictionary:
 				}
 			}
 		},
-		"counterparties": {
+		"establishments": {
 			"supplier_01": {
 				"name": "Digbeth Wholesalers",
+				"current_district_id": "DISTRICT_MARKET",
 				"inventory": {
 					"CASH": 100.0,
 					"BEER_KEG": 20.0
@@ -148,7 +149,7 @@ func test_primitive_move_actor() -> bool:
 		printerr("FAIL: MOVE_ACTOR failed unexpectedly.")
 		return false
 
-	var new_loc: String = ws["staff"]["op_02"]["current_district_id"]
+	var new_loc: String = ws["residents"]["op_02"]["current_district_id"]
 	if new_loc != "DISTRICT_MARKET":
 		printerr("FAIL: MOVE_ACTOR failed to migrate op_02 to DISTRICT_MARKET, found: ", new_loc)
 		return false
@@ -167,8 +168,8 @@ func test_primitive_transfer_item() -> bool:
 		printerr("FAIL: TRANSFER_ITEM failed unexpectedly.")
 		return false
 
-	var op1_cash: float = float(ws["staff"]["op_01"]["inventory"].get("CASH", 0.0))
-	var op2_cash: float = float(ws["staff"]["op_02"]["inventory"].get("CASH", 0.0))
+	var op1_cash: float = float(ws["residents"]["op_01"]["inventory"].get("CASH", 0.0))
+	var op2_cash: float = float(ws["residents"]["op_02"]["inventory"].get("CASH", 0.0))
 
 	if not is_equal_approx(op1_cash, 30.0) or not is_equal_approx(op2_cash, 20.0):
 		printerr("FAIL: Balances wrong after TRANSFER_ITEM. op1: %f, op2: %f" % [op1_cash, op2_cash])
@@ -262,10 +263,10 @@ func test_pipeline_pure_buy_success() -> bool:
 		printerr("FAIL: Pure BUY pipeline failed: ", result.get("message"))
 		return false
 
-	var op_cash: float = float(ws["staff"]["op_01"]["inventory"].get("CASH", 0.0))
-	var op_beer: float = float(ws["staff"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
-	var sup_cash: float = float(ws["counterparties"]["supplier_01"]["inventory"].get("CASH", 0.0))
-	var sup_beer: float = float(ws["counterparties"]["supplier_01"]["inventory"].get("BEER_KEG", 0.0))
+	var op_cash: float = float(ws["residents"]["op_01"]["inventory"].get("CASH", 0.0))
+	var op_beer: float = float(ws["residents"]["op_01"]["inventory"].get("BEER_KEG", 0.0))
+	var sup_cash: float = float(ws["establishments"]["supplier_01"]["inventory"].get("CASH", 0.0))
+	var sup_beer: float = float(ws["establishments"]["supplier_01"]["inventory"].get("BEER_KEG", 0.0))
 
 	# op_01 started with 50 CASH, 2 BEER. Paid 20 CASH, received 5 BEER -> 30 CASH, 7 BEER
 	# supplier started with 100 CASH, 20 BEER -> 120 CASH, 15 BEER

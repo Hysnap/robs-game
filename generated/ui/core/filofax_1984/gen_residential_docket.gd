@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
-# Compiled from: res://data_modules/core/ui_schemas/views/residential_docket.json
-class_name GenResidentialDocket
+# Compiled from: res://data_modules/core/ui_schemas/views/filofax_1984/residential_docket.json
 extends VBoxContainer
 
 signal route_requested(domain_token: String, target_page_name: String)

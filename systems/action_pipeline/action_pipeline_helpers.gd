@@ -45,16 +45,16 @@ static func evaluate_commodity_gate(world_state: Dictionary, entity_id: String, 
 static func get_entity_attribute(world_state: Dictionary, entity_id: String, attribute_key: String) -> float:
 	var clean_attr: String = attribute_key.to_lower().strip_edges()
 
-	# 1. Staff Members
-	var staff_dict: Dictionary = world_state.get("staff", {})
-	if staff_dict.has(entity_id):
-		var staff_record: Dictionary = staff_dict[entity_id]
-		if staff_record.has(clean_attr):
-			return float(staff_record[clean_attr])
-		push_error("[ActionPipelineHelpers] FAIL_LOUD: Attribute '%s' does not exist on staff '%s'" % [clean_attr, entity_id])
+	# 1. Residents (Operatives, Citizens, Contacts)
+	var residents: Dictionary = world_state.get("residents", {})
+	if residents.has(entity_id):
+		var res_record: Dictionary = residents[entity_id]
+		if res_record.has(clean_attr):
+			return float(res_record[clean_attr])
+		push_error("[ActionPipelineHelpers] FAIL_LOUD: Attribute '%s' does not exist on resident '%s'" % [clean_attr, entity_id])
 		return -INF
 
-	# 2. Player / Operations
+	# 2. Player / Operations / Enterprise
 	if entity_id in ["PLAYER", "", "HQ"]:
 		var ops: Dictionary = world_state.get("operations", {})
 		if ops.has(clean_attr):
@@ -62,13 +62,13 @@ static func get_entity_attribute(world_state: Dictionary, entity_id: String, att
 		push_error("[ActionPipelineHelpers] FAIL_LOUD: Attribute '%s' does not exist in operations for '%s'" % [clean_attr, entity_id])
 		return -INF
 
-	# 3. Counterparties / NPCs
-	var cp_dict: Dictionary = world_state.get("counterparties", world_state.get("npcs", {}))
-	if cp_dict.has(entity_id):
-		var cp_record: Dictionary = cp_dict[entity_id]
-		if cp_record.has(clean_attr):
-			return float(cp_record[clean_attr])
-		push_error("[ActionPipelineHelpers] FAIL_LOUD: Attribute '%s' does not exist on counterparty '%s'" % [clean_attr, entity_id])
+	# 3. Establishments (Venues, Businesses)
+	var establishments: Dictionary = world_state.get("establishments", {})
+	if establishments.has(entity_id):
+		var estab_record: Dictionary = establishments[entity_id]
+		if estab_record.has(clean_attr):
+			return float(estab_record[clean_attr])
+		push_error("[ActionPipelineHelpers] FAIL_LOUD: Attribute '%s' does not exist on establishment '%s'" % [clean_attr, entity_id])
 		return -INF
 
 	push_error("[ActionPipelineHelpers] FAIL_LOUD: Cannot query attribute '%s' on unknown entity '%s'" % [clean_attr, entity_id])

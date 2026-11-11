@@ -2,6 +2,7 @@
 class_name CatalogValidator
 extends RefCounted
 
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 const COMMODITIES_ROOT = "res://data_modules/core/commodities/"
 const MANIFEST_MGR = preload("res://systems/scenario_manifest_manager.gd")
 
@@ -427,7 +428,7 @@ static func _print_hierarchy_property_summary(report: Dictionary) -> void:
 
 	SystemLogger.log_info("\n  [TIER STRUCTURE TREE]")
 	_print_tree_node_console(report["directory_tree"], 0)
-	SystemLogger.log_info("=======================================================\n")
+	SystemLogger.log_info("=======================================================")
 
 static func _print_tree_node_console(node: Dictionary, depth: int) -> void:
 	var indent = "  ".repeat(depth)
@@ -489,10 +490,10 @@ static func audit_property_usage(
 		if leaf_token != "_meta":
 			property_tokens[leaf_token] = p
 
-	# 2. Gather all codebase script/scene/data text
+	# 2. Gather all codebase script/scene/data text via FileSystemCrawler
 	var code_files: Dictionary = {}
 	for root_dir in code_scan_roots:
-		_gather_source_files_recursive(root_dir, code_files)
+		_gather_source_files(root_dir, code_files)
 
 	var usage_report: Dictionary = {
 		"timestamp": Time.get_datetime_string_from_system(),
@@ -544,28 +545,18 @@ static func audit_property_usage(
 
 	return usage_report
 
-static func _gather_source_files_recursive(path: String, out_files: Dictionary) -> void:
+## Discovers and reads all source text files across N-tiers using FileSystemCrawler
+static func _gather_source_files(path: String, out_files: Dictionary) -> void:
 	if not DirAccess.dir_exists_absolute(path):
 		return
-	var dir = DirAccess.open(path)
-	if not dir:
-		return
-		
-	dir.list_dir_begin()
-	var entry = dir.get_next()
-	while entry != "":
-		var full_path = path.path_join(entry)
-		if dir.current_is_dir() and not entry.begins_with("."):
-			_gather_source_files_recursive(full_path, out_files)
-		elif entry.ends_with(".gd") or entry.ends_with(".tscn") or entry.ends_with(".json"):
-			var file = FileAccess.open(full_file_path_safe(full_path), FileAccess.READ)
+
+	var all_files: Array[String] = FileSystemCrawlerScript.find_files_recursive(path, "", "")
+	for full_path in all_files:
+		if full_path.ends_with(".gd") or full_path.ends_with(".tscn") or full_path.ends_with(".json"):
+			var file = FileAccess.open(full_path, FileAccess.READ)
 			if file:
 				out_files[full_path] = file.get_as_text().split("\n")
-		entry = dir.get_next()
-	dir.list_dir_end()
-
-static func full_file_path_safe(p: String) -> String:
-	return p
+				file.close()
 
 static func _print_usage_audit_summary(report: Dictionary) -> void:
 	SystemLogger.log_info("\n=======================================================")

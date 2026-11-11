@@ -2,35 +2,35 @@
 class_name ShellRegistry
 extends RefCounted
 
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
+
 const SHELLS_DIR := "res://scenes/ui/shells/"
+const FLAVOUR_DATA_DIR := "res://data_modules/"
 const BUSINESS_RULES_PATH := "res://data_modules/core/business_rules.cfg"
 
 static var _manifests: Dictionary = {} # "shell_id" -> Dictionary
 
-## Scans res://scenes/ui/shells/ for all shell_manifest.json files
+## Scans shells directory and flavour modules across N-tiers for all shell_manifest.json files
 static func initialize() -> void:
 	if not _manifests.is_empty():
 		return
 
-	var dir := DirAccess.open(SHELLS_DIR)
-	assert(dir != null, "FATAL: [ShellRegistry] Missing shells directory: %s" % SHELLS_DIR)
-
-	dir.list_dir_begin()
-	var entry := dir.get_next()
-	while entry != "":
-		if dir.current_is_dir() and not entry.begins_with("."):
-			var manifest_path := SHELLS_DIR.path_join(entry).path_join("shell_manifest.json")
-			if FileAccess.file_exists(manifest_path):
-				var f := FileAccess.open(manifest_path, FileAccess.READ)
-				if f:
-					var parsed = JSON.parse_string(f.get_as_text())
-					f.close()
-					if parsed is Dictionary and parsed.has("id"):
-						_manifests[str(parsed["id"]).to_lower()] = parsed
-		entry = dir.get_next()
-	dir.list_dir_end()
+	var manifest_paths: Array[String] = FileSystemCrawlerScript.find_files_recursive(SHELLS_DIR, "shell_manifest.json")
 	
-	assert(not _manifests.is_empty(), "FATAL: [ShellRegistry] No valid shell manifests discovered in %s" % SHELLS_DIR)
+	# Also gather any shell manifests embedded within flavour data modules
+	if DirAccess.dir_exists_absolute(FLAVOUR_DATA_DIR):
+		var flavour_paths: Array[String] = FileSystemCrawlerScript.find_files_recursive(FLAVOUR_DATA_DIR, "shell_manifest.json")
+		manifest_paths.append_array(flavour_paths)
+
+	for manifest_path in manifest_paths:
+		var f := FileAccess.open(manifest_path, FileAccess.READ)
+		if f:
+			var parsed = JSON.parse_string(f.get_as_text())
+			f.close()
+			if parsed is Dictionary and parsed.has("id"):
+				_manifests[str(parsed["id"]).to_lower()] = parsed
+
+	assert(not _manifests.is_empty(), "FATAL: [ShellRegistry] No valid shell manifests discovered across %s or %s" % [SHELLS_DIR, FLAVOUR_DATA_DIR])
 
 ## Returns the active shell ID configured in business_rules.cfg
 static func get_configured_shell_id() -> String:

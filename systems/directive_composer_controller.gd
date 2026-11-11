@@ -21,6 +21,11 @@ static func is_verb_user_creatable(verb_token: String) -> bool:
 	var scope_def: Dictionary = TargetDomainRegistryScript.get_verb_scope_definition(verb_token)
 	if scope_def.is_empty():
 		return false
+
+	# Exclude compiled recipe sub-verbs from the top-level composer dropdown
+	if bool(scope_def.get("is_recipe_verb", false)):
+		return false
+
 	return bool(scope_def.get("visible_in_composer", true))
 
 ## Resolves raw targets for an active verb
@@ -59,29 +64,18 @@ static func get_allowed_scopes(verb_token: String) -> Array[String]:
 		return []
 	return TargetDomainRegistryScript.get_allowed_scopes(verb_token)
 
-## Resolves dynamic UI form layout from verb's target_scope.json. Fails loud if missing.
+## Resolves dynamic UI form layout from verb's target_scope.json via TargetDomainRegistry. Fails loud if missing.
 static func get_form_layout(verb_token: String) -> Dictionary:
 	var clean_verb := verb_token.strip_edges().to_upper()
 	assert(!clean_verb.is_empty(), "FATAL: [DirectiveComposerController] Verb token cannot be empty when requesting form layout.")
 
-	var slug: String = clean_verb.to_lower()
-	var scope_path: String = "res://data_modules/core/verbs/".path_join(slug).path_join("target_scope.json")
+	var scope_def: Dictionary = TargetDomainRegistryScript.get_verb_scope_definition(clean_verb)
+	assert(!scope_def.is_empty(), "FATAL: [DirectiveComposerController] Missing target_scope definition for verb '%s'." % clean_verb)
 
-	assert(FileAccess.file_exists(scope_path), "FATAL: [DirectiveComposerController] Missing target_scope.json for verb '%s' at: %s" % [clean_verb, scope_path])
+	var layout: Variant = scope_def.get("form_layout", null)
+	assert(layout is Dictionary and not layout.is_empty(), "FATAL: [DirectiveComposerController] Verb '%s' scope file missing 'form_layout' dictionary." % clean_verb)
 
-	var file := FileAccess.open(scope_path, FileAccess.READ)
-	assert(file != null, "FATAL: [DirectiveComposerController] Unable to open scope file for reading: %s" % scope_path)
-
-	var json := JSON.new()
-	var err := json.parse(file.get_as_text())
-	file.close()
-
-	assert(err == OK and json.data is Dictionary, "FATAL: [DirectiveComposerController] Parse error %d in: %s" % [err, scope_path])
-
-	var data: Dictionary = json.data
-	assert(data.has("form_layout") and data["form_layout"] is Dictionary, "FATAL: [DirectiveComposerController] Verb '%s' scope file missing 'form_layout' dictionary at: %s" % [clean_verb, scope_path])
-
-	return data["form_layout"]
+	return layout
 
 ## Builds normalized location list based on player knowledge and active district
 static func build_locations_cache(verb_token: String, active_district_id: String, world_state: Dictionary) -> Array[Dictionary]:

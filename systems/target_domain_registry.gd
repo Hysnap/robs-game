@@ -2,39 +2,59 @@
 class_name TargetDomainRegistry
 extends RefCounted
 
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 const VERBS_BASE_DIR := "res://data_modules/core/verbs/"
 
 static var _cached_scopes: Dictionary = {} # "VERB_CODE" -> Dictionary
+static var _initialized: bool = false
 
 ## Clears in-memory cached scopes (useful during testing or live-reloading)
 static func clear_cache() -> void:
 	_cached_scopes.clear()
+	_initialized = false
 
-## Loads and validates the colocated target_scope.json for a given verb
+## Eagerly scans and indexes all target_scope.json definitions across N-tiers
+static func _ensure_initialized() -> void:
+	if _initialized:
+		return
+
+	var scope_files := FileSystemCrawlerScript.find_files_recursive(VERBS_BASE_DIR, "target_scope.json")
+	for file_path in scope_files:
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if file == null:
+			push_warning("[TargetDomainRegistry] Unable to open target_scope.json at: %s" % file_path)
+			continue
+
+		var parsed = JSON.parse_string(file.get_as_text())
+		file.close()
+
+		if not (parsed is Dictionary):
+			push_error("[TargetDomainRegistry FATAL] Malformed JSON in target_scope.json at: %s" % file_path)
+			continue
+
+		var verb_token: String = ""
+		if parsed.has("_meta") and parsed["_meta"] is Dictionary:
+			verb_token = str(parsed["_meta"].get("verb_token", "")).strip_edges().to_upper()
+
+		if verb_token.is_empty():
+			# Fallback: derive verb token from directory name
+			verb_token = file_path.get_base_dir().get_file().strip_edges().to_upper()
+
+		_cached_scopes[verb_token] = parsed
+
+	_initialized = true
+
+## Allows runtime registration of dynamic or player-created macro verb scopes
+static func register_scope_definition(verb_token: String, scope_def: Dictionary) -> void:
+	var clean_code := verb_token.strip_edges().to_upper()
+	assert(not clean_code.is_empty(), "[TargetDomainRegistry FATAL] Cannot register scope for empty verb token.")
+	_cached_scopes[clean_code] = scope_def
+
+## Returns the cached target_scope dictionary for a given verb token (O(1) memory lookup)
 static func get_verb_scope_definition(verb_code: String) -> Dictionary:
+	_ensure_initialized()
 	var clean_code: String = verb_code.strip_edges().to_upper()
-	if _cached_scopes.has(clean_code):
-		return _cached_scopes[clean_code]
-
-	var file_path := VERBS_BASE_DIR.path_join(clean_code.to_lower()).path_join("target_scope.json")
-	if not FileAccess.file_exists(file_path):
-		push_error("[TargetDomainRegistry FATAL] Missing target_scope.json for verb '%s' at: %s" % [clean_code, file_path])
-		return {}
-
-	var file := FileAccess.open(file_path, FileAccess.READ)
-	if file == null:
-		push_error("[TargetDomainRegistry FATAL] Unable to open target_scope.json at: %s" % file_path)
-		return {}
-
-	var parsed = JSON.parse_string(file.get_as_text())
-	file.close()
-
-	if not (parsed is Dictionary):
-		push_error("[TargetDomainRegistry FATAL] Malformed JSON in target_scope.json at: %s" % file_path)
-		return {}
-
-	_cached_scopes[clean_code] = parsed
-	return parsed
+	return _cached_scopes.get(clean_code, {})
 
 ## Returns the array of allowed spatial/entity scopes (e.g. ["DISTRICT", "ESTABLISHMENT", "STAFF"])
 static func get_allowed_scopes(verb_code: String) -> Array[String]:

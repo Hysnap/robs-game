@@ -1,6 +1,5 @@
 # AUTO-GENERATED CODE - DO NOT EDIT MANUALLY
 # Compiled from: res://data_modules/core/ui_schemas/views/navigation_bar.json
-class_name GenNavBar
 extends VBoxContainer
 
 signal action_clicked(action_code: String, payload: Dictionary)
