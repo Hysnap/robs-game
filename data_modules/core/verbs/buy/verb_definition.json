@@ -1,9 +1,9 @@
 {
   "_meta": {
     "verb_token": "BUY",
-    "version": 1,
+    "version": 2,
     "user_creatable": true,
-    "description": "Commercial wholesale or retail purchase"
+    "description": "Commercial wholesale or retail commodity purchase"
   },
   "parameters": {
     "item_id": { "type": "STRING", "required": true },
@@ -24,21 +24,22 @@
         "value": "CALCULATED_TOTAL_COST"
       },
       "on_failure": {
-        "error_code": "INSUFFICIENT_FUNDS"
+        "error_code": "INSUFFICIENT_RESOURCE"
       },
-      "next_step": "transit"
+      "next_step": "gate_co_location"
     },
     {
-      "step_id": "transit",
-      "primitive": "MOVE_ACTOR",
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
       "params": {
+        "domain": "LOCATION",
         "actor": "ORDER_ACTOR",
-        "destination": "PARAM.target_node_id",
-        "travel_time": 20.0,
-        "travel_fatigue": 0.04
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
       },
       "on_failure": {
-        "error_code": "ROUTE_UNREACHABLE"
+        "error_code": "INVALID_TARGET"
       },
       "next_step": "verify_stock"
     },
@@ -53,11 +54,7 @@
         "value": "PARAM.amount"
       },
       "on_failure": {
-        "error_code": "OUT_OF_STOCK",
-        "penalties": {
-          "extra_time_spent": 15.0,
-          "extra_fatigue": 0.02
-        }
+        "error_code": "OUT_OF_STOCK"
       },
       "next_step": "pay_supplier"
     },
@@ -68,9 +65,7 @@
         "from": "ORDER_ACTOR",
         "to": "PARAM.supplier_id",
         "item_id": "CASH",
-        "quantity": "CALCULATED_TOTAL_COST",
-        "transfer_time": 5.0,
-        "transfer_fatigue": 0.01
+        "quantity": "CALCULATED_TOTAL_COST"
       },
       "next_step": "receive_stock"
     },
@@ -81,17 +76,7 @@
         "from": "PARAM.supplier_id",
         "to": "ORDER_ACTOR",
         "item_id": "PARAM.item_id",
-        "quantity": "PARAM.amount",
-        "transfer_time": 10.0,
-        "transfer_fatigue": 0.02
-      },
-      "next_step": "trigger_macro_impacts"
-    },
-    {
-      "step_id": "trigger_macro_impacts",
-      "primitive": "DISPATCH_IMPACT",
-      "params": {
-        "load_from_folder": "res://data_modules/core/verbs/buy/impacts/"
+        "quantity": "PARAM.amount"
       },
       "next_step": null
     }

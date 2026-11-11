@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "verb_token": "RECEIVE",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Direct co-located inbound transfer of cash or commodities from a source entity"
+  },
+  "parameters": {
+    "source_id": { "type": "STRING", "required": true },
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "target_node_id": { "type": "STRING", "required": true }
+  },
+  "steps": [
+    {
+      "step_id": "gate_source_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "PARAM.source_id",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "transfer_goods"
+    },
+    {
+      "step_id": "transfer_goods",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "PARAM.source_id",
+        "to": "ORDER_ACTOR",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

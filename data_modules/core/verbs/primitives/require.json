@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RequirePrimitive",
-  "description": "Declarative condition evaluation gate for physical commodities and personal actor attributes.",
+  "description": "Declarative condition evaluation gate for physical commodities, spatial locations, and personal actor attributes.",
   "type": "object",
   "required": ["step_id", "primitive", "params"],
   "properties": {
@@ -19,9 +19,9 @@
       "properties": {
         "domain": {
           "type": "string",
-          "enum": ["COMMODITY", "ATTRIBUTE"],
+          "enum": ["COMMODITY", "LOCATION", "ATTRIBUTE"],
           "default": "COMMODITY",
-          "description": "Domain of inspection: COMMODITY checks physical inventory stock; ATTRIBUTE checks actor record metrics."
+          "description": "Domain of inspection: COMMODITY checks inventory; LOCATION checks spatial presence; ATTRIBUTE checks actor metrics."
         },
         "actor": {
           "type": ["string", "number"],
@@ -29,7 +29,7 @@
         },
         "metric": {
           "type": "string",
-          "description": "Commodity token (e.g. CASH, BEER_KEG) or attribute key (e.g. fatigue)."
+          "description": "Commodity token (e.g. CASH), location attribute (e.g. current_district_id), or actor metric (e.g. fatigue)."
         },
         "operator": {
           "type": "string",
@@ -37,7 +37,7 @@
         },
         "value": {
           "type": ["number", "string"],
-          "description": "Static numeric threshold or dynamic symbol (e.g. CALCULATED_TOTAL_COST, PARAM.amount)."
+          "description": "Static numeric/string threshold or dynamic symbol (e.g. CALCULATED_TOTAL_COST, PARAM.amount, PARAM.target_node_id)."
         }
       }
     },
@@ -46,7 +46,7 @@
       "properties": {
         "error_code": {
           "type": "string",
-          "description": "Explicit failure code (e.g. INSUFFICIENT_FUNDS, OUT_OF_STOCK, INSUFFICIENT_RESOURCE)."
+          "description": "Explicit failure code from EngineResult.ErrorCode (e.g. PAYMENT_REQUIRED, OUT_OF_STOCK, INVALID_TARGET)."
         },
         "penalties": {
           "type": "object",
