@@ -1,0 +1,30 @@
+{
+  "_meta": {
+    "verb_token": "INVESTIGATE",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Focused reconnaissance and deep surveillance against a specific establishment, resident, or container"
+  },
+  "parameters": {
+    "target_entity_id": { "type": "STRING", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "duration_ticks": { "type": "FLOAT", "default": 1.0 }
+  },
+  "steps": [
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": null
+    }
+  ]
+}

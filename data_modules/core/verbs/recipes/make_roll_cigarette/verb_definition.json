@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "description": "Craft Roll Cigarette (ROLL_CIGARETTE)",
+    "source_recipe": "ROLL_CIGARETTE",
+    "user_creatable": true,
+    "verb_token": "MAKE_ROLL_CIGARETTE",
+    "version": 1
+  },
+  "parameters": {
+    "target_node_id": {
+      "required": false,
+      "type": "STRING"
+    }
+  },
+  "steps": [
+    {
+      "next_step": "gate_input_rolling_papers",
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "params": {
+        "actor": "ORDER_ACTOR",
+        "domain": "COMMODITY",
+        "metric": "ROLLING_TOBACCO",
+        "operator": ">=",
+        "value": 0.8
+      },
+      "primitive": "REQUIRE",
+      "step_id": "gate_input_rolling_tobacco"
+    },
+    {
+      "next_step": "consume_input_rolling_tobacco",
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "params": {
+        "actor": "ORDER_ACTOR",
+        "domain": "COMMODITY",
+        "metric": "ROLLING_PAPERS",
+        "operator": ">=",
+        "value": 1.0
+      },
+      "primitive": "REQUIRE",
+      "step_id": "gate_input_rolling_papers"
+    },
+    {
+      "next_step": "consume_input_rolling_papers",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "item_id": "ROLLING_TOBACCO",
+        "quantity": 0.8
+      },
+      "primitive": "DEDUCT_ITEM",
+      "step_id": "consume_input_rolling_tobacco"
+    },
+    {
+      "next_step": "yield_output_rollup",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "item_id": "ROLLING_PAPERS",
+        "quantity": 1.0
+      },
+      "primitive": "DEDUCT_ITEM",
+      "step_id": "consume_input_rolling_papers"
+    },
+    {
+      "next_step": null,
+      "params": {
+        "item_id": "ROLLUP",
+        "quantity": 1.0,
+        "to": "ORDER_ACTOR"
+      },
+      "primitive": "CREDIT_ITEM",
+      "step_id": "yield_output_rollup"
+    }
+  ]
+}

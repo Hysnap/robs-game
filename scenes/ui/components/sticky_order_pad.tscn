@@ -31,106 +31,106 @@ layout_mode = 2
 size_flags_vertical = 3
 columns = 2
 
-[node name="StickyNote_Action" type="PanelContainer" parent="VBox/NotesGrid" unique_id=260024265]
+[node name="Slot_Action" type="PanelContainer" parent="VBox/NotesGrid" unique_id=260024265]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Action" unique_id=397023108]
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Action" unique_id=397023108]
 layout_mode = 2
 
-[node name="ActionLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Action/VBox" unique_id=182138820]
+[node name="SlotHeader_Action" type="Label" parent="VBox/NotesGrid/Slot_Action/VBox" unique_id=182138820]
 layout_mode = 2
-text = "1. ACTION"
+text = "LBL_HDR_ACTION"
 
-[node name="VerbOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Action/VBox" unique_id=34174436]
-layout_mode = 2
-
-[node name="StickyNote_What" type="PanelContainer" parent="VBox/NotesGrid" unique_id=830118750]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_What" unique_id=786834326]
+[node name="VerbOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Action/VBox" unique_id=34174436]
 layout_mode = 2
 
-[node name="WhatLabel" type="Label" parent="VBox/NotesGrid/StickyNote_What/VBox" unique_id=2133139349]
-layout_mode = 2
-text = "2. WHAT"
-
-[node name="CategoryOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_What/VBox"]
-layout_mode = 2
-
-[node name="TargetOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_What/VBox" unique_id=256766905]
-layout_mode = 2
-
-[node name="StickyNote_Amount" type="PanelContainer" parent="VBox/NotesGrid" unique_id=1738786309]
+[node name="Slot_Target" type="PanelContainer" parent="VBox/NotesGrid" unique_id=830118750]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Amount" unique_id=801393100]
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Target" unique_id=786834326]
 layout_mode = 2
 
-[node name="AmountLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Amount/VBox" unique_id=1861859527]
+[node name="SlotHeader_Target" type="Label" parent="VBox/NotesGrid/Slot_Target/VBox" unique_id=2133139349]
 layout_mode = 2
-text = "3. HOW MANY"
+text = "LBL_HDR_TARGET"
 
-[node name="AmountSpin" type="SpinBox" parent="VBox/NotesGrid/StickyNote_Amount/VBox" unique_id=1498093921]
+[node name="CategoryOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Target/VBox" unique_id=794341097]
+layout_mode = 2
+
+[node name="TargetOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Target/VBox" unique_id=256766905]
+layout_mode = 2
+
+[node name="Slot_Scalar" type="PanelContainer" parent="VBox/NotesGrid" unique_id=1738786309]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Scalar" unique_id=801393100]
+layout_mode = 2
+
+[node name="SlotHeader_Scalar" type="Label" parent="VBox/NotesGrid/Slot_Scalar/VBox" unique_id=1861859527]
+layout_mode = 2
+text = "LBL_HDR_SCALAR"
+
+[node name="AmountSpin" type="SpinBox" parent="VBox/NotesGrid/Slot_Scalar/VBox" unique_id=1498093921]
 layout_mode = 2
 min_value = 1.0
 max_value = 1000.0
 value = 10.0
 
-[node name="StickyNote_Who" type="PanelContainer" parent="VBox/NotesGrid" unique_id=2122077675]
+[node name="Slot_Actor" type="PanelContainer" parent="VBox/NotesGrid" unique_id=2122077675]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Who" unique_id=519370182]
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Actor" unique_id=519370182]
 layout_mode = 2
 
-[node name="WhoLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Who/VBox" unique_id=7282238]
+[node name="SlotHeader_Actor" type="Label" parent="VBox/NotesGrid/Slot_Actor/VBox" unique_id=7282238]
 layout_mode = 2
-text = "4. WHO (ASSIGNED)"
+text = "LBL_HDR_ACTOR"
 
-[node name="WhoOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Who/VBox" unique_id=797702458]
-layout_mode = 2
-
-[node name="StickyNote_Where" type="PanelContainer" parent="VBox/NotesGrid" unique_id=511750996]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Where" unique_id=1483889091]
+[node name="WhoOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Actor/VBox" unique_id=797702458]
 layout_mode = 2
 
-[node name="WhereLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Where/VBox" unique_id=1070376566]
-layout_mode = 2
-text = "5. WHERE & CONTACT"
-
-[node name="WhereFilterOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox" unique_id=1631661042]
-layout_mode = 2
-
-[node name="WhereOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox" unique_id=760809725]
-layout_mode = 2
-
-[node name="ContactOption" type="OptionButton" parent="VBox/NotesGrid/StickyNote_Where/VBox" unique_id=365655794]
-layout_mode = 2
-
-[node name="StickyNote_Estimate" type="PanelContainer" parent="VBox/NotesGrid" unique_id=1900079599]
+[node name="Slot_Location" type="PanelContainer" parent="VBox/NotesGrid" unique_id=511750996]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/StickyNote_Estimate" unique_id=1589710175]
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Location" unique_id=1483889091]
 layout_mode = 2
 
-[node name="EstLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Estimate/VBox" unique_id=882701904]
+[node name="SlotHeader_Location" type="Label" parent="VBox/NotesGrid/Slot_Location/VBox" unique_id=1070376566]
 layout_mode = 2
-text = "6. ESTIMATE"
+text = "LBL_HDR_LOCATION"
 
-[node name="EstimatedCostLabel" type="Label" parent="VBox/NotesGrid/StickyNote_Estimate/VBox" unique_id=1600024020]
+[node name="WhereFilterOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Location/VBox" unique_id=1631661042]
+layout_mode = 2
+
+[node name="WhereOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Location/VBox" unique_id=760809725]
+layout_mode = 2
+
+[node name="ContactOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Location/VBox" unique_id=365655794]
+layout_mode = 2
+
+[node name="Slot_Telemetry" type="PanelContainer" parent="VBox/NotesGrid" unique_id=1900079599]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBox" type="VBoxContainer" parent="VBox/NotesGrid/Slot_Telemetry" unique_id=1589710175]
+layout_mode = 2
+
+[node name="SlotHeader_Telemetry" type="Label" parent="VBox/NotesGrid/Slot_Telemetry/VBox" unique_id=882701904]
+layout_mode = 2
+text = "LBL_HDR_TELEMETRY"
+
+[node name="EstimatedCostLabel" type="Label" parent="VBox/NotesGrid/Slot_Telemetry/VBox" unique_id=1600024020]
 layout_mode = 2
 text = "£0.00"
 
@@ -140,9 +140,9 @@ layout_mode = 2
 [node name="SaveNoteBtn" type="Button" parent="VBox/ButtonBox" unique_id=802640293]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "📌 Pin to Filofax"
+text = "UI_BTN_FILE"
 
 [node name="DiscardBtn" type="Button" parent="VBox/ButtonBox" unique_id=1295820025]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Tear Off"
+text = "UI_BUTTON_DISCARD"

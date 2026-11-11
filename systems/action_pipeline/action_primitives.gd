@@ -8,7 +8,9 @@ const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 static var _registry: Dictionary = {
 	"REQUIRE": execute_require,
 	"MOVE_ACTOR": execute_move_actor,
-	"TRANSFER_ITEM": execute_transfer_item
+	"TRANSFER_ITEM": execute_transfer_item,
+	"DEDUCT_ITEM": execute_deduct_item,
+	"CREDIT_ITEM": execute_credit_item
 }
 
 ## Registers a new primitive execution function into the switchboard
@@ -95,6 +97,34 @@ static func execute_transfer_item(world_state: Dictionary, directive: Dictionary
 		return { "success": false }
 
 	ActionPipelineHelpersScript.mutate_inventory_pool(world_state, from_entity, item_id, -quantity)
+	ActionPipelineHelpersScript.mutate_inventory_pool(world_state, to_entity, item_id, quantity)
+
+	return { "success": true }
+
+## Primitive 4: DEDUCT_ITEM (Unilateral Commodity Deduction / Disposal / Consumption)
+static func execute_deduct_item(world_state: Dictionary, directive: Dictionary, params: Dictionary, step_id: String) -> Dictionary:
+	var from_entity: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("from", ""), directive, world_state)).strip_edges()
+	var item_id: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("item_id", ""), directive, world_state)).to_upper().strip_edges()
+	var quantity: float = float(ActionPipelineHelpersScript.resolve_param_value(params.get("quantity", 0.0), directive, world_state))
+
+	if from_entity.is_empty() or item_id.is_empty() or quantity <= 0.0:
+		push_error("[ActionPrimitives] FAIL_LOUD: DEDUCT_ITEM invalid arguments at step '%s' (from: '%s', item: '%s', qty: %f)" % [step_id, from_entity, item_id, quantity])
+		return { "success": false }
+
+	ActionPipelineHelpersScript.mutate_inventory_pool(world_state, from_entity, item_id, -quantity)
+
+	return { "success": true }
+
+## Primitive 5: CREDIT_ITEM (Unilateral Commodity Credit / Production Yield / Grant)
+static func execute_credit_item(world_state: Dictionary, directive: Dictionary, params: Dictionary, step_id: String) -> Dictionary:
+	var to_entity: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("to", ""), directive, world_state)).strip_edges()
+	var item_id: String = str(ActionPipelineHelpersScript.resolve_param_value(params.get("item_id", ""), directive, world_state)).to_upper().strip_edges()
+	var quantity: float = float(ActionPipelineHelpersScript.resolve_param_value(params.get("quantity", 0.0), directive, world_state))
+
+	if to_entity.is_empty() or item_id.is_empty() or quantity <= 0.0:
+		push_error("[ActionPrimitives] FAIL_LOUD: CREDIT_ITEM invalid arguments at step '%s' (to: '%s', item: '%s', qty: %f)" % [step_id, to_entity, item_id, quantity])
+		return { "success": false }
+
 	ActionPipelineHelpersScript.mutate_inventory_pool(world_state, to_entity, item_id, quantity)
 
 	return { "success": true }

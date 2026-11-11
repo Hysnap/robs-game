@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "verb_token": "MAKE",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Execute a manufacturing or crafting recipe"
+  },
+  "parameters": {
+    "target_item": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "target_node_id": { "type": "STRING", "required": false }
+  },
+  "steps": [
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "process_recipe"
+    },
+    {
+      "step_id": "process_recipe",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "SUPPLY_POOL",
+        "to": "ORDER_ACTOR",
+        "item_id": "PARAM.target_item",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

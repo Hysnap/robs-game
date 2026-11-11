@@ -1,29 +1,41 @@
 {
   "_meta": {
-    "entity_type": "VERB_TARGET_SCOPE",
-    "verb": "INVESTIGATE",
-    "description": "Targeting rules for reconnaissance, sourcing, and surveillance."
+    "verb_token": "INVESTIGATE",
+    "version": 2,
+    "description": "Form layout, target scopes, and field mapping configuration for INVESTIGATE directives."
   },
-  "target_scopes": [
-    "DISTRICT",
+  "allowed_scopes": [
     "ESTABLISHMENT"
   ],
-  "target_categories": [
-    {
-      "id": "AREA_RECON",
-      "label_token": "UI_TARGET_GENERAL_AREA_SURVEY",
-      "domain": "NONE"
+  "target_categories": [],
+  "form_layout": {
+    "target_section": {
+      "visible": false,
+      "required": false,
+      "label_token": null,
+      "mapped_field": null
     },
-    {
-      "id": "SOURCE_COMMODITY",
-      "label_token": "UI_TARGET_SOURCE_COMMODITY",
-      "domain": "COMMODITY",
-      "catalog_source": "commodity_registry"
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_HOURS",
+      "default_value": 2.0,
+      "min_value": 1.0,
+      "max_value": 8.0,
+      "step": 1.0,
+      "mapped_field": "amount"
     },
-    {
-      "id": "SHADOW_PERSON",
-      "label_token": "UI_TARGET_SHADOW_PERSON",
-      "domain": "CONTACT"
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_ESTABLISHMENT",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": false,
+      "label_token": "UI_LBL_CONTACT",
+      "mapped_field": "counterparty_id"
     }
-  ]
+  }
 }

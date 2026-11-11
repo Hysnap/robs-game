@@ -10,19 +10,38 @@ const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const DirectiveComposerControllerScript = preload("res://systems/directive_composer_controller.gd")
 
-@onready var drag_handle: Label = $VBox/Header/DragHandle
-@onready var btn_close: Button = $VBox/Header/BtnClose
-@onready var opt_verb: OptionButton = $VBox/NotesGrid/StickyNote_Action/VBox/VerbOption
-@onready var opt_category: OptionButton = $VBox/NotesGrid/StickyNote_What/VBox/CategoryOption
-@onready var opt_target: OptionButton = $VBox/NotesGrid/StickyNote_What/VBox/TargetOption
-@onready var spin_amount: SpinBox = $VBox/NotesGrid/StickyNote_Amount/VBox/AmountSpin
-@onready var opt_who: OptionButton = $VBox/NotesGrid/StickyNote_Who/VBox/WhoOption
-@onready var opt_where_filter: OptionButton = $VBox/NotesGrid/StickyNote_Where/VBox/WhereFilterOption
-@onready var opt_where: OptionButton = $VBox/NotesGrid/StickyNote_Where/VBox/WhereOption
-@onready var opt_contact: OptionButton = $VBox/NotesGrid/StickyNote_Where/VBox/ContactOption
-@onready var lbl_estimate: Label = $VBox/NotesGrid/StickyNote_Estimate/VBox/EstimatedCostLabel
-@onready var btn_pin: Button = $VBox/ButtonBox/SaveNoteBtn
-@onready var btn_tear: Button = $VBox/ButtonBox/DiscardBtn
+var drag_handle: Label
+var btn_close: Button
+
+# Generic Slot Containers
+var slot_action: PanelContainer
+var slot_target: PanelContainer
+var slot_scalar: PanelContainer
+var slot_actor: PanelContainer
+var slot_location: PanelContainer
+var slot_telemetry: PanelContainer
+
+# Input Controls
+var opt_verb: OptionButton
+var opt_category: OptionButton
+var opt_target: OptionButton
+var spin_amount: SpinBox
+var opt_who: OptionButton
+var opt_where_filter: OptionButton
+var opt_where: OptionButton
+var opt_contact: OptionButton
+var lbl_estimate: Label
+
+# Explicit Slot Headers
+var lbl_hdr_action: Label
+var lbl_hdr_target: Label
+var lbl_hdr_scalar: Label
+var lbl_hdr_actor: Label
+var lbl_hdr_location: Label
+var lbl_hdr_telemetry: Label
+
+var btn_pin: Button
+var btn_tear: Button
 
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
@@ -30,17 +49,58 @@ var _cached_targets_for_verb: Array[Dictionary] = []
 var _cached_locations: Array[Dictionary] = []
 var _active_district_id: String = ""
 
-func _ready() -> void:
-	# Ensure the modal breaks out of container clipping and floats freely
-	top_level = true
-	z_index = 100
+func _enter_tree() -> void:
+	_bind_and_assert_nodes()
 
+func _bind_and_assert_nodes() -> void:
+	drag_handle = get_node("VBox/Header/DragHandle") as Label
+	btn_close = get_node("VBox/Header/BtnClose") as Button
+
+	slot_action = get_node("VBox/NotesGrid/Slot_Action") as PanelContainer
+	slot_target = get_node("VBox/NotesGrid/Slot_Target") as PanelContainer
+	slot_scalar = get_node("VBox/NotesGrid/Slot_Scalar") as PanelContainer
+	slot_actor = get_node("VBox/NotesGrid/Slot_Actor") as PanelContainer
+	slot_location = get_node("VBox/NotesGrid/Slot_Location") as PanelContainer
+	slot_telemetry = get_node("VBox/NotesGrid/Slot_Telemetry") as PanelContainer
+
+	opt_verb = get_node("VBox/NotesGrid/Slot_Action/VBox/VerbOption") as OptionButton
+	opt_category = get_node("VBox/NotesGrid/Slot_Target/VBox/CategoryOption") as OptionButton
+	opt_target = get_node("VBox/NotesGrid/Slot_Target/VBox/TargetOption") as OptionButton
+	spin_amount = get_node("VBox/NotesGrid/Slot_Scalar/VBox/AmountSpin") as SpinBox
+	opt_who = get_node("VBox/NotesGrid/Slot_Actor/VBox/WhoOption") as OptionButton
+	opt_where_filter = get_node("VBox/NotesGrid/Slot_Location/VBox/WhereFilterOption") as OptionButton
+	opt_where = get_node("VBox/NotesGrid/Slot_Location/VBox/WhereOption") as OptionButton
+	opt_contact = get_node("VBox/NotesGrid/Slot_Location/VBox/ContactOption") as OptionButton
+	lbl_estimate = get_node("VBox/NotesGrid/Slot_Telemetry/VBox/EstimatedCostLabel") as Label
+
+	lbl_hdr_action = get_node("VBox/NotesGrid/Slot_Action/VBox/SlotHeader_Action") as Label
+	lbl_hdr_target = get_node("VBox/NotesGrid/Slot_Target/VBox/SlotHeader_Target") as Label
+	lbl_hdr_scalar = get_node("VBox/NotesGrid/Slot_Scalar/VBox/SlotHeader_Scalar") as Label
+	lbl_hdr_actor = get_node("VBox/NotesGrid/Slot_Actor/VBox/SlotHeader_Actor") as Label
+	lbl_hdr_location = get_node("VBox/NotesGrid/Slot_Location/VBox/SlotHeader_Location") as Label
+	lbl_hdr_telemetry = get_node("VBox/NotesGrid/Slot_Telemetry/VBox/SlotHeader_Telemetry") as Label
+
+	btn_pin = get_node("VBox/ButtonBox/SaveNoteBtn") as Button
+	btn_tear = get_node("VBox/ButtonBox/DiscardBtn") as Button
+
+	# Core Rule 4: Fail Early, Fail Loud
 	assert(drag_handle != null, "FATAL: [StickyOrderPad] DragHandle node missing from scene hierarchy.")
 	assert(btn_pin != null, "FATAL: [StickyOrderPad] SaveNoteBtn node missing from scene hierarchy.")
 	assert(opt_verb != null, "FATAL: [StickyOrderPad] VerbOption node missing from scene hierarchy.")
 	assert(opt_category != null, "FATAL: [StickyOrderPad] CategoryOption node missing from scene hierarchy.")
 	assert(opt_target != null, "FATAL: [StickyOrderPad] TargetOption node missing from scene hierarchy.")
 	assert(opt_where != null, "FATAL: [StickyOrderPad] WhereOption node missing from scene hierarchy.")
+	assert(spin_amount != null, "FATAL: [StickyOrderPad] AmountSpin node missing from scene hierarchy.")
+	assert(slot_action != null, "FATAL: [StickyOrderPad] Slot_Action missing from scene hierarchy.")
+	assert(slot_target != null, "FATAL: [StickyOrderPad] Slot_Target missing from scene hierarchy.")
+	assert(slot_scalar != null, "FATAL: [StickyOrderPad] Slot_Scalar missing from scene hierarchy.")
+	assert(slot_actor != null, "FATAL: [StickyOrderPad] Slot_Actor missing from scene hierarchy.")
+	assert(slot_location != null, "FATAL: [StickyOrderPad] Slot_Location missing from scene hierarchy.")
+	assert(slot_telemetry != null, "FATAL: [StickyOrderPad] Slot_Telemetry missing from scene hierarchy.")
+
+func _ready() -> void:
+	top_level = true
+	z_index = 100
 
 	drag_handle.mouse_filter = Control.MOUSE_FILTER_STOP
 	drag_handle.gui_input.connect(_on_drag_input)
@@ -68,6 +128,7 @@ func _ready() -> void:
 	_populate_default_verbs()
 	_sync_simulation_data()
 	_apply_sticky_note_skins()
+	_apply_form_layout_for_verb(_get_active_verb())
 	_recalculate_estimate()
 
 func open_for_district(district_id: String) -> void:
@@ -75,6 +136,7 @@ func open_for_district(district_id: String) -> void:
 	_active_district_id = district_id
 	_sync_simulation_data()
 	_select_where_by_id(district_id)
+	_apply_form_layout_for_verb(_get_active_verb())
 	_recalculate_estimate()
 
 	visible = true
@@ -126,19 +188,54 @@ func _populate_default_verbs() -> void:
 		opt_verb.set_item_metadata(idx, verb_code)
 		idx += 1
 
+## Dynamically adapts form slot visibility, labels, and bounds based on verb layout config
+func _apply_form_layout_for_verb(verb_token: String) -> void:
+	if verb_token.is_empty():
+		return
+
+	var layout: Dictionary = DirectiveComposerControllerScript.get_form_layout(verb_token)
+
+	# 1. Target Slot (Commodity / Entity)
+	var target_cfg: Dictionary = layout.get("target_section", {})
+	var target_visible: bool = bool(target_cfg.get("visible", true))
+	slot_target.visible = target_visible
+
+	if lbl_hdr_target and target_cfg.has("label_token") and target_cfg["label_token"] != null:
+		lbl_hdr_target.text = tr(str(target_cfg["label_token"]))
+
+	# 2. Scalar Slot (Amount / Duration)
+	var amount_cfg: Dictionary = layout.get("amount_section", {})
+	var amount_visible: bool = bool(amount_cfg.get("visible", true))
+	slot_scalar.visible = amount_visible
+
+	if lbl_hdr_scalar and amount_cfg.has("label_token") and amount_cfg["label_token"] != null:
+		lbl_hdr_scalar.text = tr(str(amount_cfg["label_token"]))
+
+	spin_amount.min_value = float(amount_cfg.get("min_value", 1.0))
+	spin_amount.max_value = float(amount_cfg.get("max_value", 999.0))
+	spin_amount.step = float(amount_cfg.get("step", 1.0))
+	spin_amount.value = float(amount_cfg.get("default_value", spin_amount.min_value))
+
+	# 3. Location Slot
+	var loc_cfg: Dictionary = layout.get("location_section", {})
+	slot_location.visible = bool(loc_cfg.get("visible", true))
+
+	if lbl_hdr_location and loc_cfg.has("label_token") and loc_cfg["label_token"] != null:
+		lbl_hdr_location.text = tr(str(loc_cfg["label_token"]))
+
 ## Ingests simulation state and populates form elements
 func _sync_simulation_data() -> void:
 	var gs = ScenarioManifestManager.get_game_state()
 	assert(gs != null and "world_state" in gs, "FATAL: [StickyOrderPad] GameState or world_state is unmounted.")
 	var ws: Dictionary = gs.world_state
 
-	# 1. Responsible Party (WHO)
+	# 1. Responsible Party (Actor Slot)
 	_populate_staff_options(ws.get("staff", {}))
 
-	# 2. Target Items & Category Drill-Down (WHAT)
+	# 2. Target Items & Category Drill-Down (Target Slot)
 	_refresh_targets_for_active_verb(ws)
 
-	# 3. Location Options (WHERE)
+	# 3. Location Options (Location Slot)
 	_refresh_where_filters_for_active_verb()
 	_cached_locations = DirectiveComposerControllerScript.build_locations_cache(_get_active_verb(), _active_district_id, ws)
 	_apply_location_filter()
@@ -152,10 +249,7 @@ func _populate_staff_options(staff_dict: Dictionary) -> void:
 	opt_who.clear()
 
 	if staff_dict.is_empty():
-		var leader_lbl := tr("UI_STAFF_PLAYER_LEADER")
-		if leader_lbl == "UI_STAFF_PLAYER_LEADER":
-			leader_lbl = "Player (Leader)"
-		opt_who.add_item(leader_lbl, 0)
+		opt_who.add_item(tr("UI_STAFF_PLAYER_LEADER"), 0)
 		opt_who.set_item_metadata(0, "PLAYER")
 		return
 
@@ -211,11 +305,7 @@ func _apply_category_filter() -> void:
 
 	var filtered := DirectiveComposerControllerScript.filter_targets_by_category(_cached_targets_for_verb, selected_cat)
 	if filtered.is_empty():
-		var none_token := "UI_TARGET_NONE_AVAILABLE"
-		var none_label := tr(none_token)
-		if none_label == none_token:
-			none_label = "[NO TARGETS IN SCOPE]"
-		opt_target.add_item(none_label, 0)
+		opt_target.add_item(tr("UI_TARGET_NONE_AVAILABLE"), 0)
 		opt_target.set_item_metadata(0, {"id": "", "unit_cost": 0.0})
 		_recalculate_estimate()
 		return
@@ -223,11 +313,7 @@ func _apply_category_filter() -> void:
 	var idx: int = 0
 	for item in filtered:
 		var token: String = str(item.get("label_token", item.get("id", "")))
-		var label_str: String = tr(token)
-		if label_str == token:
-			label_str = str(item.get("id")).capitalize().replace("_", " ")
-
-		opt_target.add_item(label_str, idx)
+		opt_target.add_item(tr(token), idx)
 		opt_target.set_item_metadata(idx, item)
 		idx += 1
 
@@ -283,10 +369,7 @@ func _refresh_contact_options() -> void:
 		return
 	opt_contact.clear()
 
-	var default_contact := tr("UI_CONTACT_ANYONE_AVAILABLE")
-	if default_contact == "UI_CONTACT_ANYONE_AVAILABLE":
-		default_contact = "[ANYONE AVAILABLE]"
-	opt_contact.add_item(default_contact, 0)
+	opt_contact.add_item(tr("UI_CONTACT_ANYONE_AVAILABLE"), 0)
 	opt_contact.set_item_metadata(0, "")
 
 	if opt_where == null or opt_where.item_count == 0:
@@ -312,11 +395,13 @@ func _select_where_by_id(target_id: String) -> void:
 			return
 
 func _on_verb_selected(_idx: int) -> void:
+	var verb := _get_active_verb()
 	var gs = ScenarioManifestManager.get_game_state()
 	var ws: Dictionary = gs.world_state if gs != null and "world_state" in gs else {}
+	_apply_form_layout_for_verb(verb)
 	_refresh_targets_for_active_verb(ws)
 	_refresh_where_filters_for_active_verb()
-	_cached_locations = DirectiveComposerControllerScript.build_locations_cache(_get_active_verb(), _active_district_id, ws)
+	_cached_locations = DirectiveComposerControllerScript.build_locations_cache(verb, _active_district_id, ws)
 	_apply_location_filter()
 	_refresh_contact_options()
 	_recalculate_estimate()

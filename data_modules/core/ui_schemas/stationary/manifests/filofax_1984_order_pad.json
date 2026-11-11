@@ -6,11 +6,11 @@
   },
   "stationery_definition": "res://data_modules/core/ui_schemas/stationary/definitions/sticky_note.json",
   "palette_slots": {
-    "StickyNote_Action": "CANARY",
-    "StickyNote_What": "LIGHTBLUE",
-    "StickyNote_Amount": "PEACH",
-    "StickyNote_Who": "MINTGREEN",
-    "StickyNote_Where": "LAVENDER",
-    "StickyNote_Estimate": "ROSEPINK"
+    "Slot_Action": "CANARY",
+    "Slot_Target": "LIGHTBLUE",
+    "Slot_Scalar": "PEACH",
+    "Slot_Actor": "MINTGREEN",
+    "Slot_Location": "LAVENDER",
+    "Slot_Telemetry": "ROSEPINK"
   }
 }

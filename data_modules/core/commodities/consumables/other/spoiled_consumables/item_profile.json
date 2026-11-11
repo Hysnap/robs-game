@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "tier": 4,
+    "scope_id": "SPOILED_CONSUMERABLE",
+    "description": "A spoiled/degraded consumable product"
+  },
+  "id": "SPOILED_CONSUMERABLE",
+  "display_name": "Spoiled Consumerable",
+  "base_cost": 0.01,
+  "unit_type": "GRAM",
+  "tags": [
+    "WASTE"
+  ]
+}

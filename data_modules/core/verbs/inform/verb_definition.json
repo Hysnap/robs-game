@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "verb_token": "INFORM",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Transmit gathered intelligence, report field findings, or deliver confidential orders to a contact"
+  },
+  "parameters": {
+    "target_resident_id": { "type": "STRING", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "duration_ticks": { "type": "FLOAT", "default": 1.0 }
+  },
+  "steps": [
+    {
+      "step_id": "gate_operative_presence",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "gate_target_resident_presence"
+    },
+    {
+      "step_id": "gate_target_resident_presence",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "PARAM.target_resident_id",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": null
+    }
+  ]
+}

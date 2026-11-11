@@ -11,6 +11,6 @@
   "decay_properties": {
     "shelf_life_ticks": 52,
     "rot_rate_per_tick": 0.01,
-    "degrades_to": "SPOILED_CONSUMABLES"
+    "degrades_to": "SPOILED_CONSUMABLE"
   }
 }

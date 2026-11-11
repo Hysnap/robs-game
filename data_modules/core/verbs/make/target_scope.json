@@ -1,18 +1,48 @@
 {
   "_meta": {
-    "entity_type": "VERB_TARGET_SCOPE",
-    "verb": "MAKE",
-    "description": "Targeting rules for manufacturing and recipe-driven batch assembly."
+    "verb_token": "MAKE",
+    "version": 2,
+    "description": "Form layout, target scopes, and field mapping configuration for MAKE directives."
   },
-  "target_scopes": [
+  "allowed_scopes": [
+    "DISTRICT",
     "ESTABLISHMENT"
   ],
   "target_categories": [
     {
-      "id": "MAKE_RECIPE",
-      "label_token": "UI_TARGET_MAKE_RECIPE",
-      "domain": "RECIPE",
+      "id": "RECIPE",
+      "label_token": "UI_CAT_RECIPES",
       "catalog_source": "recipe_registry"
     }
-  ]
+  ],
+  "form_layout": {
+    "target_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_RECIPE",
+      "mapped_field": "target_item"
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_BATCHES",
+      "default_value": 1.0,
+      "min_value": 1.0,
+      "max_value": 100.0,
+      "step": 1.0,
+      "mapped_field": "amount"
+    },
+    "location_section": {
+      "visible": true,
+      "required": false,
+      "label_token": "UI_LBL_VENUE",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": false,
+      "required": false,
+      "label_token": null,
+      "mapped_field": null
+    }
+  }
 }

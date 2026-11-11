@@ -7,9 +7,21 @@ const VerbRouterScript = preload("res://systems/verb_router.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 
-## Returns all registered verbs from VerbRouter
+## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:
-	return VerbRouterScript.get_registered_verbs()
+	var raw_verbs: Array[String] = VerbRouterScript.get_registered_verbs()
+	var visible_verbs: Array[String] = []
+	for verb_token in raw_verbs:
+		if is_verb_user_creatable(verb_token):
+			visible_verbs.append(verb_token)
+	return visible_verbs
+
+## Evaluates whether a verb is enabled for player order composition via its target_scope.json
+static func is_verb_user_creatable(verb_token: String) -> bool:
+	var scope_def: Dictionary = TargetDomainRegistryScript.get_verb_scope_definition(verb_token)
+	if scope_def.is_empty():
+		return false
+	return bool(scope_def.get("visible_in_composer", true))
 
 ## Resolves raw targets for an active verb
 static func resolve_targets_for_verb(verb_token: String, world_state: Dictionary) -> Array[Dictionary]:
@@ -47,6 +59,30 @@ static func get_allowed_scopes(verb_token: String) -> Array[String]:
 		return []
 	return TargetDomainRegistryScript.get_allowed_scopes(verb_token)
 
+## Resolves dynamic UI form layout from verb's target_scope.json. Fails loud if missing.
+static func get_form_layout(verb_token: String) -> Dictionary:
+	var clean_verb := verb_token.strip_edges().to_upper()
+	assert(!clean_verb.is_empty(), "FATAL: [DirectiveComposerController] Verb token cannot be empty when requesting form layout.")
+
+	var slug: String = clean_verb.to_lower()
+	var scope_path: String = "res://data_modules/core/verbs/".path_join(slug).path_join("target_scope.json")
+
+	assert(FileAccess.file_exists(scope_path), "FATAL: [DirectiveComposerController] Missing target_scope.json for verb '%s' at: %s" % [clean_verb, scope_path])
+
+	var file := FileAccess.open(scope_path, FileAccess.READ)
+	assert(file != null, "FATAL: [DirectiveComposerController] Unable to open scope file for reading: %s" % scope_path)
+
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	file.close()
+
+	assert(err == OK and json.data is Dictionary, "FATAL: [DirectiveComposerController] Parse error %d in: %s" % [err, scope_path])
+
+	var data: Dictionary = json.data
+	assert(data.has("form_layout") and data["form_layout"] is Dictionary, "FATAL: [DirectiveComposerController] Verb '%s' scope file missing 'form_layout' dictionary at: %s" % [clean_verb, scope_path])
+
+	return data["form_layout"]
+
 ## Builds normalized location list based on player knowledge and active district
 static func build_locations_cache(verb_token: String, active_district_id: String, world_state: Dictionary) -> Array[Dictionary]:
 	var locations: Array[Dictionary] = []
@@ -73,7 +109,7 @@ static func build_locations_cache(verb_token: String, active_district_id: String
 				var census: Dictionary = SocietyQueriesScript.get_district_census(s_id)
 				d_name = str(census.get("district_name", ""))
 
-			# 3. Last-resort fallback: clean token (strip internal prefix)
+			# 3. Clean token fallback (strip internal prefix)
 			if d_name.is_empty():
 				d_name = s_id.trim_prefix("DISTRICT_").capitalize().replace("_", " ")
 
@@ -199,48 +235,80 @@ static func calculate_estimate_with_intel(
 		"confidence_token": "UI_ESTIMATE_VERIFIED" if is_exact else "UI_ESTIMATE_SPECULATIVE"
 	}
 
-## Validates and constructs normalized directive packet
+## Validates and constructs normalized directive packet based on verb's configured form_layout
 static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var verb: String = str(form_data.get("verb", "")).strip_edges().to_upper()
 	if verb.is_empty():
 		push_error("[DirectiveComposerController REJECTED] Verb cannot be empty.")
 		return {}
 
-	var target_item: String = str(form_data.get("target_item", "")).strip_edges()
-	if target_item.is_empty():
-		push_error("[DirectiveComposerController REJECTED] Target item cannot be empty.")
-		return {}
-
-	var amount: float = float(form_data.get("amount", 0.0))
-	if amount <= 0.0:
-		push_error("[DirectiveComposerController REJECTED] Amount must be greater than zero.")
-		return {}
-
-	var target_node_id: String = str(form_data.get("target_node_id", "")).strip_edges()
-	if target_node_id.is_empty():
-		push_error("[DirectiveComposerController REJECTED] Target node ID (location) cannot be empty.")
-		return {}
-
-	var target_node_name: String = str(form_data.get("target_node_name", "")).strip_edges()
-	if target_node_name.is_empty():
-		target_node_name = target_node_id
-
-	var initiator_id: String = str(form_data.get("initiator_id", "PLAYER")).strip_edges()
-	if initiator_id.is_empty():
-		initiator_id = "PLAYER"
-
-	return {
+	var layout := get_form_layout(verb)
+	var directive: Dictionary = {
 		"verb": verb,
-		"initiator_id": initiator_id,
-		"assigned_to": str(form_data.get("assigned_to", "Player")),
-		"counterparty_id": str(form_data.get("counterparty_id", "")),
-		"target_item": target_item,
-		"amount": amount,
-		"target_node_id": target_node_id,
-		"target_node_name": target_node_name,
-		"target_scope": str(form_data.get("target_scope", "DISTRICT")),
+		"initiator_id": str(form_data.get("initiator_id", "PLAYER")).strip_edges(),
+		"assigned_to": str(form_data.get("assigned_to", "Player")).strip_edges(),
 		"config": {
 			"unit_cost": float(form_data.get("unit_cost", 0.0)),
 			"exposure_modifier": float(form_data.get("exposure_modifier", 1.0))
 		}
 	}
+	if directive["initiator_id"].is_empty():
+		directive["initiator_id"] = "PLAYER"
+
+	# 1. Target Section (Item / Entity)
+	var target_cfg: Dictionary = layout.get("target_section", {})
+	var target_field: String = str(target_cfg.get("mapped_field", "item_id"))
+	var target_val: String = str(form_data.get("target_item", form_data.get("item_id", ""))).strip_edges()
+	if bool(target_cfg.get("required", false)) and target_val.is_empty():
+		push_error("[DirectiveComposerController REJECTED] Target is required for verb '%s'." % verb)
+		return {}
+	if not target_val.is_empty():
+		directive["target_item"] = target_val
+		if not target_field.is_empty():
+			directive[target_field] = target_val
+
+	# 2. Amount / Duration Section
+	var amount_cfg: Dictionary = layout.get("amount_section", {})
+	var amount_field: String = str(amount_cfg.get("mapped_field", "amount"))
+	var raw_amount: float = float(form_data.get("amount", amount_cfg.get("default_value", 1.0)))
+	if bool(amount_cfg.get("required", false)) and raw_amount <= 0.0:
+		push_error("[DirectiveComposerController REJECTED] Amount/Duration must be > 0.0 for verb '%s'." % verb)
+		return {}
+	directive["amount"] = raw_amount
+	if not amount_field.is_empty():
+		directive[amount_field] = raw_amount
+
+	# 3. Location Section
+	var loc_cfg: Dictionary = layout.get("location_section", {})
+	var loc_field: String = str(loc_cfg.get("mapped_field", "target_node_id"))
+	var loc_id: String = str(form_data.get("target_node_id", "")).strip_edges()
+	var loc_name: String = str(form_data.get("target_node_name", loc_id)).strip_edges()
+	if bool(loc_cfg.get("required", false)) and loc_id.is_empty():
+		push_error("[DirectiveComposerController REJECTED] Target location is required for verb '%s'." % verb)
+		return {}
+	if not loc_id.is_empty():
+		directive["target_node_id"] = loc_id
+		directive["target_node_name"] = loc_name
+		if not loc_field.is_empty():
+			directive[loc_field] = loc_id
+	directive["target_scope"] = str(form_data.get("target_scope", "DISTRICT"))
+
+	# 4. Contact Section
+	var contact_cfg: Dictionary = layout.get("contact_section", {})
+	var contact_field: String = str(contact_cfg.get("mapped_field", "counterparty_id"))
+	var contact_id: String = str(form_data.get("counterparty_id", form_data.get("target_resident_id", ""))).strip_edges()
+	if bool(contact_cfg.get("required", false)) and contact_id.is_empty():
+		push_error("[DirectiveComposerController REJECTED] Contact/Counterparty is required for verb '%s'." % verb)
+		return {}
+	if not contact_id.is_empty():
+		directive["counterparty_id"] = contact_id
+		if not contact_field.is_empty():
+			directive[contact_field] = contact_id
+
+	# Optional Trade Supplier Key Parity
+	if form_data.has("supplier_id") and not str(form_data["supplier_id"]).is_empty():
+		directive["supplier_id"] = str(form_data["supplier_id"]).strip_edges()
+	elif not contact_id.is_empty() and not directive.has("supplier_id"):
+		directive["supplier_id"] = contact_id
+
+	return directive
