@@ -1,0 +1,91 @@
+{
+  "_meta": {
+    "manifest_type": "INBOX_MANIFEST",
+    "id": "pocketbooks_inbox",
+    "description": "Pre-1984 multi-PocketBook inbox stationery manifest relying on blank betting slips and Argos order pads (sticky notes excluded)."
+  },
+  "stack_rules": {
+    "presentation_order": "ISSUED_ORDER",
+    "max_visible_cards": 4,
+    "max_tilt_degrees": 10.0,
+    "jitter_offset_px": 6.0
+  },
+  "allowed_stationery": [
+    "res://data_modules/core/ui_schemas/stationary/definitions/blank_betting_slip.json",
+    "res://data_modules/core/ui_schemas/stationary/definitions/argos_order_pad.json"
+  ],
+  "verb_bindings": {
+    "DEFAULT": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "BUY": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "FINANCE"
+    },
+    "SELL": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "FINANCE"
+    },
+    "GIVE": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "FINANCE"
+    },
+    "RECEIVE": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "FINANCE"
+    },
+    "STORE_ITEMS": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "DIARY"
+    },
+    "WITHDRAW_ITEMS": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "DIARY"
+    },
+    "DUMP": {
+      "default_definition": "ARGOS_ORDER_PAD",
+      "default_filing_domain": "DIARY"
+    },
+    "SCOUT": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DOSSIER"
+    },
+    "INVESTIGATE": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DOSSIER"
+    },
+    "COMMUNICATE": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "INFORM": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "TRAVEL": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "SECRETE_ITEMS": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "RETRIEVE_ITEMS": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    },
+    "REST": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "ROSTER"
+    },
+    "CONSUME": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "ROSTER"
+    },
+    "CLOCK_OFF": {
+      "default_definition": "BLANK_BETTING_SLIP",
+      "default_filing_domain": "DIARY"
+    }
+  }
+}

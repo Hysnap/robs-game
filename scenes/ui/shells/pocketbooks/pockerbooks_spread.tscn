@@ -1,0 +1,61 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/shells/pocketbooks/pocketbooks_spread.gd" id="1_pb_spread"]
+
+[node name="PocketbooksSpread" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_pb_spread")
+
+[node name="DeskHBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BookStackFrame" type="PanelContainer" parent="DeskHBox"]
+custom_minimum_size = Vector2(145, 0)
+layout_mode = 2
+
+[node name="NavSlot" type="MarginContainer" parent="DeskHBox/BookStackFrame"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 1
+
+[node name="NotebookSpread" type="HBoxContainer" parent="DeskHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="LeftPageFrame" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ContentSlot" type="ScrollContainer" parent="DeskHBox/NotebookSpread/LeftPageFrame"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CenterFoldSeam" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RightPageFrame" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ActionSlot" type="ScrollContainer" parent="DeskHBox/NotebookSpread/RightPageFrame"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0

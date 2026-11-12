@@ -1,0 +1,45 @@
+{
+  "_meta": {
+	"entity_type": "STATIONERY_DEFINITION",
+	"id": "ARGOS_ORDER_PAD"
+  },
+  "dimensions": [265.0, 195.0],
+  "corner_radius": 1,
+  "padding": 8,
+  "layout_variant": "GRID_BOXES",
+  "border": {
+	"width": 2,
+	"color": "#153d8a"
+  },
+  "grid_boxes": {
+	"border_color": "#153d8a",
+	"accent_color": "#c8102e",
+	"columns": [
+	  { "token": "UI_SLIP_COL_CAT_NO", "fallback": "CAT NO.", "width_ratio": 0.24 },
+	  { "token": "UI_SLIP_COL_QTY", "fallback": "QTY", "width_ratio": 0.14 },
+	  { "token": "UI_SLIP_COL_DESC", "fallback": "ITEM / ORDER", "width_ratio": 0.42 },
+	  { "token": "UI_SLIP_COL_PRICE", "fallback": "£ . p", "width_ratio": 0.20 }
+	],
+	"body_box": true
+  },
+  "shadow": {
+	"size": 5,
+	"offset": [2.0, 3.0],
+	"alpha": 0.28
+  },
+  "header_template": "{title} // WK {week}",
+  "palettes": {
+	"ARGOS_BLUE": {
+	  "bg": "#fafaf7",
+	  "ink": "#153d8a",
+	  "title_token": "UI_SLIP_ARGOS_ORDER",
+	  "title": "CUSTOMER ORDER SLIP"
+	},
+	"ARGOS_CARBON": {
+	  "bg": "#fdf6d8",
+	  "ink": "#153d8a",
+	  "title_token": "UI_SLIP_ARGOS_COPY",
+	  "title": "STORE COPY SLIP"
+	}
+  }
+}
