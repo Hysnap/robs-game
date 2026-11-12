@@ -5,6 +5,8 @@ extends PanelContainer
 signal close_requested
 signal shell_switch_requested(shell_id: String)
 
+const DEFAULT_SHELL_SIZE := Vector2(980.0, 560.0)
+
 @onready var drag_handle: Control = get_node_or_null("Layout/HeaderBar/DragHandle")
 @onready var shell_option: OptionButton = get_node_or_null("Layout/HeaderBar/ShellOption")
 @onready var close_btn: Button = get_node_or_null("Layout/HeaderBar/BtnClose")
@@ -23,6 +25,25 @@ func _ready() -> void:
 	if drag_handle:
 		drag_handle.mouse_filter = Control.MOUSE_FILTER_STOP
 		drag_handle.gui_input.connect(_on_drag_input)
+
+## Resizes OuterShell window frame from the active shell_manifest.json window_size entry
+func apply_shell_window_size(manifest: Dictionary) -> void:
+	var target_size: Vector2 = DEFAULT_SHELL_SIZE
+	var raw_size = manifest.get("window_size", null)
+	if raw_size is Array and raw_size.size() >= 2:
+		target_size = Vector2(float(raw_size[0]), float(raw_size[1]))
+
+	custom_minimum_size = target_size
+	size = target_size
+
+	var vp := get_viewport()
+	if vp != null:
+		var vp_size: Vector2 = vp.get_visible_rect().size
+		if vp_size.x > 0.0 and vp_size.y > 0.0:
+			global_position = Vector2(
+				maxf(20.0, (vp_size.x - target_size.x) * 0.5),
+				maxf(60.0, (vp_size.y - target_size.y) * 0.5)
+			)
 
 ## Populates the header shell selector from year-unlocked shell definitions
 func populate_shell_options(shells: Array[Dictionary], active_shell_id: String) -> void:
