@@ -84,6 +84,28 @@ func build_ui() -> void:
 	_value_labels["operative_cards"] = civic_box_operative_cards
 	add_child(civic_box_operative_cards)
 
+	# --- Section: known_contacts_section ---
+	var sec_known_contacts_section := VBoxContainer.new()
+	sec_known_contacts_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sec_known_contacts_section.add_theme_constant_override("separation", 2)
+	var hdr_known_contacts_section := Label.new()
+	hdr_known_contacts_section.text = "[ " + tr("UI_HDR_KNOWN_CONTACTS").to_upper() + " ]"
+	hdr_known_contacts_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_known_contacts_section.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_known_contacts_section.add_theme_font_override("font", mono_font)
+	hdr_known_contacts_section.add_theme_color_override("font_color", clr_blue)
+	sec_known_contacts_section.add_child(hdr_known_contacts_section)
+	var sep_known_contacts_section := HSeparator.new()
+	sec_known_contacts_section.add_child(sep_known_contacts_section)
+	add_child(sec_known_contacts_section)
+
+	var civic_box_contact_cards := VBoxContainer.new()
+	civic_box_contact_cards.name = "contact_cards"
+	civic_box_contact_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	civic_box_contact_cards.add_theme_constant_override("separation", 2)
+	_value_labels["contact_cards"] = civic_box_contact_cards
+	add_child(civic_box_contact_cards)
+
 	# --- Inscriptions Container: dossier_notes_section ---
 	var hdr_dossier_notes_section := Label.new()
 	hdr_dossier_notes_section.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
@@ -138,6 +160,37 @@ func bind_data(data: Dictionary) -> void:
 					btn.add_theme_font_size_override("font_size", 11)
 					btn.add_theme_color_override("font_color", clr_b)
 					btn.pressed.connect(func(): item_selected.emit("OPERATIVE_DETAIL", key_val))
+					ctrl.add_child(btn)
+	if _value_labels.has("contact_cards"):
+		var ctrl = _value_labels["contact_cards"]
+		if ctrl is Container:
+			for c in ctrl.get_children():
+				c.free()
+			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
+			var clr_b: Color = RETRO_THEME.get_ink_color("body")
+			var mono_f: Font = RETRO_THEME.get_monospace_font()
+			var items: Array = data.get("known_contacts", [])
+			if items.is_empty():
+				pass
+			else:
+				for item in items:
+					assert(item is Dictionary, "[UI CONTRACT ERROR] Expected Dictionary in list payload for: known_contacts")
+					assert(item.has("resident_id"), "[UI CONTRACT ERROR] Missing required key 'resident_id' in item: " + str(item))
+					var key_val = item["resident_id"]
+					var main_txt: String = str(item.get("name", "Unnamed"))
+					var sub_txt: String = str(item.get("summary_line", ""))
+					var display_txt: String = "• " + main_txt
+					if not sub_txt.is_empty():
+						display_txt += " (" + sub_txt + ")"
+					var btn := Button.new()
+					btn.text = display_txt
+					btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+					btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+					btn.add_theme_font_override("font", mono_f)
+					btn.add_theme_font_size_override("font_size", 11)
+					btn.add_theme_color_override("font_color", clr_b)
+					btn.pressed.connect(func(): item_selected.emit("CONTACT_DETAIL", key_val))
 					ctrl.add_child(btn)
 
 func inscribe_entry(entry: Dictionary) -> void:
