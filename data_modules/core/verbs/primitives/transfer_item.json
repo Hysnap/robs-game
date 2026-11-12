@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TransferItemPrimitive",
+  "description": "Unified physical commodity handover between entity inventory containers (including physical CASH).",
+  "type": "object",
+  "required": ["step_id", "primitive", "params"],
+  "properties": {
+    "step_id": {
+      "type": "string",
+      "description": "Unique identifier for this pipeline step."
+    },
+    "primitive": {
+      "type": "string",
+      "enum": ["TRANSFER_ITEM"]
+    },
+    "params": {
+      "type": "object",
+      "required": ["from", "to", "item_id", "quantity", "transfer_time", "transfer_fatigue"],
+      "properties": {
+        "from": {
+          "type": ["string", "number"],
+          "description": "Source entity identifier or dynamic token (e.g. ORDER_ACTOR, PARAM.supplier_id)."
+        },
+        "to": {
+          "type": ["string", "number"],
+          "description": "Destination entity identifier or dynamic token."
+        },
+        "item_id": {
+          "type": "string",
+          "description": "Commodity token (e.g. CASH, BEER_KEG) or dynamic symbol (e.g. PARAM.item_id)."
+        },
+        "quantity": {
+          "type": ["number", "string"],
+          "description": "Positive numeric quantity or calculated token (e.g. CALCULATED_TOTAL_COST, PARAM.amount)."
+        },
+        "transfer_time": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Operational shift minutes consumed by the handover."
+        },
+        "transfer_fatigue": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Physical fatigue incurred by the operative."
+        }
+      }
+    },
+    "on_failure": {
+      "type": "object",
+      "properties": {
+        "error_code": {
+          "type": "string",
+          "description": "Failure code if transfer preconditions reject."
+        }
+      }
+    },
+    "next_step": {
+      "type": ["string", "null"],
+      "description": "ID of next step on completion, or null to terminate pipeline."
+    }
+  }
+}

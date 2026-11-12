@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "verb_token": "BUY",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Commercial wholesale or retail commodity purchase"
+  },
+  "parameters": {
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "unit_cost": { "type": "FLOAT", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "supplier_id": { "type": "STRING", "required": true }
+  },
+  "steps": [
+    {
+      "step_id": "gate_cash",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "CASH",
+        "operator": ">=",
+        "value": "CALCULATED_TOTAL_COST"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "verify_stock"
+    },
+    {
+      "step_id": "verify_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "PARAM.supplier_id",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "OUT_OF_STOCK"
+      },
+      "next_step": "pay_supplier"
+    },
+    {
+      "step_id": "pay_supplier",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "to": "PARAM.supplier_id",
+        "item_id": "CASH",
+        "quantity": "CALCULATED_TOTAL_COST"
+      },
+      "next_step": "receive_stock"
+    },
+    {
+      "step_id": "receive_stock",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "PARAM.supplier_id",
+        "to": "ORDER_ACTOR",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

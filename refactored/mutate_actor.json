@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MutateActorPrimitive",
+  "description": "Mutates personal physiological or psychological attributes on an operative (e.g. fatigue, stress, loyalty).",
+  "type": "object",
+  "required": ["step_id", "primitive", "params"],
+  "properties": {
+    "step_id": {
+      "type": "string",
+      "description": "Unique identifier for this pipeline step."
+    },
+    "primitive": {
+      "type": "string",
+      "enum": ["MUTATE_ACTOR"]
+    },
+    "params": {
+      "type": "object",
+      "required": ["actor", "metric", "delta"],
+      "properties": {
+        "actor": {
+          "type": ["string", "number"],
+          "description": "Operative token or slot ID to mutate (e.g. ORDER_ACTOR, INITIATOR, crew_0)."
+        },
+        "metric": {
+          "type": "string",
+          "description": "Target attribute key on the staff record (e.g. fatigue, stress, intoxication, loyalty)."
+        },
+        "delta": {
+          "type": ["number", "string"],
+          "description": "Numeric delta or dynamic parameter symbol to add to the attribute."
+        },
+        "clamp_min": {
+          "type": "number",
+          "description": "Optional minimum clamp value."
+        },
+        "clamp_max": {
+          "type": "number",
+          "description": "Optional maximum clamp value."
+        }
+      }
+    },
+    "on_failure": {
+      "type": "object",
+      "properties": {
+        "error_code": {
+          "type": "string",
+          "description": "Failure code if mutation fails or actor cannot be resolved."
+        }
+      }
+    },
+    "next_step": {
+      "type": ["string", "null"],
+      "description": "ID of next step on completion, or null to terminate pipeline."
+    }
+  }
+}

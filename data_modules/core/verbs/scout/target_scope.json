@@ -1,3 +1,39 @@
 {
-  "target_scopes": ["DISTRICT", "ESTABLISHMENT"]
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb": "SCOUT",
+    "description": "Targeting rules and dynamic form layout for district-level reconnaissance."
+  },
+  "target_scopes": [
+    "DISTRICT"
+  ],
+  "target_categories": [],
+  "form_layout": {
+    "target_section": {
+      "visible": false,
+      "required": false,
+      "mapped_field": null
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_DURATION_HOURS",
+      "default_value": 2.0,
+      "min_value": 1.0,
+      "max_value": 8.0,
+      "step": 1.0,
+      "mapped_field": "duration_ticks"
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_DISTRICT",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": false,
+      "required": false,
+      "mapped_field": null
+    }
+  }
 }

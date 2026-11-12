@@ -102,9 +102,13 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		push_error("[CrewScoutBootstrapper] Failed to execute database contract binding batch.")
 		return false
 
-	# 9. Hydrate world_state["staff"] directly from database profile and slot config
+	# 9. Hydrate world_state["staff"] and world_state["residents"] directly from database profile and slot config
 	if not world_state.has("staff"):
 		world_state["staff"] = {}
+	if not world_state.has("residents"):
+		world_state["residents"] = {}
+
+	var leader_home_estab_id: int = 0
 
 	for i in range(target_count):
 		var slot_id: String = staff_slots[i]
@@ -112,20 +116,50 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		var r_id: int = selected_resident_ids[i]
 		var profile: Dictionary = SOCIETY_QUERIES.get_resident_profile(r_id, current_sim_day)
 
+		var hh_id: int = int(profile.get("household_id", 0))
+		var home_estab_id: int = int(profile.get("establishment_id", 0))
+		assert(hh_id > 0, "FATAL: [CrewScoutBootstrapper] Operative '%s' (resident_id=%d) has no valid household_id!" % [slot_id, r_id])
+		assert(home_estab_id > 0, "FATAL: [CrewScoutBootstrapper] Operative '%s' (resident_id=%d) has no physical home establishment_id!" % [slot_id, r_id])
+
+		if i == 0 or bool(slot_cfg.get("is_leader", false)):
+			leader_home_estab_id = home_estab_id
+
+		# Guarantee reciprocal FAMILY edges exist in social_relationships for all co-residents of this household
+		SOCIETY_QUERIES.ensure_household_kinship_edges(hh_id, current_sim_day)
+
 		var staff_entry: Dictionary = slot_cfg.duplicate(true)
 		staff_entry["id"] = slot_id
 		staff_entry["resident_id"] = r_id
 		staff_entry["name"] = profile.get("full_name", "")
 		staff_entry["age"] = profile.get("age", 0)
 		staff_entry["gender_id"] = profile.get("gender_id", 0)
-		staff_entry["household_id"] = profile.get("household_id", 0)
-		staff_entry["establishment_id"] = profile.get("establishment_id", 0)
+		staff_entry["household_id"] = hh_id
+		staff_entry["establishment_id"] = home_estab_id
+		staff_entry["home_establishment_id"] = home_estab_id
 		staff_entry["current_district_id"] = home_district_id
 		staff_entry["primary_employer_id"] = profile.get("employer_entity_id", "")
 		staff_entry["primary_role_id"] = profile.get("role_title_id", 0)
 		staff_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
 
 		world_state["staff"][slot_id] = staff_entry
+		world_state["residents"][slot_id] = staff_entry
+
+	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment
+	var starting_inv: Dictionary = startpoint.get("starting_inventory", {})
+	if not starting_inv.is_empty() and leader_home_estab_id > 0:
+		if not world_state.has("establishments"):
+			world_state["establishments"] = {}
+		var est_key := str(leader_home_estab_id)
+		if not world_state["establishments"].has(est_key):
+			world_state["establishments"][est_key] = {
+				"establishment_id": leader_home_estab_id,
+				"district_id": home_district_id,
+				"inventory": {}
+			}
+		var inv: Dictionary = world_state["establishments"][est_key].get("inventory", {})
+		for comm_id in starting_inv.keys():
+			inv[comm_id] = float(inv.get(comm_id, 0.0)) + float(starting_inv[comm_id])
+		world_state["establishments"][est_key]["inventory"] = inv
 
 	return true
 

@@ -23,7 +23,7 @@ func _init() -> void:
 		"operations": {"fatigue": 0.0},
 		"commodity_registry": commodities,
 		"pending_orders": {},
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": {"STOCK": 20.0, "PREPPED": 0.0}
 		},
 		"counterparties": {

@@ -111,10 +111,12 @@ func _init() -> void:
 	])
 
 	# -------------------------------------------------------------
-	# TEST SUITE 4: Directive Assembly & Fail-Noisy Validation
+	# TEST SUITE 4: Data-Driven Directive Assembly & Guardrails
 	# -------------------------------------------------------------
-	print("\n--- [SUITE 4] Testing Directive Assembly & Guardrails ---")
-	var valid_form: Dictionary = {
+	print("\n--- [SUITE 4] Testing Data-Driven Directive Assembly & Guardrails ---")
+
+	# Subtest 4.1: Commodity Procurement (BUY)
+	var buy_form: Dictionary = {
 		"verb": "BUY",
 		"initiator_id": "PLAYER",
 		"assigned_to": "Billy (Runner)",
@@ -126,21 +128,53 @@ func _init() -> void:
 		"unit_cost": 1.20,
 		"exposure_modifier": 1.0
 	}
-	var valid_packet := CONTROLLER.build_and_validate_directive(valid_form)
-	assert(not valid_packet.is_empty(), "FAILED: Valid form must produce a non-empty directive packet.")
-	assert(valid_packet.get("verb") == "BUY", "FAILED: Verb mismatch.")
-	assert(valid_packet.get("amount") == 20.0, "FAILED: Amount mismatch.")
-	assert(valid_packet.get("assigned_to") == "Billy (Runner)", "FAILED: Assigned staff mismatch.")
+	var buy_packet := CONTROLLER.build_and_validate_directive(buy_form)
+	assert(not buy_packet.is_empty(), "FAILED: Valid BUY form must produce a non-empty directive packet.")
+	assert(buy_packet.get("verb") == "BUY", "FAILED: Verb mismatch.")
+	assert(buy_packet.get("item_id") == "BEER_STRONG_LAGER", "FAILED: item_id was not mapped from target_item.")
+	assert(buy_packet.get("amount") == 20.0, "FAILED: Amount mismatch.")
+	assert(buy_packet.get("assigned_to") == "Billy (Runner)", "FAILED: Assigned staff mismatch.")
+	assert(buy_packet.get("supplier_id") == "LANDLORD_BOB", "FAILED: supplier_id was not mapped.")
+	print("  ✓ PASS: BUY directive cleanly built with mapped schema fields.")
 
-	# Invalid Form (Missing amount - testing deliberate rejection)
-	print("  [Expecting intentional rejection error below]:")
-	var invalid_form := valid_form.duplicate()
-	invalid_form["amount"] = 0.0
-	var rejected_packet := CONTROLLER.build_and_validate_directive(invalid_form)
-	assert(rejected_packet.is_empty(), "FAILED: Zero amount directive must be rejected.")
-	print("  ✓ PASS: Directive assembly and guardrails verified.")
+	# Subtest 4.2: BUY Intentional Rejections (Core Rule 4)
+	print("  [Expecting intentional rejection errors below]:")
+	var buy_missing_item := buy_form.duplicate()
+	buy_missing_item.erase("target_item")
+	var rejected_item := CONTROLLER.build_and_validate_directive(buy_missing_item)
+	assert(rejected_item.is_empty(), "FAILED: BUY with missing item must be rejected.")
+
+	var buy_zero_amount := buy_form.duplicate()
+	buy_zero_amount["amount"] = 0.0
+	var rejected_amount := CONTROLLER.build_and_validate_directive(buy_zero_amount)
+	assert(rejected_amount.is_empty(), "FAILED: BUY with zero amount must be rejected.")
+	print("  ✓ PASS: BUY mandatory field rejections verified.")
+
+	# Subtest 4.3: District Reconnaissance (SCOUT)
+	var scout_form: Dictionary = {
+		"verb": "SCOUT",
+		"initiator_id": "PLAYER",
+		"assigned_to": "op_01",
+		"amount": 3.0, # Hours in order pad spinbox
+		"target_node_id": "DISTRICT_MARKET",
+		"target_scope": "DISTRICT"
+	}
+	var scout_packet := CONTROLLER.build_and_validate_directive(scout_form)
+	assert(not scout_packet.is_empty(), "FAILED: Valid SCOUT form must produce a non-empty directive packet.")
+	assert(scout_packet.get("verb") == "SCOUT", "FAILED: Verb mismatch.")
+	assert(scout_packet.get("duration_ticks") == 3.0, "FAILED: duration_ticks was not mapped from amount.")
+	assert(scout_packet.get("target_node_id") == "DISTRICT_MARKET", "FAILED: target_node_id mismatch.")
+	assert(!scout_packet.has("item_id"), "FAILED: SCOUT directive should not contain item_id.")
+	print("  ✓ PASS: SCOUT directive cleanly built mapping duration_ticks without commodity.")
+
+	# Subtest 4.4: SCOUT Missing Location Rejection (Core Rule 4)
+	var scout_missing_loc := scout_form.duplicate()
+	scout_missing_loc.erase("target_node_id")
+	var rejected_scout := CONTROLLER.build_and_validate_directive(scout_missing_loc)
+	assert(rejected_scout.is_empty(), "FAILED: SCOUT with missing location must be rejected.")
+	print("  ✓ PASS: SCOUT location requirement rejection verified.")
 
 	print("\n=======================================================")
 	print("   ALL DIRECTIVE COMPOSER TESTS PASSED CLEANLY!        ")
 	print("=======================================================\n")
-	quit()
+	quit(0)

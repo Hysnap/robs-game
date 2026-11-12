@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "target_class": "GenRosterDocket",
+    "extends": "VBoxContainer",
+    "description": "Dossier and personnel register of recruited crew operatives and street confederates."
+  },
+  "sections": [
+    {
+      "id": "header_section",
+      "header_token": "UI_HDR_CREW_DOSSIER",
+      "color": "body",
+      "rows": [
+        {
+          "id": "crew_header",
+          "type": "HEADER_BLOCK",
+          "field": "enterprise_title",
+          "title_color": "body",
+          "subtitle_color": "body",
+          "subtitle_field": "home_district_name",
+          "show_separator": true,
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "operative_list_section",
+      "header_token": "UI_HDR_ACTIVE_OPERATIVES",
+      "color": "body",
+      "rows": [
+        {
+          "id": "operative_cards",
+          "type": "LINKED_LIST",
+          "field": "crew_members",
+          "key_field": "resident_id",
+          "target_route": "OPERATIVE_DETAIL",
+          "label_field": "name",
+          "sublabel_field": "summary_line",
+          "action_signal": "item_selected",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "known_contacts_section",
+      "header_token": "UI_HDR_KNOWN_CONTACTS",
+      "color": "body",
+      "rows": [
+        {
+          "id": "contact_cards",
+          "type": "LINKED_LIST",
+          "field": "known_contacts",
+          "key_field": "resident_id",
+          "target_route": "CONTACT_DETAIL",
+          "label_field": "name",
+          "sublabel_field": "summary_line",
+          "action_signal": "item_selected",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "dossier_notes_section",
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FIELD_OBSERVATIONS"
+    }
+  ]
+}

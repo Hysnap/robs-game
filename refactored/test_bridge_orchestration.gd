@@ -47,7 +47,7 @@ func _init() -> void:
 			"STAFF_MALCOLM": {"name": "Malcolm", "role": "OPERATIVE"}
 		},
 		"pending_orders": {},
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": {"STOCK": 20.0, "PREPPED": 0.0}
 		},
 		"counterparties": {
@@ -187,7 +187,7 @@ func _init() -> void:
 
 	# Verify state mutation: Cash credited and stock decremented
 	assert(world_state["finances"]["liquid_cash"] == 135.0, "Liquid cash failed to credit from sale!")
-	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "Inventory stock failed to decrement!")
+	assert(world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "Inventory stock failed to decrement!")
 	SystemLogger.log_info("  ✓ SimController execution succeeded: £135.00 vault cash, 10 units stock remaining.")
 
 	# 5. TRANSLATE EVENT TRIGGERS INTO DESKTOP SLIP CARDS

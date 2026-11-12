@@ -66,7 +66,11 @@ func _init() -> void:
 	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions")
 	var cultural: Dictionary = MANIFEST_MGR.load_module("cultural_demographics")
 	var demographics: Dictionary = MANIFEST_MGR.load_module("demographics")
-	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon")
+	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon").duplicate(true)
+	var spatial_lexicon: Dictionary = MANIFEST_MGR.load_module("spatial_lexicon")
+	for k in spatial_lexicon.keys():
+		if k != "_meta":
+			lexicon[k] = spatial_lexicon[k]
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1984
@@ -127,7 +131,7 @@ func _init() -> void:
 	# Run Pass 3: Citizen Demographics & Job Hydration
 	var master_roles: Dictionary = job_defs.get("roles", job_defs)
 	await CITIZEN_HYDRATOR.run(
-		physical_state, demographics, cultural, lexicon, master_roles, rng, Callable()
+		physical_state, demographics, lexicon, master_roles, cultural, rng, Callable()
 	)
 
 	# -----------------------------------------------------------------

@@ -3,30 +3,32 @@
 class_name UICompiler
 extends RefCounted
 
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 const UI_WIDGET_EMITTERS = preload("res://tools/ui_compiler/widget_emitters.gd")
 const UI_BINDER_EMITTERS = preload("res://tools/ui_compiler/binder_emitters.gd")
 
-const SCHEMAS_VIEW_DIR := "res://data_modules/core/ui_schemas/views/"
-const OUTPUT_DIR := "res://generated/ui/"
+const DATA_MODULES_ROOT := "res://data_modules/"
+const OUTPUT_ROOT := "res://generated/ui/"
 const UI_STRINGS_PATH := "res://data_modules/core/localization/ui_strings.csv"
 
 static func compile_all() -> void:
-	var dir := DirAccess.open(SCHEMAS_VIEW_DIR)
-	assert(dir != null, "[UICompiler FATAL] View schema directory missing: " + SCHEMAS_VIEW_DIR)
-
-	DirAccess.make_dir_recursive_absolute(OUTPUT_DIR)
-
 	var harvested_tokens: Dictionary = {}
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".json"):
-			compile_schema(SCHEMAS_VIEW_DIR + file_name, harvested_tokens)
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	
+	# Recursively discover all view schema JSONs across core and flavour modules
+	var all_json_files: Array[String] = FileSystemCrawlerScript.find_files_recursive(DATA_MODULES_ROOT, "", ".json")
+	var schema_paths: Array[String] = []
+	
+	for path in all_json_files:
+		if path.contains("/ui_schemas/views/"):
+			schema_paths.append(path)
+
+	assert(not schema_paths.is_empty(), "[UICompiler FATAL] No view schemas found under: " + DATA_MODULES_ROOT)
+
+	for schema_path in schema_paths:
+		compile_schema(schema_path, harvested_tokens)
 
 	sync_localization_tokens(harvested_tokens)
-	SystemLogger.log_info("[UICompiler] Build and verification complete. Artifacts written to: " + OUTPUT_DIR)
+	SystemLogger.log_info("[UICompiler] Build and verification complete across %d schemas." % schema_paths.size())
 
 static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> void:
 	var file := FileAccess.open(schema_path, FileAccess.READ)
@@ -37,11 +39,24 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	var schema: Dictionary = JSON.parse_string(raw)
 	assert(schema is Dictionary, "[UICompiler FATAL] Schema root must be a Dictionary: " + schema_path)
 
+	# Derive relative subfolder structure under data_modules/, removing the middle 'ui_schemas/views' segment
+	var rel_dir := schema_path.get_base_dir().trim_prefix(DATA_MODULES_ROOT).trim_prefix("/")
+	var cleaned_rel_dir := rel_dir.replace("ui_schemas/views", "").replace("//", "/")
+	while cleaned_rel_dir.begins_with("/"):
+		cleaned_rel_dir = cleaned_rel_dir.substr(1)
+	while cleaned_rel_dir.ends_with("/"):
+		cleaned_rel_dir = cleaned_rel_dir.left(cleaned_rel_dir.length() - 1)
+	
+	if cleaned_rel_dir.is_empty():
+		cleaned_rel_dir = "core"
+
+	var target_dir := OUTPUT_ROOT.path_join(cleaned_rel_dir)
+	DirAccess.make_dir_recursive_absolute(target_dir)
+
 	var meta: Dictionary = schema.get("_meta", {})
-	var class_name_str: String = meta.get("target_class", "GeneratedUI")
 	var extends_str: String = meta.get("extends", "VBoxContainer")
 	var target_filename := "gen_" + schema_path.get_file().replace(".json", ".gd")
-	var out_path := OUTPUT_DIR + target_filename
+	var out_path := target_dir.path_join(target_filename)
 
 	# 1. Harvest and Deduplicate Signals from Sections (NO _meta access)
 	var declared_signals: Dictionary = {}
@@ -71,7 +86,7 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	var lines: Array[String] = []
 	lines.append("# AUTO-GENERATED CODE - DO NOT EDIT MANUALLY")
 	lines.append("# Compiled from: " + schema_path)
-	lines.append("class_name " + class_name_str)
+	# NOTE: Global 'class_name' omitted intentionally to prevent collisions between multi-era variants
 	lines.append("extends " + extends_str + "\n")
 
 	for sig_def in signal_defs:
@@ -81,7 +96,6 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 
 	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")\n")
 	lines.append("var _value_labels: Dictionary = {}")
-	
 
 	# Auto-discover action queue capability from row definitions (NOT _meta)
 	var has_action_queue: bool = false

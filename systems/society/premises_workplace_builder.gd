@@ -6,7 +6,7 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
 
-## Pass 2: Populates physical establishments, households, and job slots with authentic UK addresses
+## Pass 2: Populates physical establishments, households, and job slots with authentic UK addresses and era-accurate business names
 static func run(
 	world_state: Dictionary,
 	archetypes: Dictionary,
@@ -19,6 +19,7 @@ static func run(
 ) -> Dictionary:
 	var districts: Dictionary = world_state.get("districts", {})
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
+	var sim_start_year: int = int(world_state.get("metadata", {}).get("calendar_year", 1980))
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 	var res_unit_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", "RESIDENTIAL_UNIT")
 
@@ -37,6 +38,7 @@ static func run(
 	var district_residents_map: Dictionary = {}
 	var available_job_slots: Array[Dictionary] = []
 	var available_tied_housing: Dictionary = {}
+	var proprietor_hints: Dictionary = {}
 
 	var est_id: int = 1
 	var current_household_id: int = 1
@@ -48,20 +50,25 @@ static func run(
 	for dist_id in districts.keys():
 		block_estimates[dist_id] = float(districts[dist_id].get("estimated_population", 0.0))
 
-	# Address resolution tables from lexicon
+	# Address & commercial resolution tables from merged lexicon
 	var street_cfg: Dictionary = lexicon.get("street_names", {})
-	var street_roots: Array = street_cfg.get("roots", ["Victoria", "High", "Albert", "Church"])
-	var street_suffixes: Array = street_cfg.get("suffixes", ["Road", "Street", "Avenue", "Terrace"])
+	var street_roots: Array = street_cfg.get("roots", [])
+	var street_suffixes: Array = street_cfg.get("suffixes", [])
+	assert(not street_roots.is_empty() and not street_suffixes.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing street_names in lexicon.")
 
 	var bldg_cfg: Dictionary = lexicon.get("residential_building_names", {})
-	var bldg_roots: Array = bldg_cfg.get("roots", ["Birch", "Falcon", "Moor", "Westfield", "Victoria"])
-	var bldg_suffixes: Array = bldg_cfg.get("suffixes", ["House", "Court", "Towers", "Grange", "Mansions"])
+	var bldg_roots: Array = bldg_cfg.get("roots", [])
+	var bldg_suffixes: Array = bldg_cfg.get("suffixes", [])
+	assert(not bldg_roots.is_empty() and not bldg_suffixes.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing residential_building_names in lexicon.")
 
 	var address_fmts: Dictionary = lexicon.get("address_formats", {})
 	var fmt_flat_unit: String = str(address_fmts.get("flat_unit", "Flat {door}, {building}"))
 	var fmt_flat_door: String = str(address_fmts.get("flat_door", "Flat {door}"))
 	var fmt_street_unit: String = str(address_fmts.get("street_unit", "{door} {street}"))
 	var fmt_street_door: String = str(address_fmts.get("street_door", "{door}"))
+
+	var comm_naming: Dictionary = lexicon.get("commercial_naming", {})
+	assert(not comm_naming.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'commercial_naming' in spatial lexicon.")
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
@@ -77,11 +84,14 @@ static func run(
 		var exp_max: int = int(d.get("expected_pop_max", pop_range[1]))
 		var center_vec: Vector2 = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 
-		# 1. Establish Primary Street Name for this parcel
+		# 1. Establish Primary Street Name & District Prefix for this parcel
 		var street_root: String = str(street_roots[rng.randi() % street_roots.size()])
 		var street_suf: String = str(street_suffixes[rng.randi() % street_suffixes.size()])
 		var parcel_street_name := "%s %s" % [street_root, street_suf]
+		var district_display: String = str(d.get("display_name", dist_id))
+		var district_prefix: String = district_display.split(" ")[0] if not district_display.is_empty() else street_root
 		var street_door_counter: int = 1
+		var used_names_in_district: Dictionary = {}
 
 		dist_inserts.append("""
 			INSERT INTO districts (
@@ -98,7 +108,7 @@ static func run(
 				0, %d, NULL, %d
 			);
 		""" % [
-			dist_id, str(d.get("display_name", dist_id)).replace("'", "''"), district_type,
+			dist_id, district_display.replace("'", "''"), district_type,
 			coords.x, coords.y, g_size.x, g_size.y,
 			building_count, exp_min, exp_max,
 			float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
@@ -324,7 +334,9 @@ static func run(
 							"establishment_id": est_id,
 							"district_id": dist_id,
 							"district_type": district_type,
+							"ethnicity": cult["ethnicity"],
 							"ethnicity_id": eth_id,
+							"religion": cult["religion"],
 							"religion_id": religion_id,
 							"surnames_pool": cult["surnames_pool"],
 							"unemp_rate": float(arch.get("unemployment_rate_range", [0.10, 0.15])[0])
@@ -348,7 +360,16 @@ static func run(
 
 					block_tenancy_counts[cat_code] = block_tenancy_counts.get(cat_code, 0) + 1
 
-					var display_title: String = tenancy["display_name"]
+					var name_result: Dictionary = _generate_business_name(
+						cat_code, tenancy["display_name"], false, district_type,
+						street_root, district_prefix, sim_start_year,
+						comm_naming, cultural, lexicon, used_names_in_district, rng
+					)
+					var display_title: String = str(name_result["title"])
+					used_names_in_district[display_title] = true
+					if name_result.has("proprietor"):
+						proprietor_hints[est_id] = name_result["proprietor"]
+
 					var cap: int = int(tenancy.get("default_capacity", 20))
 					var travel_dist: float = float(tenancy.get("customer_travel_distance_m", 600.0))
 					var req_threshold: float = float(tenancy.get("required_customer_threshold", 100))
@@ -393,7 +414,16 @@ static func run(
 				for _i in range(num_ind):
 					var ind_tenancy: Dictionary = pick_tenancy(rng, ind_classes, {}, district_type)
 					var i_code: String = ind_tenancy["code"]
-					var i_title: String = ind_tenancy["display_name"]
+					var ind_name_res: Dictionary = _generate_business_name(
+						i_code, ind_tenancy["display_name"], true, district_type,
+						street_root, district_prefix, sim_start_year,
+						comm_naming, cultural, lexicon, used_names_in_district, rng
+					)
+					var i_title: String = str(ind_name_res["title"])
+					used_names_in_district[i_title] = true
+					if ind_name_res.has("proprietor"):
+						proprietor_hints[est_id] = ind_name_res["proprietor"]
+
 					var i_cap: int = int(ind_tenancy.get("default_capacity", 40))
 					var i_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", i_code)
 
@@ -457,8 +487,102 @@ static func run(
 		"households": generated_households,
 		"district_residents_map": district_residents_map,
 		"available_job_slots": available_job_slots,
-		"available_tied_housing": available_tied_housing
+		"available_tied_housing": available_tied_housing,
+		"proprietor_hints": proprietor_hints
 	}
+
+## Resolves an era-appropriate brand, pub, location-anchored, or family proprietor business title
+static func _generate_business_name(
+	cat_code: String,
+	base_trade_name: String,
+	is_industrial: bool,
+	district_type: String,
+	street_root: String,
+	district_prefix: String,
+	calendar_year: int,
+	comm_naming: Dictionary,
+	cultural: Dictionary,
+	lexicon: Dictionary,
+	used_names: Dictionary,
+	rng: RandomNumberGenerator
+) -> Dictionary:
+	# 1. Dedicated Pub Name Pool
+	if cat_code == "LOCAL_PUB":
+		var pub_names: Array = comm_naming.get("pub_names", [])
+		assert(not pub_names.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'pub_names' in commercial_naming.")
+		var candidate_pub: String = str(pub_names[rng.randi() % pub_names.size()])
+		if used_names.has(candidate_pub):
+			candidate_pub = "%s (%s)" % [candidate_pub, street_root]
+		return { "title": candidate_pub }
+
+	# 2. Era-Windowed Corporate / High-Street Chains
+	var era_brands: Dictionary = comm_naming.get("era_brands", {})
+	if era_brands.has(cat_code):
+		var active_brands: Array[String] = []
+		for entry in era_brands[cat_code]:
+			if entry is Dictionary:
+				var from_yr: int = int(entry.get("valid_from_year", 1900))
+				var to_yr: int = int(entry.get("valid_to_year", 2100))
+				if calendar_year >= from_yr and calendar_year <= to_yr:
+					active_brands.append(str(entry["name"]))
+		if not active_brands.is_empty():
+			var raw_brand: String = active_brands[rng.randi() % active_brands.size()]
+			var resolved_brand: String = raw_brand.replace("{street_root}", street_root).replace("{district_prefix}", district_prefix)
+			if used_names.has(resolved_brand) and not raw_brand.contains("{"):
+				resolved_brand = "%s (%s)" % [resolved_brand, street_root]
+			return { "title": resolved_brand }
+
+	# 3. Industrial Formats
+	if is_industrial:
+		var ind_formats: Array = comm_naming.get("industrial_formats", [])
+		assert(not ind_formats.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'industrial_formats' in commercial_naming.")
+		var fmt: String = str(ind_formats[rng.randi() % ind_formats.size()])
+		var cult: Dictionary = roll_household_culture(cultural, rng, district_type)
+		var pool_key: String = str(cult.get("surnames_pool", "surnames"))
+		var surnames_arr: Array = lexicon.get(pool_key, lexicon.get("surnames", ["Smith"]))
+		var surname: String = str(surnames_arr[rng.randi() % surnames_arr.size()])
+		var title: String = fmt.replace("{surname}", surname).replace("{district_prefix}", district_prefix).replace("{street_root}", street_root).replace("{trade}", base_trade_name)
+		var res: Dictionary = { "title": title }
+		if fmt.contains("{surname}"):
+			res["proprietor"] = {
+				"surname": surname,
+				"ethnicity": cult["ethnicity"],
+				"religion": cult["religion"],
+				"surnames_pool": pool_key
+			}
+		return res
+
+	# 4. Independent Commercial Trades (Family Proprietor vs Street/District Location)
+	var fam_prob: float = float(comm_naming.get("family_trade_probability", 0.65))
+	if rng.randf() < fam_prob:
+		var fam_formats: Array = comm_naming.get("family_formats", [])
+		assert(not fam_formats.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'family_formats' in commercial_naming.")
+		var fmt: String = str(fam_formats[rng.randi() % fam_formats.size()])
+		var cult: Dictionary = roll_household_culture(cultural, rng, district_type)
+		var pool_key: String = str(cult.get("surnames_pool", "surnames"))
+		var surnames_arr: Array = lexicon.get(pool_key, lexicon.get("surnames", ["Smith"]))
+		var surname: String = str(surnames_arr[rng.randi() % surnames_arr.size()])
+		var initial_char: String = char(65 + (rng.randi() % 26))
+		var title: String = fmt.replace("{initial}", initial_char).replace("{surname}", surname).replace("{trade}", base_trade_name)
+		if used_names.has(title):
+			title = "%s (%s)" % [title, street_root]
+		return {
+			"title": title,
+			"proprietor": {
+				"surname": surname,
+				"ethnicity": cult["ethnicity"],
+				"religion": cult["religion"],
+				"surnames_pool": pool_key
+			}
+		}
+	else:
+		var loc_formats: Array = comm_naming.get("location_formats", [])
+		assert(not loc_formats.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'location_formats' in commercial_naming.")
+		var fmt: String = str(loc_formats[rng.randi() % loc_formats.size()])
+		var title: String = fmt.replace("{street_root}", street_root).replace("{district_prefix}", district_prefix).replace("{trade}", base_trade_name)
+		if used_names.has(title):
+			title = "%s (%s)" % [title, street_root]
+		return { "title": title }
 
 static func _extract_housing_profiles(arch: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []

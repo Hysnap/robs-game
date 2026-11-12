@@ -1,18 +1,48 @@
 {
-  "verb": "GIVE",
+  "_meta": {
+    "verb_token": "GIVE",
+    "version": 2,
+    "description": "Form layout, target scopes, and field mapping configuration for GIVE directives."
+  },
   "allowed_scopes": [
-    "STAFF",
     "DISTRICT",
     "ESTABLISHMENT"
   ],
   "target_categories": [
     {
-      "id": "CURRENCY",
-      "label_token": "UI_CAT_CURRENCY"
-    },
-    {
       "id": "COMMODITY",
-      "label_token": "UI_CAT_COMMODITIES"
+      "label_token": "UI_CAT_COMMODITIES",
+      "catalog_source": "commodities"
     }
-  ]
+  ],
+  "form_layout": {
+    "target_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_COMMODITY",
+      "mapped_field": "target_item"
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_QUANTITY",
+      "default_value": 1.0,
+      "min_value": 1.0,
+      "max_value": 1000.0,
+      "step": 1.0,
+      "mapped_field": "amount"
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_LOCATION",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_RECIPIENT",
+      "mapped_field": "counterparty_id"
+    }
+  }
 }

@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "verb_token": "SELL",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Commercial wholesale or retail commodity sale"
+  },
+  "parameters": {
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "unit_cost": { "type": "FLOAT", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "buyer_id": { "type": "STRING", "required": true }
+  },
+  "steps": [
+    {
+      "step_id": "gate_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "OUT_OF_STOCK"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "gate_buyer_cash"
+    },
+    {
+      "step_id": "gate_buyer_cash",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "PARAM.buyer_id",
+        "metric": "CASH",
+        "operator": ">=",
+        "value": "CALCULATED_TOTAL_COST"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "deliver_stock"
+    },
+    {
+      "step_id": "deliver_stock",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "to": "PARAM.buyer_id",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": "collect_cash"
+    },
+    {
+      "step_id": "collect_cash",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "PARAM.buyer_id",
+        "to": "ORDER_ACTOR",
+        "item_id": "CASH",
+        "quantity": "CALCULATED_TOTAL_COST"
+      },
+      "next_step": null
+    }
+  ]
+}

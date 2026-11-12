@@ -8,6 +8,7 @@
   "display_name": "Roll Cigarette",
   "output_item": "ROLLUP",
   "output_yield_units": 1.0,
+  "batch_mode": "PIECEWORK",
   "required_tool_category": "NONE",
   "inputs": {
     "ROLLING_TOBACCO": 0.8,

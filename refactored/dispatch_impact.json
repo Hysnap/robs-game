@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DispatchImpactPrimitive",
+  "description": "Dispatches macro, contextual, and commodity-level metric impulses to ImpactRouter and UniversalMetricSink.",
+  "type": "object",
+  "required": ["step_id", "primitive", "params"],
+  "properties": {
+    "step_id": {
+      "type": "string",
+      "description": "Unique identifier for this pipeline step."
+    },
+    "primitive": {
+      "type": "string",
+      "enum": ["DISPATCH_IMPACT"]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "load_from_folder": {
+          "type": "string",
+          "description": "Path to directory containing authored impact profile JSON files (e.g. res://data_modules/core/verbs/buy/impacts/)."
+        },
+        "direct_deltas": {
+          "type": "object",
+          "description": "Dictionary mapping metric keys to explicit numeric delta impulses.",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "target_node_id": {
+          "type": "string",
+          "description": "Target district or entity ID to receive the impact impulses (defaults to action context target)."
+        },
+        "commodity_activations": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, evaluates and applies commodity-specific activations from traded catalog items."
+        }
+      }
+    },
+    "on_failure": {
+      "type": "object",
+      "properties": {
+        "error_code": {
+          "type": "string",
+          "description": "Failure code if impact loading or dispatching fails."
+        }
+      }
+    },
+    "next_step": {
+      "type": ["string", "null"],
+      "description": "ID of next step on completion, or null to terminate pipeline."
+    }
+  }
+}

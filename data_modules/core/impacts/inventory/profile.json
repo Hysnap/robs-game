@@ -13,7 +13,7 @@
   "suffix": " units",
   "telemetry_source": {
     "type": "ACTOR_STATE",
-    "state_path": "inventory_registry.{item_id}.STOCK"
+    "state_path": "inventory.{item_id}.STOCK"
   },
   "tuning": {
     "allow_negative_stock": false,

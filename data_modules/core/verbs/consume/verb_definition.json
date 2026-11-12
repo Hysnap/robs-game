@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "verb_token": "CONSUME",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Consume consumable commodities from operative inventory"
+  },
+  "parameters": {
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 }
+  },
+  "steps": [
+    {
+      "step_id": "gate_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "consume_stock"
+    },
+    {
+      "step_id": "consume_stock",
+      "primitive": "DEDUCT_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

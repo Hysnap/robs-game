@@ -54,7 +54,7 @@ func _init() -> void:
 		"metadata": {"current_week_tick": 1},
 		"finances": {"liquid_cash": 100.0},
 		"operations": {"fatigue": 0.0},
-		"inventory_registry": {
+		"inventory": {
 			"BEER_STRONG_LAGER": {"STOCK": 0.0, "PREPPED": 0.0},
 			"ROLLING_TOBACCO": {"STOCK": 50.0, "PREPPED": 0.0},
 			"ROLLING_PAPERS": {"STOCK": 50.0, "PREPPED": 0.0},
@@ -97,7 +97,7 @@ func _init() -> void:
 	
 	assert(res_buy.get("success", false) == true, "FAILED: BUY execution failed!")
 	assert(world_state["finances"]["liquid_cash"] == 76.0, "FAILED: Cash not reduced by 20 x £1.20 (£24)!")
-	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 20.0, "FAILED: Stock not received!")
+	assert(world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"] == 20.0, "FAILED: Stock not received!")
 
 	var memo_buy = DIALOGUE_RESOLVER.format_feedback(res_buy, staff, dialect, feedback_data)
 	print("  Generated Memo -> ", memo_buy)
@@ -128,9 +128,9 @@ func _init() -> void:
 	
 	# Verification based on recipe_profile.json: 10 batches * 0.8g tobacco = 8.0g consumed (50 - 8 = 42)
 	# 10 batches * 1.0 paper = 10 papers consumed (50 - 10 = 40)
-	var rem_tobacco: float = world_state["inventory_registry"]["ROLLING_TOBACCO"]["STOCK"]
-	var rem_papers: float = world_state["inventory_registry"]["ROLLING_PAPERS"]["STOCK"]
-	var prepped_rollups: float = world_state["inventory_registry"]["ROLLUP"]["PREPPED"]
+	var rem_tobacco: float = world_state["inventory"]["ROLLING_TOBACCO"]["STOCK"]
+	var rem_papers: float = world_state["inventory"]["ROLLING_PAPERS"]["STOCK"]
+	var prepped_rollups: float = world_state["inventory"]["ROLLUP"]["PREPPED"]
 
 	print("  ✓ Remaining Tobacco: %.1fg (Expected 42.0g)" % rem_tobacco)
 	print("  ✓ Remaining Papers:  %.1f  (Expected 40.0)" % rem_papers)
@@ -161,7 +161,7 @@ func _init() -> void:
 	print("  Result message: ", res_sell.get("message", ""))
 
 	assert(res_sell.get("success", false) == true, "FAILED: SELL execution failed!")
-	assert(world_state["inventory_registry"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "FAILED: Stock not reduced!")
+	assert(world_state["inventory"]["BEER_STRONG_LAGER"]["STOCK"] == 10.0, "FAILED: Stock not reduced!")
 	assert(world_state["finances"]["liquid_cash"] == 101.0, "FAILED: Revenue not deposited (+£25.00)!")
 
 	var memo_sell = DIALOGUE_RESOLVER.format_feedback(res_sell, staff, dialect, feedback_data)

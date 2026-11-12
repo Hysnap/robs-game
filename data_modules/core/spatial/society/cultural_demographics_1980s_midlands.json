@@ -1,8 +1,8 @@
 {
   "_meta": {
     "region": "West Midlands / Birmingham",
-    "era": "1980s",
-    "description": "Historical demographic weights for ethnic background and religious denominations by district density."
+    "era": "Late 1970s - Early 1980s",
+    "description": "Historical demographic weights for ethnic background and religious denominations by district density, calibrated to ~1981 UK urban census estimations with expanded European sub-populations."
   },
   "defaults": {
     "fallback_ethnicity": "WHITE_BRITISH",
@@ -12,58 +12,135 @@
     "WHITE_BRITISH": {
       "display_name": "White British",
       "religion_distribution": {
-        "PROTESTANT_COFE": 0.65,
-        "CATHOLIC": 0.15,
-        "SECULAR_NONE": 0.20
+        "PROTESTANT_COFE": 0.58,
+        "PROTESTANT_OTHER": 0.12,
+        "CATHOLIC": 0.08,
+        "SECULAR_NONE": 0.22
       },
       "surnames_pool": "surnames"
     },
     "WHITE_IRISH": {
       "display_name": "White Irish",
       "religion_distribution": {
-        "CATHOLIC": 0.90,
-        "PROTESTANT_OTHER": 0.05,
-        "SECULAR_NONE": 0.05
+        "CATHOLIC": 0.88,
+        "PROTESTANT_OTHER": 0.06,
+        "SECULAR_NONE": 0.06
       },
       "surnames_pool": "surnames_irish"
     },
     "AFRO_CARIBBEAN": {
       "display_name": "Afro-Caribbean",
       "religion_distribution": {
-        "PENTECOSTAL_PROTESTANT": 0.70,
-        "RASTAFARI": 0.15,
-        "SECULAR_NONE": 0.15
+        "PENTECOSTAL_PROTESTANT": 0.45,
+        "PROTESTANT_OTHER": 0.25,
+        "PROTESTANT_COFE": 0.10,
+        "RASTAFARI": 0.08,
+        "SECULAR_NONE": 0.12
       },
       "surnames_pool": "surnames_caribbean"
     },
     "SOUTH_ASIAN": {
       "display_name": "South Asian",
       "religion_distribution": {
-        "MUSLIM": 0.55,
-        "SIKH": 0.30,
-        "HINDU": 0.15
+        "MUSLIM": 0.53,
+        "SIKH": 0.28,
+        "HINDU": 0.17,
+        "PROTESTANT_OTHER": 0.02
       },
       "surnames_pool": "surnames_south_asian"
+    },
+    "CHINESE": {
+      "display_name": "Chinese",
+      "religion_distribution": {
+        "BUDDHIST_TAOIST": 0.45,
+        "PROTESTANT_OTHER": 0.15,
+        "CATHOLIC": 0.05,
+        "SECULAR_NONE": 0.35
+      },
+      "surnames_pool": "surnames_chinese"
+    },
+    "EUROPEAN_POLISH_CZECH": {
+      "display_name": "Polish / Central European",
+      "religion_distribution": {
+        "CATHOLIC": 0.82,
+        "JEWISH": 0.05,
+        "PROTESTANT_OTHER": 0.03,
+        "SECULAR_NONE": 0.10
+      },
+      "surnames_pool": "surnames_polish_czech"
+    },
+    "EUROPEAN_UKRAINIAN_EASTERN": {
+      "display_name": "Ukrainian / Eastern European",
+      "religion_distribution": {
+        "EASTERN_ORTHODOX": 0.65,
+        "CATHOLIC": 0.25,
+        "SECULAR_NONE": 0.10
+      },
+      "surnames_pool": "surnames_eastern_european"
+    },
+    "EUROPEAN_ITALIAN_MEDITERRANEAN": {
+      "display_name": "Italian / Mediterranean",
+      "religion_distribution": {
+        "CATHOLIC": 0.65,
+        "EASTERN_ORTHODOX": 0.25,
+        "SECULAR_NONE": 0.10
+      },
+      "surnames_pool": "surnames_mediterranean"
+    },
+    "EUROPEAN_JEWISH": {
+      "display_name": "Ashkenazi Jewish",
+      "religion_distribution": {
+        "JEWISH": 0.85,
+        "SECULAR_NONE": 0.15
+      },
+      "surnames_pool": "surnames_jewish"
+    },
+    "EUROPEAN_WESTERN_OTHER": {
+      "display_name": "Western European (French / German / Other)",
+      "religion_distribution": {
+        "CATHOLIC": 0.35,
+        "PROTESTANT_OTHER": 0.35,
+        "SECULAR_NONE": 0.30
+      },
+      "surnames_pool": "surnames_western_european"
     }
   },
   "district_ethnic_weights": {
     "high_density": {
-      "WHITE_BRITISH": 0.55,
-      "WHITE_IRISH": 0.18,
-      "AFRO_CARIBBEAN": 0.15,
-      "SOUTH_ASIAN": 0.12
+      "WHITE_BRITISH": 0.455,
+      "WHITE_IRISH": 0.140,
+      "AFRO_CARIBBEAN": 0.150,
+      "SOUTH_ASIAN": 0.220,
+      "CHINESE": 0.010,
+      "EUROPEAN_POLISH_CZECH": 0.008,
+      "EUROPEAN_UKRAINIAN_EASTERN": 0.005,
+      "EUROPEAN_ITALIAN_MEDITERRANEAN": 0.008,
+      "EUROPEAN_JEWISH": 0.002,
+      "EUROPEAN_WESTERN_OTHER": 0.002
     },
     "suburban_low_density": {
-      "WHITE_BRITISH": 0.82,
-      "WHITE_IRISH": 0.10,
-      "AFRO_CARIBBEAN": 0.04,
-      "SOUTH_ASIAN": 0.04
+      "WHITE_BRITISH": 0.865,
+      "WHITE_IRISH": 0.070,
+      "AFRO_CARIBBEAN": 0.020,
+      "SOUTH_ASIAN": 0.025,
+      "CHINESE": 0.005,
+      "EUROPEAN_POLISH_CZECH": 0.003,
+      "EUROPEAN_UKRAINIAN_EASTERN": 0.001,
+      "EUROPEAN_ITALIAN_MEDITERRANEAN": 0.003,
+      "EUROPEAN_JEWISH": 0.005,
+      "EUROPEAN_WESTERN_OTHER": 0.003
     },
     "commercial": {
-      "WHITE_BRITISH": 0.65,
-      "WHITE_IRISH": 0.15,
-      "AFRO_CARIBBEAN": 0.08,
-      "SOUTH_ASIAN": 0.12
+      "WHITE_BRITISH": 0.615,
+      "WHITE_IRISH": 0.120,
+      "AFRO_CARIBBEAN": 0.080,
+      "SOUTH_ASIAN": 0.140,
+      "CHINESE": 0.020,
+      "EUROPEAN_POLISH_CZECH": 0.006,
+      "EUROPEAN_UKRAINIAN_EASTERN": 0.003,
+      "EUROPEAN_ITALIAN_MEDITERRANEAN": 0.008,
+      "EUROPEAN_JEWISH": 0.004,
+      "EUROPEAN_WESTERN_OTHER": 0.004
     }
   }
 }

@@ -15,5 +15,36 @@
       "domain": "COMMODITY",
       "catalog_source": "commodity_registry"
     }
-  ]
+  ],
+  "form_layout": {
+    "target_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_COMMODITY",
+      "domain": "COMMODITY",
+      "mapped_field": "item_id"
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_QUANTITY",
+      "default_value": 1.0,
+      "min_value": 1.0,
+      "max_value": 999.0,
+      "step": 1.0,
+      "mapped_field": "amount"
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_VENUE",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": false,
+      "label_token": "UI_LBL_SUPPLIER",
+      "mapped_field": "supplier_id"
+    }
+  }
 }

@@ -2,19 +2,21 @@
   "_meta": {
     "scenario_id": "STREET_CREW_1980",
     "theme": "crime",
-    "era": "1980",
-    "description": "Baseline 3-person kin crew operation starting January 1980."
+    "era": "1975",
+    "description": "Baseline 3-person kin crew operation starting January 1975."
   },
   "starting_metadata": {
-    "calendar_year": 1980,
+    "calendar_year": 1975,
     "calendar_month": 1,
     "current_week_tick": 1,
     "current_day_tick": 1
   },
-  "starting_finances": {
-    "liquid_cash": 100.0,
+  "starting_obligations": {
     "clean_bank_balance": 0.0,
     "debt_balance": 0.0
+  },
+  "starting_inventory": {
+    "CASH": 100.0
   },
   "starting_operations": {
     "fatigue": 0.0,
@@ -58,7 +60,9 @@
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 1.0,
-      "pocket_cash": 20.0
+      "inventory": {
+        "CASH": 20.0
+      }
     },
     "crew_1": {
       "slot_id": "crew_1",
@@ -67,7 +71,9 @@
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 0.85,
-      "pocket_cash": 5.0
+      "inventory": {
+        "CASH": 5.0
+      }
     },
     "crew_2": {
       "slot_id": "crew_2",
@@ -76,7 +82,9 @@
       "stress": 0.0,
       "fatigue": 0.0,
       "loyalty": 0.90,
-      "pocket_cash": 15.0
+      "inventory": {
+        "CASH": 15.0
+      }
     }
   }
 }

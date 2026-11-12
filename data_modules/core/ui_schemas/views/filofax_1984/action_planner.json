@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "module_type": "ACTION_PLANNER",
+    "target_class": "GenActionPlanner",
+    "extends": "VBoxContainer"
+  },
+  "has_action_queue": true,
+  "sections": [
+    {
+      "id": "operational_docket",
+      "header_token": "UI_HDR_OPERATIONS",
+      "color": "body",
+      "rows": [
+        {
+          "id": "btn_open_order_pad",
+          "type": "BUTTON",
+          "token": "UI_BTN_OPEN_ORDER_PAD",
+          "action_signal": "action_clicked",
+          "emit_args": "\"OPEN_PAD\""
+        }
+      ]
+    },
+    {
+      "id": "staging_ledger",
+      "header_token": "UI_HDR_STAGED_QUEUE",
+      "color": "body",
+      "rows": [
+        {
+          "id": "queue_list",
+          "type": "ITEM_LIST",
+          "token": "UI_LBL_QUEUED",
+          "field": "staged_queue",
+          "has_action_queue": true,
+          "reorderable": true,
+          "min_height": 140
+        },
+        {
+          "id": "btn_select_all",
+          "type": "BUTTON",
+          "token": "UI_BTN_SELECT_ALL",
+          "action_signal": "action_clicked",
+          "emit_args": "\"SELECT_ALL\""
+        }
+      ]
+    },
+    {
+      "id": "action_planner_signals",
+      "type": "SIGNALS",
+      "signals": [
+      "directive_staged(directive)",
+      "execute_shift_requested(staged_directives)",
+      "action_clicked(action_code)"
+    ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "verb_token": "STORE_ITEMS",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Deposit cash or commodities from operative inventory into an establishment or depot storage pool"
+  },
+  "parameters": {
+    "venue_id": { "type": "STRING", "required": true },
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "target_node_id": { "type": "STRING", "required": true }
+  },
+  "steps": [
+    {
+      "step_id": "gate_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "deposit_stock"
+    },
+    {
+      "step_id": "deposit_stock",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "to": "PARAM.venue_id",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

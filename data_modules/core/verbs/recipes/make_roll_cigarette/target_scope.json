@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "description": "Compiled recipe sub-verb; executed via primary MAKE.",
+    "verb_token": "MAKE_ROLL_CIGARETTE",
+    "version": 1
+  },
+  "is_recipe_verb": true
+}

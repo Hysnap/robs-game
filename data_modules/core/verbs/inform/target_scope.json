@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "verb_token": "INFORM",
+    "version": 2,
+    "description": "Form layout, target scopes, and field mapping configuration for INFORM directives."
+  },
+  "allowed_scopes": [
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [],
+  "form_layout": {
+    "target_section": {
+      "visible": false,
+      "required": false,
+      "label_token": null,
+      "mapped_field": null
+    },
+    "amount_section": {
+      "visible": false,
+      "required": false,
+      "label_token": null,
+      "mapped_field": null
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_LOCATION",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_RECIPIENT",
+      "mapped_field": "counterparty_id"
+    }
+  }
+}

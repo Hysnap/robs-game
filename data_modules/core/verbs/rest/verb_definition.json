@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "verb_token": "REST",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Rest or wait in place, allowing time to elapse and operational fatigue to recover"
+  },
+  "parameters": {
+    "duration_ticks": { "type": "FLOAT", "default": 1.0 }
+  },
+  "steps": [
+    {
+      "step_id": "gate_actor_validity",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "!=",
+        "value": ""
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": null
+    }
+  ]
+}

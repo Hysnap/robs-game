@@ -143,48 +143,30 @@ func refresh_district_indicator(block_id: String) -> void:
 	indicator.update_from_view_data(view_data)
 
 func _setup_compiled_shell_host_views() -> void:
+	var current_year: int = _get_active_calendar_year()
+
 	# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
-	var spread_instance := ShellRegistryScript.instantiate_active_spread()
+	var spread_instance := ShellRegistryScript.instantiate_active_spread(current_year)
 	if spread_instance and outer_shell:
 		outer_shell.set_spread_wrapper(spread_instance)
 
 	# B. Mount Navigation Spine
-	var nav_class = load("res://generated/ui/gen_navigation_bar.gd")
-	assert(nav_class != null, "FATAL: [CityView] Generated UI missing: gen_navigation_bar.gd")
-	view_host.set_navigation_component(nav_class.new())
+	var nav_view: Control = ShellRegistryScript.instantiate_generated_view("gen_navigation_bar.gd", current_year)
+	view_host.set_navigation_component(nav_view)
 
 	# C. Register Compiled Content Views
-	var docket_class = load("res://generated/ui/gen_district_docket.gd")
-	assert(docket_class != null, "FATAL: [CityView] Generated UI missing: gen_district_docket.gd")
-	view_host.register_view("DOSSIER", docket_class.new())
-
-	var cashbook_class = load("res://generated/ui/gen_cashbook_ledger.gd")
-	assert(cashbook_class != null, "FATAL: [CityView] Generated UI missing: gen_cashbook_ledger.gd")
-	view_host.register_view("FINANCE", cashbook_class.new())
-
-	var diary_class = load("res://generated/ui/gen_diary_log.gd")
-	assert(diary_class != null, "FATAL: [CityView] Generated UI missing: gen_diary_log.gd")
-	view_host.register_view("DIARY", diary_class.new())
-
-	var roster_class = load("res://generated/ui/gen_roster_docket.gd")
-	assert(roster_class != null, "FATAL: [CityView] Generated UI missing: gen_roster_docket.gd")
-	view_host.register_view("ROSTER", roster_class.new())
+	view_host.register_view("DOSSIER", ShellRegistryScript.instantiate_generated_view("gen_district_docket.gd", current_year))
+	view_host.register_view("FINANCE", ShellRegistryScript.instantiate_generated_view("gen_cashbook_ledger.gd", current_year))
+	view_host.register_view("DIARY", ShellRegistryScript.instantiate_generated_view("gen_diary_log.gd", current_year))
+	view_host.register_view("ROSTER", ShellRegistryScript.instantiate_generated_view("gen_roster_docket.gd", current_year))
 
 	# Sub-Docket Inspection Views
-	var estab_class = load("res://generated/ui/gen_establishment_docket.gd")
-	assert(estab_class != null, "FATAL: [CityView] Generated UI missing: gen_establishment_docket.gd")
-	view_host.register_view("ESTABLISHMENT_DOCKET", estab_class.new())
-
-	var res_class = load("res://generated/ui/gen_residential_docket.gd")
-	assert(res_class != null, "FATAL: [CityView] Generated UI missing: gen_residential_docket.gd")
-	view_host.register_view("RESIDENTIAL_DOCKET", res_class.new())
+	view_host.register_view("ESTABLISHMENT_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_establishment_docket.gd", current_year))
+	view_host.register_view("RESIDENTIAL_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_residential_docket.gd", current_year))
 
 	# D. Mount Interactive Action Planner into ACTION slot
-	var action_planner_view: Control = null
-	var planner_class = load("res://generated/ui/gen_action_planner.gd")
-	assert(planner_class != null, "FATAL: [CityView] Generated UI missing: gen_action_planner.gd")
+	var action_planner_view: Control = ShellRegistryScript.instantiate_generated_view("gen_action_planner.gd", current_year)
 	if outer_shell:
-		action_planner_view = planner_class.new()
 		outer_shell.mount_view("ACTION", action_planner_view)
 		view_host.set_action_component(action_planner_view)
 
@@ -232,12 +214,18 @@ func _on_ui_command_dispatched(command: UIActionCommand) -> void:
 		}
 	)
 
+func _get_active_calendar_year() -> int:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs != null and "world_state" in gs:
+		return int(gs.world_state.get("metadata", {}).get("calendar_year", 0))
+	return 0
+
 func _setup_shell_customizer() -> void:
 	var customizer_res = load("res://scenes/ui/shell_host/shell_customizer.tscn")
 	if customizer_res and workspace_canvas:
 		shell_customizer = customizer_res.instantiate()
 		
-		var active_shell_id: String = ShellRegistryScript.get_configured_shell_id()
+		var active_shell_id: String = ShellRegistryScript.get_configured_shell_id(_get_active_calendar_year())
 		if "target_shell" in shell_customizer:
 			shell_customizer.target_shell = active_shell_id
 			
