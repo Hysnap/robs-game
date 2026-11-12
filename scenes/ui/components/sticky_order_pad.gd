@@ -377,7 +377,9 @@ func _refresh_contact_options() -> void:
 
 	var loc_meta = opt_where.get_item_metadata(opt_where.selected)
 	if loc_meta is Dictionary:
-		var contacts := DirectiveComposerControllerScript.resolve_contacts_for_location(loc_meta)
+		var gs = ScenarioManifestManager.get_game_state()
+		var ws: Dictionary = gs.world_state if gs != null and "world_state" in gs else {}
+		var contacts := DirectiveComposerControllerScript.resolve_contacts_for_location(loc_meta, ws)
 		var idx: int = 1
 		for c in contacts:
 			opt_contact.add_item("%s (%s)" % [c["name"], c["role"]], idx)

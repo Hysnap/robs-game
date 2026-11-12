@@ -32,6 +32,8 @@ static func run(
 	var rel_civic_peer_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
 	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
+	var proprietor_hints: Dictionary = physical_state.get("proprietor_hints", {})
+
 	# Spatial index for non-working establishments
 	var by_cat_and_district: Dictionary = {}
 	for cat in by_cat.keys():
@@ -43,9 +45,6 @@ static func run(
 			by_cat_and_district[cat][d_id].append(item)
 
 	open_job_slots.shuffle()
-
-	var male_names: Array = lexicon.get("first_names_male", ["Terry"])
-	var female_names: Array = lexicon.get("first_names_female", ["Sharon"])
 
 	var resident_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
@@ -109,7 +108,9 @@ static func run(
 			var role_in_home: String = str(member.get("role_in_home", "CHILD"))
 
 			var gender_id: int = male_gender_id if is_male else female_gender_id
-			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
+			var hh_religion: String = str(hh.get("religion", ""))
+			var hh_surnames_pool: String = str(hh.get("surnames_pool", "surnames"))
+			var first_name: String = _pick_first_name(lexicon, is_male, hh_surnames_pool, hh_religion, rng)
 			var member_surname: String = family_surname
 
 			if role_in_home == "PEER":
@@ -184,6 +185,21 @@ static func run(
 					if slot.has("slot_id"):
 						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
 							r_id, int(slot["slot_id"])
+						])
+					
+					# Align proprietor and their household with family-named business sign
+					if proprietor_hints.has(assigned_est_id) and is_head:
+						var hint: Dictionary = proprietor_hints[assigned_est_id]
+						proprietor_hints.erase(assigned_est_id)
+						var prop_surname: String = str(hint["surname"]).replace("'", "''")
+						var prop_eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", str(hint["ethnicity"]))
+						var prop_rel_id: int = DB_MANAGER.get_label_id("RELIGION", str(hint["religion"]))
+						var prop_first: String = _pick_first_name(lexicon, is_male, str(hint["surnames_pool"]), str(hint["religion"]), rng)
+						resident_updates.append("UPDATE residents SET birth_surname = '%s', current_surname = '%s', ethnicity_id = %d, religion_id = %d WHERE household_id = %d;" % [
+							prop_surname, prop_surname, prop_eth_id, prop_rel_id, int(hh["household_id"])
+						])
+						resident_updates.append("UPDATE residents SET first_name = '%s' WHERE resident_id = %d;" % [
+							prop_first, r_id
 						])
 
 					# Check for tied accommodation relocation (e.g. Student Nurse, Junior Doctor, Constable, Uni Student)
@@ -352,10 +368,9 @@ static func run(
 			var is_male: bool = (rng.randf() > 0.5)
 
 			var gender_id: int = male_gender_id if is_male else female_gender_id
-			var first_name: String = str(male_names[rng.randi() % male_names.size()] if is_male else female_names[rng.randi() % female_names.size()]).replace("'", "''")
-
 			# Roll authentic culture from cultural configuration rather than hardcoding
 			var cult: Dictionary = PremisesWorkplaceBuilder.roll_household_culture(cultural, rng, "suburban_low_density")
+			var first_name: String = _pick_first_name(lexicon, is_male, str(cult["surnames_pool"]), str(cult["religion"]), rng)
 			var eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", cult["ethnicity"])
 			var rel_id: int = DB_MANAGER.get_label_id("RELIGION", cult["religion"])
 			var surname_pool: Array = lexicon.get(cult["surnames_pool"], lexicon.get("surnames", ["Smith", "Jones"]))
@@ -485,6 +500,41 @@ static func run(
 	])
 	_log_tied_housing_audit(available_tied_housing, local_tied_relocated_count, external_tied_influx_count)
 	audit_generated_jobs_by_education()
+
+## Resolves an ethno-religiously matched first name from lexicon pools with deterministic fallback
+static func _pick_first_name(
+	lexicon: Dictionary,
+	is_male: bool,
+	surnames_pool: String,
+	religion: String,
+	rng: RandomNumberGenerator
+) -> String:
+	var gender_prefix: String = "first_names_male" if is_male else "first_names_female"
+	var ethnic_suffix: String = ""
+	if surnames_pool.begins_with("surnames_"):
+		ethnic_suffix = "_" + surnames_pool.trim_prefix("surnames_")
+
+	var rel_suffix: String = ""
+	if not religion.is_empty():
+		rel_suffix = "_" + religion.to_lower()
+
+	# 1. Exact ethno-religious pool (e.g., first_names_male_south_asian_sikh)
+	if not ethnic_suffix.is_empty() and not rel_suffix.is_empty():
+		var full_key: String = gender_prefix + ethnic_suffix + rel_suffix
+		if lexicon.has(full_key) and lexicon[full_key] is Array and not lexicon[full_key].is_empty():
+			var pool: Array = lexicon[full_key]
+			return str(pool[rng.randi() % pool.size()]).strip_edges().replace("'", "''")
+
+	# 2. Ethnic pool (e.g., first_names_male_irish)
+	if not ethnic_suffix.is_empty():
+		var eth_key: String = gender_prefix + ethnic_suffix
+		if lexicon.has(eth_key) and lexicon[eth_key] is Array and not lexicon[eth_key].is_empty():
+			var pool: Array = lexicon[eth_key]
+			return str(pool[rng.randi() % pool.size()]).strip_edges().replace("'", "''")
+
+	# 3. Base regional pool (first_names_male / first_names_female)
+	var base_pool: Array = lexicon.get(gender_prefix, ["Terry" if is_male else "Sharon"])
+	return str(base_pool[rng.randi() % base_pool.size()]).strip_edges().replace("'", "''")
 
 ## Logs an audit breakdown of tied accommodation occupancy
 static func _log_tied_housing_audit(available_tied: Dictionary, local_count: int, external_count: int) -> void:

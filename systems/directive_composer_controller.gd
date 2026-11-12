@@ -6,6 +6,7 @@ const TargetDomainRegistryScript = preload("res://systems/target_domain_registry
 const VerbRouterScript = preload("res://systems/verb_router.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
+const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:
@@ -136,22 +137,8 @@ static func build_locations_cache(verb_token: String, active_district_id: String
 
 	return locations
 
-## Filters cached locations by sector/type
-static func filter_locations(cached_locations: Array[Dictionary], filter_type: String) -> Array[Dictionary]:
-	var f_upper := filter_type.strip_edges().to_upper()
-	if f_upper == "ALL" or f_upper.is_empty():
-		return cached_locations
-
-	var filtered: Array[Dictionary] = []
-	for loc in cached_locations:
-		if f_upper == "DISTRICT" and loc.get("type") == "DISTRICT":
-			filtered.append(loc)
-		elif loc.get("type") == "ESTABLISHMENT" and loc.get("sector") == f_upper:
-			filtered.append(loc)
-	return filtered
-
-## Queries establishment dockets and extracts contacts
-static func resolve_contacts_for_location(location_meta: Dictionary) -> Array[Dictionary]:
+## Queries establishment dockets through the Fog-of-War intel filter and extracts known contacts
+static func resolve_contacts_for_location(location_meta: Dictionary, world_state: Dictionary = {}) -> Array[Dictionary]:
 	var contacts: Array[Dictionary] = []
 	if not location_meta is Dictionary or location_meta.get("type") != "ESTABLISHMENT":
 		return contacts
@@ -160,24 +147,32 @@ static func resolve_contacts_for_location(location_meta: Dictionary) -> Array[Di
 	if estab_id <= 0:
 		return contacts
 
-	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
+	var sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 0))
+	var intel_ctx: Dictionary = OperationsControllerScript._build_player_intel_context(world_state)
+	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, sim_day, intel_ctx)
 	
 	for emp in docket.get("employees", []):
+		if bool(emp.get("is_masked", false)):
+			continue
+		var res_id: int = int(emp.get("resident_id", 0))
 		var emp_name: String = str(emp.get("full_name", ""))
 		var emp_role: String = str(emp.get("role_title", ""))
-		if not emp_name.is_empty():
+		if res_id > 0 and not emp_name.is_empty():
 			contacts.append({
-				"id": str(emp.get("resident_id", emp_name)),
+				"id": str(res_id),
 				"name": emp_name,
 				"role": emp_role,
 				"type": "EMPLOYEE"
 			})
 
 	for res in docket.get("residents", []):
+		if bool(res.get("is_masked", false)):
+			continue
+		var res_id: int = int(res.get("resident_id", 0))
 		var res_name: String = str(res.get("full_name", ""))
-		if not res_name.is_empty():
+		if res_id > 0 and not res_name.is_empty():
 			contacts.append({
-				"id": str(res.get("resident_id", res_name)),
+				"id": str(res_id),
 				"name": res_name,
 				"role": "OCCUPANT",
 				"type": "RESIDENTIAL"
@@ -306,3 +301,17 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		directive["supplier_id"] = contact_id
 
 	return directive
+
+## Filters cached locations by sector/type
+static func filter_locations(cached_locations: Array[Dictionary], filter_type: String) -> Array[Dictionary]:
+	var f_upper := filter_type.strip_edges().to_upper()
+	if f_upper == "ALL" or f_upper.is_empty():
+		return cached_locations
+
+	var filtered: Array[Dictionary] = []
+	for loc in cached_locations:
+		if f_upper == "DISTRICT" and loc.get("type") == "DISTRICT":
+			filtered.append(loc)
+		elif loc.get("type") == "ESTABLISHMENT" and loc.get("sector") == f_upper:
+			filtered.append(loc)
+	return filtered

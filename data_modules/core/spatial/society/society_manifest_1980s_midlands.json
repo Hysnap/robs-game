@@ -14,6 +14,21 @@
     "supplier_stock_mode": "INFINITE_SUPPLY",
     "third_party_funds_mode": "FINITE_LIQUIDITY"
   },
+  "ui_shells": {
+    "default_shell": "filofax",
+    "available_shells": [
+      {
+        "shell_id": "filofax",
+        "earliest_year": 1980,
+        "view_variant": "core"
+      },
+      {
+        "shell_id": "apple2",
+        "earliest_year": 1982,
+        "view_variant": "core"
+      }
+    ]
+  },
   "modules": {
     "startpoint": "res://data_modules/crime/startpoints/street_crew_1980.json",
     "fog_of_war": "res://data_modules/core/spatial/districts/fog_of_war_rules.json",
@@ -21,6 +36,7 @@
     "archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
     "demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
     "lexicon": "res://data_modules/core/spatial/society/names.json",
+    "spatial_lexicon": "res://data_modules/core/spatial/districts/names/en_gb.json",
     "cultural_demographics": "res://data_modules/core/spatial/society/cultural_demographics_1980s_midlands.json",
     "civic_hierarchy": "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json",
     "building_classes": "res://data_modules/core/spatial/society/building_classes.json",

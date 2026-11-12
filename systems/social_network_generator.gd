@@ -25,7 +25,12 @@ static func _load_configs() -> void:
 		return
 
 	_demographics = MANIFEST_MGR.load_module("demographics")
-	_lexicon = MANIFEST_MGR.load_module("lexicon")
+	_lexicon = MANIFEST_MGR.load_module("lexicon").duplicate(true)
+	var spatial_lexicon: Dictionary = MANIFEST_MGR.load_module("spatial_lexicon")
+	assert(not spatial_lexicon.is_empty(), "FATAL: [SocialNetworkGenerator] 'spatial_lexicon' module is empty or missing.")
+	for k in spatial_lexicon.keys():
+		if k != "_meta":
+			_lexicon[k] = spatial_lexicon[k]
 	_cultural = MANIFEST_MGR.load_module("cultural_demographics")
 	_civic_hierarchy = MANIFEST_MGR.load_module("civic_hierarchy")
 	_job_definitions = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
