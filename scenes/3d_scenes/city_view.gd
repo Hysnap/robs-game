@@ -233,13 +233,13 @@ func _handle_shell_switch(target_shell_id: String) -> void:
 		if active_planner.has_method("get_staged_directives"):
 			preserved_directives = active_planner.get_staged_directives().duplicate(true)
 
-	var current_domain: String = view_host.active_domain if view_host != null else "DOSSIER"
-	if current_domain.is_empty():
-		current_domain = "DOSSIER"
+	var current_domain: String = "DOSSIER"
+	if view_host != null and not view_host.get_active_domain().is_empty():
+		current_domain = view_host.get_active_domain()
 
 	ShellRegistryScript.set_active_shell(target_shell_id)
-	if view_host != null and view_host.has_method("reset_registered_views"):
-		view_host.reset_registered_views()
+	if view_host != null and view_host.has_method("clear_registered_views"):
+		view_host.clear_registered_views()
 
 	_mount_shell_and_views(current_domain, preserved_directives)
 

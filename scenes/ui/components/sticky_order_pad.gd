@@ -567,7 +567,7 @@ func _apply_sticky_note_skins() -> void:
 
 	var header_node := get_node_or_null("VBox/Header")
 	if header_node != null:
-		_apply_ink_color_recursive(header_node, RETRO_THEME.get_color("page_bg"))
+		_apply_ink_color_recursive(header_node, RETRO_THEME.color_page_bg)
 
 	var node_palette_keys: Dictionary = composer_manifest.get("palette_slots", {})
 	assert(!node_palette_keys.is_empty(), "FATAL: [StickyOrderPad] Composer manifest missing 'palette_slots' mapping.")
