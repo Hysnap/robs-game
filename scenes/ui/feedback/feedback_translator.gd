@@ -7,6 +7,7 @@ const StationeryRegistryScript = preload("res://scenes/ui/feedback/stationery_re
 ## Translates engine event triggers into physical card payloads using JSON config
 static func triggers_to_slip_cards(event_triggers: Array) -> Array:
 	StationeryRegistryScript.initialize()
+	var default_def_id: String = StationeryRegistryScript.get_default_definition_id()
 	var cards: Array = []
 
 	for trigger in event_triggers:
@@ -31,7 +32,7 @@ static func triggers_to_slip_cards(event_triggers: Array) -> Array:
 
 		# Presentation payload constructed strictly from configs
 		var card := {
-			"stationery_profile": binding.get("default_definition", "STICKY_NOTE"),
+			"stationery_profile": binding.get("default_definition", default_def_id),
 			"destination": binding.get("default_filing_domain", "DIARY"),
 			"display_text": text,
 			"tick": trigger.get("tick", trigger.get("day_offset", 1)),

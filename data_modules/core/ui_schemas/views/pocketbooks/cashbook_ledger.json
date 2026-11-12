@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "target_class": "GenCashbookLedger",
+    "extends": "VBoxContainer",
+    "description": "Pocket notebook cash tally and filed receipt register"
+  },
+  "sections": [
+    {
+      "id": "vault_summary",
+      "header_token": "UI_SEC_VAULT_RESERVES",
+      "color": "body",
+      "rows": [
+        {
+          "id": "liquid_cash",
+          "token": "UI_LBL_LIQUID_CASH",
+          "field": "reported_cash",
+          "format": "CURRENCY",
+          "color": "body",
+          "autowrap": true
+        },
+        {
+          "id": "filed_receipts_total",
+          "token": "UI_LBL_EXPENSE_TOTAL",
+          "field": "total_filed_expenses",
+          "format": "CURRENCY",
+          "color": "body",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "receipts_inscriptions",
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FILED_RECEIPTS"
+    }
+  ]
+}

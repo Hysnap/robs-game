@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "entity_type": "STATIONERY_DEFINITION",
+    "id": "SPIRAL_ORDER_PAD"
+  },
+  "dimensions": [380.0, 480.0],
+  "corner_radius": 2,
+  "padding": 8,
+  "layout_variant": "SPIRAL_RULED_PAD",
+  "border": {
+    "width": 1,
+    "color": "#7c98b3"
+  },
+  "shadow": {
+    "size": 6,
+    "offset": [3.0, 4.0],
+    "alpha": 0.30
+  },
+  "header_template": "{title} // WK {week}",
+  "palettes": {
+    "SPIRAL_PAGE": {
+      "bg": "#f6f3e8",
+      "ink": "#1a2433",
+      "title_token": "UI_PAD_SPIRAL_SECTION",
+      "title": "NOTEPAD SECTION"
+    },
+    "SPIRAL_ACCENT": {
+      "bg": "#efeadd",
+      "ink": "#14213d",
+      "title_token": "UI_PAD_SPIRAL_ACTION",
+      "title": "DIRECTIVE ENTRY"
+    },
+    "SPIRAL_SUMMARY": {
+      "bg": "#ebe5d5",
+      "ink": "#7a1c1c",
+      "title_token": "UI_PAD_SPIRAL_TALLY",
+      "title": "LEDGER TALLY"
+    }
+  }
+}

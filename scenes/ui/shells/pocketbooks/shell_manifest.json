@@ -1,0 +1,10 @@
+{
+  "id": "pocketbooks",
+  "display_name": "Pre-1984 PocketBooks & Ledger",
+  "spread_scene": "res://scenes/ui/shells/pocketbooks/pocketbooks_spread.tscn",
+  "inbox_manifest": "res://data_modules/core/ui_schemas/stationary/manifests/pocketbooks_inbox.json",
+  "order_composer_manifest": "res://data_modules/core/ui_schemas/stationary/manifests/pocketbooks_order_pad.json",
+  "default_theme_profile": "pocketbooks_stationers",
+  "window_size": [680, 520],
+  "supports_customizer": true
+}

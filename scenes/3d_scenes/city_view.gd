@@ -8,13 +8,13 @@ extends Node3D
 @onready var outer_shell: OuterShell = $FilofaxCanvas/OuterShell
 
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
+const UIActionCommandScript = preload("res://scenes/ui/shell_host/ui_action_command.gd")
 const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
-
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
@@ -38,12 +38,12 @@ func _ready() -> void:
 		view_host = ViewHostScript.new()
 		view_host.shell_node = outer_shell
 		outer_shell.add_child(view_host)
-		
+
 		_setup_compiled_shell_host_views()
 		_setup_shell_customizer()
 
 		if outer_shell.has_signal("close_requested"):
-			outer_shell.connect("close_requested", func(): workspace_canvas.visible = false)
+			outer_shell.close_requested.connect(func(): workspace_canvas.visible = false)
 		elif outer_shell.close_btn != null:
 			outer_shell.close_btn.pressed.connect(func(): workspace_canvas.visible = false)
 
@@ -67,7 +67,6 @@ func _ready() -> void:
 		active_seed = str(gs.world_state.get("metadata", {}).get("active_seed", "default-city"))
 		saved_layout = gs.world_state.get("city_layout", {})
 
-		# Listen reactively for turn completion to update 3D ground markers
 		if gs.has_signal("turn_advanced"):
 			gs.turn_advanced.connect(func(_current_tick: int):
 				refresh_all_district_indicators()
@@ -79,7 +78,7 @@ func _ready() -> void:
 
 	if not saved_layout.is_empty() and city_crafter.has_method("load_visual_layout"):
 		city_crafter.load_visual_layout(saved_layout)
-	
+
 	# 5. Index District Nodes and Mount Visual Indicators
 	call_deferred("_initialize_spatial_ground_indicators")
 
@@ -117,7 +116,6 @@ func _initialize_spatial_ground_indicators() -> void:
 
 	refresh_all_district_indicators()
 
-## Refreshes ground ticks and landmark billboards based on current perception
 func refresh_all_district_indicators() -> void:
 	for b_id in _district_ground_nodes.keys():
 		refresh_district_indicator(b_id)
@@ -132,7 +130,6 @@ func refresh_district_indicator(block_id: String) -> void:
 	if gs != null and gs.has_method("get_district_view"):
 		view_data = gs.get_district_view(block_id)
 
-	# Fetch or instantiate the component
 	var indicator: DistrictIndicator = _district_indicators.get(block_id, null)
 	if indicator == null or not is_instance_valid(indicator):
 		indicator = IndicatorScene.instantiate() as DistrictIndicator
@@ -142,8 +139,29 @@ func refresh_district_indicator(block_id: String) -> void:
 
 	indicator.update_from_view_data(view_data)
 
+func _get_active_calendar_year() -> int:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs != null and "world_state" in gs:
+		return int(gs.world_state.get("metadata", {}).get("calendar_year", 0))
+	return 0
+
 func _setup_compiled_shell_host_views() -> void:
+	_mount_shell_and_views("DOSSIER", [])
+
+	if view_host != null and not view_host.ui_command_dispatched.is_connected(_on_ui_command_dispatched):
+		view_host.ui_command_dispatched.connect(_on_ui_command_dispatched)
+
+func _mount_shell_and_views(initial_domain: String, preserved_directives: Array) -> void:
 	var current_year: int = _get_active_calendar_year()
+	var active_shell_id: String = ShellRegistryScript.get_configured_shell_id(current_year)
+	var active_manifest: Dictionary = ShellRegistryScript.get_shell_manifest(active_shell_id)
+	var unlocked_shells: Array[Dictionary] = ShellRegistryScript.get_available_shells_for_year(current_year)
+
+	if outer_shell != null and outer_shell.has_method("apply_shell_window_size"):
+		outer_shell.apply_shell_window_size(active_manifest)
+
+	if view_host != null:
+		view_host.sync_shell_selector(unlocked_shells, active_shell_id)
 
 	# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
 	var spread_instance := ShellRegistryScript.instantiate_active_spread(current_year)
@@ -170,6 +188,10 @@ func _setup_compiled_shell_host_views() -> void:
 		outer_shell.mount_view("ACTION", action_planner_view)
 		view_host.set_action_component(action_planner_view)
 
+	for dir_item in preserved_directives:
+		if action_planner_view != null and action_planner_view.has_method("add_directive"):
+			action_planner_view.add_directive(dir_item)
+
 	# E. Mount Feedback Inbox Shell onto Canvas
 	if workspace_canvas and feedback_inbox == null:
 		feedback_inbox = DesktopSlipStackScene.instantiate() as Control
@@ -188,56 +210,197 @@ func _setup_compiled_shell_host_views() -> void:
 	assert(directive_modal != null, "FATAL: [CityView] Active spread did not supply a MODAL slot.")
 	assert(directive_modal.has_signal("directive_committed"), "FATAL: [CityView] Modal slot does not expose 'directive_committed' signal.")
 	assert(action_planner_view != null and action_planner_view.has_method("add_directive"), "FATAL: [CityView] Action planner view is missing 'add_directive' contract.")
-	
+
 	if not directive_modal.directive_committed.is_connected(action_planner_view.add_directive):
 		directive_modal.directive_committed.connect(action_planner_view.add_directive)
 
-	# G. Connect ViewHost signals
-	if view_host:
-		view_host.ui_command_dispatched.connect(_on_ui_command_dispatched)
+	if shell_customizer != null and "target_shell" in shell_customizer:
+		shell_customizer.target_shell = active_shell_id
 
-	view_host.switch_to_domain("DOSSIER")
+	view_host.switch_to_domain(initial_domain)
+	_handle_route_request(initial_domain)
 
-func _on_ui_command_dispatched(command: UIActionCommand) -> void:
-	if command.type == UIActionCommand.CommandType.ROUTE_REQUEST \
-	and command.domain == "STYLES":
-		shell_customizer.visible = not shell_customizer.visible
-		if shell_customizer.visible:
-			shell_customizer.move_to_front()
+func _handle_shell_switch(target_shell_id: String) -> void:
+	var current_year: int = _get_active_calendar_year()
+	var current_shell: String = ShellRegistryScript.get_configured_shell_id(current_year)
+	if target_shell_id.is_empty() or target_shell_id == current_shell:
+		return
 
-	OperationsControllerScript.dispatch_ui_command(
-		command,
-		view_host,
-		{
-			"directive_modal": directive_modal,
-			"action_planner": view_host.get_action_component()
-		}
-	)
+	var preserved_directives: Array = []
+	var planner_node: Control = outer_shell.get_slot("ACTION")
+	if planner_node != null and planner_node.get_child_count() > 0:
+		var active_planner = planner_node.get_child(0)
+		if active_planner.has_method("get_staged_directives"):
+			preserved_directives = active_planner.get_staged_directives().duplicate(true)
 
-func _get_active_calendar_year() -> int:
-	var gs = ScenarioManifestManager.get_game_state()
-	if gs != null and "world_state" in gs:
-		return int(gs.world_state.get("metadata", {}).get("calendar_year", 0))
-	return 0
+	var current_domain: String = "DOSSIER"
+	if view_host != null and not view_host.get_active_domain().is_empty():
+		current_domain = view_host.get_active_domain()
+
+	ShellRegistryScript.set_active_shell(target_shell_id)
+	if view_host != null and view_host.has_method("clear_registered_views"):
+		view_host.clear_registered_views()
+
+	_mount_shell_and_views(current_domain, preserved_directives)
 
 func _setup_shell_customizer() -> void:
 	var customizer_res = load("res://scenes/ui/shell_host/shell_customizer.tscn")
 	if customizer_res and workspace_canvas:
 		shell_customizer = customizer_res.instantiate()
-		
+
 		var active_shell_id: String = ShellRegistryScript.get_configured_shell_id(_get_active_calendar_year())
 		if "target_shell" in shell_customizer:
 			shell_customizer.target_shell = active_shell_id
-			
+
 		shell_customizer.visible = false
 		shell_customizer.z_index = 20
 		workspace_canvas.add_child(shell_customizer)
 
-func _on_view_host_slip_triage(action_id: String, card_payload: Dictionary) -> void:
+func _on_ui_command_dispatched(command: UIActionCommand) -> void:
+	match command.type:
+		UIActionCommand.CommandType.SWITCH_SHELL:
+			_handle_shell_switch(str(command.payload.get("shell_id", "")))
+
+		UIActionCommand.CommandType.ROUTE_REQUEST:
+			if command.domain == "STYLES":
+				if shell_customizer != null:
+					shell_customizer.visible = not shell_customizer.visible
+					if shell_customizer.visible:
+						shell_customizer.move_to_front()
+			else:
+				_handle_route_request(command.domain)
+
+		UIActionCommand.CommandType.ACTION_CLICKED:
+			if command.domain == "INBOX":
+				_handle_slip_triage(command.action_code, command.payload)
+			else:
+				_handle_action_requested(command.action_code, command.payload)
+
+		UIActionCommand.CommandType.ITEM_SELECTED:
+			_handle_item_selected(command.domain, command.payload.get("filter_key"))
+
+		UIActionCommand.CommandType.SLIP_FILED:
+			pass
+
+func _handle_route_request(domain_key: String) -> void:
+	match domain_key:
+		"ROSTER":
+			_hydrate_roster_view()
+		"DOSSIER":
+			var gs = ScenarioManifestManager.get_game_state()
+			var active_id: String = ""
+			if gs != null and "world_state" in gs:
+				active_id = str(gs.world_state.get("selected_district_id", ""))
+			if not active_id.is_empty() and gs.has_method("get_district_view"):
+				view_host.update_active_view_data(gs.get_district_view(active_id))
+
+func _hydrate_roster_view() -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs == null or not "world_state" in gs or view_host == null:
+		return
+
+	var ws: Dictionary = gs.world_state
+	var staff_dict: Dictionary = ws.get("staff", {})
+	var home_id: String = str(ws.get("operations", {}).get("home_district_id", "block_0_0"))
+
+	var crew_members: Array[Dictionary] = []
+	for staff_id in staff_dict.keys():
+		var member = staff_dict[staff_id]
+		if member is Dictionary:
+			var r_id: int = int(member.get("resident_id", 0))
+			var name_str: String = str(member.get("name", staff_id))
+			var cash_val: float = float(member.get("pocket_cash", 0.0))
+			var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
+
+			var age_val: int = 25
+			if r_id > 0:
+				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(r_id)
+				age_val = int(demo.get("age", 25))
+
+			var summary: String = "Age %d • £%.2f Pocket • %.0fh max" % [age_val, cash_val, daily_hrs]
+
+			crew_members.append({
+				"resident_id": r_id if r_id > 0 else staff_id,
+				"name": name_str,
+				"summary_line": summary,
+				"staff_id": staff_id,
+				"assigned_district": str(member.get("current_district_id", home_id))
+			})
+
+	view_host.update_active_view_data({"crew_roster": crew_members})
+
+func _handle_action_requested(action_code: String, _payload: Dictionary) -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	var target_district: String = ""
+	if gs != null and "world_state" in gs:
+		target_district = str(gs.world_state.get("selected_district_id", ""))
+
+	match action_code:
+		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
+			if directive_modal != null and directive_modal.has_method("open_for_context"):
+				directive_modal.open_for_context({"target_district_id": target_district})
+		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
+			_on_end_turn_requested()
+
+func _handle_slip_triage(action_id: String, card_payload: Dictionary) -> void:
 	if action_id == "FILE":
 		OperationsControllerScript.file_card_slip(card_payload, view_host)
 	else:
 		SystemLogger.log_info("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
+
+func _handle_item_selected(target_route: String, filter_key: Variant) -> void:
+	match target_route:
+		"OPERATIVE_DETAIL":
+			var gs = ScenarioManifestManager.get_game_state()
+			var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
+			var staff_dict: Dictionary = ws.get("staff", {})
+
+			var res_id: int = 0
+			var staff_info: Dictionary = {}
+
+			if typeof(filter_key) == TYPE_INT or (typeof(filter_key) == TYPE_STRING and str(filter_key).is_valid_int()):
+				res_id = int(filter_key)
+			else:
+				var s_id: String = str(filter_key)
+				if staff_dict.has(s_id):
+					staff_info = staff_dict[s_id]
+					res_id = int(staff_info.get("resident_id", 0))
+
+			if res_id > 0:
+				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(res_id)
+				var home_estab: int = int(demo.get("home_establishment_id", demo.get("establishment_id", 0)))
+				if home_estab > 0:
+					var res_data: Dictionary = SocietyQueriesScript.get_establishment_docket(home_estab)
+					view_host.switch_to_domain("RESIDENTIAL_DOCKET")
+					view_host.update_active_view_data(res_data)
+					return
+
+			var target_district: String = ""
+			if not staff_info.is_empty():
+				target_district = str(staff_info.get("current_district_id", ""))
+			else:
+				for s_key in staff_dict.keys():
+					var s_entry = staff_dict[s_key]
+					if s_entry is Dictionary and int(s_entry.get("resident_id", -1)) == res_id:
+						target_district = str(s_entry.get("current_district_id", ""))
+						break
+
+			if target_district.is_empty():
+				target_district = str(ws.get("player_knowledge", {}).get("home_district_id", ""))
+
+			if not target_district.is_empty() and gs != null and gs.has_method("get_district_view"):
+				var district_data: Dictionary = gs.get_district_view(target_district)
+				view_host.switch_to_domain("DOSSIER")
+				view_host.update_active_view_data(district_data)
+
+		"RESIDENTIAL_DOCKET", "ESTABLISHMENT_DOCKET":
+			var estab_id: int = int(filter_key)
+			var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
+			view_host.switch_to_domain(target_route)
+			view_host.update_active_view_data(docket_data)
+
+		_:
+			view_host.switch_to_domain(target_route)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -247,7 +410,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_district_clicked(block_id: String) -> void:
 	SystemLogger.log_info("[CityView] District clicked on 3D map: %s" % block_id)
-	
+
 	var gs = ScenarioManifestManager.get_game_state()
 	var district_data: Dictionary = {}
 	if gs != null:
@@ -274,11 +437,11 @@ func _toggle_workspace_visibility() -> void:
 			outer_shell.move_to_front()
 			var vp_size: Vector2 = get_viewport().get_visible_rect().size
 			var shell_size: Vector2 = outer_shell.size
-			
+
 			var min_y: float = 60.0
 			var max_x: float = maxf(20.0, vp_size.x - shell_size.x - 20.0)
 			var max_y: float = maxf(min_y, vp_size.y - 80.0)
-			
+
 			if outer_shell.global_position.x < 0.0 or outer_shell.global_position.x > max_x \
 			or outer_shell.global_position.y < min_y or outer_shell.global_position.y > max_y:
 				outer_shell.global_position = Vector2(
@@ -298,16 +461,9 @@ func _toggle_workspace_visibility() -> void:
 
 func _on_end_turn_requested() -> void:
 	var staged: Array = []
-	var active_planner: Control = null
-	if view_host != null:
-		active_planner = view_host.get_action_component()
-
-	if active_planner == null:
-		var planner_node: Control = outer_shell.get_slot("ACTION")
-		if planner_node != null and planner_node.get_child_count() > 0:
-			active_planner = planner_node.get_child(0)
-
-	if active_planner != null:
+	var planner_node: Control = outer_shell.get_slot("ACTION")
+	if planner_node != null and planner_node.get_child_count() > 0:
+		var active_planner = planner_node.get_child(0)
 		if active_planner.has_method("consume_selected_directives"):
 			staged = active_planner.consume_selected_directives()
 		elif active_planner.has_method("get_staged_directives"):

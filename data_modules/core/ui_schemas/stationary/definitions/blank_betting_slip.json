@@ -1,0 +1,33 @@
+{
+  "_meta": {
+	"entity_type": "STATIONERY_DEFINITION",
+	"id": "BLANK_BETTING_SLIP"
+  },
+  "dimensions": [245.0, 175.0],
+  "corner_radius": 1,
+  "padding": 8,
+  "border": {
+	"width": 1,
+	"color": "#7a2e2e"
+  },
+  "shadow": {
+	"size": 4,
+	"offset": [2.0, 3.0],
+	"alpha": 0.26
+  },
+  "header_template": "{title} // WK {week}",
+  "palettes": {
+	"NEWSPRINT": {
+	  "bg": "#ebe6d8",
+	  "ink": "#1c232b",
+	  "title_token": "UI_SLIP_BETTING_SLIP",
+	  "title": "BETTING SLIP"
+	},
+	"PINK_CARBON": {
+	  "bg": "#f4d6d2",
+	  "ink": "#2b1418",
+	  "title_token": "UI_SLIP_CARBON_COPY",
+	  "title": "CARBON SLIP"
+	}
+  }
+}

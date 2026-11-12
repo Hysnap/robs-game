@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "manifest_type": "ORDER_COMPOSER_MANIFEST",
+    "id": "pocketbooks_order_pad",
+    "description": "Spiral-bound ruled order pad for pre-1984 multi-PocketBook desk setup."
+  },
+  "stationery_definition": "res://data_modules/core/ui_schemas/stationary/definitions/spiral_order_pad.json",
+  "palette_slots": {
+    "Slot_Action": "SPIRAL_ACCENT",
+    "Slot_Target": "SPIRAL_PAGE",
+    "Slot_Scalar": "SPIRAL_PAGE",
+    "Slot_Actor": "SPIRAL_PAGE",
+    "Slot_Location": "SPIRAL_PAGE",
+    "Slot_Telemetry": "SPIRAL_SUMMARY"
+  }
+}

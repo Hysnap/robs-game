@@ -1,0 +1,15 @@
+{
+  "id": "pocketbooks_stationers",
+  "shell": "pocketbooks",
+  "display_name": "Stationer's Navy PocketBook",
+  "colors": {
+    "binder_cover": "#1b263b",
+    "binder_trim": "#415a77",
+    "page_bg": "#f6f3e8",
+    "ruled_line": "#c5d1de",
+    "ink_body": "#14213d",
+    "ink_accent": "#2b4c7e",
+    "ink_warning": "#8c271e",
+    "ink_muted": "#5c677d"
+  }
+}

@@ -134,6 +134,7 @@ func _ready() -> void:
 func open_for_district(district_id: String) -> void:
 	assert(not district_id.is_empty(), "FATAL: [StickyOrderPad] Cannot open order pad with empty district_id.")
 	_active_district_id = district_id
+	_apply_sticky_note_skins()
 	_sync_simulation_data()
 	_select_where_by_id(district_id)
 	_apply_form_layout_for_verb(_get_active_verb())
@@ -200,16 +201,20 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 	var target_visible: bool = bool(target_cfg.get("visible", true))
 	slot_target.visible = target_visible
 
-	if lbl_hdr_target and target_cfg.has("label_token") and target_cfg["label_token"] != null:
-		lbl_hdr_target.text = tr(str(target_cfg["label_token"]))
+	if lbl_hdr_target and target_cfg.has("label_token"):
+		var token: String = str(target_cfg["label_token"])
+		var translated: String = tr(token)
+		lbl_hdr_target.text = translated if translated != token else token
 
 	# 2. Scalar Slot (Amount / Duration)
 	var amount_cfg: Dictionary = layout.get("amount_section", {})
 	var amount_visible: bool = bool(amount_cfg.get("visible", true))
 	slot_scalar.visible = amount_visible
 
-	if lbl_hdr_scalar and amount_cfg.has("label_token") and amount_cfg["label_token"] != null:
-		lbl_hdr_scalar.text = tr(str(amount_cfg["label_token"]))
+	if lbl_hdr_scalar and amount_cfg.has("label_token"):
+		var token: String = str(amount_cfg["label_token"])
+		var translated: String = tr(token)
+		lbl_hdr_scalar.text = translated if translated != token else token
 
 	spin_amount.min_value = float(amount_cfg.get("min_value", 1.0))
 	spin_amount.max_value = float(amount_cfg.get("max_value", 999.0))
@@ -220,8 +225,17 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 	var loc_cfg: Dictionary = layout.get("location_section", {})
 	slot_location.visible = bool(loc_cfg.get("visible", true))
 
-	if lbl_hdr_location and loc_cfg.has("label_token") and loc_cfg["label_token"] != null:
-		lbl_hdr_location.text = tr(str(loc_cfg["label_token"]))
+	if lbl_hdr_location and loc_cfg.has("label_token"):
+		var token: String = str(loc_cfg["label_token"])
+		var translated: String = tr(token)
+		lbl_hdr_location.text = translated if translated != token else token
+
+	# 4. Contact Selector
+	var contact_cfg: Dictionary = layout.get("contact_section", {})
+	opt_contact.visible = bool(contact_cfg.get("visible", false))
+
+	# 5. Telemetry Slot
+	slot_telemetry.visible = target_visible
 
 ## Ingests simulation state and populates form elements
 func _sync_simulation_data() -> void:
@@ -249,7 +263,10 @@ func _populate_staff_options(staff_dict: Dictionary) -> void:
 	opt_who.clear()
 
 	if staff_dict.is_empty():
-		opt_who.add_item(tr("UI_STAFF_PLAYER_LEADER"), 0)
+		var leader_lbl := tr("UI_STAFF_PLAYER_LEADER")
+		if leader_lbl == "UI_STAFF_PLAYER_LEADER":
+			leader_lbl = "Player (Leader)"
+		opt_who.add_item(leader_lbl, 0)
 		opt_who.set_item_metadata(0, "PLAYER")
 		return
 
@@ -305,7 +322,11 @@ func _apply_category_filter() -> void:
 
 	var filtered := DirectiveComposerControllerScript.filter_targets_by_category(_cached_targets_for_verb, selected_cat)
 	if filtered.is_empty():
-		opt_target.add_item(tr("UI_TARGET_NONE_AVAILABLE"), 0)
+		var none_token := "UI_TARGET_NONE_AVAILABLE"
+		var none_label := tr(none_token)
+		if none_label == none_token:
+			none_label = "[NO TARGETS IN SCOPE]"
+		opt_target.add_item(none_label, 0)
 		opt_target.set_item_metadata(0, {"id": "", "unit_cost": 0.0})
 		_recalculate_estimate()
 		return
@@ -313,7 +334,11 @@ func _apply_category_filter() -> void:
 	var idx: int = 0
 	for item in filtered:
 		var token: String = str(item.get("label_token", item.get("id", "")))
-		opt_target.add_item(tr(token), idx)
+		var label_str: String = tr(token)
+		if label_str == token:
+			label_str = str(item.get("id")).capitalize().replace("_", " ")
+
+		opt_target.add_item(label_str, idx)
 		opt_target.set_item_metadata(idx, item)
 		idx += 1
 
@@ -369,7 +394,10 @@ func _refresh_contact_options() -> void:
 		return
 	opt_contact.clear()
 
-	opt_contact.add_item(tr("UI_CONTACT_ANYONE_AVAILABLE"), 0)
+	var default_contact := tr("UI_CONTACT_ANYONE_AVAILABLE")
+	if default_contact == "UI_CONTACT_ANYONE_AVAILABLE":
+		default_contact = "[ANYONE AVAILABLE]"
+	opt_contact.add_item(default_contact, 0)
 	opt_contact.set_item_metadata(0, "")
 
 	if opt_where == null or opt_where.item_count == 0:
@@ -517,6 +545,9 @@ func _apply_sticky_note_skins() -> void:
 
 	var corner_radius: int = int(def_json.get("corner_radius", 2))
 	var padding: int = int(def_json.get("padding", 8))
+	var border_conf: Dictionary = def_json.get("border", {})
+	var border_width: int = int(border_conf.get("width", 1))
+	var border_color := Color(str(border_conf.get("color", "#4a4a4a")))
 	var shadow_conf: Dictionary = def_json.get("shadow", {})
 	var shadow_size: int = int(shadow_conf.get("size", 5))
 	var shadow_offset_arr: Array = shadow_conf.get("offset", [2.0, 3.0])
@@ -524,6 +555,19 @@ func _apply_sticky_note_skins() -> void:
 	var shadow_alpha: float = float(shadow_conf.get("alpha", 0.28))
 	var palettes: Dictionary = def_json.get("palettes", {})
 	assert(!palettes.is_empty(), "FATAL: [StickyOrderPad] Stationery definition missing 'palettes' dictionary: %s" % def_path)
+
+	# Skin the outer composer cover / backing frame using the active RetroTheme cover style
+	var cover_sb: StyleBoxFlat = RETRO_THEME.create_cover_style()
+	cover_sb.set_corner_radius_all(corner_radius + 2)
+	cover_sb.set_content_margin_all(padding)
+	cover_sb.shadow_size = shadow_size + 2
+	cover_sb.shadow_offset = shadow_offset
+	cover_sb.shadow_color = Color(0, 0, 0, shadow_alpha)
+	add_theme_stylebox_override("panel", cover_sb)
+
+	var header_node := get_node_or_null("VBox/Header")
+	if header_node != null:
+		_apply_ink_color_recursive(header_node, RETRO_THEME.color_page_bg)
 
 	var node_palette_keys: Dictionary = composer_manifest.get("palette_slots", {})
 	assert(!node_palette_keys.is_empty(), "FATAL: [StickyOrderPad] Composer manifest missing 'palette_slots' mapping.")
@@ -544,6 +588,8 @@ func _apply_sticky_note_skins() -> void:
 
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = bg_color
+		sb.set_border_width_all(border_width)
+		sb.border_color = border_color
 		sb.set_corner_radius_all(corner_radius)
 		sb.set_content_margin_all(padding)
 		sb.shadow_size = shadow_size

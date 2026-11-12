@@ -6,7 +6,8 @@ enum CommandType {
 	ROUTE_REQUEST,
 	ITEM_SELECTED,
 	ACTION_CLICKED,
-	SLIP_FILED
+	SLIP_FILED,
+	SWITCH_SHELL
 }
 
 var type: CommandType
