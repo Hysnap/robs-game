@@ -20,7 +20,7 @@
 	  {
         "shell_id": "pocketbooks",
         "earliest_year": 1970,
-        "view_variant": "core"
+        "view_variant": "core/pocketbooks"
       },
 	  {
 		"shell_id": "filofax",

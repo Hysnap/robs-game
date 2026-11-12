@@ -1,17 +1,18 @@
 # res://scenes/ui/shells/pocketbooks/pocketbooks_spread.gd
+# res://scenes/ui/shells/pocketbooks/pocketbooks_spread.gd
 class_name PocketbooksSpread
 extends PanelContainer
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const StickyOrderPadScene = preload("res://scenes/ui/components/sticky_order_pad.tscn")
 
-@onready var book_stack_frame: PanelContainer = $DeskHBox/BookStackFrame
-@onready var nav_slot: Control = $DeskHBox/BookStackFrame/NavSlot
-@onready var left_page_frame: PanelContainer = $DeskHBox/NotebookSpread/LeftPageFrame
-@onready var content_slot: Control = $DeskHBox/NotebookSpread/LeftPageFrame/ContentSlot
-@onready var center_seam: PanelContainer = $DeskHBox/NotebookSpread/CenterFoldSeam
-@onready var right_page_frame: PanelContainer = $DeskHBox/NotebookSpread/RightPageFrame
-@onready var action_slot: Control = $DeskHBox/NotebookSpread/RightPageFrame/ActionSlot
+@onready var book_stack_frame: PanelContainer = $DeskMargin/DeskHBox/BookStackFrame
+@onready var nav_slot: Control = $DeskMargin/DeskHBox/BookStackFrame/NavSlot
+@onready var left_page_frame: PanelContainer = $DeskMargin/DeskHBox/NotebookSpread/LeftPageFrame
+@onready var content_slot: Control = $DeskMargin/DeskHBox/NotebookSpread/LeftPageFrame/ContentSlot
+@onready var center_seam: PanelContainer = $DeskMargin/DeskHBox/NotebookSpread/CenterFoldSeam
+@onready var right_page_frame: PanelContainer = $DeskMargin/DeskHBox/NotebookSpread/RightPageFrame
+@onready var action_slot: Control = $DeskMargin/DeskHBox/NotebookSpread/RightPageFrame/ActionSlot
 
 var _directive_modal: Control = null
 
@@ -71,14 +72,14 @@ func get_slot(slot_name: String) -> Control:
 		"NAV":
 			if nav_slot != null:
 				return nav_slot
-			return get_node_or_null("DeskHBox/BookStackFrame/NavSlot") as Control
+			return get_node_or_null("DeskMargin/DeskHBox/BookStackFrame/NavSlot") as Control
 		"CONTENT", "DOSSIER", "MAIN":
 			if content_slot != null:
 				return content_slot
-			return get_node_or_null("DeskHBox/NotebookSpread/LeftPageFrame/ContentSlot") as Control
+			return get_node_or_null("DeskMargin/DeskHBox/NotebookSpread/LeftPageFrame/ContentSlot") as Control
 		"ACTION", "PLANNER", "RIGHT":
 			if action_slot != null:
 				return action_slot
-			return get_node_or_null("DeskHBox/NotebookSpread/RightPageFrame/ActionSlot") as Control
+			return get_node_or_null("DeskMargin/DeskHBox/NotebookSpread/RightPageFrame/ActionSlot") as Control
 		_:
 			return get_node_or_null(slot_name) as Control

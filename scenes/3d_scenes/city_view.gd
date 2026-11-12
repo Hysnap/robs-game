@@ -14,7 +14,7 @@ const OperationsControllerScript = preload("res://systems/operations_controller.
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
-
+const UIActionCommandScript = preload("res://scenes/ui/shell_host/ui_action_command.gd")
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
@@ -143,7 +143,34 @@ func refresh_district_indicator(block_id: String) -> void:
 	indicator.update_from_view_data(view_data)
 
 func _setup_compiled_shell_host_views() -> void:
+	# E. Mount Feedback Inbox Shell onto Canvas (persistent across shell switches)
+	if workspace_canvas and feedback_inbox == null:
+		feedback_inbox = DesktopSlipStackScene.instantiate() as Control
+		feedback_inbox.visible = false
+		feedback_inbox.z_index = 15
+		workspace_canvas.add_child(feedback_inbox)
+
+		if game_hud != null and feedback_inbox.has_signal("stack_count_changed"):
+			feedback_inbox.stack_count_changed.connect(game_hud.update_unread_message_count)
+
+		if view_host != null:
+			view_host.set_desk_inbox(feedback_inbox)
+
+	# G. Connect ViewHost signals once
+	if view_host:
+		var cb := Callable(self, "_on_ui_command_dispatched")
+		if not view_host.ui_command_dispatched.is_connected(cb):
+			view_host.ui_command_dispatched.connect(cb)
+
+	_mount_shell_and_views("DOSSIER", [])
+
+func _mount_shell_and_views(initial_domain: String, preserved_directives: Array) -> void:
 	var current_year: int = _get_active_calendar_year()
+	var active_shell_id: String = ShellRegistryScript.get_configured_shell_id(current_year)
+	var unlocked_shells: Array[Dictionary] = ShellRegistryScript.get_available_shells_for_year(current_year)
+
+	if view_host != null:
+		view_host.sync_shell_selector(unlocked_shells, active_shell_id)
 
 	# A. Mount Era Presentation Spread resolved dynamically via Shell Manifest
 	var spread_instance := ShellRegistryScript.instantiate_active_spread(current_year)
@@ -170,35 +197,61 @@ func _setup_compiled_shell_host_views() -> void:
 		outer_shell.mount_view("ACTION", action_planner_view)
 		view_host.set_action_component(action_planner_view)
 
-	# E. Mount Feedback Inbox Shell onto Canvas
-	if workspace_canvas and feedback_inbox == null:
-		feedback_inbox = DesktopSlipStackScene.instantiate() as Control
-		feedback_inbox.visible = false
-		feedback_inbox.z_index = 15
-		workspace_canvas.add_child(feedback_inbox)
-
-		if game_hud != null and feedback_inbox.has_signal("stack_count_changed"):
-			feedback_inbox.stack_count_changed.connect(game_hud.update_unread_message_count)
-
-		if view_host != null:
-			view_host.set_desk_inbox(feedback_inbox)
+	# Restore any staged directives preserved across a live shell switch
+	if not preserved_directives.is_empty() and action_planner_view != null and action_planner_view.has_method("add_directive"):
+		for d in preserved_directives:
+			action_planner_view.add_directive(d)
 
 	# F. Query active spread for its era-specific composer modal and bind to action planner
 	directive_modal = outer_shell.get_slot("MODAL")
 	assert(directive_modal != null, "FATAL: [CityView] Active spread did not supply a MODAL slot.")
 	assert(directive_modal.has_signal("directive_committed"), "FATAL: [CityView] Modal slot does not expose 'directive_committed' signal.")
 	assert(action_planner_view != null and action_planner_view.has_method("add_directive"), "FATAL: [CityView] Action planner view is missing 'add_directive' contract.")
-	
+
 	if not directive_modal.directive_committed.is_connected(action_planner_view.add_directive):
 		directive_modal.directive_committed.connect(action_planner_view.add_directive)
 
-	# G. Connect ViewHost signals
-	if view_host:
-		view_host.ui_command_dispatched.connect(_on_ui_command_dispatched)
+	# Route to target domain and hydrate active view telemetry
+	var target_domain: String = initial_domain if not initial_domain.is_empty() else "DOSSIER"
+	OperationsControllerScript.dispatch_ui_command(
+		UIActionCommandScript.new(UIActionCommandScript.CommandType.ROUTE_REQUEST, target_domain),
+		view_host,
+		{
+			"directive_modal": directive_modal,
+			"action_planner": view_host.get_action_component()
+		}
+	)
 
-	view_host.switch_to_domain("DOSSIER")
+func _hot_swap_ui_shell(target_shell_id: String) -> void:
+	var current_year: int = _get_active_calendar_year()
+	var current_shell_id: String = ShellRegistryScript.get_configured_shell_id(current_year)
+	if target_shell_id.strip_edges().to_lower() == current_shell_id:
+		return
+
+	# Preserve active domain and staged directives before tearing down old shell views
+	var previous_domain: String = view_host.get_active_domain() if view_host != null else "DOSSIER"
+	var preserved_directives: Array = []
+	var old_planner: Control = view_host.get_action_component() if view_host != null else null
+	if is_instance_valid(old_planner) and old_planner.has_method("get_staged_directives"):
+		preserved_directives = old_planner.get_staged_directives()
+
+	ShellRegistryScript.set_active_shell(target_shell_id, current_year)
+
+	if shell_customizer != null and "target_shell" in shell_customizer:
+		shell_customizer.target_shell = ShellRegistryScript.get_configured_shell_id(current_year)
+
+	if view_host != null:
+		view_host.clear_registered_views()
+
+	_mount_shell_and_views(previous_domain, preserved_directives)
+	SystemLogger.log_info("[CityView] Hot-swapped UI shell to '%s'." % target_shell_id)
 
 func _on_ui_command_dispatched(command: UIActionCommand) -> void:
+	if command.type == UIActionCommand.CommandType.SWITCH_SHELL:
+		var target_shell_id: String = str(command.payload.get("shell_id", command.action_code))
+		_hot_swap_ui_shell(target_shell_id)
+		return
+
 	if command.type == UIActionCommand.CommandType.ROUTE_REQUEST \
 	and command.domain == "STYLES":
 		shell_customizer.visible = not shell_customizer.visible

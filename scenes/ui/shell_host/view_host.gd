@@ -18,10 +18,32 @@ var _action_component: Control = null
 func _ready() -> void:
 	if shell_node == null:
 		shell_node = get_parent() as OuterShell
+	_connect_shell_signals()
 	SystemLogger.log_info("[ViewHost] View host ready.")
 
 func _exit_tree() -> void:
 	cleanup()
+
+func _connect_shell_signals() -> void:
+	if shell_node != null and shell_node.has_signal("shell_switch_requested"):
+		var cb := Callable(self, "_on_shell_switch_requested")
+		if not shell_node.is_connected("shell_switch_requested", cb):
+			shell_node.connect("shell_switch_requested", cb)
+
+func _on_shell_switch_requested(shell_id: String) -> void:
+	var cmd := UIActionCommand.new(
+		UIActionCommand.CommandType.SWITCH_SHELL,
+		"",
+		shell_id,
+		{"shell_id": shell_id}
+	)
+	ui_command_dispatched.emit(cmd)
+
+## Populates the OuterShell workspace switcher with year-unlocked shells
+func sync_shell_selector(shells: Array[Dictionary], active_shell_id: String) -> void:
+	_connect_shell_signals()
+	if shell_node != null and shell_node.has_method("populate_shell_options"):
+		shell_node.populate_shell_options(shells, active_shell_id)
 
 func set_action_component(action_control: Control) -> void:
 	_action_component = action_control
@@ -99,6 +121,9 @@ func switch_to_domain(domain_key: String) -> void:
 	_active_domain = domain_key
 	shell_node.mount_view("CONTENT", target_view, false)
 
+func get_active_domain() -> String:
+	return _active_domain
+
 ## Pure Data Ingestion: Forwards arbitrary domain telemetry to active view's bind_data()
 func update_active_view_data(display_data: Dictionary) -> void:
 	if _views.has(_active_domain):
@@ -162,6 +187,17 @@ func show_feedback_inbox() -> void:
 			(parent_node as CanvasLayer).visible = true
 		elif shell_node != null and shell_node.get_parent() is CanvasLayer:
 			(shell_node.get_parent() as CanvasLayer).visible = true
+
+## Frees registered domain views and action planner without tearing down persistent desk inbox
+func clear_registered_views() -> void:
+	for domain_key in _views.keys():
+		var v = _views[domain_key]
+		if is_instance_valid(v):
+			if v.get_parent() != null:
+				v.get_parent().remove_child(v)
+			v.queue_free()
+	_views.clear()
+	_action_component = null
 
 ## Cleanly frees all registered view instances and clears cached references
 func cleanup() -> void:

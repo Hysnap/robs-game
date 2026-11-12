@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "target_class": "GenDistrictDocket",
+    "extends": "VBoxContainer",
+    "description": "Pocket index-card district intelligence dossier view"
+  },
+  "sections": [
+    {
+      "id": "ward_identity",
+      "rows": [
+        {
+          "id": "docket_header",
+          "type": "HEADER_BLOCK",
+          "field": "display_name",
+          "subtitle_field": "type_title",
+          "title_color": "body",
+          "subtitle_color": "body",
+          "title_font_size": 15,
+          "subtitle_font_size": 11,
+          "show_separator": true,
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "intel_status_header",
+      "header_token": "UI_HDR_SURVEY_INTELLIGENCE",
+      "color": "body",
+      "rows": [
+        {
+          "id": "survey_badge",
+          "field": "intel_status_token",
+          "type": "BADGE_STATUS",
+          "format": "TOKEN",
+          "color": "body",
+          "token": "UI_LBL_INTEL_STATUS",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "demographics_overview",
+      "header_token": "UI_HDR_WARD_DEMOGRAPHICS",
+      "color": "body",
+      "rows": [
+        {
+          "id": "pop",
+          "field": "active_population",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "INT",
+          "token": "UI_LBL_ACTIVE_POPULATION",
+          "autowrap": true
+        },
+        {
+          "id": "households",
+          "field": "total_households",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "INT",
+          "token": "UI_LBL_TOTAL_HOUSEHOLDS",
+          "autowrap": true
+        },
+        {
+          "id": "unemployment_tier",
+          "field": "unemployment_bucket_token",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "TOKEN",
+          "token": "UI_LBL_UNEMPLOYMENT_TIER",
+          "autowrap": true
+        },
+        {
+          "id": "income",
+          "field": "income_bucket_token",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "TOKEN",
+          "token": "UI_LBL_DISPOSABLE_INCOME",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "civic_infrastructure",
+      "header_token": "UI_HDR_CIVIC_FEATURES",
+      "rows": [
+        {
+          "id": "civic_features",
+          "type": "LINKED_LIST",
+          "field": "establishments_summary",
+          "key_field": "establishment_id",
+          "label_field": "name",
+          "sublabel_field": "category_title",
+          "token": "UI_LBL_CIVIC_SUMMARY",
+          "action_signal": "item_selected",
+          "route_field": "detail_route",
+          "target_route": "ESTABLISHMENT_DOCKET",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "security_environment",
+      "header_token": "UI_HDR_SECURITY_ENVIRONMENT",
+      "color": "body",
+      "rows": [
+        {
+          "id": "zhi",
+          "field": "zone_health_bucket_token",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "TOKEN",
+          "token": "UI_LBL_ZONE_HEALTH",
+          "autowrap": true
+        },
+        {
+          "id": "heat",
+          "field": "heat_bucket_token",
+          "type": "TEXT_METRIC",
+          "color": "body",
+          "format": "TOKEN",
+          "token": "UI_LBL_POLICE_HEAT",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "field_observations",
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FIELD_OBSERVATIONS"
+    },
+    {
+      "id": "district_docket_signals",
+      "type": "SIGNALS",
+      "signals": [
+        "item_selected(target_route, filter_key)"
+      ]
+    }
+  ]
+}

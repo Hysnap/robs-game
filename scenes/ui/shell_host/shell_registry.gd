@@ -11,6 +11,7 @@ const GENERATED_UI_ROOT := "res://generated/ui/"
 const CORE_VARIANT_SLUG := "core"
 
 static var _manifests: Dictionary = {} # "shell_id" -> Dictionary
+static var _runtime_shell_override: String = ""
 
 ## Scans shells directory and flavour modules across N-tiers for all shell_manifest.json files
 static func initialize() -> void:
@@ -34,14 +35,14 @@ static func initialize() -> void:
 
 	assert(not _manifests.is_empty(), "FATAL: [ShellRegistry] No valid shell manifests discovered across %s or %s" % [SHELLS_DIR, FLAVOUR_DATA_DIR])
 
-## Resolves the active shell configuration block from the scenario manifest
+## Resolves the active shell configuration block from the scenario manifest (or active runtime override)
 static func _get_active_shell_entry(calendar_year: int = 0) -> Dictionary:
 	var scenario_manifest: Dictionary = ScenarioManifestManagerScript.get_manifest()
 	assert(scenario_manifest.has("ui_shells") and scenario_manifest["ui_shells"] is Dictionary,
 		"FATAL: [ShellRegistry] Scenario manifest missing 'ui_shells' configuration block.")
 
 	var ui_shells: Dictionary = scenario_manifest["ui_shells"]
-	var target_shell: String = str(ui_shells.get("default_shell", "")).strip_edges().to_lower()
+	var target_shell: String = _runtime_shell_override if not _runtime_shell_override.is_empty() else str(ui_shells.get("default_shell", "")).strip_edges().to_lower()
 	assert(not target_shell.is_empty(), "FATAL: [ShellRegistry] 'default_shell' is missing or empty in scenario manifest 'ui_shells'.")
 
 	var available: Array = ui_shells.get("available_shells", [])
@@ -56,7 +57,49 @@ static func _get_active_shell_entry(calendar_year: int = 0) -> Dictionary:
 	assert(false, "FATAL: [ShellRegistry] Shell '%s' is not registered in manifest 'available_shells'." % target_shell)
 	return {}
 
-## Returns the active shell ID configured in the scenario manifest
+## Sets the active runtime shell override, asserting it is unlocked and valid for the given year
+static func set_active_shell(shell_id: String, calendar_year: int = 0) -> void:
+	initialize()
+	var clean_id: String = shell_id.strip_edges().to_lower()
+	assert(not clean_id.is_empty(), "FATAL: [ShellRegistry] Cannot switch to empty shell_id.")
+	assert(_manifests.has(clean_id), "FATAL: [ShellRegistry] Target shell '%s' has no loaded shell_manifest.json." % clean_id)
+
+	var previous_override: String = _runtime_shell_override
+	_runtime_shell_override = clean_id
+	var resolved: Dictionary = _get_active_shell_entry(calendar_year)
+	if resolved.is_empty():
+		_runtime_shell_override = previous_override
+
+## Clears any runtime shell override, reverting to the scenario manifest's default_shell
+static func clear_runtime_shell_override() -> void:
+	_runtime_shell_override = ""
+
+## Returns all shells unlocked at or before calendar_year (with display_name resolved from shell_manifest.json)
+static func get_available_shells_for_year(calendar_year: int = 0) -> Array[Dictionary]:
+	initialize()
+	var scenario_manifest: Dictionary = ScenarioManifestManagerScript.get_manifest()
+	var ui_shells: Dictionary = scenario_manifest.get("ui_shells", {})
+	var available: Array = ui_shells.get("available_shells", [])
+	var unlocked: Array[Dictionary] = []
+
+	for entry in available:
+		if not (entry is Dictionary):
+			continue
+		var s_id: String = str(entry.get("shell_id", "")).strip_edges().to_lower()
+		var earliest_year: int = int(entry.get("earliest_year", 0))
+		if calendar_year > 0 and earliest_year > 0 and calendar_year < earliest_year:
+			continue
+		if _manifests.has(s_id):
+			var manifest: Dictionary = _manifests[s_id]
+			unlocked.append({
+				"shell_id": s_id,
+				"display_name": str(manifest.get("display_name", s_id.capitalize())),
+				"earliest_year": earliest_year,
+				"view_variant": str(entry.get("view_variant", CORE_VARIANT_SLUG))
+			})
+	return unlocked
+
+## Returns the active shell ID configured in the scenario manifest (or active runtime override)
 static func get_configured_shell_id(calendar_year: int = 0) -> String:
 	var entry: Dictionary = _get_active_shell_entry(calendar_year)
 	return str(entry.get("shell_id", "")).to_lower()

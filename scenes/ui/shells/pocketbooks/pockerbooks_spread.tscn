@@ -12,49 +12,56 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_pb_spread")
 
-[node name="DeskHBox" type="HBoxContainer" parent="."]
+[node name="DeskMargin" type="MarginContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
 
-[node name="BookStackFrame" type="PanelContainer" parent="DeskHBox"]
-custom_minimum_size = Vector2(145, 0)
+[node name="DeskHBox" type="HBoxContainer" parent="DeskMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BookStackFrame" type="PanelContainer" parent="DeskMargin/DeskHBox"]
+custom_minimum_size = Vector2(125, 0)
 layout_mode = 2
 
-[node name="NavSlot" type="MarginContainer" parent="DeskHBox/BookStackFrame"]
+[node name="NavSlot" type="MarginContainer" parent="DeskMargin/DeskHBox/BookStackFrame"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 1
 
-[node name="NotebookSpread" type="HBoxContainer" parent="DeskHBox"]
+[node name="NotebookSpread" type="HBoxContainer" parent="DeskMargin/DeskHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 
-[node name="LeftPageFrame" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
+[node name="LeftPageFrame" type="PanelContainer" parent="DeskMargin/DeskHBox/NotebookSpread"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="ContentSlot" type="ScrollContainer" parent="DeskHBox/NotebookSpread/LeftPageFrame"]
+[node name="ContentSlot" type="ScrollContainer" parent="DeskMargin/DeskHBox/NotebookSpread/LeftPageFrame"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="CenterFoldSeam" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
-custom_minimum_size = Vector2(6, 0)
+[node name="CenterFoldSeam" type="PanelContainer" parent="DeskMargin/DeskHBox/NotebookSpread"]
+custom_minimum_size = Vector2(5, 0)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="RightPageFrame" type="PanelContainer" parent="DeskHBox/NotebookSpread"]
-custom_minimum_size = Vector2(280, 0)
+[node name="RightPageFrame" type="PanelContainer" parent="DeskMargin/DeskHBox/NotebookSpread"]
+custom_minimum_size = Vector2(215, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="ActionSlot" type="ScrollContainer" parent="DeskHBox/NotebookSpread/RightPageFrame"]
+[node name="ActionSlot" type="ScrollContainer" parent="DeskMargin/DeskHBox/NotebookSpread/RightPageFrame"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
