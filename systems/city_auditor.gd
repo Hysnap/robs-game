@@ -2,7 +2,7 @@
 class_name CityAuditor
 extends SceneTree
 
-const SQL_REFERENCE_PATH := "res://systems/city_auditor_queries.sql"
+const SQL_REFERENCE_PATH := "res://systems/society_queries.sql"
 const DEFAULT_REPORT_DIR := "user://city_audits"
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 
