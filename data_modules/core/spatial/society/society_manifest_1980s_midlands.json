@@ -37,6 +37,8 @@
   "modules": {
 	"startpoint": "res://data_modules/crime/startpoints/street_crew_1980.json",
 	"fog_of_war": "res://data_modules/core/spatial/districts/fog_of_war_rules.json",
+	"impact_routing": "res://data_modules/core/impacts/routing_manifest.json",
+	"intel_exposure": "res://data_modules/core/spatial/districts/intel_exposure_rules.json",
 	"db_labels": "res://data_modules/core/localization/db_labels_en_gb.json",
 	"archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
 	"demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",

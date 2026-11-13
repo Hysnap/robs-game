@@ -2,6 +2,7 @@
 extends SceneTree
 
 const CONTROLLER = preload("res://systems/directive_composer_controller.gd")
+const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 func _init() -> void:
 	print("\n=======================================================")
@@ -41,9 +42,11 @@ func _init() -> void:
 	# -------------------------------------------------------------
 	print("\n--- [SUITE 2] Testing District Name Resolution ---")
 	var mock_world_state: Dictionary = {
-		"player_knowledge": {
-			"known_districts": ["DISTRICT_NECHELLS_01", "DISTRICT_DIGBETH_01"]
+		"metadata": {"current_sim_day": 10},
+		"staff": {
+			"crew_0": {"resident_id": "101", "name": "Leader"}
 		},
+		"knowledge_pools": {},
 		"districts": {
 			"DISTRICT_NECHELLS_01": {
 				"district_id": "DISTRICT_NECHELLS_01",
@@ -52,13 +55,20 @@ func _init() -> void:
 			"DISTRICT_DIGBETH_01": {
 				"district_id": "DISTRICT_DIGBETH_01",
 				"display_name": "Digbeth High Street"
+			},
+			"DISTRICT_HIDDEN_01": {
+				"district_id": "DISTRICT_HIDDEN_01",
+				"display_name": "Hidden Yard"
 			}
 		}
 	}
+	INTEL_MANAGER.apply_effort_impulse(mock_world_state, "RESIDENT", "101", "DISTRICT", "DISTRICT_NECHELLS_01", 40.0)
+	INTEL_MANAGER.apply_effort_impulse(mock_world_state, "RESIDENT", "101", "DISTRICT", "DISTRICT_DIGBETH_01", 25.0)
 
 	var locations := CONTROLLER.build_locations_cache("BUY", "DISTRICT_NECHELLS_01", mock_world_state)
 	var found_nechells := false
 	var found_digbeth := false
+	var found_hidden := false
 
 	for loc in locations:
 		if loc.get("id") == "DISTRICT_NECHELLS_01":
@@ -67,9 +77,12 @@ func _init() -> void:
 		elif loc.get("id") == "DISTRICT_DIGBETH_01":
 			found_digbeth = true
 			assert(loc.get("display") == "Digbeth High Street", "FAILED: Expected 'Digbeth High Street', got '%s'" % loc.get("display"))
+		elif loc.get("id") == "DISTRICT_HIDDEN_01":
+			found_hidden = true
 
 	assert(found_nechells and found_digbeth, "FAILED: Could not find resolved known districts in cache.")
-	print("  ✓ PASS: Internal engine tokens cleanly resolved to authentic ward names.")
+	assert(not found_hidden, "FAILED: Undiscovered district should not be included in locations cache.")
+	print("  ✓ PASS: Internal engine tokens cleanly resolved to authentic ward names via continuous intel scores.")
 
 	# -------------------------------------------------------------
 	# TEST SUITE 3: Imprecise Cost Estimation & Perception Fuzzing
@@ -79,8 +92,8 @@ func _init() -> void:
 		"id": "BEER_STRONG_LAGER",
 		"unit_cost": 2.00
 	}
-	var venue_known: Dictionary = {"id": "VENUE_WHOLESALER_KNOWN", "is_home_turf": false}
-	var venue_unknown: Dictionary = {"id": "VENUE_UNKNOWN_DEPOT", "is_home_turf": false}
+	var venue_known: Dictionary = {"id": "VENUE_WHOLESALER_KNOWN", "is_home_turf": false, "intel_score": 60.0}
+	var venue_unknown: Dictionary = {"id": "VENUE_UNKNOWN_DEPOT", "is_home_turf": false, "intel_score": 10.0}
 
 	var state_with_history: Dictionary = {
 		"player_knowledge": {
@@ -155,7 +168,7 @@ func _init() -> void:
 		"verb": "SCOUT",
 		"initiator_id": "PLAYER",
 		"assigned_to": "op_01",
-		"amount": 3.0, # Hours in order pad spinbox
+		"amount": 3.0,
 		"target_node_id": "DISTRICT_MARKET",
 		"target_scope": "DISTRICT"
 	}

@@ -7,6 +7,7 @@ const VerbRouterScript = preload("res://systems/verb_router.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
+const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:
@@ -78,33 +79,63 @@ static func get_form_layout(verb_token: String) -> Dictionary:
 
 	return layout
 
-## Builds normalized location list based on player knowledge and active district
+## Helper to extract active crew observers from world_state
+static func _build_observers_from_state(world_state: Dictionary) -> Array:
+	var observers: Array = []
+	var staff_dict: Dictionary = world_state.get("staff", {})
+	for staff_id in staff_dict.keys():
+		var member = staff_dict[staff_id]
+		if not (member is Dictionary):
+			continue
+		var obs_id: String = str(member.get("resident_id", staff_id))
+		if obs_id.is_empty():
+			continue
+		var affs: Array = []
+		var home_est_id: String = str(member.get("home_establishment_id", member.get("residence_establishment_id", "")))
+		if not home_est_id.is_empty() and home_est_id != "0":
+			affs.append({"org_scope": "ESTABLISHMENT", "org_id": home_est_id, "clearance": 1.0})
+		var emp_id: String = str(member.get("employer_entity_id", ""))
+		if not emp_id.is_empty() and emp_id != "0":
+			affs.append({
+				"org_scope": "ESTABLISHMENT",
+				"org_id": emp_id,
+				"role_code": str(member.get("role_code", member.get("role", "")))
+			})
+		observers.append({
+			"observer_scope": "RESIDENT",
+			"observer_id": obs_id,
+			"affiliations": affs
+		})
+	return observers
+
+## Builds normalized location list based on continuous 0-100 knowledge pools and active district
 static func build_locations_cache(verb_token: String, active_district_id: String, world_state: Dictionary) -> Array[Dictionary]:
 	var locations: Array[Dictionary] = []
 	var allowed_scopes := get_allowed_scopes(verb_token)
+	var observers := _build_observers_from_state(world_state)
 
-	# A. Districts Known to Player (if allowed by verb)
+	# A. Districts Known via Continuous 0-100 Intel Thresholds (if allowed by verb)
 	if allowed_scopes.is_empty() or allowed_scopes.has("DISTRICT"):
-		var known_districts: Array = world_state.get("player_knowledge", {}).get("known_districts", []).duplicate()
-		if not active_district_id.is_empty() and not known_districts.has(active_district_id):
-			known_districts.append(active_district_id)
-
 		var districts_map: Dictionary = world_state.get("districts", {})
+		var candidate_ids: Array[String] = []
+		for d_key in districts_map.keys():
+			candidate_ids.append(str(d_key))
+		if not active_district_id.is_empty() and not candidate_ids.has(active_district_id):
+			candidate_ids.append(active_district_id)
 
-		for dist_id in known_districts:
-			var s_id := str(dist_id)
-			var d_name := ""
+		for s_id in candidate_ids:
+			var dist_rec: Dictionary = districts_map.get(s_id, {}) if districts_map.has(s_id) and districts_map[s_id] is Dictionary else {}
+			var is_landmark: bool = bool(dist_rec.get("is_public_landmark", false))
+			var score: float = IntelManagerScript.get_collective_score(world_state, observers, "DISTRICT", s_id)
+			if is_landmark and score < 20.0:
+				score = 20.0
+			if s_id != active_district_id and not IntelManagerScript.is_entity_known(score, "DISTRICT"):
+				continue
 
-			# 1. Resolve authentic name from world_state in memory
-			if districts_map.has(s_id) and districts_map[s_id] is Dictionary:
-				d_name = str(districts_map[s_id].get("display_name", ""))
-
-			# 2. Fall back to SQLite v_district_census via get_district_census
+			var d_name: String = str(dist_rec.get("display_name", ""))
 			if d_name.is_empty() and SocietyQueriesScript != null:
 				var census: Dictionary = SocietyQueriesScript.get_district_census(s_id)
 				d_name = str(census.get("district_name", ""))
-
-			# 3. Clean token fallback (strip internal prefix)
 			if d_name.is_empty():
 				d_name = s_id.trim_prefix("DISTRICT_").capitalize().replace("_", " ")
 
@@ -113,14 +144,21 @@ static func build_locations_cache(verb_token: String, active_district_id: String
 				"type": "DISTRICT",
 				"category": "DISTRICT",
 				"sector": "DISTRICT",
-				"display": d_name
+				"display": d_name,
+				"intel_score": score
 			})
 
-	# B. Establishments in active district (if allowed by verb)
+	# B. Known Establishments in active district (if allowed by verb)
 	if (allowed_scopes.is_empty() or allowed_scopes.has("ESTABLISHMENT")) and not active_district_id.is_empty():
 		var estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
 		for e in estabs:
-			var e_id: Variant = e.get("establishment_id", "")
+			var e_id_str: String = str(e.get("establishment_id", ""))
+			var e_score: float = IntelManagerScript.get_collective_score(world_state, observers, "ESTABLISHMENT", e_id_str)
+			if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
+				e_score = 20.0
+			if not IntelManagerScript.is_entity_known(e_score, "ESTABLISHMENT"):
+				continue
+
 			var e_name: String = str(e.get("name", "Unnamed Venue"))
 			var cat_code: String = str(e.get("category_code", ""))
 
@@ -128,11 +166,12 @@ static func build_locations_cache(verb_token: String, active_district_id: String
 			var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
 
 			locations.append({
-				"id": str(e_id),
+				"id": e_id_str,
 				"type": "ESTABLISHMENT",
 				"category": cat_code,
 				"sector": sector,
-				"display": e_name
+				"display": e_name,
+				"intel_score": e_score
 			})
 
 	return locations
@@ -180,7 +219,7 @@ static func resolve_contacts_for_location(location_meta: Dictionary, world_state
 
 	return contacts
 
-## Calculates cost estimate incorporating player knowledge and perception fuzzing
+## Calculates cost estimate incorporating player knowledge and intel-attenuated perception fuzzing
 static func calculate_estimate_with_intel(
 	qty: float, 
 	target_meta: Dictionary, 
@@ -212,7 +251,9 @@ static func calculate_estimate_with_intel(
 		is_exact = true
 	else:
 		var is_home: bool = bool(location_meta.get("is_home_turf", false))
-		var fuzzed_cost: float = ConditionEvaluatorScript.calculate_fuzzed_ratio(base_cost, is_home, -0.25, 0.25, 0.10, 0.05)
+		var venue_score: float = float(location_meta.get("intel_score", 0.0))
+		var scaled_jitter: float = IntelManagerScript.attenuate_fuzz(0.25, 0.02, venue_score)
+		var fuzzed_cost: float = ConditionEvaluatorScript.calculate_fuzzed_ratio(base_cost, is_home, -scaled_jitter, scaled_jitter, 0.10, 0.02)
 		perceived_unit_cost = snappedf(fuzzed_cost, 0.05)
 		is_exact = false
 

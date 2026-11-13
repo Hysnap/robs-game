@@ -20,9 +20,9 @@ func _init() -> void:
 		"street_informal_count": 180,
 		"incarcerated_count": 12,
 		"establishments_summary": [
-			{"name": "Aston Scrap Yard", "worker_count": 42},
-			{"name": "The Dog & Partridge", "worker_count": 4},
-			{"name": "Midlands General Foundry", "worker_count": 312}
+			{"establishment_id": 101, "name": "Aston Scrap Yard", "worker_count": 42},
+			{"establishment_id": 102, "name": "The Dog & Partridge", "worker_count": 4},
+			{"establishment_id": 103, "name": "Midlands General Foundry", "worker_count": 312}
 		]
 	}
 
@@ -31,7 +31,7 @@ func _init() -> void:
 	# -------------------------------------------------------------
 	print("\n--- [SUITE 1] Testing Unexplored Ward Masking ---")
 	var unk_context: Dictionary = {
-		"known_districts": [],
+		"intel_scores": {},
 		"home_district_id": "DISTRICT_DIGBETH_01",
 		"current_sim_day": 10
 	}
@@ -55,10 +55,14 @@ func _init() -> void:
 	# -------------------------------------------------------------
 	print("\n--- [SUITE 2] Testing Surveyed Ward Transformation ---")
 	var known_context: Dictionary = {
-		"known_districts": ["DISTRICT_NECHELLS_01"],
+		"intel_scores": {
+			"DISTRICT:DISTRICT_NECHELLS_01": 65.0,
+			"ESTABLISHMENT:101": 35.0,
+			"ESTABLISHMENT:102": 35.0,
+			"ESTABLISHMENT:103": 35.0
+		},
 		"home_district_id": "DISTRICT_DIGBETH_01",
-		"current_sim_day": 15,
-		"district_survey_ticks": {"DISTRICT_NECHELLS_01": 15}
+		"current_sim_day": 15
 	}
 
 	var surveyed_view: Dictionary = FILTER.filter_district_view(raw_ward, known_context)
@@ -79,10 +83,11 @@ func _init() -> void:
 	# -------------------------------------------------------------
 	print("\n--- [SUITE 3] Testing Home Turf Perception ---")
 	var home_context: Dictionary = {
-		"known_districts": ["DISTRICT_NECHELLS_01"],
+		"intel_scores": {
+			"DISTRICT:DISTRICT_NECHELLS_01": 85.0
+		},
 		"home_district_id": "DISTRICT_NECHELLS_01",
-		"current_sim_day": 15,
-		"district_survey_ticks": {"DISTRICT_NECHELLS_01": 15}
+		"current_sim_day": 15
 	}
 
 	var home_view: Dictionary = FILTER.filter_district_view(raw_ward, home_context)
@@ -90,22 +95,24 @@ func _init() -> void:
 	print("  ✓ PASS: Home turf flag cleanly propagated.")
 
 	# -------------------------------------------------------------
-	# TEST SUITE 4: Stale Intel Temporal Decay
+	# TEST SUITE 4: Low-Confidence / Decayed Intel Tiering
 	# -------------------------------------------------------------
-	print("\n--- [SUITE 4] Testing Stale Intel Decay ---")
+	print("\n--- [SUITE 4] Testing Low-Confidence / Decayed Intel Tier ---")
 	var stale_context: Dictionary = {
-		"known_districts": ["DISTRICT_NECHELLS_01"],
+		"intel_scores": {
+			"DISTRICT:DISTRICT_NECHELLS_01": 25.0
+		},
 		"home_district_id": "DISTRICT_DIGBETH_01",
-		"current_sim_day": 100, # 85 days elapsed (> 28-day threshold)
-		"district_survey_ticks": {"DISTRICT_NECHELLS_01": 15}
+		"current_sim_day": 100
 	}
 
 	var stale_view: Dictionary = FILTER.filter_district_view(raw_ward, stale_context)
-	print("  Elapsed days: 85 -> Intel status: %s" % stale_view.get("intel_status"))
+	print("  Score 25.0 -> Intel status: %s" % stale_view.get("intel_status"))
 	assert(stale_view.get("intel_status") == "INTEL_STATUS_STALE", "FAILED: Expected INTEL_STATUS_STALE.")
-	print("  ✓ PASS: Temporal decay accurately flagged stale intelligence.")
+	assert(stale_view.get("active_population") == null, "FAILED: active_population (60.0 tier) must be withheld at score 25.0.")
+	print("  ✓ PASS: Low-confidence score accurately flagged stale status and masked high-tier census fields.")
 
 	print("\n=======================================================")
 	print("   ALL DEMOGRAPHIC FUZZING TESTS PASSED CLEANLY!       ")
 	print("=======================================================\n")
-	quit()
+	quit(0)

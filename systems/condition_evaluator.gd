@@ -7,9 +7,9 @@ const _Calculator = preload("res://systems/impacts/impact_calculator.gd")
 # 1. ATOMIC COMPARISON OPERATOR ENGINE
 # =====================================================================
 
-## Evaluates whether a value breaches a threshold using a string operator
+## Evaluates whether a numeric value breaches a threshold using a string operator
 static func evaluate(current_val: float, threshold_val: float, operator: String = ">=") -> bool:
-	match operator:
+	match operator.strip_edges().to_upper():
 		"<":  return current_val < threshold_val
 		"<=": return current_val <= threshold_val
 		">":  return current_val > threshold_val
@@ -17,36 +17,140 @@ static func evaluate(current_val: float, threshold_val: float, operator: String 
 		"==": return is_equal_approx(current_val, threshold_val)
 		"!=": return not is_equal_approx(current_val, threshold_val)
 		_:
-			push_error("[CONDITION EVALUATOR] Unknown operator: %s" % operator)
+			push_error("[CONDITION EVALUATOR] FAIL_LOUD: Unknown numeric operator: %s" % operator)
 			return false
 
+## Evaluates whether a numeric value falls within [lower_bound, upper_bound]
+static func evaluate_between(current_val: float, lower_bound: float, upper_bound: float, inclusive: bool = true) -> bool:
+	var low: float = minf(lower_bound, upper_bound)
+	var high: float = maxf(lower_bound, upper_bound)
+	if inclusive:
+		return current_val >= low and current_val <= high
+	return current_val > low and current_val < high
+
+## Evaluates string / token equality or inequality (used for spatial IDs, tags, and state tokens)
+static func evaluate_string(current_str: String, target_str: String, operator: String = "==") -> bool:
+	var clean_curr: String = current_str.strip_edges()
+	var clean_targ: String = target_str.strip_edges()
+	match operator.strip_edges().to_upper():
+		"==": return clean_curr == clean_targ
+		"!=": return clean_curr != clean_targ
+		"CONTAINS": return clean_curr.contains(clean_targ)
+		_:
+			push_error("[CONDITION EVALUATOR] FAIL_LOUD: Unknown string operator: %s" % operator)
+			return false
+
+## Evaluates a single resolved gate dictionary supporting scalars, ranges (BETWEEN), and strings
+## Expected shape: {"current": Variant, "target": Variant, "operator": String, "lower": float, "upper": float}
+static func evaluate_gate(gate: Dictionary) -> bool:
+	var op: String = str(gate.get("operator", ">=")).strip_edges().to_upper()
+	var raw_current: Variant = gate.get("current", 0.0)
+	var raw_target: Variant = gate.get("target", 0.0)
+
+	if op == "BETWEEN" or op == "NOT_BETWEEN":
+		var low: float = float(gate.get("lower", 0.0))
+		var high: float = float(gate.get("upper", 0.0))
+		if raw_target is Array and raw_target.size() >= 2:
+			low = float(raw_target[0])
+			high = float(raw_target[1])
+		var in_range: bool = evaluate_between(float(raw_current), low, high, true)
+		return in_range if op == "BETWEEN" else not in_range
+
+	if typeof(raw_current) == TYPE_STRING or typeof(raw_target) == TYPE_STRING:
+		if not str(raw_current).is_valid_float() or not str(raw_target).is_valid_float():
+			return evaluate_string(str(raw_current), str(raw_target), op)
+
+	return evaluate(float(raw_current), float(raw_target), op)
+
 # =====================================================================
-# 2. COMPOUND COMPARISON GATES (RESOLVED VALUES)
+# 2. COMPOUND COMPARISON GATES & DECISION BRANCHING (RESOLVED VALUES)
 # =====================================================================
 
 ## Evaluates an array of resolved conditions where ALL must satisfy their threshold (AND gate)
-## Each item in resolved_gates expects: {"current": float, "target": float, "operator": String}
 static func has_all(resolved_gates: Array) -> bool:
 	for gate in resolved_gates:
-		var current_val: float = float(gate.get("current", 0.0))
-		var target_val: float = float(gate.get("target", 0.0))
-		var op: String = str(gate.get("operator", ">="))
-		if not evaluate(current_val, target_val, op):
+		if not evaluate_gate(gate):
 			return false
 	return true
 
 ## Evaluates an array of resolved conditions where AT LEAST ONE must satisfy its threshold (OR gate)
-## Each item in resolved_gates expects: {"current": float, "target": float, "operator": String}
 static func has_any(resolved_gates: Array) -> bool:
 	if resolved_gates.is_empty():
 		return true
 	for gate in resolved_gates:
-		var current_val: float = float(gate.get("current", 0.0))
-		var target_val: float = float(gate.get("target", 0.0))
-		var op: String = str(gate.get("operator", ">="))
-		if evaluate(current_val, target_val, op):
+		if evaluate_gate(gate):
 			return true
 	return false
+
+## Evaluates an array of resolved conditions where NOT ALL may be true (NAND gate)
+static func has_nand(resolved_gates: Array) -> bool:
+	if resolved_gates.is_empty():
+		return false
+	return not has_all(resolved_gates)
+
+## Evaluates an array of resolved conditions where ZERO may be true (NOR gate)
+static func has_none(resolved_gates: Array) -> bool:
+	if resolved_gates.is_empty():
+		return true
+	return not has_any(resolved_gates)
+
+## Evaluates an array of resolved conditions where EXACTLY ONE must be true (XOR gate)
+static func has_xor(resolved_gates: Array) -> bool:
+	var true_count: int = 0
+	for gate in resolved_gates:
+		if evaluate_gate(gate):
+			true_count += 1
+	return true_count == 1
+
+## Universal compound logic gate dispatcher for macro verb decision trees
+static func evaluate_logic_block(logic_gate: String, resolved_gates: Array) -> bool:
+	match logic_gate.strip_edges().to_upper():
+		"AND", "ALL":
+			return has_all(resolved_gates)
+		"OR", "ANY":
+			return has_any(resolved_gates)
+		"NAND", "NOT_ALL":
+			return has_nand(resolved_gates)
+		"NOR", "NONE":
+			return has_none(resolved_gates)
+		"XOR", "ONE":
+			return has_xor(resolved_gates)
+		_:
+			push_error("[CONDITION EVALUATOR] FAIL_LOUD: Unknown logic gate: %s" % logic_gate)
+			return false
+
+## Standardised call-and-response decision router: evaluates a logic block and returns the branch outcome
+static func evaluate_decision_branch(
+	logic_gate: String,
+	resolved_gates: Array,
+	on_true_step: String = "",
+	on_false_step: String = "",
+	default_error_code: String = "INSUFFICIENT_RESOURCE"
+) -> Dictionary:
+	var passed: bool = evaluate_logic_block(logic_gate, resolved_gates)
+	if passed:
+		return {
+			"passed": true,
+			"next_step": on_true_step.strip_edges(),
+			"halt": false,
+			"error_code": ""
+		}
+
+	var clean_false: String = on_false_step.strip_edges()
+	if not clean_false.is_empty() and clean_false.to_upper() != "HALT":
+		return {
+			"passed": false,
+			"next_step": clean_false,
+			"halt": false,
+			"error_code": ""
+		}
+
+	return {
+		"passed": false,
+		"next_step": "",
+		"halt": true,
+		"error_code": default_error_code.strip_edges()
+	}
 
 # =====================================================================
 # 3. NON-LINEAR CURVE GATE EVALUATION

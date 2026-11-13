@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "INTEL_EXPOSURE_RULES",
+    "description": "Era-agnostic 0-100 asymptotic knowledge rules, spatial/organizational access friction, fuzz attenuation, and evenly-spaced threshold exposure brackets."
+  },
+  "curve_defaults": {
+    "min_score": 0.0,
+    "max_score": 100.0,
+    "existence_threshold": 1.0,
+    "saturation_model": "HYPERBOLIC_HALF_SATURATION",
+    "default_half_saturation_effort": 25.0,
+    "org_size_maintenance_factor": 0.05,
+    "distance_decay_factor": 0.35,
+    "default_access_permeability": 0.5,
+    "default_weekly_decay": 2.0,
+    "fuzz_attenuation": {
+      "model": "LINEAR_TO_FLOOR",
+      "exact_at_score": 100.0
+    }
+  },
+  "scopes": {
+    "DISTRICT": {
+      "existence_threshold": 1.0,
+      "discovery_floor": 20.0,
+      "half_saturation_effort": 30.0,
+      "default_access_permeability": 0.85,
+      "weekly_decay": 2.0,
+      "thresholds": [
+        { "min_score": 1.0,   "fields": ["district_id", "display_name", "district_type", "type_title", "grid_coords", "grid_size"] },
+        { "min_score": 20.0,  "fields": ["zone_health_bucket_token", "heat_bucket_token"] },
+        { "min_score": 40.0,  "fields": ["unemployment_bucket_token", "income_bucket_token", "establishments_summary"] },
+        { "min_score": 60.0,  "fields": ["active_population", "total_households"] },
+        { "min_score": 80.0,  "fields": ["actual_police_heat", "actual_zone_health", "unemployment_rate", "avg_disposable_income"] },
+        { "min_score": 100.0, "fields": ["*"] }
+      ]
+    },
+    "ESTABLISHMENT": {
+      "existence_threshold": 1.0,
+      "discovery_floor": 15.0,
+      "half_saturation_effort": 25.0,
+      "default_access_permeability": 0.5,
+      "weekly_decay": 2.5,
+      "thresholds": [
+        { "min_score": 1.0,   "fields": ["establishment_id", "name", "category_code", "category_title", "district_id", "street_address"] },
+        { "min_score": 20.0,  "fields": ["capacity", "worker_count_bucket"] },
+        { "min_score": 40.0,  "fields": ["employees.known_only", "residents.known_only"] },
+        { "min_score": 60.0,  "fields": ["employees.all", "residents.all", "schedule_window"] },
+        { "min_score": 80.0,  "fields": ["market_catchment", "total_catchment_population", "total_catchment_households", "avg_neighbor_disposable_income"] },
+        { "min_score": 100.0, "fields": ["*"] }
+      ]
+    },
+    "RESIDENT": {
+      "existence_threshold": 1.0,
+      "discovery_floor": 20.0,
+      "half_saturation_effort": 20.0,
+      "default_access_permeability": 0.6,
+      "weekly_decay": 1.5,
+      "thresholds": [
+        { "min_score": 1.0,   "fields": ["resident_id", "full_name", "first_name", "current_surname", "gender"] },
+        { "min_score": 20.0,  "fields": ["age", "home_address", "home_establishment_id", "district_id"] },
+        { "min_score": 40.0,  "fields": ["role_title", "employer_entity_id", "employer_name", "relationship_type"] },
+        { "min_score": 60.0,  "fields": ["schedule_window", "education_level", "household_members.known_only"] },
+        { "min_score": 80.0,  "fields": ["hourly_wage", "affinity_score", "household_members.all"] },
+        { "min_score": 100.0, "fields": ["*"] }
+      ]
+    },
+    "EVENT": {
+      "existence_threshold": 1.0,
+      "discovery_floor": 0.0,
+      "half_saturation_effort": 15.0,
+      "default_access_permeability": 0.4,
+      "weekly_decay": 4.0,
+      "thresholds": [
+        { "min_score": 1.0,   "fields": ["event_id", "event_type", "district_id"] },
+        { "min_score": 20.0,  "fields": ["scheduled_day", "category_title"] },
+        { "min_score": 40.0,  "fields": ["establishment_id", "venue_name"] },
+        { "min_score": 60.0,  "fields": ["participants.known_only", "estimated_scale"] },
+        { "min_score": 80.0,  "fields": ["participants.all", "security_level"] },
+        { "min_score": 100.0, "fields": ["*"] }
+      ]
+    }
+  }
+}

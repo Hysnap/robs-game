@@ -52,16 +52,19 @@ func _ready() -> void:
 		"zone_health_index": 54.0,
 		"establishments_summary": [
 			{
+				"establishment_id": 1,
 				"name": "St. Jude's Parish Church",
 				"category_title": "Place of Worship",
 				"worker_count": 2
 			},
 			{
+				"establishment_id": 2,
 				"name": "Anchor Iron Foundry",
 				"category_title": "Industrial Works",
 				"worker_count": 84
 			},
 			{
+				"establishment_id": 3,
 				"name": "Harbor Freight Clearing",
 				"category_title": "Logistics Depot",
 				"worker_count": 26
@@ -71,11 +74,13 @@ func _ready() -> void:
 
 	var player_context: Dictionary = {
 		"home_district_id": "DIST_EAST_DOCKS",
-		"known_districts": ["DIST_EAST_DOCKS"],
-		"current_sim_day": 12,
-		"district_survey_ticks": {
-			"DIST_EAST_DOCKS": 10
-		}
+		"intel_scores": {
+			"DISTRICT:DIST_EAST_DOCKS": 85.0,
+			"ESTABLISHMENT:1": 70.0,
+			"ESTABLISHMENT:2": 70.0,
+			"ESTABLISHMENT:3": 70.0
+		},
+		"current_sim_day": 12
 	}
 
 	# Run through the perception filter model to generate perceived tokens & entity records

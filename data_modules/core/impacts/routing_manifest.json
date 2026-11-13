@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_ROUTING_MANIFEST",
+    "description": "Maps canonical entity scopes in metric profiles to world_state storage path templates."
+  },
+  "routes": {
+    "DISTRICT": {
+      "path": "districts.{target_id}.{state_field}",
+      "create_missing": false
+    },
+    "ESTABLISHMENT": {
+      "path": "establishments.{target_id}.{state_field}",
+      "create_missing": false
+    },
+    "RESIDENT": {
+      "path": "residents.{target_id}.{state_field}",
+      "fallback_path": "staff.{target_id}.{state_field}",
+      "create_missing": false
+    },
+    "EVENT": {
+      "path": "events.{target_id}.{state_field}",
+      "create_missing": false
+    },
+    "INVENTORY": {
+      "path": "inventory.{item_id}.{lane}",
+      "create_missing": true
+    },
+    "KNOWLEDGE": {
+      "path": "knowledge_pools.{observer_scope}.{observer_id}.{target_key}.score",
+      "stamp_field": "last_updated_day",
+      "create_missing": true,
+      "erase_at_min": true
+    }
+  }
+}
