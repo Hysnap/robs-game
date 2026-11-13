@@ -2,9 +2,9 @@
 class_name CityAuditor
 extends SceneTree
 
-const SQL_REFERENCE_PATH := "res://systems/society_queries.sql"
 const DEFAULT_REPORT_DIR := "user://city_audits"
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 
 ## Allows this file to be launched directly with Godot's --script option.
 ## The audit intentionally stops if the active database has not already been opened.
@@ -116,12 +116,7 @@ static func _audit_world_state(report: Dictionary, world_state: Dictionary) -> v
 		_add_warning(report, "More than half of world_state districts have zero population.")
 
 static func _audit_database(report: Dictionary, db_manager) -> void:
-	var queries := _load_queries()
-	if queries.is_empty():
-		_add_error(report, "No SQL queries could be loaded from %s." % SQL_REFERENCE_PATH)
-		return
-
-	var counts := _query_rows(db_manager, queries, "entity_counts")
+	var counts: Array = SOCIETY_QUERIES.get_audit_entity_counts(db_manager)
 	for row in counts:
 		var entity := str(row.get("entity", "unknown"))
 		report["metrics"]["db_%s" % entity] = int(row.get("count", 0))
@@ -138,29 +133,23 @@ static func _audit_database(report: Dictionary, db_manager) -> void:
 			world_districts, db_districts
 		])
 
-	var district_rows := _query_rows(db_manager, queries, "district_distribution")
+	var district_rows: Array = SOCIETY_QUERIES.get_audit_district_distribution(db_manager)
 	report["distributions"]["districts"] = district_rows
 	_audit_district_distribution(report, district_rows)
 
-	var borough_rows := _query_rows(db_manager, queries, "borough_distribution")
+	var borough_rows: Array = SOCIETY_QUERIES.get_audit_borough_distribution(db_manager)
 	report["distributions"]["boroughs"] = borough_rows
 	_audit_borough_distribution(report, borough_rows)
 
-	report["distributions"]["establishment_categories"] = _query_rows(
-		db_manager, queries, "establishment_categories"
-	)
-	report["distributions"]["employment_classes"] = _query_rows(
-		db_manager, queries, "employment_classes"
-	)
-	report["distributions"]["social_degree"] = _query_rows(
-		db_manager, queries, "social_degree"
-	)
+	report["distributions"]["establishment_categories"] = SOCIETY_QUERIES.get_audit_establishment_categories(db_manager)
+	report["distributions"]["employment_classes"] = SOCIETY_QUERIES.get_audit_employment_classes(db_manager)
+	report["distributions"]["social_degree"] = SOCIETY_QUERIES.get_audit_social_degree(db_manager)
 
 	# Labor Market Diagnostics
-	var sector_rows := _query_rows(db_manager, queries, "labor_by_sector")
+	var sector_rows: Array = SOCIETY_QUERIES.get_audit_labor_by_sector(db_manager)
 	report["distributions"]["labor_by_sector"] = sector_rows
 
-	var vacancy_rows := _query_rows(db_manager, queries, "labor_market_vacancies")
+	var vacancy_rows: Array = SOCIETY_QUERIES.get_audit_labor_vacancies(db_manager)
 	report["distributions"]["labor_market_vacancies"] = vacancy_rows
 
 	var total_budgeted_slots := 0
@@ -181,7 +170,7 @@ static func _audit_database(report: Dictionary, db_manager) -> void:
 	_add_check(report, "has_budgeted_workplace_slots", total_budgeted_slots > 0)
 	_add_check(report, "has_filled_workplace_slots", total_filled_slots > 0)
 
-	var integrity := _query_rows(db_manager, queries, "integrity_checks")
+	var integrity: Array = SOCIETY_QUERIES.get_audit_integrity_checks(db_manager)
 	for row in integrity:
 		var check_name := str(row.get("check_name", "integrity_check"))
 		var failures := int(row.get("failures", 0))
@@ -190,7 +179,7 @@ static func _audit_database(report: Dictionary, db_manager) -> void:
 		if failures > 0:
 			_add_error(report, "%s reported %d invalid records." % [check_name, failures])
 
-	var capacity_rows := _query_rows(db_manager, queries, "district_capacity")
+	var capacity_rows: Array = SOCIETY_QUERIES.get_audit_district_capacity(db_manager)
 	report["distributions"]["district_capacity"] = capacity_rows
 	for row in capacity_rows:
 		var active_population := int(row.get("active_population", 0))
@@ -217,35 +206,6 @@ static func _audit_borough_distribution(report: Dictionary, rows: Array) -> void
 	report["metrics"]["empty_boroughs"] = empty_boroughs
 	if empty_boroughs > 0:
 		_add_warning(report, "%d boroughs have zero active population." % empty_boroughs)
-
-static func _load_queries() -> Dictionary:
-	if not FileAccess.file_exists(SQL_REFERENCE_PATH):
-		return {}
-	var file := FileAccess.open(SQL_REFERENCE_PATH, FileAccess.READ)
-	if file == null:
-		return {}
-
-	var queries := {}
-	var current_name := ""
-	var current_lines: Array[String] = []
-	for line in file.get_as_text().split("\n"):
-		var trimmed := line.strip_edges()
-		if trimmed.begins_with("-- QUERY:"):
-			if not current_name.is_empty():
-				queries[current_name] = "\n".join(current_lines).strip_edges()
-			current_name = trimmed.trim_prefix("-- QUERY:").strip_edges()
-			current_lines.clear()
-		elif not current_name.is_empty():
-			current_lines.append(line)
-	if not current_name.is_empty():
-		queries[current_name] = "\n".join(current_lines).strip_edges()
-	file.close()
-	return queries
-
-static func _query_rows(db_manager, queries: Dictionary, query_name: String) -> Array:
-	if not queries.has(query_name):
-		return []
-	return db_manager.query_rows(queries[query_name])
 
 static func _metric(report: Dictionary, key: String) -> int:
 	return int(report.get("metrics", {}).get(key, 0))
