@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "COMMUNICATE",
+    "description": "Continuous 0-100 resident dossier intelligence impulse generated per interpersonal conversation tick."
+  },
+  "metric_id": "INTEL_SCORE",
+  "rules_module": "intel_exposure",
+  "model": "HYPERBOLIC_EFFORT_PER_TICK",
+  "target_scope": "RESIDENT",
+  "base_effort_per_tick": 16.0
+}
