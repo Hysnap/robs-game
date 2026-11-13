@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb_token": "COLLECT_FROM",
+    "description": "Targeting rules for inbound spatial collection of cash or commodities from a source entity."
+  },
+  "target_scopes": [
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [
+    {
+      "id": "CURRENCY",
+      "label_token": "UI_CAT_CURRENCY",
+      "domain": "CURRENCY"
+    },
+    {
+      "id": "COLLECT_COMMODITY",
+      "label_token": "UI_CAT_COMMODITIES",
+      "domain": "COMMODITY",
+      "catalog_source": "commodities"
+    }
+  ],
+  "form_layout": {
+    "target_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_COMMODITY",
+      "domain": "COMMODITY",
+      "mapped_field": "item_id"
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_QUANTITY",
+      "default_value": 1.0,
+      "min_value": 1.0,
+      "max_value": 999.0,
+      "step": 1.0,
+      "mapped_field": "amount"
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_VENUE",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_SOURCE",
+      "mapped_field": "source_id"
+    }
+  }
+}
