@@ -7,6 +7,7 @@ const CREW_BOOT = preload("res://systems/society/crew_scout_bootstrapper.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const OPS_CTRL = preload("res://systems/operations_controller.gd")
 const GEN_ROSTER_SCRIPT = preload("res://generated/ui/core/gen_roster_docket.gd")
+const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 func _init() -> void:
 	call_deferred("_run_suite")
@@ -51,63 +52,64 @@ func _build_test_world_state() -> Dictionary:
 			"enterprise_name": "ASTON FIRM"
 		},
 		"player_knowledge": {
-			"known_districts": ["block_0_0"],
+			"home_district_id": "block_0_0",
 			"known_residents": [],
 			"scouted_establishments": []
 		},
+		"knowledge_pools": {},
 		"districts": {
 			"block_0_0": {
-			"district_id": "block_0_0",
-			"display_name": "Aston Row",
-			"district_type": "high_density_low_rise",
-			"grid_coords": Vector2i(0, 0),
-			"grid_size": Vector2i(2, 2),
-			"spatial_anchor": Vector2(0, 0),
-			"estimated_population": 3500.0,
-			"expected_pop_min": 3000,
-			"expected_pop_max": 4000,
-			"unemployment_rate": 0.14,
-			"avg_disposable_income": 65.0
-		},
-		"block_1_0": {
-			"district_id": "block_1_0",
-			"display_name": "High Parade",
-			"district_type": "commercial",
-			"grid_coords": Vector2i(2, 0),
-			"grid_size": Vector2i(1, 1),
-			"spatial_anchor": Vector2(500, 0),
-			"estimated_population": 1200.0,
-			"expected_pop_min": 900,
-			"expected_pop_max": 1500,
-			"unemployment_rate": 0.11,
-			"avg_disposable_income": 85.0
-		},
-		"block_0_1": {
-			"district_id": "block_0_1",
-			"display_name": "Vulcan Works",
-			"district_type": "industrial",
-			"grid_coords": Vector2i(0, 2),
-			"grid_size": Vector2i(1, 1),
-			"spatial_anchor": Vector2(0, 500),
-			"estimated_population": 600.0,
-			"expected_pop_min": 400,
-			"expected_pop_max": 800,
-			"unemployment_rate": 0.12,
-			"avg_disposable_income": 75.0
-		},
-		"block_1_1": {
-			"district_id": "block_1_1",
-			"display_name": "Birch Estate",
-			"district_type": "high_density_high_rise",
-			"grid_coords": Vector2i(2, 2),
-			"grid_size": Vector2i(1, 1),
-			"spatial_anchor": Vector2(500, 500),
-			"estimated_population": 2500.0,
-			"expected_pop_min": 2000,
-			"expected_pop_max": 3000,
-			"unemployment_rate": 0.16,
-			"avg_disposable_income": 55.0
-		}
+				"district_id": "block_0_0",
+				"display_name": "Aston Row",
+				"district_type": "high_density_low_rise",
+				"grid_coords": Vector2i(0, 0),
+				"grid_size": Vector2i(2, 2),
+				"spatial_anchor": Vector2(0, 0),
+				"estimated_population": 3500.0,
+				"expected_pop_min": 3000,
+				"expected_pop_max": 4000,
+				"unemployment_rate": 0.14,
+				"avg_disposable_income": 65.0
+			},
+			"block_1_0": {
+				"district_id": "block_1_0",
+				"display_name": "High Parade",
+				"district_type": "commercial",
+				"grid_coords": Vector2i(2, 0),
+				"grid_size": Vector2i(1, 1),
+				"spatial_anchor": Vector2(500, 0),
+				"estimated_population": 1200.0,
+				"expected_pop_min": 900,
+				"expected_pop_max": 1500,
+				"unemployment_rate": 0.11,
+				"avg_disposable_income": 85.0
+			},
+			"block_0_1": {
+				"district_id": "block_0_1",
+				"display_name": "Vulcan Works",
+				"district_type": "industrial",
+				"grid_coords": Vector2i(0, 2),
+				"grid_size": Vector2i(1, 1),
+				"spatial_anchor": Vector2(0, 500),
+				"estimated_population": 600.0,
+				"expected_pop_min": 400,
+				"expected_pop_max": 800,
+				"unemployment_rate": 0.12,
+				"avg_disposable_income": 75.0
+			},
+			"block_1_1": {
+				"district_id": "block_1_1",
+				"display_name": "Birch Estate",
+				"district_type": "high_density_high_rise",
+				"grid_coords": Vector2i(2, 2),
+				"grid_size": Vector2i(1, 1),
+				"spatial_anchor": Vector2(500, 500),
+				"estimated_population": 2500.0,
+				"expected_pop_min": 2000,
+				"expected_pop_max": 3000,
+				"unemployment_rate": 0.16,
+				"avg_disposable_income": 55.0
+			}
 		}
 	}
 
@@ -159,6 +161,12 @@ func _test_crew_addresses_and_kinship(world_state: Dictionary) -> bool:
 			return false
 		if leader_estab_id == 0 or bool(op.get("is_leader", false)):
 			leader_estab_id = est_id
+
+		# Seed starting home district score into sparse knowledge_pools for this operative
+		INTEL_MANAGER.apply_effort_impulse(
+			world_state, "RESIDENT", str(r_id), "DISTRICT", "block_0_0", 85.0,
+			{"distance": 0.0, "access_permeability": 1.0}
+		)
 
 		var hh_members: Array = DB_MANAGER.query_rows("SELECT resident_id FROM residents WHERE household_id = %d AND dod IS NULL;" % hh_id)
 		if hh_members.size() > 1:
@@ -252,7 +260,7 @@ func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 	for k in intel_ctx["crew_resident_ids"]:
 		known_res_set[int(k)] = true
 
-	# Find an uninvestigated occupied residential unit in block_1_0
+	# Find an uninvestigated occupied residential unit in block_1_1
 	var res_units: Array = DB_MANAGER.query_rows("""
 		SELECT DISTINCT e.establishment_id
 		FROM establishments e
@@ -263,7 +271,7 @@ func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 		LIMIT 1;
 	""")
 	if res_units.is_empty():
-		printerr("FAIL [Test 4]: No occupied residential unit found in block_1_0.")
+		printerr("FAIL [Test 4]: No occupied residential unit found in block_1_1.")
 		return false
 
 	var res_estab_id: int = int(res_units[0]["establishment_id"])

@@ -22,6 +22,7 @@ var selected_district_id: String = ""
 const SystemLoggerScript = preload("res://systems/logger.gd")
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
 const DISTRICT_PERCEPTION_FILTER = preload("res://systems/multilayer_info_loop/district_perception_filter.gd")
+const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
 
@@ -48,10 +49,10 @@ func initialize_fresh_state() -> void:
 		"debug_rules": scenario.get("debug_rules", {}).duplicate(true),
 		"player_knowledge": {
 			"home_district_id": "",
-			"known_districts": [],
 			"known_outlets": [],
 			"district_survey_ticks": {}
 		},
+		"knowledge_pools": {},
 		"staff": scenario.get("starting_staff", {}).duplicate(true),
 		"inventory": {},
 		"commodity_registry": {},
@@ -94,29 +95,38 @@ func initialize_fresh_state() -> void:
 	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()
 
-## Pure State Setter: Records the confirmed home district and seeds the leader's home establishment
+## Pure State Setter: Records the confirmed home district and seeds initial crew & home establishment intel
 func set_home_district(district_id: String) -> void:
 	assert(not district_id.is_empty(), "FATAL: [GAME_STATE] Cannot set empty home district.")
 	if not world_state.has("player_knowledge"):
-		world_state["player_knowledge"] = {"home_district_id": "", "known_districts": [], "known_outlets": [], "district_survey_ticks": {}}
+		world_state["player_knowledge"] = {"home_district_id": "", "known_outlets": [], "district_survey_ticks": {}}
+	if not world_state.has("knowledge_pools"):
+		world_state["knowledge_pools"] = {}
 	if not world_state.has("operations"):
 		world_state["operations"] = {}
 
 	world_state["player_knowledge"]["home_district_id"] = district_id
 	world_state["operations"]["home_district_id"] = district_id
 
-	var known: Array = world_state["player_knowledge"].get("known_districts", [])
-	if not district_id in known:
-		known.append(district_id)
-	world_state["player_knowledge"]["known_districts"] = known
-
 	set_selected_district(district_id)
 
-	# Anchor starting crew roster to this district
+	# Anchor starting crew roster to this district and seed initial local district intel
 	var staff_dict: Dictionary = world_state.get("staff", {})
 	for staff_id in staff_dict.keys():
 		if staff_dict[staff_id] is Dictionary:
-			staff_dict[staff_id]["current_district_id"] = district_id
+			var member: Dictionary = staff_dict[staff_id]
+			member["current_district_id"] = district_id
+			var obs_id: String = str(member.get("resident_id", staff_id))
+			if not obs_id.is_empty():
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state,
+					"RESIDENT",
+					obs_id,
+					"DISTRICT",
+					district_id,
+					85.0,
+					{"distance": 0.0, "access_permeability": 1.0}
+				)
 
 	# Physically anchor pending starting inventory into the leader's residence
 	_anchor_starting_inventory_to_home(district_id)
@@ -128,7 +138,6 @@ func _anchor_starting_inventory_to_home(district_id: String) -> void:
 	if _pending_starting_inventory.is_empty():
 		return
 
-	# Identify leader establishment if bound, or seed the home district's primary residential venue
 	var districts: Dictionary = world_state.get("districts", {})
 	if not districts.has(district_id):
 		return
@@ -136,7 +145,6 @@ func _anchor_starting_inventory_to_home(district_id: String) -> void:
 	var venues: Dictionary = districts[district_id].get("venues", {})
 	var target_venue_id: String = ""
 
-	# Check if crew_0 has an explicit establishment ID assigned
 	var leader_data: Dictionary = world_state.get("staff", {}).get("crew_0", {})
 	var res_est_id: String = str(leader_data.get("establishment_id", leader_data.get("residence_establishment_id", "")))
 	
@@ -164,6 +172,35 @@ func _load_section_into_state(config: ConfigFile, section_name: String, target_d
 	for key in config.get_section_keys(section_name):
 		world_state[target_dict_key][key] = config.get_value(section_name, key)
 
+## Builds the active crew observer descriptor list for IntelManager collective queries
+func get_player_observers() -> Array:
+	var observers: Array = []
+	var staff_dict: Dictionary = world_state.get("staff", {})
+	for staff_id in staff_dict.keys():
+		var member = staff_dict[staff_id]
+		if not (member is Dictionary):
+			continue
+		var obs_id: String = str(member.get("resident_id", staff_id))
+		if obs_id.is_empty():
+			continue
+		var affs: Array = []
+		var home_est_id: String = str(member.get("home_establishment_id", member.get("residence_establishment_id", "")))
+		if not home_est_id.is_empty() and home_est_id != "0":
+			affs.append({"org_scope": "ESTABLISHMENT", "org_id": home_est_id, "clearance": 1.0})
+		var emp_id: String = str(member.get("employer_entity_id", ""))
+		if not emp_id.is_empty() and emp_id != "0":
+			affs.append({
+				"org_scope": "ESTABLISHMENT",
+				"org_id": emp_id,
+				"role_code": str(member.get("role_code", member.get("role", "")))
+			})
+		observers.append({
+			"observer_scope": "RESIDENT",
+			"observer_id": obs_id,
+			"affiliations": affs
+		})
+	return observers
+
 ## Query and mutation helpers
 func get_district(district_id: String) -> Dictionary:
 	return world_state.get("districts", {}).get(district_id, {})
@@ -186,7 +223,7 @@ func set_selected_district(district_id: String) -> void:
 	world_state["selected_district_id"] = district_id
 	district_selected.emit(district_id)
 
-## Returns district telemetry filtered through the player's perception and fog-of-war
+## Returns district telemetry filtered through the player's continuous 0-100 perception and fog-of-war
 func get_district_view(district_id: String) -> Dictionary:
 	assert(not district_id.is_empty(), "FATAL: [GAME_STATE] district_id cannot be empty.")
 
@@ -214,9 +251,14 @@ func get_district_view(district_id: String) -> Dictionary:
 
 	raw_data["establishments_summary"] = SOCIETY_QUERIES.get_district_establishments(district_id)
 
-	# 4. Assemble player knowledge context
-	var pk: Dictionary = world_state.get("player_knowledge", {}).duplicate(true)
-	pk["current_sim_day"] = int(world_state.get("metadata", {}).get("current_sim_day", 1))
+	# 4. Assemble continuous 0-100 player perception context (zero legacy known_districts fallback)
+	var pk: Dictionary = world_state.get("player_knowledge", {})
+	var player_context: Dictionary = {
+		"world_state": world_state,
+		"observers": get_player_observers(),
+		"home_district_id": str(pk.get("home_district_id", "")),
+		"current_sim_day": int(world_state.get("metadata", {}).get("current_sim_day", 1))
+	}
 
 	# 5. Apply pure in-memory perception transformation
-	return DISTRICT_PERCEPTION_FILTER.filter_district_view(raw_data, pk)
+	return DISTRICT_PERCEPTION_FILTER.filter_district_view(raw_data, player_context)

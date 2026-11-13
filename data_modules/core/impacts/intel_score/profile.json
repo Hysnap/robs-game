@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "METRIC_PROFILE",
+    "description": "Continuous 0-100 sparse observer-to-target knowledge score routed via the KNOWLEDGE path template."
+  },
+  "metric_id": "INTEL_SCORE",
+  "target_scope": "KNOWLEDGE",
+  "state_container": "knowledge_pools",
+  "state_field": "score",
+  "tuning": {
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 100.0,
+    "default_baseline": 0.0,
+    "discovery_floor": 15.0,
+    "passive_cooling_per_week": 2.0
+  }
+}

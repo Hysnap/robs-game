@@ -2,6 +2,8 @@
 class_name CitySpatialAdapter
 extends RefCounted
 
+const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+
 static var _archetypes: Dictionary = {}
 
 static func load_archetypes() -> void:
@@ -123,7 +125,7 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 	SystemLogger.log_info("[CitySpatialAdapter] Ingested %d districts." % out_world_state["districts"].size())
 
 ## Evaluates finalized districts to find a valid, populated residential neighborhood.
-## Also auto-seeds all 'is_public_landmark' districts into known_districts.
+## Seeds public landmarks and the selected home district into sparse knowledge_pools via IntelManager.
 static func resolve_verified_home_district(world_state: Dictionary, seed_id: String) -> String:
 	load_archetypes()
 	var districts: Dictionary = world_state.get("districts", {})
@@ -131,11 +133,11 @@ static func resolve_verified_home_district(world_state: Dictionary, seed_id: Str
 		return ""
 
 	if not world_state.has("player_knowledge"):
-		world_state["player_knowledge"] = {"home_district_id": "", "known_districts": [], "known_outlets": []}
+		world_state["player_knowledge"] = {"home_district_id": "", "known_outlets": [], "district_survey_ticks": {}}
+	if not world_state.has("knowledge_pools"):
+		world_state["knowledge_pools"] = {}
 
-	var pk: Dictionary = world_state["player_knowledge"]
-	var known: Array = pk.get("known_districts", [])
-
+	var observer_ids: Array[String] = _collect_crew_observer_ids(world_state)
 	var candidates: Array[String] = []
 
 	# Check each district for residential eligibility, housing, and active population
@@ -144,10 +146,13 @@ static func resolve_verified_home_district(world_state: Dictionary, seed_id: Str
 		var d_type: String = str(d.get("district_type", ""))
 		var arch: Dictionary = _archetypes.get(d_type, {})
 		
-		# Auto-seed public landmarks as universally known
+		# Auto-seed public landmarks into sparse knowledge pools
 		if bool(arch.get("is_public_landmark", false)):
-			if not d_id in known:
-				known.append(d_id)
+			for obs_id in observer_ids:
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state, "RESIDENT", obs_id, "DISTRICT", str(d_id), 10.0,
+					{"distance": 0.0, "access_permeability": 1.0}
+				)
 
 		# Exclude non-residential civil anchors or heavy industrial sites
 		if d_type in ["place_of_worship", "primary_school", "secondary_school", "hospital_site", "civic_penal_block", "local_government", "industrial_automotive_works", "police_station", "police_headquarters"]:
@@ -189,12 +194,26 @@ static func resolve_verified_home_district(world_state: Dictionary, seed_id: Str
 	var selected_home_id: String = candidates[0]
 	SystemLogger.log_info("[CitySpatialAdapter] Resolved home district '%s' from %d candidates." % [selected_home_id, candidates.size()])
 
-	# Ensure selected home district is in known_districts
-	if not selected_home_id in known:
-		known.append(selected_home_id)
+	for obs_id in observer_ids:
+		INTEL_MANAGER.apply_effort_impulse(
+			world_state, "RESIDENT", obs_id, "DISTRICT", selected_home_id, 85.0,
+			{"distance": 0.0, "access_permeability": 1.0}
+		)
 
-	pk["known_districts"] = known
 	return selected_home_id
+
+static func _collect_crew_observer_ids(world_state: Dictionary) -> Array[String]:
+	var ids: Array[String] = []
+	var staff_dict: Dictionary = world_state.get("staff", {})
+	for staff_id in staff_dict.keys():
+		var member = staff_dict[staff_id]
+		if member is Dictionary:
+			var obs_id: String = str(member.get("resident_id", staff_id))
+			if not obs_id.is_empty() and not ids.has(obs_id):
+				ids.append(obs_id)
+	if ids.is_empty():
+		ids.append("crew_0")
+	return ids
 
 static func _calculate_district_scale_factor(archetype: Dictionary, block_size: Vector2i, standard_lot_sqm: float) -> float:
 	var allocated_cells: int = block_size.x * block_size.y
