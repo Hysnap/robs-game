@@ -100,13 +100,15 @@ static func _generate_establishment_peer_ties(rng: RandomNumberGenerator, sim_st
 	var peer_rel_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
 
 	var est_clusters = DB_MANAGER.query_rows("""
-		SELECT employer_entity_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
+		SELECT employer_establishment_id, GROUP_CONCAT(resident_id) as member_ids, COUNT(*) as count
 		FROM livelihood_contracts
-		GROUP BY employer_entity_id
+		WHERE employer_establishment_id IS NOT NULL AND valid_to IS NULL
+		GROUP BY employer_establishment_id
 		HAVING count > 1;
 	""")
 
 	for cluster in est_clusters:
+		var est_id: int = int(cluster["employer_establishment_id"])
 		var id_strings: PackedStringArray = str(cluster["member_ids"]).split(",")
 		if id_strings.size() < 2:
 			continue
@@ -124,8 +126,8 @@ static func _generate_establishment_peer_ties(rng: RandomNumberGenerator, sim_st
 					INSERT OR IGNORE INTO social_relationships (
 						from_resident_id, to_resident_id, relationship_type_id,
 						context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
-					) VALUES (%d, %d, %d, NULL, 0.50, %d, NULL, %d);
-				""" % [a, b, peer_rel_id, sim_start_day, reason_id])
+					) VALUES (%d, %d, %d, %d, 0.50, %d, NULL, %d);
+				""" % [a, b, peer_rel_id, est_id, sim_start_day, reason_id])
 				edge_count += 1
 
 		if peer_edges.size() >= 500:
