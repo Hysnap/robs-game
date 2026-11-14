@@ -16,7 +16,7 @@
 	"third_party_funds_mode": "FINITE_LIQUIDITY"
   },
   "ui_shells": {
-	"default_shell": "filofax",
+	"default_shell": "pocketbooks",
 	"available_shells": [
 	  {
 		"shell_id": "pocketbooks",
