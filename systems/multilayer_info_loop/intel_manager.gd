@@ -2,24 +2,19 @@
 ## Reusable, Parameterized 0–100 Saturating Measure & Threshold Exposure Engine.
 ##
 ## Architecture & Cross-Domain Reusability:
-## Although originally built for Field Intelligence & Fog-of-War ("intel_exposure" / "INTEL_SCORE"),
-## every calculation and threshold query in this engine is parameterized by `rules_module` and
-## `metric_id` so it can govern ANY saturating 0–100 simulation measure with zero GDScript changes:
-##   1. Field Intelligence & Surveillance ("intel_exposure" / "INTEL_SCORE"):
-##      Observer (RESIDENT / ESTABLISHMENT) -> Target (DISTRICT / ESTABLISHMENT / RESIDENT / EVENT).
-##   2. Market Brand Penetration & Customer Awareness ("brand_exposure" / "BRAND_AWARENESS"):
-##      Enterprise / Product -> District / Demographic segment (decays without marketing upkeep).
-##   3. Gang Turf Control & Street Influence ("turf_control_rules" / "TURF_CONTROL"):
-##      Syndicate / Crew -> District (attenuated by distance from HQ and organizational size).
-##   4. Skill Mastery, Habit Formation, or Chemical Tolerance ("tolerance_rules" / "TOLERANCE_SCORE"):
-##      Resident -> Activity / Commodity (hyperbolic effort curve with ambient decay).
-##   5. Law Enforcement Case Files ("case_file_rules" / "CASE_PROGRESS"):
-##      Precinct / Detective -> Suspect / Syndicate (compartmentalized by role clearance).
+## Parameterized by `rules_module`, `metric_id`, `pool_container`, and `clearance_field`
+## so it governs ANY saturating 0–100 simulation measure with zero GDScript changes:
+##   1. Field Intelligence & Surveillance ("intel_exposure" / "INTEL_SCORE")
+##   2. Market Brand Penetration & Customer Awareness ("brand_exposure" / "BRAND_AWARENESS")
+##   3. Gang Turf Control & Street Influence ("turf_control_rules" / "TURF_CONTROL")
+##   4. Skill Mastery, Habit Formation, or Chemical Tolerance ("tolerance_rules" / "TOLERANCE_SCORE")
+##   5. Law Enforcement Case Files ("case_file_rules" / "CASE_PROGRESS")
 class_name IntelManager
 extends RefCounted
 
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
+const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 
 const DEFAULT_RULES_MODULE: String = "intel_exposure"
 const DEFAULT_METRIC_ID: String = "INTEL_SCORE"
@@ -88,7 +83,7 @@ static func get_direct_score(
 	return 0.0
 
 ## Computes effective score (0.0 - 100.0) combining personal score and role-cleared organizational score
-## affiliations: Array of { "org_scope": "ESTABLISHMENT", "org_id": String, "role_code": String }
+## affiliations: Array of { "org_scope": String, "org_id": String, "role_code": String }
 static func get_effective_score(
 	world_state: Dictionary,
 	observer_scope: String,
@@ -120,7 +115,7 @@ static func get_effective_score(
 
 	return clampf(best_score, 0.0, 100.0)
 
-## Computes collective best score across multiple observers (e.g. a group of active operatives & affiliated venues)
+## Computes collective best score across multiple observers
 static func get_collective_score(
 	world_state: Dictionary,
 	observers: Array,
@@ -173,23 +168,17 @@ static func apply_effort_impulse(
 	var access_perm: float = clampf(float(context.get("access_permeability", default_perm)), 0.05, 1.0)
 	var effective_effort: float = base_effort * dist_multiplier * access_perm
 
-	# 2. Organizational Maintenance Friction (larger orgs require more effort to keep measures fresh)
+	# 2. Organizational Maintenance Friction
 	var base_h: float = float(scope_cfg.get("half_saturation_effort", defaults.get("default_half_saturation_effort", 25.0)))
 	var org_size: float = maxf(0.0, float(context.get("observer_org_size", 0.0)))
 	var org_factor: float = float(defaults.get("org_size_maintenance_factor", 0.05))
 	var effective_h: float = base_h * (1.0 + (org_size * org_factor))
 
-	# 3. Hyperbolic Saturation Mapping: S(M) = 100 * M / (M + H)
+	# 3. Hyperbolic Saturation Mapping delegated to ConditionEvaluator
 	var cur_score: float = get_direct_score(world_state, observer_scope, observer_id, target_scope, target_id, pool_container)
-	var capped_cur: float = minf(cur_score, MAX_ASYMPTOTIC_CAP)
-	var cur_effort: float = 0.0
-	if capped_cur > 0.0:
-		cur_effort = (effective_h * capped_cur) / (100.0 - capped_cur)
-
+	var cur_effort: float = ConditionEvaluatorScript.invert_hyperbolic_saturation(minf(cur_score, MAX_ASYMPTOTIC_CAP), effective_h, 100.0)
 	var new_effort: float = maxf(0.0, cur_effort + effective_effort)
-	var target_score: float = 0.0
-	if new_effort > 0.0:
-		target_score = 100.0 * (new_effort / (new_effort + effective_h))
+	var target_score: float = ConditionEvaluatorScript.evaluate_hyperbolic_saturation(new_effort, effective_h, 100.0)
 
 	var max_cap: float = float(context.get("max_cap", 100.0))
 	target_score = clampf(target_score, 0.0, minf(max_cap, MAX_ASYMPTOTIC_CAP))
@@ -204,7 +193,7 @@ static func apply_effort_impulse(
 
 	return get_direct_score(world_state, observer_scope, observer_id, target_scope, target_id, pool_container)
 
-## Explicit compartmentalized score transfer (e.g. INFORM / briefing / propaganda) from source observer to recipient
+## Explicit compartmentalized score transfer from source observer to recipient observer
 static func transfer_intel(
 	world_state: Dictionary,
 	from_scope: String,
@@ -228,13 +217,102 @@ static func transfer_intel(
 	var scope_cfg: Dictionary = rules.get("scopes", {}).get(target_scope.to_upper(), {})
 	var base_h: float = float(scope_cfg.get("half_saturation_effort", defaults.get("default_half_saturation_effort", 25.0)))
 
-	var capped_src: float = minf(source_score, MAX_ASYMPTOTIC_CAP)
-	var source_effort: float = (base_h * capped_src) / (100.0 - capped_src)
+	var source_effort: float = ConditionEvaluatorScript.invert_hyperbolic_saturation(minf(source_score, MAX_ASYMPTOTIC_CAP), base_h, 100.0)
 	var transferred_effort: float = source_effort * clampf(share_ratio, 0.0, 1.0)
 
 	var transfer_ctx := context.duplicate(true)
 	transfer_ctx["max_cap"] = source_score * clampf(share_ratio, 0.0, 1.0)
 	return apply_effort_impulse(world_state, to_scope, to_id, target_scope, target_id, transferred_effort, transfer_ctx, rules_module, metric_id)
+
+## Generic declarative saturating impact executor (completely measure- & scope-agnostic)
+## impact_params: {
+##   "observer_scope": String, "observer_id": String,
+##   "target_scope": String, "target_id": String,
+##   "recipient_scope": String, "recipient_id": String,
+##   "subject_scope": String, "subject_id": String,
+##   "multiplier": float (e.g. duration_ticks),
+##   "context": Dictionary (optional distance, access_permeability, etc.),
+##   "secondary_targets": Array of { "target_scope": String, "target_id": String, "effort_ratio": float }
+## }
+static func process_verb_impact(world_state: Dictionary, impact_params: Dictionary, cfg: Dictionary) -> Dictionary:
+	var obs_scope: String = str(cfg.get("observer_scope", impact_params.get("observer_scope", "RESIDENT"))).to_upper().strip_edges()
+	var obs_id: String = str(impact_params.get("observer_id", "")).strip_edges()
+	if obs_id.is_empty():
+		return {}
+
+	var rules_mod: String = str(cfg.get("rules_module", DEFAULT_RULES_MODULE))
+	var metric_id: String = str(cfg.get("metric_id", DEFAULT_METRIC_ID)).to_upper().strip_edges()
+	var model: String = str(cfg.get("model", "HYPERBOLIC_EFFORT_PER_TICK")).to_upper().strip_edges()
+	var ctx: Dictionary = impact_params.get("context", {}).duplicate(true)
+	if cfg.has("pool_container"):
+		ctx["pool_container"] = str(cfg["pool_container"])
+
+	if model == "HYPERBOLIC_EFFORT_PER_TICK":
+		var base_per_unit: float = float(cfg.get("base_effort_per_tick", cfg.get("base_effort", 10.0)))
+		var multiplier: float = maxf(0.0, float(impact_params.get("multiplier", 1.0)))
+		var total_effort: float = base_per_unit * multiplier
+		var tgt_scope: String = str(cfg.get("target_scope", impact_params.get("target_scope", ""))).to_upper().strip_edges()
+		var tgt_id: String = str(impact_params.get("target_id", "")).strip_edges()
+
+		if tgt_scope.is_empty() or tgt_id.is_empty() or total_effort <= 0.0:
+			return {}
+
+		var new_score: float = apply_effort_impulse(
+			world_state, obs_scope, obs_id, tgt_scope, tgt_id, total_effort, ctx, rules_mod, metric_id
+		)
+		var result: Dictionary = {
+			"metric_id": metric_id,
+			"observer_scope": obs_scope,
+			"observer_id": obs_id,
+			"target_scope": tgt_scope,
+			"target_id": tgt_id,
+			"effort_applied": total_effort,
+			"new_score": new_score
+		}
+
+		var secondary: Array = impact_params.get("secondary_targets", [])
+		var secondary_applied: int = 0
+		for item in secondary:
+			if not (item is Dictionary):
+				continue
+			var s_scope: String = str(item.get("target_scope", "")).to_upper().strip_edges()
+			var s_id: String = str(item.get("target_id", "")).strip_edges()
+			var s_ratio: float = float(item.get("effort_ratio", cfg.get("secondary_effort_ratio", 0.45)))
+			if not s_scope.is_empty() and not s_id.is_empty() and s_ratio > 0.0:
+				apply_effort_impulse(
+					world_state, obs_scope, obs_id, s_scope, s_id, total_effort * s_ratio, ctx, rules_mod, metric_id
+				)
+				secondary_applied += 1
+
+		if secondary_applied > 0:
+			result["secondary_targets_updated"] = secondary_applied
+		return result
+
+	elif model == "COMPARTMENTALIZED_TRANSFER":
+		var to_scope: String = str(cfg.get("recipient_scope", impact_params.get("recipient_scope", "RESIDENT"))).to_upper().strip_edges()
+		var to_id: String = str(impact_params.get("recipient_id", "")).strip_edges()
+		var subj_scope: String = str(cfg.get("subject_scope", impact_params.get("subject_scope", ""))).to_upper().strip_edges()
+		var subj_id: String = str(impact_params.get("subject_id", "")).strip_edges()
+		var share_ratio: float = float(cfg.get("share_ratio", cfg.get("transfer_efficiency", 0.75)))
+
+		if to_id.is_empty() or subj_scope.is_empty() or subj_id.is_empty():
+			return {}
+
+		var transferred_score: float = transfer_intel(
+			world_state, obs_scope, obs_id, to_scope, to_id, subj_scope, subj_id, share_ratio, ctx, rules_mod, metric_id
+		)
+		return {
+			"metric_id": metric_id,
+			"from_scope": obs_scope,
+			"from_id": obs_id,
+			"to_scope": to_scope,
+			"to_id": to_id,
+			"subject_scope": subj_scope,
+			"subject_id": subj_id,
+			"transferred_score": transferred_score
+		}
+
+	return {}
 
 ## Returns whether an entity's existence/threshold is breached (>= existence_threshold)
 static func is_entity_known(score: float, target_scope: String, rules_module: String = DEFAULT_RULES_MODULE) -> bool:

@@ -408,3 +408,25 @@ static func evaluate_weighted_sum(quantities: Dictionary, weights: Dictionary, d
 		var weight: float = float(weights.get(key, default_weight))
 		total += qty * weight
 	return total
+
+## Pure stateless hyperbolic saturation curve S(M) = max_cap * (M / (M + half_saturation))
+static func evaluate_hyperbolic_saturation(
+	effective_effort: float,
+	half_saturation: float,
+	max_cap: float = 100.0
+) -> float:
+	var m: float = maxf(0.0, effective_effort)
+	var h: float = maxf(0.0001, half_saturation)
+	return clampf(max_cap * (m / (m + h)), 0.0, max_cap)
+
+## Inverse hyperbolic curve: resolves effective cumulative effort M from current score S
+static func invert_hyperbolic_saturation(
+	current_score: float,
+	half_saturation: float,
+	max_cap: float = 100.0
+) -> float:
+	var s: float = clampf(current_score, 0.0, max_cap - 0.01)
+	if s <= 0.0:
+		return 0.0
+	var h: float = maxf(0.0001, half_saturation)
+	return (s * h) / (max_cap - s)

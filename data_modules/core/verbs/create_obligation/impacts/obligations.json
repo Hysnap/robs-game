@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "CREATE_OBLIGATION",
+    "description": "Records any bilateral or institutional obligation in SQLite from explicit directive parameters."
+  },
+  "metric_id": "OBLIGATION",
+  "rules_module": "civic_hierarchy",
+  "model": "CREATE_OBLIGATION"
+}

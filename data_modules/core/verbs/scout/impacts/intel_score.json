@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "SCOUT",
+    "description": "Continuous 0-100 district and local establishment intelligence impulse generated per scouting shift tick."
+  },
+  "metric_id": "INTEL_SCORE",
+  "rules_module": "intel_exposure",
+  "model": "HYPERBOLIC_EFFORT_PER_TICK",
+  "base_effort_per_tick": 14.0,
+  "sweep_child_establishments": true,
+  "child_establishment_effort_ratio": 0.45
+}

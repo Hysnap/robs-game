@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "INFORM",
+    "description": "Compartmentalized transfer of accumulated intelligence from an operative to a recipient resident or organization."
+  },
+  "metric_id": "INTEL_SCORE",
+  "rules_module": "intel_exposure",
+  "model": "COMPARTMENTALIZED_TRANSFER",
+  "recipient_scope": "RESIDENT",
+  "share_ratio": 0.85
+}

@@ -51,11 +51,6 @@ func _build_test_world_state() -> Dictionary:
 			"home_district_id": "block_0_0",
 			"enterprise_name": "ASTON FIRM"
 		},
-		"player_knowledge": {
-			"home_district_id": "block_0_0",
-			"known_residents": [],
-			"scouted_establishments": []
-		},
 		"knowledge_pools": {},
 		"districts": {
 			"block_0_0": {
@@ -189,7 +184,7 @@ func _test_crew_addresses_and_kinship(world_state: Dictionary) -> bool:
 	print("PASS [Test 2]: All %d crew operatives anchored to physical homes, kinship edges verified, £%.2f stash anchored." % [residents.size(), stash_cash])
 	return true
 
-## Test 3 (Item c): Secondary Relationship Firewall blocks 2nd-degree acquaintance leaks
+## Test 3 (Item c): Secondary Relationship Firewall blocks 2nd-degree acquaintance leaks until continuous intel impulse
 func _test_secondary_relationship_firewall(world_state: Dictionary) -> bool:
 	var intel_ctx: Dictionary = OPS_CTRL._build_player_intel_context(world_state)
 	var crew_ids: Array = intel_ctx["crew_resident_ids"]
@@ -221,7 +216,7 @@ func _test_secondary_relationship_firewall(world_state: Dictionary) -> bool:
 		"INSERT OR IGNORE INTO social_relationships (from_resident_id, to_resident_id, relationship_type_id, affinity_score, valid_from, change_reason_id) VALUES (%d, %d, %d, 0.80, 29219, %d);" % [c1_id, c2_id, rel_friend_id, reason_id]
 	])
 
-	var contacts_before: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(crew_ids, [], 29219)
+	var contacts_before: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(intel_ctx, 29219)
 	var found_c1 := false
 	var found_c2 := false
 	for c in contacts_before:
@@ -238,8 +233,13 @@ func _test_secondary_relationship_firewall(world_state: Dictionary) -> bool:
 		printerr("FAIL [Test 3]: Secondary Relationship Firewall breached! 2nd-degree contact %d leaked through %d." % [c2_id, c1_id])
 		return false
 
-	# Explicit introduction (COMMUNICATE / INVESTIGATE) unlocks c2
-	var contacts_after: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(crew_ids, [c2_id], 29219)
+	# Explicit introduction (COMMUNICATE / INVESTIGATE impulse into knowledge_pools) unlocks c2
+	INTEL_MANAGER.apply_effort_impulse(
+		world_state, "RESIDENT", str(op1_id), "RESIDENT", str(c2_id), 25.0,
+		{"distance": 0.0, "access_permeability": 1.0}
+	)
+	var updated_ctx: Dictionary = OPS_CTRL._build_player_intel_context(world_state)
+	var contacts_after: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(updated_ctx, 29219)
 	var unlocked_c2 := false
 	for c in contacts_after:
 		if int(c["resident_id"]) == c2_id:
@@ -247,18 +247,16 @@ func _test_secondary_relationship_firewall(world_state: Dictionary) -> bool:
 			break
 
 	if not unlocked_c2:
-		printerr("FAIL [Test 3]: Explicitly introduced contact %d failed to appear after revelation." % c2_id)
+		printerr("FAIL [Test 3]: Explicitly introduced contact %d failed to appear after continuous intel impulse." % c2_id)
 		return false
 
-	print("PASS [Test 3]: Secondary Relationship Firewall blocked 2nd-degree contact %d until explicit introduction." % c2_id)
+	print("PASS [Test 3]: Secondary Relationship Firewall blocked 2nd-degree contact %d until continuous intel impulse." % c2_id)
 	return true
 
-## Test 4 (Items d, e, f): Residential & Workplace Fog-of-War masking before/after investigation
+## Test 4 (Items d, e, f): Residential & Workplace Fog-of-War masking before/after continuous investigation
 func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 	var intel_ctx: Dictionary = OPS_CTRL._build_player_intel_context(world_state)
-	var known_res_set: Dictionary = {}
-	for k in intel_ctx["crew_resident_ids"]:
-		known_res_set[int(k)] = true
+	var op1_id: int = int(intel_ctx["crew_resident_ids"][0])
 
 	# Find an uninvestigated occupied residential unit in block_1_1
 	var res_units: Array = DB_MANAGER.query_rows("""
@@ -287,17 +285,14 @@ func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 		printerr("FAIL [Test 4]: Uninvestigated residential unit %d leaked occupant names instead of UI_MASKED_OCCUPANT." % res_estab_id)
 		return false
 
-	# Find an uninvestigated staffed workplace
+	# Find an uninvestigated staffed workplace where no crew member works
 	var known_est_strs: Array[String] = ["0"]
-	for est_k in intel_ctx.get("scouted_establishment_ids", []):
-		known_est_strs.append(str(int(est_k)))
 	for crew_id in intel_ctx.get("crew_resident_ids", []):
 		var prof: Dictionary = SOCIETY_QUERIES.get_resident_profile(int(crew_id), 29219)
 		var emp_str: String = str(prof.get("employer_entity_id", ""))
 		if emp_str.begins_with("ESTAB_"):
 			known_est_strs.append(emp_str.trim_prefix("ESTAB_"))
 
-	# Find an uninvestigated staffed workplace where no crew member works
 	var workplaces: Array = DB_MANAGER.query_rows("""
 		SELECT DISTINCT e.establishment_id
 		FROM establishments e
@@ -322,23 +317,26 @@ func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 		printerr("FAIL [Test 4]: Uninvestigated workplace %d leaked employee names instead of UI_MASKED_STAFF." % work_estab_id)
 		return false
 
-	# Simulate INVESTIGATE/SCOUT on work_estab_id -> true staff names revealed
-	var revealed_ctx: Dictionary = intel_ctx.duplicate(true)
-	revealed_ctx["scouted_establishment_ids"] = [work_estab_id]
+	# Simulate continuous INVESTIGATE impulse on work_estab_id (pushes score past 60.0 employees threshold)
+	INTEL_MANAGER.apply_effort_impulse(
+		world_state, "RESIDENT", str(op1_id), "ESTABLISHMENT", str(work_estab_id), 200.0,
+		{"distance": 0.0}
+	)
+	var revealed_ctx: Dictionary = OPS_CTRL._build_player_intel_context(world_state)
 	var revealed_work_docket: Dictionary = SOCIETY_QUERIES.get_establishment_docket(work_estab_id, 29219, revealed_ctx)
 	for emp in revealed_work_docket.get("employees", []):
 		if bool(emp.get("is_masked", false)) or str(emp.get("full_name", "")) == "UI_MASKED_STAFF":
-			printerr("FAIL [Test 4]: Scouted workplace %d remained masked after investigation." % work_estab_id)
+			printerr("FAIL [Test 4]: Investigated workplace %d remained masked after continuous intel impulse." % work_estab_id)
 			return false
 
-	print("PASS [Test 4]: Residential (UI_MASKED_OCCUPANT) & Workplace (UI_MASKED_STAFF) Fog of War enforced and revealed on scout.")
+	print("PASS [Test 4]: Residential (UI_MASKED_OCCUPANT) & Workplace (UI_MASKED_STAFF) Fog of War enforced and revealed via continuous intel.")
 	return true
 
 ## Test 5 (Item b): GenRosterDocket binds crew_members + known_contacts and resets cleanly
 func _test_roster_docket_contract(world_state: Dictionary) -> bool:
 	var roster_view: Control = GEN_ROSTER_SCRIPT.new()
 	var intel_ctx: Dictionary = OPS_CTRL._build_player_intel_context(world_state)
-	var contacts: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(intel_ctx["crew_resident_ids"], [], 29219)
+	var contacts: Array[Dictionary] = SOCIETY_QUERIES.get_known_contacts_for_crew(intel_ctx, 29219)
 
 	var crew_list: Array[Dictionary] = []
 	for slot_id in world_state.get("residents", {}).keys():

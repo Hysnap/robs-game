@@ -1,0 +1,12 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "INVESTIGATE",
+    "description": "High-concentration 0-100 intelligence impulse on a specific establishment or entity."
+  },
+  "metric_id": "INTEL_SCORE",
+  "rules_module": "intel_exposure",
+  "model": "HYPERBOLIC_EFFORT_PER_TICK",
+  "target_scope": "ESTABLISHMENT",
+  "base_effort_per_tick": 24.0
+}

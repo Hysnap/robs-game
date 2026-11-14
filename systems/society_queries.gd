@@ -2,7 +2,9 @@
 class_name SocietyQueries
 extends RefCounted
 
-## Returns an inspectable dossier for an establishment, applying Fog-of-War masking when player_context is supplied
+const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+
+## Returns an inspectable dossier for an establishment, applying continuous 0-100 Fog-of-War masking when player_context is supplied
 static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, player_context: Dictionary = {}) -> Dictionary:
 	assert(estab_id > 0, "FATAL: [SocietyQueries] estab_id must be a positive integer.")
 
@@ -15,7 +17,8 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			d.display_name AS district_name,
 			d.grid_x,
 			d.grid_z,
-			e.owning_entity,
+			e.owner_org_id,
+			o.display_name AS owner_org_name,
 			e.unit_door_number,
 			l_cat.code AS category_code,
 			l_cat.title AS category_title,
@@ -23,10 +26,10 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			e.is_vacant
 		FROM establishments e
 		JOIN districts d ON e.district_id = d.district_id
+		LEFT JOIN organizations o ON e.owner_org_id = o.org_id
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
 		WHERE e.establishment_id = %d;
 	""" % estab_id)
-
 	if base_rows.is_empty():
 		return {}
 
@@ -43,14 +46,32 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 	var apply_fow: bool = not player_context.is_empty()
 	var known_res_lookup: Dictionary = {}
 	var known_hh_lookup: Dictionary = {}
-	var is_estab_investigated: bool = false
+	var estab_score: float = 100.0
+	var ws_ref = player_context.get("world_state", null)
+	var observers_ref = player_context.get("observers", null)
 
 	if apply_fow:
 		var intel: Dictionary = _resolve_crew_intel_sets(player_context)
 		known_res_lookup = intel["known_residents"]
 		known_hh_lookup = intel["known_households"]
-		var scouted_estabs: Dictionary = intel["scouted_establishments"]
-		is_estab_investigated = scouted_estabs.has(estab_id)
+		var own_estabs: Dictionary = intel["own_establishments"]
+
+		if own_estabs.has(estab_id):
+			estab_score = 100.0
+		elif ws_ref is Dictionary and observers_ref is Array:
+			estab_score = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "ESTABLISHMENT", str(estab_id))
+		else:
+			estab_score = 0.0
+
+		if not IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "capacity"):
+			docket["capacity"] = null
+			docket["owner_org_id"] = ""
+			docket["owner_org_name"] = "UI_INTEL_UNKNOWN"
+
+	docket["intel_score"] = estab_score
+	var all_staff_exposed: bool = not apply_fow or IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "employees.all")
+	var all_residents_exposed: bool = not apply_fow or IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "residents.all")
+	var pay_exposed_by_estab: bool = not apply_fow or IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "market_catchment")
 
 	# 2. Branch: Residential Unit
 	if cat_code == "RESIDENTIAL_UNIT":
@@ -90,17 +111,22 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			WHERE h.establishment_id = %d AND r.dod IS NULL;
 		""" % [current_sim_day, estab_id])
 
-		var any_occupant_known: bool = not apply_fow or is_estab_investigated
+		var any_occupant_known: bool = all_residents_exposed
 		if apply_fow:
 			var masked_residents: Array = []
 			for row in res_rows:
 				var r_id: int = int(row.get("resident_id", 0))
 				var hh_id: int = int(row.get("household_id", 0))
-				var is_known: bool = is_estab_investigated or known_res_lookup.has(r_id) or known_hh_lookup.has(hh_id)
+				var res_score: float = 0.0
+				if ws_ref is Dictionary and observers_ref is Array and r_id > 0:
+					res_score = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "RESIDENT", str(r_id))
+				var is_known: bool = all_residents_exposed or known_res_lookup.has(r_id) or known_hh_lookup.has(hh_id) or IntelManagerScript.is_entity_known(res_score, "RESIDENT")
 				if is_known:
 					any_occupant_known = true
 					var clear_row: Dictionary = row.duplicate()
 					clear_row["is_masked"] = false
+					if not pay_exposed_by_estab and not known_res_lookup.has(r_id) and not known_hh_lookup.has(hh_id) and not IntelManagerScript.is_field_exposed(res_score, "RESIDENT", "hourly_wage"):
+						clear_row["weekly_wage"] = null
 					masked_residents.append(clear_row)
 				else:
 					var age_val: int = int(row.get("age", 30))
@@ -152,7 +178,7 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 			JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
 			JOIN system_labels l_sch ON c.schedule_window_id = l_sch.label_id
-			WHERE c.employer_entity_id = 'ESTAB_%d' AND c.valid_to IS NULL AND r.dod IS NULL;
+			WHERE c.employer_establishment_id = %d AND c.valid_to IS NULL AND r.dod IS NULL;
 		""" % estab_id)
 
 		if apply_fow:
@@ -160,10 +186,16 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			for emp in emp_rows:
 				var r_id: int = int(emp.get("resident_id", 0))
 				var hh_id: int = int(emp.get("household_id", 0))
-				var is_known: bool = is_estab_investigated or known_res_lookup.has(r_id) or known_hh_lookup.has(hh_id)
+				var res_score: float = 0.0
+				if ws_ref is Dictionary and observers_ref is Array and r_id > 0:
+					res_score = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "RESIDENT", str(r_id))
+				var is_known: bool = all_staff_exposed or known_res_lookup.has(r_id) or known_hh_lookup.has(hh_id) or IntelManagerScript.is_entity_known(res_score, "RESIDENT")
 				if is_known:
 					var clear_emp: Dictionary = emp.duplicate()
 					clear_emp["is_masked"] = false
+					if not pay_exposed_by_estab and not known_res_lookup.has(r_id) and not known_hh_lookup.has(hh_id) and not IntelManagerScript.is_field_exposed(res_score, "RESIDENT", "hourly_wage"):
+						clear_emp["weekly_pay"] = null
+						clear_emp["compensation_rate"] = 0.0
 					masked_emps.append(clear_emp)
 				else:
 					masked_emps.append({
@@ -182,28 +214,31 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 
 		docket["employees"] = emp_rows
 
-		# Market Catchment (Surrounding 9 Chebyshev blocks)
-		var gx: int = int(docket["grid_x"])
-		var gz: int = int(docket["grid_z"])
-		var catchment = DBManager.query_rows("""
-			SELECT 
-				COUNT(DISTINCT r.resident_id) AS total_catchment_population,
-				COUNT(DISTINCT h.household_id) AS total_catchment_households,
-				ROUND(AVG(d.base_disposable_income), 2) AS avg_neighbor_disposable_income
-			FROM districts d
-			JOIN establishments e ON d.district_id = e.district_id
-			JOIN households h ON e.establishment_id = h.establishment_id
-			JOIN residents r ON h.household_id = r.household_id
-			WHERE r.dod IS NULL
-			  AND d.grid_x BETWEEN %d AND %d
-			  AND d.grid_z BETWEEN %d AND %d;
-		""" % [gx - 1, gx + 1, gz - 1, gz + 1])
+		# Market Catchment (Surrounding 9 Chebyshev blocks) — gated by ESTABLISHMENT threshold
+		if not apply_fow or IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "market_catchment"):
+			var gx: int = int(docket["grid_x"])
+			var gz: int = int(docket["grid_z"])
+			var catchment = DBManager.query_rows("""
+				SELECT 
+					COUNT(DISTINCT r.resident_id) AS total_catchment_population,
+					COUNT(DISTINCT h.household_id) AS total_catchment_households,
+					ROUND(AVG(d.base_disposable_income), 2) AS avg_neighbor_disposable_income
+				FROM districts d
+				JOIN establishments e ON d.district_id = e.district_id
+				JOIN households h ON e.establishment_id = h.establishment_id
+				JOIN residents r ON h.household_id = r.household_id
+				WHERE r.dod IS NULL
+				  AND d.grid_x BETWEEN %d AND %d
+				  AND d.grid_z BETWEEN %d AND %d;
+			""" % [gx - 1, gx + 1, gz - 1, gz + 1])
 
-		docket["market_catchment"] = catchment[0] if not catchment.is_empty() else {}
+			docket["market_catchment"] = catchment[0] if not catchment.is_empty() else {}
+		else:
+			docket["market_catchment"] = {}
 
 	return docket
 
-## Resolves 1st-degree known residents, crew households, and investigated establishments while blocking 2nd-degree leaks
+## Resolves 1st-degree known residents, crew households, and own home/work establishments while blocking 2nd-degree leaks
 static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 	var crew_ids: Array[int] = []
 	for raw_id in player_context.get("crew_resident_ids", []):
@@ -213,23 +248,13 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 
 	var known_residents: Dictionary = {}
 	var known_households: Dictionary = {}
-	var scouted_establishments: Dictionary = {}
-
-	for raw_known in player_context.get("known_resident_ids", []):
-		var k_id: int = int(raw_known)
-		if k_id > 0:
-			known_residents[k_id] = true
-
-	for raw_est in player_context.get("scouted_establishment_ids", []):
-		var e_id: int = int(raw_est)
-		if e_id > 0:
-			scouted_establishments[e_id] = true
+	var own_establishments: Dictionary = {}
 
 	if crew_ids.is_empty():
 		return {
 			"known_residents": known_residents,
 			"known_households": known_households,
-			"scouted_establishments": scouted_establishments
+			"own_establishments": own_establishments
 		}
 
 	var id_strings: Array[String] = []
@@ -247,20 +272,18 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 	""" % in_clause)
 	for row in crew_hh_rows:
 		known_households[int(row["household_id"])] = true
-		scouted_establishments[int(row["establishment_id"])] = true
+		own_establishments[int(row["establishment_id"])] = true
 
 	# 2. Crew members' active workplaces
 	var crew_work_rows: Array = DBManager.query_rows("""
-		SELECT employer_entity_id
+		SELECT employer_establishment_id
 		FROM livelihood_contracts
-		WHERE resident_id IN (%s) AND valid_to IS NULL AND employer_entity_id LIKE 'ESTAB_%%';
+		WHERE resident_id IN (%s) AND valid_to IS NULL AND employer_establishment_id IS NOT NULL;
 	""" % in_clause)
 	for row in crew_work_rows:
-		var emp_str: String = str(row.get("employer_entity_id", ""))
-		if emp_str.begins_with("ESTAB_"):
-			var work_est_id: int = int(emp_str.trim_prefix("ESTAB_"))
-			if work_est_id > 0:
-				scouted_establishments[work_est_id] = true
+		var work_est_id: int = int(row.get("employer_establishment_id", 0))
+		if work_est_id > 0:
+			own_establishments[work_est_id] = true
 
 	# 3. Strict 1st-degree social_relationships from crew members (blocks 2nd-degree family acquaintances)
 	var direct_edges: Array = DBManager.query_rows("""
@@ -276,14 +299,14 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 	return {
 		"known_residents": known_residents,
 		"known_households": known_households,
-		"scouted_establishments": scouted_establishments
+		"own_establishments": own_establishments
 	}
 
-## Returns 1st-degree known contacts (kin, co-residents, introduced acquaintances) for the crew, excluding 2nd-degree contacts
-static func get_known_contacts_for_crew(crew_resident_ids: Array, known_resident_ids: Array = [], current_sim_day: int = 29219) -> Array[Dictionary]:
+## Returns 1st-degree known contacts (kin, co-residents, and knowledge_pool acquaintances) for the crew, excluding 2nd-degree leaks
+static func get_known_contacts_for_crew(player_context: Dictionary, current_sim_day: int = 29219) -> Array[Dictionary]:
 	var crew_set: Dictionary = {}
 	var id_strings: Array[String] = []
-	for raw_id in crew_resident_ids:
+	for raw_id in player_context.get("crew_resident_ids", []):
 		var c_id: int = int(raw_id)
 		if c_id > 0 and not crew_set.has(c_id):
 			crew_set[c_id] = true
@@ -319,11 +342,28 @@ static func get_known_contacts_for_crew(crew_resident_ids: Array, known_resident
 		if not crew_set.has(t_id) and not candidate_ids.has(t_id):
 			candidate_ids[t_id] = str(row.get("rel_code", "CONTACT"))
 
-	# C. Explicitly introduced / investigated contacts
-	for raw_k in known_resident_ids:
-		var k_id: int = int(raw_k)
-		if k_id > 0 and not crew_set.has(k_id) and not candidate_ids.has(k_id):
-			candidate_ids[k_id] = "INTRODUCED"
+	# C. Continuous 0-100 knowledge_pools contacts meeting RESIDENT discovery threshold
+	var ws_ref = player_context.get("world_state", null)
+	var observers_ref = player_context.get("observers", null)
+	if ws_ref is Dictionary and observers_ref is Array:
+		var res_pools: Dictionary = ws_ref.get("knowledge_pools", {}).get("RESIDENT", {})
+		var seen_subjects: Dictionary = {}
+		for obs in observers_ref:
+			var obs_id: String = str(obs.get("observer_id", ""))
+			var dossier = res_pools.get(obs_id, null)
+			if not (dossier is Dictionary):
+				continue
+			for target_key in dossier.keys():
+				var tk_str := str(target_key)
+				if tk_str.begins_with("RESIDENT:"):
+					var subj_id_str := tk_str.trim_prefix("RESIDENT:")
+					if subj_id_str.is_valid_int() and not seen_subjects.has(subj_id_str):
+						seen_subjects[subj_id_str] = true
+						var k_id: int = int(subj_id_str)
+						if k_id > 0 and not crew_set.has(k_id) and not candidate_ids.has(k_id):
+							var score: float = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "RESIDENT", subj_id_str)
+							if IntelManagerScript.is_entity_known(score, "RESIDENT"):
+								candidate_ids[k_id] = "INTRODUCED"
 
 	if candidate_ids.is_empty():
 		return []
@@ -402,7 +442,7 @@ static func get_establishment_headcount(estab_id: int) -> int:
 		SELECT COUNT(*) AS staff_count
 		FROM livelihood_contracts c
 		JOIN residents r ON c.resident_id = r.resident_id
-		WHERE c.employer_entity_id = 'ESTAB_%d'
+		WHERE c.employer_establishment_id = %d
 		  AND c.valid_to IS NULL
 		  AND r.dod IS NULL;
 	""" % estab_id)
@@ -415,7 +455,6 @@ static func get_establishment_headcount(estab_id: int) -> int:
 static func find_kinship_crew_candidates(district_id: String, min_age: int = 18, max_age: int = 26, current_sim_day: int = 29219) -> Array:
 	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
 	
-	# Calculate DOB day bounds from epoch
 	var dob_max: int = current_sim_day - int(round(float(min_age) * 365.25))
 	var dob_min: int = current_sim_day - int(round(float(max_age + 1) * 365.25))
 
@@ -455,7 +494,8 @@ static func get_resident_profile(resident_id: int, current_sim_day: int = 29219)
 			r.gender_id,
 			c.role_title_id,
 			c.contract_class_id,
-			c.employer_entity_id
+			c.employer_org_id,
+			c.employer_establishment_id
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
 		JOIN establishments e ON h.establishment_id = e.establishment_id
@@ -479,7 +519,12 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 
 	for b in bindings:
 		var r_id: int = int(b.get("resident_id", 0))
-		var employer_id: String = str(b.get("employer_entity_id", "CREW_ENTERPRISE"))
+		var employer_org_id: String = str(b.get("employer_org_id", "ORG:CREW_ENTERPRISE"))
+		if not employer_org_id.is_empty() and not employer_org_id.begins_with("ORG:"):
+			employer_org_id = "ORG:%s" % employer_org_id
+		var employer_org_sql: String = "'%s'" % employer_org_id.replace("'", "''") if not employer_org_id.is_empty() else "NULL"
+		var raw_estab = b.get("employer_establishment_id", null)
+		var employer_estab_sql: String = str(int(raw_estab)) if (raw_estab != null and int(raw_estab) > 0) else "NULL"
 		var class_id: int = int(b.get("contract_class_id", 1))
 		var role_id: int = int(b.get("role_title_id", 1))
 		var sched_id: int = int(b.get("schedule_window_id", 1))
@@ -488,18 +533,16 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 		var start_day: int = int(b.get("start_day", 29219))
 		var c_type_id: int = int(b.get("contract_type_id", type_secondary_id))
 
-		# 1. Insert secondary enterprise contract
 		statements.append("""
 			INSERT INTO livelihood_contracts (
-				resident_id, employer_entity_id, contract_class_id, contract_type_id,
+				resident_id, employer_org_id, employer_establishment_id, contract_class_id, contract_type_id,
 				role_title_id, schedule_window_id, weekly_hours, 
 				compensation_rate, valid_from
 			) VALUES (
-				%d, '%s', %d, %d, %d, %d, %.2f, %.2f, %d
+				%d, %s, %s, %d, %d, %d, %d, %.2f, %.2f, %d
 			);
-		""" % [r_id, employer_id, class_id, c_type_id, role_id, sched_id, hours, rate, start_day])
+		""" % [r_id, employer_org_sql, employer_estab_sql, class_id, c_type_id, role_id, sched_id, hours, rate, start_day])
 
-		# 2. Mark citizen as active player-controlled/observed agent
 		statements.append("UPDATE residents SET is_active_agent = 1 WHERE resident_id = %d;" % r_id)
 
 	return DBManager.execute_batch(statements)
@@ -542,10 +585,203 @@ static func get_district_establishments(district_id: String) -> Array:
 			e.capacity,
 			(SELECT COUNT(*) 
 			 FROM livelihood_contracts c 
-			 WHERE c.employer_entity_id = 'ESTAB_' || e.establishment_id 
+			 WHERE c.employer_establishment_id = e.establishment_id 
 			   AND c.valid_to IS NULL) AS worker_count
 		FROM establishments e
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
 		WHERE e.district_id = '%s'
 		ORDER BY e.category_id ASC, e.establishment_id ASC;
 	""" % district_id)
+
+# ==============================================================================
+# CONSOLIDATED READ-ONLY CITY AUDIT QUERIES (Merged from city_auditor_queries.sql)
+# ==============================================================================
+
+static func get_audit_entity_counts(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT 'boroughs' AS entity, COUNT(*) AS count FROM boroughs
+		UNION ALL SELECT 'districts', COUNT(*) FROM districts
+		UNION ALL SELECT 'establishments', COUNT(*) FROM establishments
+		UNION ALL SELECT 'households', COUNT(*) FROM households
+		UNION ALL SELECT 'residents', COUNT(*) FROM residents
+		UNION ALL SELECT 'workplace_job_slots', COUNT(*) FROM workplace_job_slots
+		UNION ALL SELECT 'contracts', COUNT(*) FROM livelihood_contracts
+		UNION ALL SELECT 'relationships', COUNT(*) FROM social_relationships;
+	""")
+
+static func get_audit_district_distribution(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			district_id,
+			district_name,
+			total_households,
+			active_population AS active_population,
+			formally_employed_count,
+			street_informal_count,
+			incarcerated_count
+		FROM v_district_census
+		ORDER BY active_population DESC, district_id ASC;
+	""")
+
+static func get_audit_borough_distribution(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			borough_id,
+			borough_name,
+			total_districts,
+			total_households,
+			active_population AS active_population,
+			formally_employed_count,
+			street_informal_count,
+			incarcerated_count
+		FROM v_borough_census
+		ORDER BY active_population DESC, borough_id ASC;
+	""")
+
+static func get_audit_establishment_categories(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			l.code AS category,
+			COUNT(*) AS establishment_count,
+			SUM(e.capacity) AS total_capacity,
+			SUM(CASE WHEN e.is_vacant = 1 THEN 1 ELSE 0 END) AS vacant_count
+		FROM establishments e
+		JOIN system_labels l ON e.category_id = l.label_id
+		GROUP BY l.code
+		ORDER BY establishment_count DESC, category ASC;
+	""")
+
+static func get_audit_employment_classes(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			l.code AS contract_class,
+			COUNT(*) AS contract_count,
+			ROUND(AVG(c.weekly_hours), 2) AS average_weekly_hours,
+			ROUND(AVG(c.compensation_rate), 2) AS average_compensation_rate
+		FROM livelihood_contracts c
+		JOIN system_labels l ON c.contract_class_id = l.label_id
+		WHERE c.valid_to IS NULL
+		GROUP BY l.code
+		ORDER BY contract_count DESC, contract_class ASC;
+	""")
+
+static func get_audit_social_degree(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			degree_bucket,
+			COUNT(*) AS resident_count
+		FROM (
+			SELECT
+				r.resident_id,
+				CASE
+					WHEN COUNT(sr.relationship_id) = 0 THEN '0'
+					WHEN COUNT(sr.relationship_id) BETWEEN 1 AND 2 THEN '1-2'
+					WHEN COUNT(sr.relationship_id) BETWEEN 3 AND 5 THEN '3-5'
+					WHEN COUNT(sr.relationship_id) BETWEEN 6 AND 10 THEN '6-10'
+					ELSE '11+'
+				END AS degree_bucket
+			FROM residents r
+			LEFT JOIN social_relationships sr
+				ON sr.from_resident_id = r.resident_id
+				OR sr.to_resident_id = r.resident_id
+			WHERE r.dod IS NULL
+			GROUP BY r.resident_id
+		)
+		GROUP BY degree_bucket
+		ORDER BY CASE degree_bucket
+			WHEN '0' THEN 0
+			WHEN '1-2' THEN 1
+			WHEN '3-5' THEN 2
+			WHEN '6-10' THEN 3
+			ELSE 4
+		END;
+	""")
+
+static func get_audit_integrity_checks(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			'orphan_establishments' AS check_name,
+			COUNT(*) AS failures
+		FROM establishments e
+		LEFT JOIN districts d ON d.district_id = e.district_id
+		WHERE d.district_id IS NULL
+		UNION ALL
+		SELECT
+			'orphan_households',
+			COUNT(*)
+		FROM households h
+		LEFT JOIN establishments e ON e.establishment_id = h.establishment_id
+		WHERE e.establishment_id IS NULL
+		UNION ALL
+		SELECT
+			'orphan_residents',
+			COUNT(*)
+		FROM residents r
+		LEFT JOIN households h ON h.household_id = r.household_id
+		WHERE h.household_id IS NULL
+		UNION ALL
+		SELECT
+			'orphan_relationships',
+			COUNT(*)
+		FROM social_relationships sr
+		LEFT JOIN residents rf ON rf.resident_id = sr.from_resident_id
+		LEFT JOIN residents rt ON rt.resident_id = sr.to_resident_id
+		WHERE rf.resident_id IS NULL OR rt.resident_id IS NULL
+		UNION ALL
+		SELECT
+			'orphan_contracts',
+			COUNT(*)
+		FROM livelihood_contracts c
+		LEFT JOIN residents r ON r.resident_id = c.resident_id
+		WHERE r.resident_id IS NULL;
+	""")
+
+static func get_audit_district_capacity(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT
+			d.district_id,
+			d.display_name AS district_name,
+			COUNT(DISTINCT CASE WHEN r.dod IS NULL THEN r.resident_id END) AS active_population,
+			COALESCE(SUM(
+				CASE
+					WHEN l.code IN ('RESIDENTIAL_UNIT', 'RESIDENTIAL') THEN e.capacity
+					ELSE 0
+				END
+			), 0) AS residential_capacity
+		FROM districts d
+		LEFT JOIN establishments e ON e.district_id = d.district_id
+		LEFT JOIN system_labels l ON l.label_id = e.category_id
+		LEFT JOIN households h ON h.establishment_id = e.establishment_id
+		LEFT JOIN residents r ON r.household_id = h.household_id
+		GROUP BY d.district_id, d.display_name
+		ORDER BY d.district_id ASC;
+	""")
+
+static func get_audit_labor_vacancies(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT 
+			role.code AS role_title,
+			edu.code AS required_education,
+			COUNT(w.slot_id) AS budgeted_slots,
+			SUM(CASE WHEN w.is_filled = 1 THEN 1 ELSE 0 END) AS filled_slots,
+			SUM(CASE WHEN w.is_filled = 0 THEN 1 ELSE 0 END) AS vacant_slots,
+			ROUND(AVG(w.hourly_rate), 2) AS avg_hourly_wage
+		FROM workplace_job_slots w
+		JOIN system_labels role ON w.role_title_id = role.label_id
+		JOIN system_labels edu ON w.min_education_level_id = edu.label_id
+		GROUP BY role.code, edu.code
+		ORDER BY vacant_slots DESC, budgeted_slots DESC;
+	""")
+
+static func get_audit_labor_by_sector(db = DBManager) -> Array:
+	return db.query_rows("""
+		SELECT 
+			sec.code AS sector,
+			COUNT(w.slot_id) AS budgeted_slots,
+			SUM(CASE WHEN w.is_filled = 1 THEN 1 ELSE 0 END) AS filled_slots,
+			SUM(CASE WHEN w.is_filled = 0 THEN 1 ELSE 0 END) AS vacant_slots
+		FROM workplace_job_slots w
+		JOIN system_labels sec ON w.sector_category_id = sec.label_id
+		GROUP BY sec.code
+		ORDER BY budgeted_slots DESC;
+	""")

@@ -7,7 +7,7 @@ const SCENARIO_MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manag
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 
 ## Scouts related young adults in the home district using the configured strategy pipeline,
-## binds secondary grey-economy contracts in SQLite, and stamps operative profiles into world_state["staff"].
+## binds secondary grey-economy contracts in SQLite, and stamps operative profiles into world_state["residents"].
 static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_id: String) -> bool:
 	assert(not home_district_id.is_empty(), "FATAL: [CrewScoutBootstrapper] home_district_id cannot be empty.")
 	assert(SCENARIO_MANIFEST_MANAGER.has_module("startpoint"), "FATAL: [CrewScoutBootstrapper] Missing 'startpoint' module.")
@@ -15,7 +15,7 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 	# 1. Resolve simulation temporal day offset (default to 1980-01-01 start day 29219)
 	var current_sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 29219))
 
-	# 2. Ingest generation criteria and staff templates from startpoint config
+	# 2. Ingest generation criteria and operative templates from startpoint config
 	var startpoint: Dictionary = SCENARIO_MANIFEST_MANAGER.load_module("startpoint")
 	var criteria: Dictionary = startpoint.get("crew_generation_criteria", {})
 	var starting_staff_configs: Dictionary = startpoint.get("starting_staff", {})
@@ -61,14 +61,23 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		push_error("[CrewScoutBootstrapper] Strategy pipeline failed to assemble required cohort of %d operatives." % target_count)
 		return false
 
-	# 6. Resolve DB Label IDs dynamically from the secondary contract profile
+	# 6. Resolve DB Label IDs dynamically from the secondary contract profile & seed Crew Organization
 	var sec_contract_def: Dictionary = criteria.get("secondary_contract", {})
 	var class_code: String = str(sec_contract_def.get("contract_class_code", "INFORMAL_GREY"))
 	var sched_code: String = str(sec_contract_def.get("schedule_window_code", "EVENING"))
 	var sched_fallback: String = str(sec_contract_def.get("fallback_schedule_window_code", "FLEXIBLE"))
-	var employer_id: String = str(sec_contract_def.get("employer_entity_id", "CREW_ENTERPRISE"))
+	var employer_org_id: String = str(sec_contract_def.get("employer_org_id", "ORG:CREW_ENTERPRISE"))
+	if not employer_org_id.begins_with("ORG:"):
+		employer_org_id = "ORG:%s" % employer_org_id
 	var weekly_hours: float = float(sec_contract_def.get("weekly_hours", 20.0))
 	var comp_rate: float = float(sec_contract_def.get("compensation_rate", 0.0))
+
+	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+	DB_MANAGER.execute_batch([
+		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('%s', 'Crew Enterprise', 'GANG', 'INFORMAL_GREY', 'STANDARD', %d, NULL, %d);" % [
+			employer_org_id.replace("'", "''"), current_sim_day, reason_world_gen_id
+		]
+	])
 
 	var contract_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", class_code)
 	var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", sched_code)
@@ -90,7 +99,8 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 			"role_title_id": role_title_id,
 			"contract_class_id": contract_class_id,
 			"schedule_window_id": schedule_id,
-			"employer_entity_id": employer_id,
+			"employer_org_id": employer_org_id,
+			"employer_establishment_id": null,
 			"weekly_hours": weekly_hours,
 			"compensation_rate": comp_rate,
 			"start_day": current_sim_day
@@ -102,9 +112,7 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		push_error("[CrewScoutBootstrapper] Failed to execute database contract binding batch.")
 		return false
 
-	# 9. Hydrate world_state["staff"] and world_state["residents"] directly from database profile and slot config
-	if not world_state.has("staff"):
-		world_state["staff"] = {}
+	# 9. Hydrate canonical world_state["residents"] directly from database profile and slot config
 	if not world_state.has("residents"):
 		world_state["residents"] = {}
 
@@ -127,24 +135,39 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		# Guarantee reciprocal FAMILY edges exist in social_relationships for all co-residents of this household
 		SOCIETY_QUERIES.ensure_household_kinship_edges(hh_id, current_sim_day)
 
-		var staff_entry: Dictionary = slot_cfg.duplicate(true)
-		staff_entry["id"] = slot_id
-		staff_entry["resident_id"] = r_id
-		staff_entry["name"] = profile.get("full_name", "")
-		staff_entry["age"] = profile.get("age", 0)
-		staff_entry["gender_id"] = profile.get("gender_id", 0)
-		staff_entry["household_id"] = hh_id
-		staff_entry["establishment_id"] = home_estab_id
-		staff_entry["home_establishment_id"] = home_estab_id
-		staff_entry["current_district_id"] = home_district_id
-		staff_entry["primary_employer_id"] = profile.get("employer_entity_id", "")
-		staff_entry["primary_role_id"] = profile.get("role_title_id", 0)
-		staff_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
+		var resident_entry: Dictionary = slot_cfg.duplicate(true)
+		var starting_pocket_cash: float = float(resident_entry.get("pocket_cash", 0.0))
+		resident_entry.erase("pocket_cash")
 
-		world_state["staff"][slot_id] = staff_entry
-		world_state["residents"][slot_id] = staff_entry
+		var res_inv: Dictionary = resident_entry.get("inventory", {})
+		res_inv["CASH"] = float(res_inv.get("CASH", 0.0)) + starting_pocket_cash
+		resident_entry["inventory"] = res_inv
 
-	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment
+		resident_entry["id"] = slot_id
+		resident_entry["resident_id"] = r_id
+		resident_entry["name"] = profile.get("full_name", "")
+		resident_entry["age"] = profile.get("age", 0)
+		resident_entry["gender_id"] = profile.get("gender_id", 0)
+		resident_entry["household_id"] = hh_id
+		resident_entry["establishment_id"] = home_estab_id
+		resident_entry["home_establishment_id"] = home_estab_id
+		resident_entry["current_district_id"] = home_district_id
+		resident_entry["primary_employer_org_id"] = profile.get("employer_org_id", "")
+		resident_entry["primary_employer_establishment_id"] = int(profile.get("employer_establishment_id", 0))
+		resident_entry["primary_role_id"] = profile.get("role_title_id", 0)
+		resident_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
+
+		world_state["residents"][slot_id] = resident_entry
+
+	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
+	if leader_home_estab_id > 0:
+		DB_MANAGER.execute_batch([
+			"UPDATE organizations SET hq_establishment_id = %d WHERE org_id = '%s';" % [
+				leader_home_estab_id,
+				employer_org_id.replace("'", "''")
+			]
+		])
+
 	var starting_inv: Dictionary = startpoint.get("starting_inventory", {})
 	if not starting_inv.is_empty() and leader_home_estab_id > 0:
 		if not world_state.has("establishments"):

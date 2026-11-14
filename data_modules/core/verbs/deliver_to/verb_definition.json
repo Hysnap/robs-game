@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "verb_token": "DELIVER_TO",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Outbound spatial logistics mission: travel to destination district if needed and deliver cash or commodities to recipient"
+  },
+  "parameters": {
+    "recipient_id": { "type": "STRING", "required": true },
+    "item_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "default": 1.0 },
+    "target_node_id": { "type": "STRING", "required": true }
+  },
+  "steps": [
+    {
+      "step_id": "gate_sender_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "transit"
+    },
+    {
+      "step_id": "transit",
+      "primitive": "MOVE_ACTOR",
+      "params": {
+        "actor": "ORDER_ACTOR",
+        "destination": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "transfer_goods"
+    },
+    {
+      "step_id": "transfer_goods",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "to": "PARAM.recipient_id",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

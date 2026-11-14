@@ -5,6 +5,7 @@
 	"region": "West Midlands, UK",
 	"description": "Master society manifest linking all demographic, cultural, civic, housing, and lexical modules."
   },
+  "jurisdiction": "UK_ENG_WALES",
   "inbox_rules": {
 	"presentation_order": "ISSUED_ORDER",
 	"max_visible_stack": 4,
@@ -18,10 +19,10 @@
 	"default_shell": "filofax",
 	"available_shells": [
 	  {
-        "shell_id": "pocketbooks",
-        "earliest_year": 1970,
-        "view_variant": "core/pocketbooks"
-      },
+		"shell_id": "pocketbooks",
+		"earliest_year": 1970,
+		"view_variant": "core/pocketbooks"
+	  },
 	  {
 		"shell_id": "filofax",
 		"earliest_year": 1980,

@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "scope": "CALENDAR_HOLIDAY_RULES",
+    "description": "Locale-independent, era-windowed public holidays, banking non-working days, movable feasts, equinoxes, and sandwich rules by world jurisdiction."
+  },
+  "jurisdictions": {
+    "UK_ENG_WALES": {
+      "non_working_days_of_week": [7],
+      "banking_non_working_days_of_week": [6, 7],
+      "rules": [
+        { "id": "NEW_YEARS_DAY", "type": "FIXED", "month": 1, "day": 1, "observed": "NEXT_MONDAY", "valid_from_year": 1974 },
+        { "id": "GOOD_FRIDAY", "type": "EASTER_OFFSET", "offset_days": -2, "valid_from_year": 1752 },
+        { "id": "EASTER_MONDAY", "type": "EASTER_OFFSET", "offset_days": 1, "valid_from_year": 1871 },
+        { "id": "MAY_DAY", "type": "NTH_WEEKDAY", "month": 5, "weekday": 1, "nth": 1, "valid_from_year": 1978 },
+        { "id": "WHIT_MONDAY", "type": "EASTER_OFFSET", "offset_days": 50, "valid_from_year": 1871, "valid_to_year": 1970 },
+        { "id": "SPRING_BANK", "type": "LAST_WEEKDAY", "month": 5, "weekday": 1, "valid_from_year": 1971 },
+        { "id": "SUMMER_BANK", "type": "LAST_WEEKDAY", "month": 8, "weekday": 1, "valid_from_year": 1971 },
+        { "id": "CHRISTMAS_DAY", "type": "FIXED", "month": 12, "day": 25, "observed": "NEXT_WEEKDAY", "valid_from_year": 1752 },
+        { "id": "BOXING_DAY", "type": "FIXED", "month": 12, "day": 26, "observed": "NEXT_WEEKDAY", "valid_from_year": 1871 }
+      ],
+      "one_off_dates": [
+        { "id": "SILVER_JUBILEE", "year": 1977, "month": 6, "day": 7 },
+        { "id": "ROYAL_WEDDING_1981", "year": 1981, "month": 7, "day": 29 },
+        { "id": "GOLDEN_JUBILEE", "year": 2002, "month": 6, "day": 3 },
+        { "id": "ROYAL_WEDDING_2011", "year": 2011, "month": 4, "day": 29 },
+        { "id": "DIAMOND_JUBILEE", "year": 2012, "month": 6, "day": 5 },
+        { "id": "PLATINUM_JUBILEE", "year": 2022, "month": 6, "day": 3 },
+        { "id": "CORONATION_2023", "year": 2023, "month": 5, "day": 8 }
+      ]
+    },
+    "US_FEDERAL": {
+      "non_working_days_of_week": [7],
+      "banking_non_working_days_of_week": [6, 7],
+      "rules": [
+        { "id": "NEW_YEARS_DAY", "type": "FIXED", "month": 1, "day": 1, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1870 },
+        { "id": "MLK_DAY", "type": "NTH_WEEKDAY", "month": 1, "weekday": 1, "nth": 3, "valid_from_year": 1986 },
+        { "id": "WASHINGTON_BIRTHDAY", "type": "FIXED", "month": 2, "day": 22, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1879, "valid_to_year": 1970 },
+        { "id": "PRESIDENTS_DAY", "type": "NTH_WEEKDAY", "month": 2, "weekday": 1, "nth": 3, "valid_from_year": 1971 },
+        { "id": "MEMORIAL_DAY", "type": "FIXED", "month": 5, "day": 30, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1888, "valid_to_year": 1970 },
+        { "id": "MEMORIAL_DAY_MODERN", "type": "LAST_WEEKDAY", "month": 5, "weekday": 1, "valid_from_year": 1971 },
+        { "id": "JUNETEENTH", "type": "FIXED", "month": 6, "day": 19, "observed": "NEAREST_WEEKDAY", "valid_from_year": 2021 },
+        { "id": "INDEPENDENCE_DAY", "type": "FIXED", "month": 7, "day": 4, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1870 },
+        { "id": "LABOR_DAY", "type": "NTH_WEEKDAY", "month": 9, "weekday": 1, "nth": 1, "valid_from_year": 1894 },
+        { "id": "VETERANS_DAY", "type": "FIXED", "month": 11, "day": 11, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1938 },
+        { "id": "THANKSGIVING", "type": "NTH_WEEKDAY", "month": 11, "weekday": 4, "nth": 4, "valid_from_year": 1863 },
+        { "id": "CHRISTMAS_DAY", "type": "FIXED", "month": 12, "day": 25, "observed": "NEAREST_WEEKDAY", "valid_from_year": 1870 }
+      ],
+      "one_off_dates": []
+    },
+    "FR_METRO": {
+      "non_working_days_of_week": [7],
+      "banking_non_working_days_of_week": [6, 7],
+      "rules": [
+        { "id": "JOUR_DE_LAN", "type": "FIXED", "month": 1, "day": 1, "observed": "NONE", "valid_from_year": 1810 },
+        { "id": "LUNDI_DE_PAQUES", "type": "EASTER_OFFSET", "offset_days": 1, "valid_from_year": 1886 },
+        { "id": "FETE_DU_TRAVAIL", "type": "FIXED", "month": 5, "day": 1, "observed": "NONE", "valid_from_year": 1947 },
+        { "id": "VICTOIRE_1945", "type": "FIXED", "month": 5, "day": 8, "observed": "NONE", "valid_from_year": 1953, "valid_to_year": 1959 },
+        { "id": "VICTOIRE_1945_MODERN", "type": "FIXED", "month": 5, "day": 8, "observed": "NONE", "valid_from_year": 1981 },
+        { "id": "ASCENSION", "type": "EASTER_OFFSET", "offset_days": 39, "valid_from_year": 1802 },
+        { "id": "LUNDI_DE_PENTECOTE", "type": "EASTER_OFFSET", "offset_days": 50, "valid_from_year": 1886 },
+        { "id": "FETE_NATIONALE", "type": "FIXED", "month": 7, "day": 14, "observed": "NONE", "valid_from_year": 1880 },
+        { "id": "ASSOMPTION", "type": "FIXED", "month": 8, "day": 15, "observed": "NONE", "valid_from_year": 1802 },
+        { "id": "TOUSSAINT", "type": "FIXED", "month": 11, "day": 1, "observed": "NONE", "valid_from_year": 1802 },
+        { "id": "ARMISTICE_1918", "type": "FIXED", "month": 11, "day": 11, "observed": "NONE", "valid_from_year": 1922 },
+        { "id": "NOEL", "type": "FIXED", "month": 12, "day": 25, "observed": "NONE", "valid_from_year": 1802 }
+      ],
+      "one_off_dates": []
+    },
+    "JP_NATIONAL": {
+      "non_working_days_of_week": [7],
+      "banking_non_working_days_of_week": [6, 7],
+      "enable_sandwich_holidays": true,
+      "sandwich_valid_from_year": 1985,
+      "rules": [
+        { "id": "GANJITSU", "type": "FIXED", "month": 1, "day": 1, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 },
+        { "id": "SEIJIN_NO_HI_FIXED", "type": "FIXED", "month": 1, "day": 15, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948, "valid_to_year": 1999 },
+        { "id": "SEIJIN_NO_HI_HAPPY_MON", "type": "NTH_WEEKDAY", "month": 1, "weekday": 1, "nth": 2, "valid_from_year": 2000 },
+        { "id": "KENKOKU_KINEN", "type": "FIXED", "month": 2, "day": 11, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1967 },
+        { "id": "TENNO_TANJOBI_SHOWA", "type": "FIXED", "month": 4, "day": 29, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948, "valid_to_year": 1988 },
+        { "id": "MIDORI_NO_HI_SHOWA_DAY", "type": "FIXED", "month": 4, "day": 29, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1989 },
+        { "id": "KENPO_KINENBI", "type": "FIXED", "month": 5, "day": 3, "observed": "NEXT_WEEKDAY_IF_SUNDAY", "observed_from_year": 2007, "valid_from_year": 1948 },
+        { "id": "MIDORI_NO_HI_MAY", "type": "FIXED", "month": 5, "day": 4, "observed": "NEXT_WEEKDAY_IF_SUNDAY", "observed_from_year": 2007, "valid_from_year": 2007 },
+        { "id": "KODOMO_NO_HI", "type": "FIXED", "month": 5, "day": 5, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 },
+        { "id": "UMI_NO_HI_FIXED", "type": "FIXED", "month": 7, "day": 20, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1996, "valid_to_year": 2002 },
+        { "id": "UMI_NO_HI_HAPPY_MON", "type": "NTH_WEEKDAY", "month": 7, "weekday": 1, "nth": 3, "valid_from_year": 2003 },
+        { "id": "YAMA_NO_HI", "type": "FIXED", "month": 8, "day": 11, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 2016 },
+        { "id": "KEIRO_NO_HI_FIXED", "type": "FIXED", "month": 9, "day": 15, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1966, "valid_to_year": 2002 },
+        { "id": "KEIRO_NO_HI_HAPPY_MON", "type": "NTH_WEEKDAY", "month": 9, "weekday": 1, "nth": 3, "valid_from_year": 2003 },
+        { "id": "TAIIKU_NO_HI_FIXED", "type": "FIXED", "month": 10, "day": 10, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1966, "valid_to_year": 1999 },
+        { "id": "SPORTS_NO_HI_HAPPY_MON", "type": "NTH_WEEKDAY", "month": 10, "weekday": 1, "nth": 2, "valid_from_year": 2000 },
+        { "id": "BUNKA_NO_HI", "type": "FIXED", "month": 11, "day": 3, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 },
+        { "id": "KINRO_KANSHA_NO_HI", "type": "FIXED", "month": 11, "day": 23, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 },
+        { "id": "TENNO_TANJOBI_HEISEI", "type": "FIXED", "month": 12, "day": 23, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1989, "valid_to_year": 2018 },
+        { "id": "TENNO_TANJOBI_REIWA", "type": "FIXED", "month": 2, "day": 23, "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 2020 },
+        { "id": "SHUNBUN_NO_HI", "type": "EQUINOX", "equinox_type": "VERNAL", "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 },
+        { "id": "SHUBUN_NO_HI", "type": "EQUINOX", "equinox_type": "AUTUMNAL", "observed": "NEXT_MONDAY_IF_SUNDAY", "observed_from_year": 1973, "valid_from_year": 1948 }
+      ],
+      "banking_fixed_closures": [
+        { "id": "BANK_YEAR_END_1", "month": 12, "day": 31, "valid_from_year": 1948 },
+        { "id": "BANK_NEW_YEAR_2", "month": 1, "day": 2, "valid_from_year": 1948 },
+        { "id": "BANK_NEW_YEAR_3", "month": 1, "day": 3, "valid_from_year": 1948 }
+      ],
+      "one_off_dates": []
+    }
+  }
+}

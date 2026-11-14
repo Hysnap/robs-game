@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "verb_token": "COLLECT_OBLIGATION",
+    "version": 2,
+    "description": "Form layout, target scopes, and field mapping configuration for COLLECT_OBLIGATION directives."
+  },
+  "allowed_scopes": [
+    "DISTRICT",
+    "ESTABLISHMENT"
+  ],
+  "target_categories": [],
+  "form_layout": {
+    "target_section": {
+      "visible": false,
+      "required": false,
+      "label_token": null,
+      "mapped_field": null
+    },
+    "amount_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_AMOUNT",
+      "default_value": 10.0,
+      "min_value": 0.01,
+      "max_value": 10000.0,
+      "step": 1.0,
+      "mapped_field": "amount"
+    },
+    "location_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_LOCATION",
+      "mapped_field": "target_node_id"
+    },
+    "contact_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_DEBTOR",
+      "mapped_field": "counterparty_id"
+    }
+  }
+}

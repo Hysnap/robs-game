@@ -45,11 +45,14 @@ static func create_test_world(grid_w: int = 2, grid_h: int = 2, seed_id: String 
 			"current_week_tick": 1,
 			"calendar_year": 1980
 		},
-		"player_knowledge": {
+		"operations": {
 			"home_district_id": chosen_district
 		},
+		"knowledge_pools": {},
 		"districts": mock_world["districts"],
-		"staff": {}
+		"residents": {},
+		"establishments": {},
+		"caches": {}
 	}
 
 ## Finds a district with verified candidate young adults or dense households

@@ -12,7 +12,7 @@ func _init() -> void:
 
 	# 1. Initialize schema and generate standardized test society via factory
 	var world_state: Dictionary = TEST_SOCIETY_FACTORY.create_test_world(2, 2, "bootstrapper-test-seed")
-	var home_district: String = str(world_state.get("player_knowledge", {}).get("home_district_id", ""))
+	var home_district: String = str(world_state.get("operations", {}).get("home_district_id", world_state.get("player_knowledge", {}).get("home_district_id", "")))
 	assert(not home_district.is_empty(), "FAIL: TestSocietyFactory produced empty home_district_id.")
 
 	print("  ✓ Test society generated. Scouting candidates in: %s" % home_district)
@@ -22,22 +22,24 @@ func _init() -> void:
 	assert(success, "FAIL: CrewScoutBootstrapper failed to scout and bind crew.")
 	print("✅ Bootstrapper returned success.")
 
-	# 3. Assert staff entries in world_state
-	var staff: Dictionary = world_state.get("staff", {})
-	assert(staff.has("crew_0") and staff.has("crew_1") and staff.has("crew_2"), "FAIL: Missing crew slots in staff.")
+	# 3. Assert canonical resident entries in world_state
+	var residents: Dictionary = world_state.get("residents", {})
+	assert(residents.has("crew_0") and residents.has("crew_1") and residents.has("crew_2"), "FAIL: Missing crew slots in canonical residents registry.")
+	assert(not world_state.has("staff"), "FAIL: Legacy 'staff' pool must not exist in canonical world_state.")
 
 	for slot in ["crew_0", "crew_1", "crew_2"]:
-		var member: Dictionary = staff[slot]
+		var member: Dictionary = residents[slot]
 		assert(int(member.get("resident_id", 0)) > 0, "FAIL: %s missing valid resident_id." % slot)
 		assert(not str(member.get("name", "")).is_empty(), "FAIL: %s missing procedural name." % slot)
 		assert(int(member.get("household_id", 0)) > 0, "FAIL: %s missing household_id." % slot)
-		print("   • Slot %s: %s (Resident #%d, Age %d, Pocket: £%.2f)" % [
-			slot, member["name"], member["resident_id"], member["age"], member.get("pocket_cash", 0.0)
+		var cash_balance: float = float(member.get("inventory", {}).get("CASH", 0.0))
+		print("   • Slot %s: %s (Resident #%d, Age %d, Cash: £%.2f)" % [
+			slot, member["name"], member["resident_id"], member["age"], cash_balance
 		])
 
 	# 4. Verify SQLite secondary contracts and is_active_agent
 	for slot in ["crew_0", "crew_1", "crew_2"]:
-		var r_id: int = int(staff[slot]["resident_id"])
+		var r_id: int = int(residents[slot]["resident_id"])
 		
 		# Check active agent flag
 		var r_rows: Array = DB_MANAGER.query_rows("SELECT is_active_agent FROM residents WHERE resident_id = %d;" % r_id)

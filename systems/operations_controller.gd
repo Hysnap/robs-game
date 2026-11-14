@@ -54,30 +54,33 @@ static func _format_residential_docket_payload(raw_docket: Dictionary) -> Dictio
 	view_data["residents_summary"] = residents_summary
 	return view_data
 
-## Builds the player's 1st-degree intel and crew context for SocietyQueries Fog-of-War filtering
+## Builds the player's canonical 1st-degree intel and observer context from residents & continuous knowledge_pools
 static func _build_player_intel_context(ws: Dictionary) -> Dictionary:
 	var crew_ids: Array[int] = []
+	var observers: Array = []
 	var residents_dict: Dictionary = ws.get("residents", {})
+
 	for key in residents_dict.keys():
 		var rec = residents_dict[key]
 		if rec is Dictionary and bool(rec.get("is_crew", true)):
 			var r_id: int = int(rec.get("resident_id", 0))
 			if r_id > 0 and not crew_ids.has(r_id):
 				crew_ids.append(r_id)
+				observers.append({
+					"observer_scope": "RESIDENT",
+					"observer_id": str(r_id)
+				})
+			var slot_str := str(key)
+			if not slot_str.is_empty() and slot_str != str(r_id):
+				observers.append({
+					"observer_scope": "RESIDENT",
+					"observer_id": slot_str
+				})
 
-	var staff_dict: Dictionary = ws.get("staff", {})
-	for key in staff_dict.keys():
-		var member = staff_dict[key]
-		if member is Dictionary:
-			var r_id: int = int(member.get("resident_id", 0))
-			if r_id > 0 and not crew_ids.has(r_id):
-				crew_ids.append(r_id)
-
-	var pk: Dictionary = ws.get("player_knowledge", {})
 	return {
-		"crew_resident_ids": crew_ids,
-		"known_resident_ids": pk.get("known_residents", []),
-		"scouted_establishment_ids": pk.get("scouted_establishments", [])
+		"world_state": ws,
+		"observers": observers,
+		"crew_resident_ids": crew_ids
 	}
 
 static func _handle_route_request(domain_key: String, view_host: ViewHost) -> void:
@@ -93,23 +96,20 @@ static func _handle_route_request(domain_key: String, view_host: ViewHost) -> vo
 			var home_dist_name: String = str(ws.get("districts", {}).get(home_id, {}).get("display_name", home_id))
 			var enterprise_title: String = str(ws.get("operations", {}).get("enterprise_name", "CREW_ENTERPRISE"))
 
-			var crew_source: Dictionary = ws.get("residents", ws.get("staff", {}))
-			if crew_source.is_empty():
-				crew_source = ws.get("staff", {})
-
+			var crew_source: Dictionary = ws.get("residents", {})
 			var crew_members: Array[Dictionary] = []
 			var seen_res_ids: Dictionary = {}
 			
-			for staff_id in crew_source.keys():
-				var member = crew_source[staff_id]
-				if member is Dictionary:
+			for slot_id in crew_source.keys():
+				var member = crew_source[slot_id]
+				if member is Dictionary and bool(member.get("is_crew", true)):
 					var r_id: int = int(member.get("resident_id", 0))
 					if r_id > 0 and seen_res_ids.has(r_id):
 						continue
 					if r_id > 0:
 						seen_res_ids[r_id] = true
 
-					var name_str: String = str(member.get("name", staff_id))
+					var name_str: String = str(member.get("name", slot_id))
 					var inv: Dictionary = member.get("inventory", {})
 					var cash_val: float = float(inv.get("CASH", 0.0))
 					var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
@@ -122,17 +122,16 @@ static func _handle_route_request(domain_key: String, view_host: ViewHost) -> vo
 					var summary: String = "Age %d • £%.2f • %.0fh max" % [age_val, cash_val, daily_hrs]
 
 					crew_members.append({
-						"resident_id": r_id if r_id > 0 else staff_id,
+						"resident_id": r_id if r_id > 0 else slot_id,
 						"name": name_str,
 						"summary_line": summary,
-						"staff_id": staff_id,
+						"slot_id": slot_id,
 						"assigned_district": str(member.get("current_district_id", home_id))
 					})
 
 			var intel_ctx: Dictionary = _build_player_intel_context(ws)
 			var raw_contacts: Array[Dictionary] = SocietyQueriesScript.get_known_contacts_for_crew(
-				intel_ctx["crew_resident_ids"],
-				intel_ctx["known_resident_ids"],
+				intel_ctx,
 				current_sim_day
 			)
 			var known_contacts: Array[Dictionary] = []
@@ -209,15 +208,15 @@ static func _handle_item_selected(target_route: String, filter_key: Variant, vie
 			if ws.is_empty():
 				return
 				
-			var staff_dict: Dictionary = ws.get("residents", ws.get("staff", {}))
+			var residents_dict: Dictionary = ws.get("residents", {})
 			var res_id: int = 0
 
 			if typeof(filter_key) == TYPE_INT or (typeof(filter_key) == TYPE_STRING and str(filter_key).is_valid_int()):
 				res_id = int(filter_key)
 			else:
 				var s_id: String = str(filter_key)
-				if staff_dict.has(s_id):
-					res_id = int(staff_dict[s_id].get("resident_id", 0))
+				if residents_dict.has(s_id):
+					res_id = int(residents_dict[s_id].get("resident_id", 0))
 
 			if res_id <= 0:
 				SystemLogger.log_error("[OperationsController] Cannot route to %s: Invalid or missing resident_id." % target_route)
