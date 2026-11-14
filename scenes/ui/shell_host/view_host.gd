@@ -2,7 +2,6 @@
 class_name ViewHost
 extends Node
 
-
 ## Unified signal emitting structured UIActionCommand objects
 signal ui_command_dispatched(command: UIActionCommand)
 signal slip_filed(slip_data: Dictionary, destination: String)
@@ -31,13 +30,7 @@ func _connect_shell_signals() -> void:
 			shell_node.connect("shell_switch_requested", cb)
 
 func _on_shell_switch_requested(shell_id: String) -> void:
-	var cmd := UIActionCommand.new(
-		UIActionCommand.CommandType.SWITCH_SHELL,
-		"",
-		shell_id,
-		{"shell_id": shell_id}
-	)
-	ui_command_dispatched.emit(cmd)
+	ui_command_dispatched.emit(UIActionCommand.new("switch_shell", {"shell_id": shell_id}))
 
 ## Populates the OuterShell workspace switcher with year-unlocked shells
 func sync_shell_selector(shells: Array[Dictionary], active_shell_id: String) -> void:
@@ -48,8 +41,7 @@ func sync_shell_selector(shells: Array[Dictionary], active_shell_id: String) -> 
 func set_action_component(action_control: Control) -> void:
 	_action_component = action_control
 
-	if action_control != null \
-	and action_control.has_signal("action_clicked"):
+	if action_control != null and action_control.has_signal("action_clicked"):
 		var callback := Callable(self, "_on_view_action_clicked")
 		if not action_control.is_connected("action_clicked", callback):
 			action_control.connect("action_clicked", callback)
@@ -62,28 +54,17 @@ func set_navigation_component(nav_bar: Control) -> void:
 	if shell_node:
 		shell_node.mount_view("NAV", nav_bar)
 
-	if nav_bar.has_signal("action_clicked"):
+	if nav_bar != null and nav_bar.has_signal("action_clicked"):
 		var callback := Callable(self, "_on_navigation_action_clicked")
 		if not nav_bar.is_connected("action_clicked", callback):
 			nav_bar.connect("action_clicked", callback)
 
-func _on_navigation_action_clicked(
-	action_code: String,
-	payload: Dictionary
-) -> void:
-	if action_code != "NAV_ROUTE":
+func _on_navigation_action_clicked(action_code: String, payload: Dictionary = {}) -> void:
+	var clean_code: String = action_code.strip_edges()
+	if clean_code.is_empty():
+		push_warning("[ViewHost] Navigation action did not provide an action_code.")
 		return
-
-	var domain_token := str(payload.get("domain", "")).strip_edges()
-	if domain_token.is_empty():
-		push_warning("[ViewHost] Navigation action did not provide a domain.")
-		return
-
-	var cmd := UIActionCommand.new(
-		UIActionCommand.CommandType.ROUTE_REQUEST,
-		domain_token
-	)
-	ui_command_dispatched.emit(cmd)
+	ui_command_dispatched.emit(UIActionCommand.new(clean_code, payload))
 
 ## Registers any compiled UI view to an arbitrary string key from configuration
 func register_view(domain_key: String, view_control: Control) -> void:
@@ -98,18 +79,18 @@ func register_view(domain_key: String, view_control: Control) -> void:
 
 	if is_instance_valid(view_control):
 		if view_control.has_signal("item_selected"):
-			if not view_control.is_connected("item_selected", Callable(self, "_on_view_item_selected")):
-				view_control.connect("item_selected", Callable(self, "_on_view_item_selected"))
+			var item_cb := Callable(self, "_on_view_item_selected")
+			if not view_control.is_connected("item_selected", item_cb):
+				view_control.connect("item_selected", item_cb)
 		if view_control.has_signal("action_clicked"):
-			if not view_control.is_connected("action_clicked", Callable(self, "_on_view_action_clicked")):
-				view_control.connect("action_clicked", Callable(self, "_on_view_action_clicked"))
+			var act_cb := Callable(self, "_on_view_action_clicked")
+			if not view_control.is_connected("action_clicked", act_cb):
+				view_control.connect("action_clicked", act_cb)
 
 ## Swaps whatever view is currently mounted in CONTENT slot
 func switch_to_domain(domain_key: String) -> void:
 	if not _views.has(domain_key) or shell_node == null:
-		SystemLogger.log_warn(
-			"[ViewHost] Cannot switch to unavailable domain '%s'." % domain_key
-		)
+		SystemLogger.log_warn("[ViewHost] Cannot switch to unavailable domain '%s'." % domain_key)
 		return
 
 	var target_view = _views[domain_key]
@@ -162,15 +143,13 @@ func set_desk_inbox(inbox_control: Control) -> void:
 func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
 	inscribe_entry_to_domain(destination, slip_data)
 	slip_filed.emit(slip_data, destination)
-	
-	# Emit unified command for filing
-	var cmd = UIActionCommand.new(UIActionCommand.CommandType.SLIP_FILED, destination, "", slip_data)
-	ui_command_dispatched.emit(cmd)
+	ui_command_dispatched.emit(UIActionCommand.new("file_slip", {
+		"destination": destination,
+		"slip_data": slip_data
+	}))
 
 func _on_desk_top_card_action(action_id: String, payload: Dictionary) -> void:
-	# Emit unified command for inbox triage actions
-	var cmd = UIActionCommand.new(UIActionCommand.CommandType.ACTION_CLICKED, "INBOX", action_id, payload)
-	ui_command_dispatched.emit(cmd)
+	ui_command_dispatched.emit(UIActionCommand.new(action_id, payload))
 
 ## Presentation helper: Dispatches raw slip cards to the desk inbox
 func push_feedback_slips(cards: Array) -> void:
@@ -216,19 +195,7 @@ func cleanup() -> void:
 	_desk_inbox = null
 
 func _on_view_item_selected(target_route: String, filter_key: Variant) -> void:
-	var cmd = UIActionCommand.new(UIActionCommand.CommandType.ITEM_SELECTED, target_route, "", {"filter_key": filter_key})
-	ui_command_dispatched.emit(cmd)
+	ui_command_dispatched.emit(UIActionCommand.new(target_route, {"filter_key": filter_key}))
 
-func _on_view_action_clicked(action_code: String) -> void:
-	var cmd = UIActionCommand.new(UIActionCommand.CommandType.ACTION_CLICKED, _active_domain, action_code)
-	ui_command_dispatched.emit(cmd)
-
-func _on_nav_route_requested(
-	domain_token: String,
-	_target_page: String
-	) -> void:
-	var cmd := UIActionCommand.new(
-		UIActionCommand.CommandType.ROUTE_REQUEST,
-		domain_token
-	)
-	ui_command_dispatched.emit(cmd)
+func _on_view_action_clicked(action_code: String, payload: Dictionary = {}) -> void:
+	ui_command_dispatched.emit(UIActionCommand.new(action_code, payload))

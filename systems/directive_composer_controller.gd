@@ -187,7 +187,7 @@ static func resolve_contacts_for_location(location_meta: Dictionary, world_state
 		return contacts
 
 	var sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 0))
-	var intel_ctx: Dictionary = OperationsControllerScript._build_player_intel_context(world_state)
+	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(world_state)
 	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, sim_day, intel_ctx)
 	
 	for emp in docket.get("employees", []):

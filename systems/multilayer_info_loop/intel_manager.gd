@@ -396,3 +396,32 @@ static func _write_score_fallback(
 			"score": score,
 			"last_updated_day": int(world_state.get("metadata", {}).get("current_sim_day", 0))
 		}
+
+## Builds the player's canonical 1st-degree intel and observer context from residents & continuous knowledge_pools
+static func build_player_intel_context(ws: Dictionary) -> Dictionary:
+	var crew_ids: Array[int] = []
+	var observers: Array = []
+	var residents_dict: Dictionary = ws.get("residents", {})
+
+	for key in residents_dict.keys():
+		var rec = residents_dict[key]
+		if rec is Dictionary and bool(rec.get("is_crew", true)):
+			var r_id: int = int(rec.get("resident_id", 0))
+			if r_id > 0 and not crew_ids.has(r_id):
+				crew_ids.append(r_id)
+				observers.append({
+					"observer_scope": "RESIDENT",
+					"observer_id": str(r_id)
+				})
+			var slot_str := str(key)
+			if not slot_str.is_empty() and slot_str != str(r_id):
+				observers.append({
+					"observer_scope": "RESIDENT",
+					"observer_id": slot_str
+				})
+
+	return {
+		"world_state": ws,
+		"observers": observers,
+		"crew_resident_ids": crew_ids
+	}

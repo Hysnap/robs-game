@@ -12,8 +12,8 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
-          "action_signal": "route_requested",
-          "emit_args": "\"DOSSIER\", \"\""
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_dossier\", {}"
         }
       ]
     },

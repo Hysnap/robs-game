@@ -9,10 +9,8 @@ extends Node3D
 
 const ViewHostScript = preload("res://scenes/ui/shell_host/view_host.gd")
 const UIActionCommandScript = preload("res://scenes/ui/shell_host/ui_action_command.gd")
-const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
-const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
 
@@ -24,14 +22,11 @@ var directive_modal: Control = null
 # Spatial indicators state
 var _district_ground_nodes: Dictionary = {} # block_id -> MeshInstance3D
 var _district_indicators: Dictionary = {}   # block_id -> Node3D (holder)
-var _color_verified: Color
-var _color_stale: Color
-var _marker_elevation: float = 1.5
-var _landmark_elevation: float = 4.0
 
 func _ready() -> void:
 	SystemLogger.log_info("[CityView] Initializing city view.")
-	_load_spatial_indicator_rules()
+	_validate_spatial_indicator_rules()
+	OperationsControllerScript.initialize_commands()
 
 	# 1. Mount Presenter Host inside OuterShell
 	if outer_shell != null:
@@ -91,21 +86,13 @@ func _exit_tree() -> void:
 	_district_indicators.clear()
 	_district_ground_nodes.clear()
 
-func _load_spatial_indicator_rules() -> void:
+func _validate_spatial_indicator_rules() -> void:
 	assert(ScenarioManifestManager.has_module("fog_of_war"),
 		"FATAL: [CityView] Active scenario manifest missing 'fog_of_war' registration.")
 
 	var fow_rules: Dictionary = ScenarioManifestManager.load_module("fog_of_war")
 	assert(not fow_rules.is_empty(), "FATAL: [CityView] Loaded 'fog_of_war' module is empty.")
 	assert(fow_rules.has("spatial_indicators"), "FATAL: [CityView] Missing 'spatial_indicators' in fog_of_war rules.")
-
-	var spatial_cfg: Dictionary = fow_rules["spatial_indicators"]
-	var hex_v: String = str(spatial_cfg.get("color_verified", "#2ecc71"))
-	var hex_s: String = str(spatial_cfg.get("color_stale", "#e67e22"))
-	_color_verified = Color.from_string(hex_v, Color.GREEN)
-	_color_stale = Color.from_string(hex_s, Color.ORANGE)
-	_marker_elevation = float(spatial_cfg.get("marker_elevation", 1.5))
-	_landmark_elevation = float(spatial_cfg.get("landmark_elevation", 4.0))
 
 func _initialize_spatial_ground_indicators() -> void:
 	_district_ground_nodes.clear()
@@ -217,8 +204,7 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 	if shell_customizer != null and "target_shell" in shell_customizer:
 		shell_customizer.target_shell = active_shell_id
 
-	view_host.switch_to_domain(initial_domain)
-	_handle_route_request(initial_domain)
+	OperationsControllerScript.refresh_domain_view(initial_domain, view_host)
 
 func _handle_shell_switch(target_shell_id: String) -> void:
 	var current_year: int = _get_active_calendar_year()
@@ -227,11 +213,9 @@ func _handle_shell_switch(target_shell_id: String) -> void:
 		return
 
 	var preserved_directives: Array = []
-	var planner_node: Control = outer_shell.get_slot("ACTION")
-	if planner_node != null and planner_node.get_child_count() > 0:
-		var active_planner = planner_node.get_child(0)
-		if active_planner.has_method("get_staged_directives"):
-			preserved_directives = active_planner.get_staged_directives().duplicate(true)
+	var active_planner: Control = view_host.get_action_component() if view_host != null else null
+	if is_instance_valid(active_planner) and active_planner.has_method("get_staged_directives"):
+		preserved_directives = active_planner.get_staged_directives().duplicate(true)
 
 	var current_domain: String = "DOSSIER"
 	if view_host != null and not view_host.get_active_domain().is_empty():
@@ -256,151 +240,14 @@ func _setup_shell_customizer() -> void:
 		shell_customizer.z_index = 20
 		workspace_canvas.add_child(shell_customizer)
 
-func _on_ui_command_dispatched(command: UIActionCommand) -> void:
-	match command.type:
-		UIActionCommand.CommandType.SWITCH_SHELL:
-			_handle_shell_switch(str(command.payload.get("shell_id", "")))
-
-		UIActionCommand.CommandType.ROUTE_REQUEST:
-			if command.domain == "STYLES":
-				if shell_customizer != null:
-					shell_customizer.visible = not shell_customizer.visible
-					if shell_customizer.visible:
-						shell_customizer.move_to_front()
-			else:
-				_handle_route_request(command.domain)
-
-		UIActionCommand.CommandType.ACTION_CLICKED:
-			if command.domain == "INBOX":
-				_handle_slip_triage(command.action_code, command.payload)
-			else:
-				_handle_action_requested(command.action_code, command.payload)
-
-		UIActionCommand.CommandType.ITEM_SELECTED:
-			_handle_item_selected(command.domain, command.payload.get("filter_key"))
-
-		UIActionCommand.CommandType.SLIP_FILED:
-			pass
-
-func _handle_route_request(domain_key: String) -> void:
-	match domain_key:
-		"ROSTER":
-			_hydrate_roster_view()
-		"DOSSIER":
-			var gs = ScenarioManifestManager.get_game_state()
-			var active_id: String = ""
-			if gs != null and "world_state" in gs:
-				active_id = str(gs.world_state.get("selected_district_id", ""))
-			if not active_id.is_empty() and gs.has_method("get_district_view"):
-				view_host.update_active_view_data(gs.get_district_view(active_id))
-
-func _hydrate_roster_view() -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	if gs == null or not "world_state" in gs or view_host == null:
-		return
-
-	var ws: Dictionary = gs.world_state
-	var staff_dict: Dictionary = ws.get("staff", {})
-	var home_id: String = str(ws.get("operations", {}).get("home_district_id", "block_0_0"))
-
-	var crew_members: Array[Dictionary] = []
-	for staff_id in staff_dict.keys():
-		var member = staff_dict[staff_id]
-		if member is Dictionary:
-			var r_id: int = int(member.get("resident_id", 0))
-			var name_str: String = str(member.get("name", staff_id))
-			var cash_val: float = float(member.get("pocket_cash", 0.0))
-			var daily_hrs: float = float(member.get("daily_operational_limit_hours", 8.0))
-
-			var age_val: int = 25
-			if r_id > 0:
-				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(r_id)
-				age_val = int(demo.get("age", 25))
-
-			var summary: String = "Age %d • £%.2f Pocket • %.0fh max" % [age_val, cash_val, daily_hrs]
-
-			crew_members.append({
-				"resident_id": r_id if r_id > 0 else staff_id,
-				"name": name_str,
-				"summary_line": summary,
-				"staff_id": staff_id,
-				"assigned_district": str(member.get("current_district_id", home_id))
-			})
-
-	view_host.update_active_view_data({"crew_roster": crew_members})
-
-func _handle_action_requested(action_code: String, _payload: Dictionary) -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	var target_district: String = ""
-	if gs != null and "world_state" in gs:
-		target_district = str(gs.world_state.get("selected_district_id", ""))
-
-	match action_code:
-		"OPEN_PAD", "NEW_ORDER", "OPEN_COMPOSER":
-			if directive_modal != null and directive_modal.has_method("open_for_context"):
-				directive_modal.open_for_context({"target_district_id": target_district})
-		"COMMIT_SHIFT", "EXECUTE_TURN", "END_DAY":
-			_on_end_turn_requested()
-
-func _handle_slip_triage(action_id: String, card_payload: Dictionary) -> void:
-	if action_id == "FILE":
-		OperationsControllerScript.file_card_slip(card_payload, view_host)
-	else:
-		SystemLogger.log_info("[CityView] Discarded slip: %s" % card_payload.get("display_text"))
-
-func _handle_item_selected(target_route: String, filter_key: Variant) -> void:
-	match target_route:
-		"OPERATIVE_DETAIL":
-			var gs = ScenarioManifestManager.get_game_state()
-			var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
-			var staff_dict: Dictionary = ws.get("staff", {})
-
-			var res_id: int = 0
-			var staff_info: Dictionary = {}
-
-			if typeof(filter_key) == TYPE_INT or (typeof(filter_key) == TYPE_STRING and str(filter_key).is_valid_int()):
-				res_id = int(filter_key)
-			else:
-				var s_id: String = str(filter_key)
-				if staff_dict.has(s_id):
-					staff_info = staff_dict[s_id]
-					res_id = int(staff_info.get("resident_id", 0))
-
-			if res_id > 0:
-				var demo: Dictionary = SocietyQueriesScript.get_resident_profile(res_id)
-				var home_estab: int = int(demo.get("home_establishment_id", demo.get("establishment_id", 0)))
-				if home_estab > 0:
-					var res_data: Dictionary = SocietyQueriesScript.get_establishment_docket(home_estab)
-					view_host.switch_to_domain("RESIDENTIAL_DOCKET")
-					view_host.update_active_view_data(res_data)
-					return
-
-			var target_district: String = ""
-			if not staff_info.is_empty():
-				target_district = str(staff_info.get("current_district_id", ""))
-			else:
-				for s_key in staff_dict.keys():
-					var s_entry = staff_dict[s_key]
-					if s_entry is Dictionary and int(s_entry.get("resident_id", -1)) == res_id:
-						target_district = str(s_entry.get("current_district_id", ""))
-						break
-
-			if target_district.is_empty():
-				target_district = str(ws.get("player_knowledge", {}).get("home_district_id", ""))
-
-			if not target_district.is_empty() and gs != null and gs.has_method("get_district_view"):
-				var district_data: Dictionary = gs.get_district_view(target_district)
-				view_host.switch_to_domain("DOSSIER")
-				view_host.update_active_view_data(district_data)
-
-		"RESIDENTIAL_DOCKET", "ESTABLISHMENT_DOCKET":
-			var estab_id: int = int(filter_key)
-			var docket_data: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id)
-			view_host.switch_to_domain(target_route)
-			view_host.update_active_view_data(docket_data)
-
-		_:
-			view_host.switch_to_domain(target_route)
+func _on_ui_command_dispatched(command: UIActionCommandScript) -> void:
+	var context_refs: Dictionary = {
+		"action_planner": view_host.get_action_component() if view_host != null else null,
+		"directive_modal": directive_modal,
+		"shell_customizer": shell_customizer,
+		"on_shell_switch": Callable(self, "_handle_shell_switch")
+	}
+	OperationsControllerScript.dispatch_ui_command(command, view_host, context_refs)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -412,20 +259,15 @@ func _on_district_clicked(block_id: String) -> void:
 	SystemLogger.log_info("[CityView] District clicked on 3D map: %s" % block_id)
 
 	var gs = ScenarioManifestManager.get_game_state()
-	var district_data: Dictionary = {}
 	if gs != null:
 		if gs.has_method("set_selected_district"):
 			gs.set_selected_district(block_id)
 		elif "world_state" in gs:
 			gs.world_state["selected_district_id"] = block_id
 
-		if gs.has_method("get_district_view"):
-			district_data = gs.get_district_view(block_id)
-
 	if workspace_canvas != null and view_host != null:
 		workspace_canvas.visible = true
-		view_host.switch_to_domain("DOSSIER")
-		view_host.update_active_view_data(district_data)
+		OperationsControllerScript.refresh_domain_view("DOSSIER", view_host, {"district_id": block_id})
 
 func _toggle_workspace_visibility() -> void:
 	if workspace_canvas == null:
@@ -450,20 +292,12 @@ func _toggle_workspace_visibility() -> void:
 				)
 
 		if view_host != null:
-			var gs = ScenarioManifestManager.get_game_state()
-			var active_id: String = ""
-			if gs != null and "world_state" in gs:
-				active_id = str(gs.world_state.get("selected_district_id", ""))
-
-			if not active_id.is_empty() and gs != null and gs.has_method("get_district_view"):
-				var district_data: Dictionary = gs.get_district_view(active_id)
-				view_host.update_active_view_data(district_data)
+			OperationsControllerScript.refresh_domain_view(view_host.get_active_domain(), view_host)
 
 func _on_end_turn_requested() -> void:
 	var staged: Array = []
-	var planner_node: Control = outer_shell.get_slot("ACTION")
-	if planner_node != null and planner_node.get_child_count() > 0:
-		var active_planner = planner_node.get_child(0)
+	var active_planner: Control = view_host.get_action_component() if view_host != null else null
+	if is_instance_valid(active_planner):
 		if active_planner.has_method("consume_selected_directives"):
 			staged = active_planner.consume_selected_directives()
 		elif active_planner.has_method("get_staged_directives"):
