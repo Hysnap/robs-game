@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "SETTLE_OBLIGATION",
+    "description": "Settles or reduces an active obligation balance in SQLite upon outbound settlement."
+  },
+  "metric_id": "OBLIGATION",
+  "rules_module": "civic_hierarchy",
+  "model": "SETTLE_OBLIGATION"
+}

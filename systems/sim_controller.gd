@@ -8,6 +8,7 @@ const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
+const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -64,7 +65,11 @@ static func _dispatch_verb_impacts(
 				f.close()
 				if parsed is Dictionary:
 					var metric_id: String = str(parsed.get("metric_id", file_name.get_basename())).to_upper().strip_edges()
-					if parsed.has("rules_module") or parsed.has("model"):
+					if metric_id == "OBLIGATION":
+						var obl_outcome: Dictionary = _ObligationLedger.process_verb_impact(world_state, directive, parsed)
+						if not obl_outcome.is_empty():
+							applied[metric_id] = obl_outcome
+					elif parsed.has("rules_module") or parsed.has("model"):
 						var target_scope: String = str(parsed.get("target_scope", directive.get("target_scope", "DISTRICT"))).to_upper().strip_edges()
 						var resolved_target_id: String = target_node_id
 						if target_scope == "RESIDENT":
@@ -193,6 +198,8 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	if crossed_boundary:
 		_ImpactRouter.dispatch_ambient_tick(world_state)
+	
+	var obligation_rollover: Dictionary = _ObligationLedger.process_daily_tick(current_day)
 
 	var dow := _CalendarHelper.day_of_week(current_day)
 	meta["current_sim_day"] = current_day
@@ -217,6 +224,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"week": meta["current_week_tick"],
 		"day_of_week": dow,
 		"week_rollover": crossed_boundary,
+		"obligation_rollover": obligation_rollover,
 		"executed_events": executed_events,
 		"diary_memos": diary_memos
 	}

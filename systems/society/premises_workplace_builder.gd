@@ -70,6 +70,27 @@ static func run(
 	var comm_naming: Dictionary = lexicon.get("commercial_naming", {})
 	assert(not comm_naming.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'commercial_naming' in spatial lexicon.")
 
+	# 0. Seed Canonical Institutional & Corporate Organizations
+	var org_inserts: Array[String] = [
+		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:CIVIC', 'Municipal & Civic Authority', 'CIVIC', 'FORMAL', 'STANDARD', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id],
+		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:DHSS', 'Department of Health & Social Security', 'INSTITUTION', 'FORMAL', 'GIRO_ISSUER', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id],
+		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:POST_OFFICE', 'General Post Office', 'INSTITUTION', 'FORMAL', 'GIRO_AGENT', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id]
+	]
+	var brand_org_map: Dictionary = {}
+	var bank_brands: Array = comm_naming.get("era_brands", {}).get("BANK_BRANCH", [])
+	for entry in bank_brands:
+		if entry is Dictionary:
+			var b_name: String = str(entry.get("name", ""))
+			if not b_name.is_empty():
+				var slug: String = b_name.to_upper().replace(" ", "_").replace("'", "").replace(".", "")
+				var org_id: String = "ORG:%s" % slug
+				var rail_cls: String = "BUILDING_SOCIETY" if b_name.to_lower().contains("society") or b_name.to_lower().contains("halifax") or b_name.to_lower().contains("nationwide") or b_name.to_lower().contains("abbey") else "CLEARING_BANK"
+				brand_org_map[b_name] = org_id
+				org_inserts.append("INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('%s', '%s', 'INSTITUTION', 'FORMAL', '%s', %d, NULL, %d);" % [
+					org_id, b_name.replace("'", "''"), rail_cls, sim_start_day, reason_world_gen_id
+				])
+	DB_MANAGER.execute_batch(org_inserts)
+
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
 		var district_type: String = str(d.get("district_type", ""))
@@ -132,8 +153,8 @@ static func run(
 			estab_inserts.append("""
 				INSERT INTO establishments (
 					establishment_id, district_id, building_index, unit_door_number,
-					owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-				) VALUES (%d, '%s', 0, 'MAIN', 'CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
+					owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+				) VALUES (%d, '%s', 0, 'MAIN', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
 			""" % [institution_estab_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id)
@@ -174,10 +195,10 @@ static func run(
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
-							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 2, 1, %d, NULL, %d);
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', 0, '%s', 'ORG:CIVIC', '%s', %d, 2, 1, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, unit_door, int_tenure_type,
+						est_id, dist_id, unit_door,
 						unit_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
 					])
 
@@ -210,8 +231,8 @@ static func run(
 				estab_inserts.append("""
 					INSERT INTO establishments (
 						establishment_id, district_id, building_index, unit_door_number,
-						owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', 'CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
+						owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
 				""" % [embedded_estab_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
 				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id)
@@ -237,10 +258,10 @@ static func run(
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
-							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 4, 1, %d, NULL, %d);
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', 0, '%s', 'ORG:CIVIC', '%s', %d, 4, 1, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, e_door, e_tenure,
+						est_id, dist_id, e_door,
 						e_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
 					])
 
@@ -303,13 +324,14 @@ static func run(
 
 					var is_vacant: int = 1 if (rng.randf() < 0.03) else 0
 
+					var res_owner_sql: String = "'ORG:CIVIC'" if tenure_type == "COUNCIL_TENANT" else "NULL"
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
-							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', %d, '%s', '%s', '%s', %d, 5, %d, %d, NULL, %d);
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', %d, '%s', %s, '%s', %d, 5, %d, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, b_idx, unit_door, tenure_type,
+						est_id, dist_id, b_idx, unit_door, res_owner_sql,
 						unit_name.replace("'", "''"), res_unit_cat_id, is_vacant, sim_start_day, reason_world_gen_id
 					])
 
@@ -384,13 +406,19 @@ static func run(
 						is_vacant = 1
 						cap = 0
 
+					var comm_owner_sql: String = "NULL"
+					if brand_org_map.has(display_title):
+						comm_owner_sql = "'%s'" % str(brand_org_map[display_title])
+					elif cat_code == "POST_OFFICE":
+						comm_owner_sql = "'ORG:POST_OFFICE'"
+
 					var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_code)
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
-							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', %d, 'SHOP', 'PRIVATE', '%s', %d, %d, %d, %d, NULL, %d);
-					""" % [est_id, dist_id, b_idx, display_title.replace("'", "''"), cat_id, cap, is_vacant, sim_start_day, reason_world_gen_id])
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', %d, 'SHOP', %s, '%s', %d, %d, %d, %d, NULL, %d);
+					""" % [est_id, dist_id, b_idx, comm_owner_sql, display_title.replace("'", "''"), cat_id, cap, is_vacant, sim_start_day, reason_world_gen_id])
 
 					if not commercial_instances_by_type.has(cat_code):
 						commercial_instances_by_type[cat_code] = []
@@ -430,10 +458,10 @@ static func run(
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
-							owning_entity, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', %d, 'WORKS', 'PRIVATE', '%s', %d, %d, 0, %d, NULL, %d);
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', %d, 'WORKS', NULL, '%s', %d, %d, 0, %d, NULL, %d);
 					""" % [est_id, dist_id, b_idx, i_title.replace("'", "''"), i_cat_id, i_cap, sim_start_day, reason_world_gen_id])
-
+   
 					_register_est_cat(by_cat, i_code, est_id, dist_id)
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
 

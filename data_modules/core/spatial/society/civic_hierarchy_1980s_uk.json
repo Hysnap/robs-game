@@ -2,8 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.0.0",
-    "description": "Commercial, light-industrial, and civic tenancy classes that occupy individual buildings."
+    "version": "1.2.0",
+    "description": "Municipal clustering scales, public/banking holiday calendar, institutional organizations, postal delivery rules, and settlement clearing rails."
   },
   "hierarchy_scales": {
     "blocks_per_borough": 90,
@@ -20,6 +20,263 @@
     "central_core_borough": {
       "borough_id": "BOROUGH_CORE",
       "display_name": "Central Municipal Core Council"
+    }
+  },
+  "holiday_calendar": {
+    "non_working_days_of_week": [7],
+    "banking_non_working_days_of_week": [6, 7],
+    "rules": [
+      { "id": "NEW_YEARS_DAY", "type": "FIXED", "month": 1, "day": 1, "observed": "NEXT_MONDAY", "valid_from_year": 1974 },
+      { "id": "GOOD_FRIDAY", "type": "EASTER_OFFSET", "offset_days": -2, "valid_from_year": 1752 },
+      { "id": "EASTER_MONDAY", "type": "EASTER_OFFSET", "offset_days": 1, "valid_from_year": 1871 },
+      { "id": "MAY_DAY", "type": "NTH_WEEKDAY", "month": 5, "weekday": 1, "nth": 1, "valid_from_year": 1978 },
+      { "id": "WHIT_MONDAY", "type": "EASTER_OFFSET", "offset_days": 50, "valid_from_year": 1871, "valid_to_year": 1970 },
+      { "id": "SPRING_BANK", "type": "LAST_WEEKDAY", "month": 5, "weekday": 1, "valid_from_year": 1971 },
+      { "id": "SUMMER_BANK", "type": "LAST_WEEKDAY", "month": 8, "weekday": 1, "valid_from_year": 1971 },
+      { "id": "CHRISTMAS_DAY", "type": "FIXED", "month": 12, "day": 25, "observed": "NEXT_WEEKDAY", "valid_from_year": 1752 },
+      { "id": "BOXING_DAY", "type": "FIXED", "month": 12, "day": 26, "observed": "NEXT_WEEKDAY", "valid_from_year": 1871 }
+    ],
+    "one_off_dates": [
+      { "id": "SILVER_JUBILEE", "year": 1977, "month": 6, "day": 7 },
+      { "id": "ROYAL_WEDDING_1981", "year": 1981, "month": 7, "day": 29 },
+      { "id": "GOLDEN_JUBILEE", "year": 2002, "month": 6, "day": 3 },
+      { "id": "ROYAL_WEDDING_2011", "year": 2011, "month": 4, "day": 29 },
+      { "id": "DIAMOND_JUBILEE", "year": 2012, "month": 6, "day": 5 },
+      { "id": "PLATINUM_JUBILEE", "year": 2022, "month": 6, "day": 3 },
+      { "id": "CORONATION_2023", "year": 2023, "month": 5, "day": 8 }
+    ]
+  },
+  "institutions": {
+    "default_civic_org_id": "ORG:CIVIC",
+    "seeded_organizations": [
+      {
+        "org_id": "ORG:CIVIC",
+        "display_name": "Municipal & Civic Authority",
+        "org_type": "CIVIC",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "owns_civic_anchors": true,
+        "owns_council_housing": true
+      },
+      {
+        "org_id": "ORG:DHSS",
+        "display_name": "Department of Health & Social Security",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "PUBLIC_DISBURSER"
+      },
+      {
+        "org_id": "ORG:POST_OFFICE",
+        "display_name": "General Post Office",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "POSTAL_AGENT",
+        "matched_categories": ["POST_OFFICE"]
+      },
+      {
+        "org_id": "ORG:MIDLAND_BANK",
+        "display_name": "Midland Bank",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "CLEARING_BANK",
+        "matched_titles": ["Midland Bank"]
+      },
+      {
+        "org_id": "ORG:BARCLAYS_BANK",
+        "display_name": "Barclays Bank",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "CLEARING_BANK",
+        "matched_titles": ["Barclays Bank"]
+      },
+      {
+        "org_id": "ORG:LLOYDS_BANK",
+        "display_name": "Lloyds Bank",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "CLEARING_BANK",
+        "matched_titles": ["Lloyds Bank", "Lloyds TSB"]
+      },
+      {
+        "org_id": "ORG:NATWEST",
+        "display_name": "NatWest",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "CLEARING_BANK",
+        "matched_titles": ["NatWest"]
+      },
+      {
+        "org_id": "ORG:TSB",
+        "display_name": "TSB",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "SAVINGS_INSTITUTION",
+        "matched_titles": ["TSB"]
+      },
+      {
+        "org_id": "ORG:HALIFAX",
+        "display_name": "Halifax",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "SAVINGS_INSTITUTION",
+        "matched_titles": ["Halifax"]
+      },
+      {
+        "org_id": "ORG:ABBEY_NATIONAL",
+        "display_name": "Abbey National",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "SAVINGS_INSTITUTION",
+        "matched_titles": ["Abbey National"]
+      }
+    ]
+  },
+  "postal_rules": {
+    "classes": {
+      "FIRST_CLASS": {
+        "label_token": "UI_POST_FIRST_CLASS",
+        "is_physical": true,
+        "stamps_commodity_id": "POSTAGE_STAMP_1ST"
+      },
+      "SECOND_CLASS": {
+        "label_token": "UI_POST_SECOND_CLASS",
+        "is_physical": true,
+        "stamps_commodity_id": "POSTAGE_STAMP_2ND"
+      },
+      "ELECTRONIC_NOTICE": {
+        "label_token": "UI_POST_ELECTRONIC_NOTICE",
+        "is_physical": false,
+        "stamps_commodity_id": ""
+      }
+    },
+    "era_schedules": [
+      {
+        "valid_from_year": 1700,
+        "valid_to_year": 1839,
+        "deliveries_per_day": 1,
+        "delivery_windows": ["MORNING_ROUND"],
+        "distance_days_per_hop": 0.5,
+        "postage_paid_by": "RECIPIENT",
+        "transit_days": {
+          "FIRST_CLASS": 2,
+          "SECOND_CLASS": 4
+        }
+      },
+      {
+        "valid_from_year": 1840,
+        "valid_to_year": 1999,
+        "deliveries_per_day": 2,
+        "delivery_windows": ["MORNING_ROUND", "AFTERNOON_ROUND"],
+        "distance_days_per_hop": 0.0,
+        "postage_paid_by": "SENDER",
+        "transit_days": {
+          "FIRST_CLASS": 1,
+          "SECOND_CLASS": 3
+        }
+      },
+      {
+        "valid_from_year": 2000,
+        "valid_to_year": 2099,
+        "deliveries_per_day": 1,
+        "delivery_windows": ["MORNING_ROUND"],
+        "distance_days_per_hop": 0.0,
+        "postage_paid_by": "SENDER",
+        "transit_days": {
+          "FIRST_CLASS": 2,
+          "SECOND_CLASS": 5,
+          "ELECTRONIC_NOTICE": 0
+        }
+      }
+    ]
+  },
+  "settlement_rails": {
+    "PHYSICAL_CASH": {
+      "label_token": "UI_RAIL_PHYSICAL_CASH",
+      "valid_from_year": 1700,
+      "valid_to_year": 2099,
+      "requires_co_location": true,
+      "can_post": false,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["ALL"],
+      "audit_trace_weight": 0.0
+    },
+    "BEARER_VOUCHER": {
+      "label_token": "UI_RAIL_BEARER_VOUCHER",
+      "valid_from_year": 1900,
+      "valid_to_year": 2010,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["PUBLIC_DISBURSER", "POSTAL_AGENT", "CLEARING_BANK", "SAVINGS_INSTITUTION"],
+      "audit_trace_weight": 0.6
+    },
+    "CLEARING_BANK_CHEQUE": {
+      "label_token": "UI_RAIL_CLEARING_BANK_CHEQUE",
+      "valid_from_year": 1770,
+      "valid_to_year": 2019,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK"],
+      "audit_trace_weight": 0.85
+    },
+    "AGENCY_SAVINGS_CHEQUE": {
+      "label_token": "UI_RAIL_AGENCY_SAVINGS_CHEQUE",
+      "valid_from_year": 1850,
+      "valid_to_year": 1999,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 10,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["SAVINGS_INSTITUTION"],
+      "audit_trace_weight": 0.85
+    },
+    "STANDARD_CHEQUE_MODERN": {
+      "label_token": "UI_RAIL_STANDARD_CHEQUE",
+      "valid_from_year": 2000,
+      "valid_to_year": 2019,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "SAVINGS_INSTITUTION"],
+      "audit_trace_weight": 0.9
+    },
+    "BATCH_BANK_TRANSFER": {
+      "label_token": "UI_RAIL_BATCH_BANK_TRANSFER",
+      "valid_from_year": 1968,
+      "valid_to_year": 2099,
+      "requires_co_location": false,
+      "can_post": false,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "SAVINGS_INSTITUTION", "PUBLIC_DISBURSER"],
+      "audit_trace_weight": 1.0
+    },
+    "INSTANT_BANK_TRANSFER": {
+      "label_token": "UI_RAIL_INSTANT_BANK_TRANSFER",
+      "valid_from_year": 2008,
+      "valid_to_year": 2099,
+      "requires_co_location": false,
+      "can_post": false,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "SAVINGS_INSTITUTION"],
+      "audit_trace_weight": 1.0
+    },
+    "BILL_OF_EXCHANGE": {
+      "label_token": "UI_RAIL_BILL_OF_EXCHANGE",
+      "valid_from_year": 1700,
+      "valid_to_year": 1914,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 30,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["ALL"],
+      "audit_trace_weight": 0.7
     }
   }
 }

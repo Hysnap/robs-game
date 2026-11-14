@@ -17,7 +17,8 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			d.display_name AS district_name,
 			d.grid_x,
 			d.grid_z,
-			e.owning_entity,
+			e.owner_org_id,
+			o.display_name AS owner_org_name,
 			e.unit_door_number,
 			l_cat.code AS category_code,
 			l_cat.title AS category_title,
@@ -25,10 +26,10 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			e.is_vacant
 		FROM establishments e
 		JOIN districts d ON e.district_id = d.district_id
+		LEFT JOIN organizations o ON e.owner_org_id = o.org_id
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
 		WHERE e.establishment_id = %d;
 	""" % estab_id)
-
 	if base_rows.is_empty():
 		return {}
 
@@ -64,7 +65,8 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 
 		if not IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "capacity"):
 			docket["capacity"] = null
-			docket["owning_entity"] = "UI_INTEL_UNKNOWN"
+			docket["owner_org_id"] = ""
+			docket["owner_org_name"] = "UI_INTEL_UNKNOWN"
 
 	docket["intel_score"] = estab_score
 	var all_staff_exposed: bool = not apply_fow or IntelManagerScript.is_field_exposed(estab_score, "ESTABLISHMENT", "employees.all")
@@ -176,7 +178,7 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 			JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
 			JOIN system_labels l_sch ON c.schedule_window_id = l_sch.label_id
-			WHERE c.employer_entity_id = 'ESTAB_%d' AND c.valid_to IS NULL AND r.dod IS NULL;
+			WHERE c.employer_establishment_id = %d AND c.valid_to IS NULL AND r.dod IS NULL;
 		""" % estab_id)
 
 		if apply_fow:
@@ -274,16 +276,14 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 
 	# 2. Crew members' active workplaces
 	var crew_work_rows: Array = DBManager.query_rows("""
-		SELECT employer_entity_id
+		SELECT employer_establishment_id
 		FROM livelihood_contracts
-		WHERE resident_id IN (%s) AND valid_to IS NULL AND employer_entity_id LIKE 'ESTAB_%%';
+		WHERE resident_id IN (%s) AND valid_to IS NULL AND employer_establishment_id IS NOT NULL;
 	""" % in_clause)
 	for row in crew_work_rows:
-		var emp_str: String = str(row.get("employer_entity_id", ""))
-		if emp_str.begins_with("ESTAB_"):
-			var work_est_id: int = int(emp_str.trim_prefix("ESTAB_"))
-			if work_est_id > 0:
-				own_establishments[work_est_id] = true
+		var work_est_id: int = int(row.get("employer_establishment_id", 0))
+		if work_est_id > 0:
+			own_establishments[work_est_id] = true
 
 	# 3. Strict 1st-degree social_relationships from crew members (blocks 2nd-degree family acquaintances)
 	var direct_edges: Array = DBManager.query_rows("""
@@ -442,7 +442,7 @@ static func get_establishment_headcount(estab_id: int) -> int:
 		SELECT COUNT(*) AS staff_count
 		FROM livelihood_contracts c
 		JOIN residents r ON c.resident_id = r.resident_id
-		WHERE c.employer_entity_id = 'ESTAB_%d'
+		WHERE c.employer_establishment_id = %d
 		  AND c.valid_to IS NULL
 		  AND r.dod IS NULL;
 	""" % estab_id)
@@ -494,7 +494,8 @@ static func get_resident_profile(resident_id: int, current_sim_day: int = 29219)
 			r.gender_id,
 			c.role_title_id,
 			c.contract_class_id,
-			c.employer_entity_id
+			c.employer_org_id,
+			c.employer_establishment_id
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
 		JOIN establishments e ON h.establishment_id = e.establishment_id
@@ -518,7 +519,12 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 
 	for b in bindings:
 		var r_id: int = int(b.get("resident_id", 0))
-		var employer_id: String = str(b.get("employer_entity_id", "CREW_ENTERPRISE"))
+		var employer_org_id: String = str(b.get("employer_org_id", "ORG:CREW_ENTERPRISE"))
+		if not employer_org_id.is_empty() and not employer_org_id.begins_with("ORG:"):
+			employer_org_id = "ORG:%s" % employer_org_id
+		var employer_org_sql: String = "'%s'" % employer_org_id.replace("'", "''") if not employer_org_id.is_empty() else "NULL"
+		var raw_estab = b.get("employer_establishment_id", null)
+		var employer_estab_sql: String = str(int(raw_estab)) if (raw_estab != null and int(raw_estab) > 0) else "NULL"
 		var class_id: int = int(b.get("contract_class_id", 1))
 		var role_id: int = int(b.get("role_title_id", 1))
 		var sched_id: int = int(b.get("schedule_window_id", 1))
@@ -529,13 +535,13 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 
 		statements.append("""
 			INSERT INTO livelihood_contracts (
-				resident_id, employer_entity_id, contract_class_id, contract_type_id,
+				resident_id, employer_org_id, employer_establishment_id, contract_class_id, contract_type_id,
 				role_title_id, schedule_window_id, weekly_hours, 
 				compensation_rate, valid_from
 			) VALUES (
-				%d, '%s', %d, %d, %d, %d, %.2f, %.2f, %d
+				%d, %s, %s, %d, %d, %d, %d, %.2f, %.2f, %d
 			);
-		""" % [r_id, employer_id, class_id, c_type_id, role_id, sched_id, hours, rate, start_day])
+		""" % [r_id, employer_org_sql, employer_estab_sql, class_id, c_type_id, role_id, sched_id, hours, rate, start_day])
 
 		statements.append("UPDATE residents SET is_active_agent = 1 WHERE resident_id = %d;" % r_id)
 
@@ -579,7 +585,7 @@ static func get_district_establishments(district_id: String) -> Array:
 			e.capacity,
 			(SELECT COUNT(*) 
 			 FROM livelihood_contracts c 
-			 WHERE c.employer_entity_id = 'ESTAB_' || e.establishment_id 
+			 WHERE c.employer_establishment_id = e.establishment_id 
 			   AND c.valid_to IS NULL) AS worker_count
 		FROM establishments e
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id

@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "verb_token": "COLLECT_OBLIGATION",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Collect a co-located cash payment from a debtor against an active obligation."
+  },
+  "parameters": {
+    "obligation_id": { "type": "INT", "required": true },
+    "counterparty_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "rail_code": { "type": "STRING", "required": false }
+  },
+  "steps": [
+    {
+      "step_id": "gate_debtor_cash",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "PARAM.counterparty_id",
+        "metric": "CASH",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "collect_payment"
+    },
+    {
+      "step_id": "collect_payment",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "PARAM.counterparty_id",
+        "to": "ORDER_ACTOR",
+        "item_id": "CASH",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

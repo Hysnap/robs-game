@@ -255,14 +255,14 @@ static func run(
 
 			contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
-					resident_id, employer_entity_id, contract_class_id, role_title_id,
+					resident_id, employer_org_id, employer_establishment_id, contract_class_id, role_title_id,
 					contract_type_id, schedule_window_id, weekly_hours, compensation_rate, 
 					valid_from, valid_to, change_reason_id
 				) VALUES (
-					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
+					%d, (SELECT owner_org_id FROM establishments WHERE establishment_id = %d), %d, %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, assigned_est_id, class_id, role_id, contract_std_id, default_daytime_id,
+				r_id, assigned_est_id, assigned_est_id, class_id, role_id, contract_std_id, default_daytime_id,
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
@@ -416,16 +416,17 @@ static func run(
 			var class_id: int = int(slot["contract_class_id"])
 			var role_id: int = int(slot["role_title_id"])
 
+			var influx_est_id: int = int(slot["estab_id"])
 			influx_contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
-					resident_id, employer_entity_id, contract_class_id, role_title_id,
+					resident_id, employer_org_id, employer_establishment_id, contract_class_id, role_title_id,
 					contract_type_id, schedule_window_id, weekly_hours, compensation_rate, 
 					valid_from, valid_to, change_reason_id
 				) VALUES (
-					%d, 'ESTAB_%d', %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
+					%d, (SELECT owner_org_id FROM establishments WHERE establishment_id = %d), %d, %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, int(slot["estab_id"]), class_id, role_id, contract_std_id, default_daytime_id,
+				r_id, influx_est_id, influx_est_id, class_id, role_id, contract_std_id, default_daytime_id,
 				float(slot["hours"]), float(slot["rate"]), sim_start_day, reason_world_gen_id
 			])
 

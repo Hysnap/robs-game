@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "scope": "POSTAL_SERVICE_RULES",
+    "description": "Era-windowed postal delivery rounds, transit days by class, distance scaling, and electronic notice channels."
+  },
+  "classes": {
+    "FIRST_CLASS": {
+      "label_token": "UI_POST_FIRST_CLASS",
+      "is_physical": true,
+      "stamps_commodity_id": "POSTAGE_STAMP_1ST"
+    },
+    "SECOND_CLASS": {
+      "label_token": "UI_POST_SECOND_CLASS",
+      "is_physical": true,
+      "stamps_commodity_id": "POSTAGE_STAMP_2ND"
+    },
+    "ELECTRONIC_NOTICE": {
+      "label_token": "UI_POST_ELECTRONIC_NOTICE",
+      "is_physical": false,
+      "stamps_commodity_id": ""
+    }
+  },
+  "era_schedules": [
+    {
+      "valid_from_year": 1700,
+      "valid_to_year": 1839,
+      "deliveries_per_day": 1,
+      "delivery_windows": ["MORNING_ROUND"],
+      "distance_days_per_hop": 0.5,
+      "postage_paid_by": "RECIPIENT",
+      "transit_days": {
+        "FIRST_CLASS": 2,
+        "SECOND_CLASS": 4
+      }
+    },
+    {
+      "valid_from_year": 1840,
+      "valid_to_year": 1999,
+      "deliveries_per_day": 2,
+      "delivery_windows": ["MORNING_ROUND", "AFTERNOON_ROUND"],
+      "distance_days_per_hop": 0.0,
+      "postage_paid_by": "SENDER",
+      "transit_days": {
+        "FIRST_CLASS": 1,
+        "SECOND_CLASS": 3
+      }
+    },
+    {
+      "valid_from_year": 2000,
+      "valid_to_year": 2099,
+      "deliveries_per_day": 1,
+      "delivery_windows": ["MORNING_ROUND"],
+      "distance_days_per_hop": 0.0,
+      "postage_paid_by": "SENDER",
+      "transit_days": {
+        "FIRST_CLASS": 2,
+        "SECOND_CLASS": 5,
+        "ELECTRONIC_NOTICE": 0
+      }
+    }
+  ]
+}

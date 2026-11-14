@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "scope": "SETTLEMENT_RAILS",
+    "description": "Era-windowed payment and clearing instruments with working-day float, institution class restrictions, and auditability."
+  },
+  "rails": {
+    "PHYSICAL_CASH": {
+      "label_token": "UI_RAIL_PHYSICAL_CASH",
+      "valid_from_year": 1700,
+      "valid_to_year": 2099,
+      "requires_co_location": true,
+      "can_post": false,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["ALL"],
+      "audit_trace_weight": 0.0
+    },
+    "GIRO_CHEQUE": {
+      "label_token": "UI_RAIL_GIRO_CHEQUE",
+      "valid_from_year": 1968,
+      "valid_to_year": 2003,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["GIRO_ISSUER", "GIRO_AGENT", "CLEARING_BANK", "BUILDING_SOCIETY"],
+      "audit_trace_weight": 0.6
+    },
+    "CLEARING_BANK_CHEQUE": {
+      "label_token": "UI_RAIL_CLEARING_BANK_CHEQUE",
+      "valid_from_year": 1770,
+      "valid_to_year": 2019,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK"],
+      "audit_trace_weight": 0.85
+    },
+    "BUILDING_SOCIETY_CHEQUE_AGENCY": {
+      "label_token": "UI_RAIL_BUILDING_SOCIETY_CHEQUE",
+      "valid_from_year": 1850,
+      "valid_to_year": 1999,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 10,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["BUILDING_SOCIETY"],
+      "audit_trace_weight": 0.85
+    },
+    "UNIFIED_CHEQUE_MODERN": {
+      "label_token": "UI_RAIL_BANK_CHEQUE",
+      "valid_from_year": 2000,
+      "valid_to_year": 2019,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "BUILDING_SOCIETY"],
+      "audit_trace_weight": 0.9
+    },
+    "BACS_TRANSFER": {
+      "label_token": "UI_RAIL_BACS_TRANSFER",
+      "valid_from_year": 1968,
+      "valid_to_year": 2099,
+      "requires_co_location": false,
+      "can_post": false,
+      "clearing_working_days": 3,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "BUILDING_SOCIETY", "GIRO_ISSUER"],
+      "audit_trace_weight": 1.0
+    },
+    "FASTER_PAYMENT": {
+      "label_token": "UI_RAIL_FASTER_PAYMENT",
+      "valid_from_year": 2008,
+      "valid_to_year": 2099,
+      "requires_co_location": false,
+      "can_post": false,
+      "clearing_working_days": 0,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["CLEARING_BANK", "BUILDING_SOCIETY"],
+      "audit_trace_weight": 1.0
+    },
+    "BILL_OF_EXCHANGE": {
+      "label_token": "UI_RAIL_BILL_OF_EXCHANGE",
+      "valid_from_year": 1700,
+      "valid_to_year": 1914,
+      "requires_co_location": false,
+      "can_post": true,
+      "clearing_working_days": 30,
+      "clearing_mode": "BANKING",
+      "institution_classes": ["ALL"],
+      "audit_trace_weight": 0.7
+    }
+  }
+}

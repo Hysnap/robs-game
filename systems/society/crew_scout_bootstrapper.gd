@@ -61,14 +61,23 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		push_error("[CrewScoutBootstrapper] Strategy pipeline failed to assemble required cohort of %d operatives." % target_count)
 		return false
 
-	# 6. Resolve DB Label IDs dynamically from the secondary contract profile
+	# 6. Resolve DB Label IDs dynamically from the secondary contract profile & seed Crew Organization
 	var sec_contract_def: Dictionary = criteria.get("secondary_contract", {})
 	var class_code: String = str(sec_contract_def.get("contract_class_code", "INFORMAL_GREY"))
 	var sched_code: String = str(sec_contract_def.get("schedule_window_code", "EVENING"))
 	var sched_fallback: String = str(sec_contract_def.get("fallback_schedule_window_code", "FLEXIBLE"))
-	var employer_id: String = str(sec_contract_def.get("employer_entity_id", "CREW_ENTERPRISE"))
+	var employer_org_id: String = str(sec_contract_def.get("employer_org_id", "ORG:CREW_ENTERPRISE"))
+	if not employer_org_id.begins_with("ORG:"):
+		employer_org_id = "ORG:%s" % employer_org_id
 	var weekly_hours: float = float(sec_contract_def.get("weekly_hours", 20.0))
 	var comp_rate: float = float(sec_contract_def.get("compensation_rate", 0.0))
+
+	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+	DB_MANAGER.execute_batch([
+		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('%s', 'Crew Enterprise', 'GANG', 'INFORMAL_GREY', 'STANDARD', %d, NULL, %d);" % [
+			employer_org_id.replace("'", "''"), current_sim_day, reason_world_gen_id
+		]
+	])
 
 	var contract_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", class_code)
 	var schedule_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", sched_code)
@@ -90,7 +99,8 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 			"role_title_id": role_title_id,
 			"contract_class_id": contract_class_id,
 			"schedule_window_id": schedule_id,
-			"employer_entity_id": employer_id,
+			"employer_org_id": employer_org_id,
+			"employer_establishment_id": null,
 			"weekly_hours": weekly_hours,
 			"compensation_rate": comp_rate,
 			"start_day": current_sim_day
@@ -142,13 +152,22 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		resident_entry["establishment_id"] = home_estab_id
 		resident_entry["home_establishment_id"] = home_estab_id
 		resident_entry["current_district_id"] = home_district_id
-		resident_entry["primary_employer_id"] = profile.get("employer_entity_id", "")
+		resident_entry["primary_employer_org_id"] = profile.get("employer_org_id", "")
+		resident_entry["primary_employer_establishment_id"] = int(profile.get("employer_establishment_id", 0))
 		resident_entry["primary_role_id"] = profile.get("role_title_id", 0)
 		resident_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
 
 		world_state["residents"][slot_id] = resident_entry
 
-	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment
+	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
+	if leader_home_estab_id > 0:
+		DB_MANAGER.execute_batch([
+			"UPDATE organizations SET hq_establishment_id = %d WHERE org_id = '%s';" % [
+				leader_home_estab_id,
+				employer_org_id.replace("'", "''")
+			]
+		])
+
 	var starting_inv: Dictionary = startpoint.get("starting_inventory", {})
 	if not starting_inv.is_empty() and leader_home_estab_id > 0:
 		if not world_state.has("establishments"):

@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "verb_token": "CREATE_OBLIGATION",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Issue a co-located cash advance, loan, credit line, or bilateral obligation to a counterparty."
+  },
+  "parameters": {
+    "counterparty_id": { "type": "STRING", "required": true },
+    "amount": { "type": "FLOAT", "required": true },
+    "target_node_id": { "type": "STRING", "required": true },
+    "obligation_type": { "type": "STRING", "required": true },
+    "interest_rate": { "type": "FLOAT", "required": false },
+    "due_in_days": { "type": "INT", "required": false }
+  },
+  "steps": [
+    {
+      "step_id": "gate_lender_cash",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "ORDER_ACTOR",
+        "metric": "CASH",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "gate_co_location"
+    },
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "disburse_principal"
+    },
+    {
+      "step_id": "disburse_principal",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "ORDER_ACTOR",
+        "to": "PARAM.counterparty_id",
+        "item_id": "CASH",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

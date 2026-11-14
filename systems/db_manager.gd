@@ -78,6 +78,10 @@ static func _drop_society_schema() -> void:
 	_db.query("DROP VIEW IF EXISTS v_residents_overview;")
 	_db.query("DROP VIEW IF EXISTS v_district_census;")
 	_db.query("DROP VIEW IF EXISTS v_borough_census;")
+	_db.query("DROP TABLE IF EXISTS postal_mail;")
+	_db.query("DROP TABLE IF EXISTS pending_settlements;")
+	_db.query("DROP TABLE IF EXISTS obligations;")
+	_db.query("DROP TABLE IF EXISTS organization_members;")
 	_db.query("DROP TABLE IF EXISTS entity_adhoc_measures;")
 	_db.query("DROP TABLE IF EXISTS adhoc_measure_definitions;")
 	_db.query("DROP TABLE IF EXISTS livelihood_contracts;")
@@ -86,6 +90,7 @@ static func _drop_society_schema() -> void:
 	_db.query("DROP TABLE IF EXISTS residents;")
 	_db.query("DROP TABLE IF EXISTS households;")
 	_db.query("DROP TABLE IF EXISTS establishments;")
+	_db.query("DROP TABLE IF EXISTS organizations;")
 	_db.query("DROP TABLE IF EXISTS districts;")
 	_db.query("DROP TABLE IF EXISTS boroughs;")
 	_db.query("DROP TABLE IF EXISTS system_labels;")
@@ -178,6 +183,22 @@ static func _create_society_schema() -> void:
 		);
 	""")
 
+	# 2.8 Organizations Table (Companies, Partnerships, Gangs, Cartels, Banks, Civic Institutions)
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS organizations (
+			org_id TEXT PRIMARY KEY,
+			display_name TEXT NOT NULL,
+			org_type TEXT NOT NULL,
+			legal_status TEXT NOT NULL DEFAULT 'FORMAL',
+			institution_rail_class TEXT NOT NULL DEFAULT 'STANDARD',
+			hq_establishment_id INTEGER DEFAULT NULL,
+			valid_from INTEGER NOT NULL,
+			valid_to INTEGER,
+			change_reason_id INTEGER
+		);
+	""")
+
+
 	# 3. Establishments Table
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS establishments (
@@ -185,7 +206,7 @@ static func _create_society_schema() -> void:
 			district_id TEXT NOT NULL,
 			building_index INTEGER DEFAULT 0,
 			unit_door_number TEXT,
-			owning_entity TEXT NOT NULL DEFAULT 'CIVIC',
+			owner_org_id TEXT DEFAULT NULL,
 			name TEXT NOT NULL,
 			category_id INTEGER NOT NULL,
 			capacity INTEGER NOT NULL,
@@ -193,6 +214,7 @@ static func _create_society_schema() -> void:
 			valid_from INTEGER NOT NULL,
 			valid_to INTEGER,
 			change_reason_id INTEGER,
+			FOREIGN KEY (owner_org_id) REFERENCES organizations(org_id) ON DELETE SET NULL,
 			FOREIGN KEY (category_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (district_id) REFERENCES districts(district_id) ON DELETE NO ACTION
@@ -307,7 +329,8 @@ static func _create_society_schema() -> void:
 		CREATE TABLE IF NOT EXISTS livelihood_contracts (
 			contract_id INTEGER PRIMARY KEY AUTOINCREMENT,
 			resident_id INTEGER NOT NULL,
-			employer_entity_id TEXT NOT NULL,
+			employer_org_id TEXT DEFAULT NULL,
+			employer_establishment_id INTEGER DEFAULT NULL,
 			contract_class_id INTEGER NOT NULL,
 			role_title_id INTEGER NOT NULL,
 			contract_type_id INTEGER NOT NULL,
@@ -318,11 +341,103 @@ static func _create_society_schema() -> void:
 			valid_to INTEGER,
 			change_reason_id INTEGER,
 			FOREIGN KEY (resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
+			FOREIGN KEY (employer_org_id) REFERENCES organizations(org_id) ON DELETE SET NULL,
+			FOREIGN KEY (employer_establishment_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
 			FOREIGN KEY (contract_class_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (schedule_window_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (role_title_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (contract_type_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+		);
+	""")
+
+	# 7.2 Organization Memberships & Signing Authority
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS organization_members (
+			membership_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			org_id TEXT NOT NULL,
+			resident_id INTEGER NOT NULL,
+			role_code TEXT NOT NULL,
+			authority_mask INTEGER NOT NULL DEFAULT 1,
+			valid_from INTEGER NOT NULL,
+			valid_to INTEGER,
+			change_reason_id INTEGER,
+			UNIQUE(org_id, resident_id, role_code, valid_from),
+			FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE CASCADE,
+			FOREIGN KEY (resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
+			FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+		);
+	""")
+
+	# 7.3 Bilateral & Institutional Obligations (Loans, Deposits, Trade Credit, Arrears, Benefits, Pensions, Tithes)
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS obligations (
+			obligation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			debtor_scope TEXT NOT NULL,
+			debtor_id TEXT NOT NULL,
+			creditor_scope TEXT NOT NULL,
+			creditor_id TEXT NOT NULL,
+			obligation_type TEXT NOT NULL,
+			balance REAL NOT NULL DEFAULT 0.0,
+			principal REAL NOT NULL DEFAULT 0.0,
+			interest_rate REAL NOT NULL DEFAULT 0.0,
+			periodic_amount REAL NOT NULL DEFAULT 0.0,
+			recurrence_days INTEGER NOT NULL DEFAULT 0,
+			next_accrual_day INTEGER NOT NULL DEFAULT -1,
+			due_day INTEGER NOT NULL DEFAULT -1,
+			accepted_rails_json TEXT NOT NULL DEFAULT '[]',
+			status TEXT NOT NULL DEFAULT 'ACTIVE',
+			created_day INTEGER NOT NULL,
+			updated_day INTEGER NOT NULL
+		);
+	""")
+
+	# 7.4 Pending Clearing Settlements (Cheques, Bills of Exchange, BACS, Giro Float)
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS pending_settlements (
+			settlement_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			obligation_id INTEGER NOT NULL,
+			payer_scope TEXT NOT NULL,
+			payer_id TEXT NOT NULL,
+			payee_scope TEXT NOT NULL,
+			payee_id TEXT NOT NULL,
+			drawer_bank_org_id TEXT DEFAULT NULL,
+			rail_code TEXT NOT NULL,
+			amount REAL NOT NULL,
+			initiated_day INTEGER NOT NULL,
+			presented_day INTEGER NOT NULL,
+			settles_on_day INTEGER NOT NULL,
+			status TEXT NOT NULL DEFAULT 'PENDING_CLEARANCE',
+			FOREIGN KEY (obligation_id) REFERENCES obligations(obligation_id) ON DELETE CASCADE
+		);
+	""")
+
+	# 7.5 Physical & Electronic Postal Mail Ledger
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS postal_mail (
+			mail_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			sender_scope TEXT NOT NULL,
+			sender_id TEXT NOT NULL,
+			recipient_scope TEXT NOT NULL,
+			recipient_id TEXT NOT NULL,
+			destination_estab_id INTEGER NOT NULL,
+			mail_class TEXT NOT NULL,
+			delivery_round TEXT NOT NULL,
+			item_type TEXT NOT NULL,
+			linked_obligation_id INTEGER DEFAULT NULL,
+			linked_settlement_id INTEGER DEFAULT NULL,
+			enclosed_cash REAL NOT NULL DEFAULT 0.0,
+			postage_due REAL NOT NULL DEFAULT 0.0,
+			subject_token TEXT NOT NULL,
+			body_token TEXT NOT NULL,
+			payload_json TEXT NOT NULL DEFAULT '{}',
+			posted_day INTEGER NOT NULL,
+			delivery_day INTEGER NOT NULL,
+			status TEXT NOT NULL DEFAULT 'IN_TRANSIT',
+			opened_day INTEGER DEFAULT NULL,
+			FOREIGN KEY (destination_estab_id) REFERENCES establishments(establishment_id) ON DELETE CASCADE,
+			FOREIGN KEY (linked_obligation_id) REFERENCES obligations(obligation_id) ON DELETE SET NULL,
+			FOREIGN KEY (linked_settlement_id) REFERENCES pending_settlements(settlement_id) ON DELETE SET NULL
 		);
 	""")
 
@@ -575,9 +690,10 @@ static func _create_society_schema() -> void:
 			c.contract_id,
 			c.resident_id,
 			r.first_name || ' ' || r.current_surname AS full_name,
-			e.district_id AS home_district_id,
-			c.employer_entity_id,
-			COALESCE(e.name, c.employer_entity_id) AS employer_name,
+			e_home.district_id AS home_district_id,
+			c.employer_org_id,
+			c.employer_establishment_id,
+			COALESCE(o.display_name, e_work.name, '') AS employer_name,
 			l_class.code AS contract_class_code,
 			l_class.title AS contract_class_title,
 			l_type.code AS contract_type_code,
@@ -592,7 +708,9 @@ static func _create_society_schema() -> void:
 		FROM livelihood_contracts c
 		JOIN residents r ON c.resident_id = r.resident_id
 		JOIN households h ON r.household_id = h.household_id
-		JOIN establishments e ON h.establishment_id = e.establishment_id
+		JOIN establishments e_home ON h.establishment_id = e_home.establishment_id
+		LEFT JOIN organizations o ON c.employer_org_id = o.org_id
+		LEFT JOIN establishments e_work ON c.employer_establishment_id = e_work.establishment_id
 		JOIN system_labels l_class ON c.contract_class_id = l_class.label_id
 		JOIN system_labels l_type ON c.contract_type_id = l_type.label_id
 		JOIN system_labels l_role ON c.role_title_id = l_role.label_id
@@ -609,7 +727,8 @@ static func _create_society_schema() -> void:
 			d.display_name as district_name,
 			e.district_id,
 			e.name,
-			e.owning_entity,
+			e.owner_org_id,
+			o.display_name AS owner_org_name,
 			e.is_vacant,
 			l_cat.code AS category_code,
 			l_cat.title AS category_title,
@@ -618,8 +737,9 @@ static func _create_society_schema() -> void:
 		FROM establishments e
 		JOIN districts d ON d.district_id = e.district_id
 		LEFT JOIN boroughs b ON b.borough_id = d.borough_id
+		LEFT JOIN organizations o ON e.owner_org_id = o.org_id
 		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
-		LEFT JOIN livelihood_contracts c ON ('ESTAB_' || e.establishment_id) = c.employer_entity_id AND c.valid_to IS NULL
+		LEFT JOIN livelihood_contracts c ON e.establishment_id = c.employer_establishment_id AND c.valid_to IS NULL
 		WHERE e.valid_to IS NULL
 		GROUP BY e.establishment_id;
 	""")
@@ -644,7 +764,8 @@ static func _create_society_schema() -> void:
 			w.slot_id,
 			e.establishment_id,
 			e.name AS establishment_name,
-			e.owning_entity,
+			e.owner_org_id, 
+			o.display_name AS owner_org_name,
 			b.display_name AS borough_name,
 			d.borough_id,
 			d.display_name AS district_name,
@@ -670,6 +791,7 @@ static func _create_society_schema() -> void:
 			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || w.valid_from || ' days') AS slot_created_date
 		FROM workplace_job_slots w
 		JOIN establishments e ON w.establishment_id = e.establishment_id
+		LEFT JOIN organizations o ON e.owner_org_id = o.org_id
 		JOIN districts d ON e.district_id = d.district_id
 		LEFT JOIN boroughs b ON d.borough_id = b.borough_id 
 		JOIN system_labels l_sec ON w.sector_category_id = l_sec.label_id
@@ -695,7 +817,20 @@ static func _create_society_schema() -> void:
 	_db.query("CREATE INDEX IF NOT EXISTS idx_hh_pub ON households(local_pub_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_rel_pair ON social_relationships(from_resident_id, to_resident_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_resident ON livelihood_contracts(resident_id);")
-	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_employer ON livelihood_contracts(employer_entity_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_est_owner_org ON establishments(owner_org_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_resident ON livelihood_contracts(resident_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_employer_org ON livelihood_contracts(employer_org_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_employer_estab ON livelihood_contracts(employer_establishment_id);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_org_members_org ON organization_members(org_id, valid_to);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_org_members_res ON organization_members(resident_id, valid_to);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_debtor ON obligations(debtor_scope, debtor_id, status);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_creditor ON obligations(creditor_scope, creditor_id, status);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_due ON obligations(status, due_day);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_accrual ON obligations(status, next_accrual_day);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_settlements_day ON pending_settlements(status, settles_on_day);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_settlements_obl ON pending_settlements(obligation_id, status);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_postal_delivery ON postal_mail(delivery_day, status);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_postal_dest ON postal_mail(destination_estab_id, status);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_households_estab ON households(establishment_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_districts_borough ON districts(borough_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_rel_to ON social_relationships(to_resident_id);")
