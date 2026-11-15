@@ -1,16 +1,31 @@
 # res://systems/ui_commands/cmd_open_order_composer.gd
 extends RefCounted
 
-## Opens the active shell's directive composer modal for the selected or requested district
-static func execute(payload: Dictionary, _view_host: ViewHost, context_refs: Dictionary = {}) -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	var default_district: String = ""
-	if gs != null and "world_state" in gs:
-		default_district = str(gs.world_state.get("selected_district_id", ""))
+## Opens and initializes the StickyOrderPad order composer via ViewHost
+static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
+	if view_host == null:
+		return
 
-	var target_district: String = str(payload.get("target_district_id", default_district)).strip_edges()
-	var directive_modal = context_refs.get("directive_modal", null)
-	assert(directive_modal != null and directive_modal.has_method("open_for_context"),
-		"FATAL: [CmdOpenOrderComposer] Missing or invalid 'directive_modal' in context_refs.")
+	var order_pad = view_host.get_order_composer_node()
+	if order_pad == null:
+		SystemLogger.log_error("[CmdOpenOrderComposer] Cannot open order composer: ViewHost has no mounted order pad.")
+		push_error("[CmdOpenOrderComposer] Cannot open order composer: ViewHost has no mounted order pad.")
+		return
 
-	directive_modal.open_for_context({"target_district_id": target_district})
+	if order_pad.has_method("open_for_context"):
+		order_pad.open_for_context(payload)
+	elif order_pad.has_method("open_for_district"):
+		var target_dist: String = str(payload.get("target_district_id", payload.get("district_id", "")))
+		if target_dist.is_empty():
+			var gs = ScenarioManifestManager.get_game_state()
+			if gs and "world_state" in gs:
+				var ws: Dictionary = gs.world_state
+				target_dist = str(ws.get("selected_district_id", ws.get("player_knowledge", {}).get("home_district_id", "")))
+		if not target_dist.is_empty():
+			order_pad.open_for_district(target_dist)
+		else:
+			order_pad.visible = true
+			order_pad.move_to_front()
+	else:
+		order_pad.visible = true
+		order_pad.move_to_front()

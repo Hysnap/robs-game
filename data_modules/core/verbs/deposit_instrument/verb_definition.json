@@ -1,0 +1,35 @@
+{
+    "_meta": {
+        "verb_token": "DEPOSIT_INSTRUMENT",
+        "version": 1,
+        "user_creatable": true,
+        "description": "Pay a delivered cheque or giro voucher into an active bank demand deposit account for clearing."
+    },
+    "parameters": {
+        "mail_id": {
+            "type": "INT",
+            "required": true
+        },
+        "target_node_id": {
+            "type": "STRING",
+            "required": true
+        }
+    },
+    "steps": [
+        {
+            "step_id": "gate_co_location",
+            "primitive": "REQUIRE",
+            "params": {
+                "domain": "LOCATION",
+                "actor": "ORDER_ACTOR",
+                "metric": "current_district_id",
+                "operator": "==",
+                "value": "TARGET_NODE"
+            },
+            "on_failure": {
+                "error_code": "INVALID_TARGET"
+            },
+            "next_step": null
+        }
+    ]
+}

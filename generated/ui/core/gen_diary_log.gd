@@ -2,7 +2,10 @@
 # Compiled from: res://data_modules/core/ui_schemas/views/diary_log.json
 extends VBoxContainer
 
+signal action_clicked(action_code, payload)
+
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+const CalendarNavigator = preload("res://scenes/ui/components/calendar_navigator.gd")
 
 var _value_labels: Dictionary = {}
 
@@ -74,6 +77,29 @@ func build_ui() -> void:
 	_value_labels["dispatched_count"] = val_dispatched_count
 	add_child(row_dispatched_count)
 
+	# --- Section: diary_calendar ---
+	var sec_diary_calendar := VBoxContainer.new()
+	sec_diary_calendar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sec_diary_calendar.add_theme_constant_override("separation", 2)
+	var hdr_diary_calendar := Label.new()
+	hdr_diary_calendar.text = "[ " + tr("UI_SEC_DIARY_CALENDAR").to_upper() + " ]"
+	hdr_diary_calendar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_diary_calendar.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_diary_calendar.add_theme_font_override("font", mono_font)
+	hdr_diary_calendar.add_theme_color_override("font_color", clr_blue)
+	sec_diary_calendar.add_child(hdr_diary_calendar)
+	var sep_diary_calendar := HSeparator.new()
+	sec_diary_calendar.add_child(sep_diary_calendar)
+	add_child(sec_diary_calendar)
+
+	var cal_calendar_nav := CalendarNavigator.new()
+	cal_calendar_nav.name = "calendar_nav"
+	cal_calendar_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if has_signal("action_clicked"):
+		cal_calendar_nav.action_clicked.connect(func(code: String, payload: Dictionary): emit_signal("action_clicked", code, payload))
+	_value_labels["calendar_nav"] = cal_calendar_nav
+	add_child(cal_calendar_nav)
+
 	# --- Inscriptions Container: inscriptions ---
 	var hdr_inscriptions := Label.new()
 	hdr_inscriptions.text = "[ " + tr("UI_SEC_DISPATCH_INSCRIPTIONS").to_upper() + " ]"
@@ -102,6 +128,10 @@ func bind_data(data: Dictionary) -> void:
 		else:
 			var val_str := str(int(data["total_dispatched_orders"]))
 			ctrl.text = tr("FMT_INT").replace("{val}", val_str) + ""
+	if _value_labels.has("calendar_nav") and data.has("calendar_payload"):
+		var cal_widget = _value_labels["calendar_nav"]
+		if cal_widget is CalendarNavigator and data["calendar_payload"] is Dictionary:
+			cal_widget.bind_calendar(data["calendar_payload"])
 
 func inscribe_entry(entry: Dictionary) -> void:
 	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):

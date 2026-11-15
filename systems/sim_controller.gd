@@ -74,6 +74,8 @@ static func _dispatch_verb_impacts(
 			var obl_outcome: Dictionary = _ObligationLedger.process_verb_impact(world_state, directive, parsed)
 			if not obl_outcome.is_empty():
 				applied[metric_id] = obl_outcome
+				if obl_outcome.has("impacts") and obl_outcome["impacts"] is Array:
+					_apply_calendar_event_impacts(world_state, obl_outcome["impacts"], target_node_id, actor_id)
 		elif parsed.has("rules_module") or parsed.has("model"):
 			var target_scope: String = str(parsed.get("target_scope", directive.get("target_scope", "DISTRICT"))).to_upper().strip_edges()
 			var resolved_target_id: String = target_node_id
@@ -106,8 +108,29 @@ static func _dispatch_verb_impacts(
 			applied[metric_id] = delta_val
 	return applied
 
+## Applies N-actor / multi-target declarative impacts attached to a calendar_events row
+static func _apply_calendar_event_impacts(
+	world_state: Dictionary,
+	impacts: Array,
+	default_location_id: String,
+	default_actor_id: String = ""
+) -> void:
+	for entry in impacts:
+		if not (entry is Dictionary):
+			continue
+		var metric_id := str(entry.get("metric_id", "")).to_upper().strip_edges()
+		if metric_id.is_empty() or not entry.has("delta"):
+			continue
+		var delta_val := float(entry["delta"])
+		var scope := str(entry.get("target_scope", _ImpactRouter.get_metric_scope(metric_id))).to_upper().strip_edges()
+		var recipient_id := str(entry.get("target_id", "")).strip_edges()
+		if recipient_id.is_empty():
+			recipient_id = default_actor_id if (scope == "ACTOR" and not default_actor_id.is_empty()) else default_location_id
+		if not recipient_id.is_empty():
+			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
+
 ## Processes complete operational cycle: resolves directives, advances time via CalendarHelper,
-## triggers ambient drift, rolls daily obligation/postal ledger, and returns structured cycle report.
+## triggers ambient drift, rolls daily obligation/postal/calendar ledger, and returns structured cycle report.
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
 	var meta: Dictionary = world_state.get("metadata", {})
@@ -189,7 +212,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		})
 		diary_memos.append(TranslationServer.translate("FEEDBACK_CYCLE_IDLE"))
 
-	# 2. Advance Temporal Offset via CalendarHelper & Roll Daily Obligation / Postal Ledger
+	# 2. Advance Temporal Offset via CalendarHelper & Roll Daily Obligation / Postal / Calendar Ledger
 	var days_to_advance := 1
 	match horizon:
 		"day", "shift":
@@ -203,7 +226,10 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"cleared_settlements": [],
 		"dishonoured_settlements": [],
 		"accrued_obligations": [],
-		"overdue_obligations": []
+		"overdue_obligations": [],
+		"dispatched_statements": [],
+		"activated_events": [],
+		"completed_events": []
 	}
 
 	for step in range(1, days_to_advance + 1):
@@ -213,6 +239,15 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		obligation_rollover["cleared_settlements"].append_array(daily_res.get("cleared_settlements", []))
 		obligation_rollover["dishonoured_settlements"].append_array(daily_res.get("dishonoured_settlements", []))
 		obligation_rollover["accrued_obligations"].append_array(daily_res.get("accrued_obligations", []))
+		obligation_rollover["dispatched_statements"].append_array(daily_res.get("dispatched_statements", []))
+		obligation_rollover["activated_events"].append_array(daily_res.get("activated_events", []))
+		var ended_evs: Array = daily_res.get("completed_events", [])
+		obligation_rollover["completed_events"].append_array(ended_evs)
+		for ev in ended_evs:
+			if ev is Dictionary:
+				var parsed_imp = JSON.parse_string(str(ev.get("impacts_json", "[]")))
+				if parsed_imp is Array and not parsed_imp.is_empty():
+					_apply_calendar_event_impacts(world_state, parsed_imp, str(ev.get("location_id", "")))
 		if step == days_to_advance:
 			obligation_rollover["overdue_obligations"] = daily_res.get("overdue_obligations", [])
 
@@ -260,6 +295,48 @@ static func _append_ledger_rollover_events(
 	var week_num: int = _CalendarHelper.day_to_week(current_day)
 	var cal_date: String = _CalendarHelper.day_to_calendar_date(current_day)
 	var dow: int = _CalendarHelper.day_of_week(current_day)
+
+	for ev in rollover.get("activated_events", []):
+		if not (ev is Dictionary):
+			continue
+		var title_tok := str(ev.get("title_token", "UI_EVENT_DEFAULT"))
+		var msg := "%s: %s" % [TranslationServer.translate("FEEDBACK_CALENDAR_EVENT_ACTIVE"), TranslationServer.translate(title_tok)]
+		executed_events.append({
+			"trigger_type": "CALENDAR_EVENT_STARTED",
+			"day_offset": int(ev.get("start_day", current_day)),
+			"calendar_date": cal_date,
+			"week": week_num,
+			"day_of_week": dow,
+			"verb": "CALENDAR_EVENT_STARTED",
+			"target_item": str(ev.get("event_type", "")),
+			"event_id": int(ev.get("event_id", 0)),
+			"success": true,
+			"message": msg,
+			"author": TranslationServer.translate("UI_CALENDAR_DIARY"),
+			"target_node_id": str(ev.get("location_id", ""))
+		})
+		diary_memos.append(msg)
+
+	for ev in rollover.get("completed_events", []):
+		if not (ev is Dictionary):
+			continue
+		var title_tok := str(ev.get("title_token", "UI_EVENT_DEFAULT"))
+		var msg := "%s: %s" % [TranslationServer.translate("FEEDBACK_CALENDAR_EVENT_COMPLETED"), TranslationServer.translate(title_tok)]
+		executed_events.append({
+			"trigger_type": "CALENDAR_EVENT_COMPLETED",
+			"day_offset": int(ev.get("end_day", current_day)),
+			"calendar_date": cal_date,
+			"week": week_num,
+			"day_of_week": dow,
+			"verb": "CALENDAR_EVENT_COMPLETED",
+			"target_item": str(ev.get("event_type", "")),
+			"event_id": int(ev.get("event_id", 0)),
+			"success": true,
+			"message": msg,
+			"author": TranslationServer.translate("UI_CALENDAR_DIARY"),
+			"target_node_id": str(ev.get("location_id", ""))
+		})
+		diary_memos.append(msg)
 
 	for mail in rollover.get("delivered_mail", []):
 		if not (mail is Dictionary):

@@ -81,6 +81,7 @@ static func _drop_society_schema() -> void:
 	_db.query("DROP TABLE IF EXISTS postal_mail;")
 	_db.query("DROP TABLE IF EXISTS pending_settlements;")
 	_db.query("DROP TABLE IF EXISTS obligations;")
+	_db.query("DROP TABLE IF EXISTS calendar_events;")
 	_db.query("DROP TABLE IF EXISTS organization_members;")
 	_db.query("DROP TABLE IF EXISTS entity_adhoc_measures;")
 	_db.query("DROP TABLE IF EXISTS adhoc_measure_definitions;")
@@ -369,7 +370,27 @@ static func _create_society_schema() -> void:
 		);
 	""")
 
-	# 7.3 Bilateral & Institutional Obligations (Loans, Deposits, Trade Credit, Arrears, Benefits, Pensions, Tithes)
+	# 7.25 Shared Public & Personal Calendar Events (1-to-N Multi-Actor Occurrences)
+	_db.query("""
+		CREATE TABLE IF NOT EXISTS calendar_events (
+			event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			event_type TEXT NOT NULL,
+			title_token TEXT NOT NULL,
+			organizer_scope TEXT DEFAULT NULL,
+			organizer_id TEXT DEFAULT NULL,
+			location_scope TEXT NOT NULL,
+			location_id TEXT NOT NULL,
+			start_day INTEGER NOT NULL,
+			end_day INTEGER NOT NULL,
+			recurrence_days INTEGER NOT NULL DEFAULT 0,
+			visibility_scope TEXT NOT NULL DEFAULT 'PUBLIC',
+			impacts_json TEXT NOT NULL DEFAULT '[]',
+			status TEXT NOT NULL DEFAULT 'SCHEDULED',
+			created_day INTEGER NOT NULL
+		);
+	""")
+
+	# 7.3 Bilateral & Institutional Obligations (1-to-1 Loans, Deposits, Trade Credit, Arrears, Benefits, Pensions, Event Duties)
 	_db.query("""
 		CREATE TABLE IF NOT EXISTS obligations (
 			obligation_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -378,6 +399,7 @@ static func _create_society_schema() -> void:
 			creditor_scope TEXT NOT NULL,
 			creditor_id TEXT NOT NULL,
 			obligation_type TEXT NOT NULL,
+			linked_event_id INTEGER DEFAULT NULL,
 			balance REAL NOT NULL DEFAULT 0.0,
 			principal REAL NOT NULL DEFAULT 0.0,
 			interest_rate REAL NOT NULL DEFAULT 0.0,
@@ -388,7 +410,8 @@ static func _create_society_schema() -> void:
 			accepted_rails_json TEXT NOT NULL DEFAULT '[]',
 			status TEXT NOT NULL DEFAULT 'ACTIVE',
 			created_day INTEGER NOT NULL,
-			updated_day INTEGER NOT NULL
+			updated_day INTEGER NOT NULL,
+			FOREIGN KEY (linked_event_id) REFERENCES calendar_events(event_id) ON DELETE SET NULL
 		);
 	""")
 
@@ -823,10 +846,13 @@ static func _create_society_schema() -> void:
 	_db.query("CREATE INDEX IF NOT EXISTS idx_contracts_employer_estab ON livelihood_contracts(employer_establishment_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_org_members_org ON organization_members(org_id, valid_to);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_org_members_res ON organization_members(resident_id, valid_to);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_calendar_events_window ON calendar_events(status, start_day, end_day);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_calendar_events_loc ON calendar_events(location_scope, location_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_debtor ON obligations(debtor_scope, debtor_id, status);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_creditor ON obligations(creditor_scope, creditor_id, status);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_due ON obligations(status, due_day);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_accrual ON obligations(status, next_accrual_day);")
+	_db.query("CREATE INDEX IF NOT EXISTS idx_obligations_event ON obligations(linked_event_id);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_settlements_day ON pending_settlements(status, settles_on_day);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_settlements_obl ON pending_settlements(obligation_id, status);")
 	_db.query("CREATE INDEX IF NOT EXISTS idx_postal_delivery ON postal_mail(delivery_day, status);")

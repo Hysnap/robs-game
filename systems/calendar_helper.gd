@@ -369,3 +369,29 @@ static func _days_in_gregorian_month(year: int, month: int) -> int:
 			return 29 if is_leap else 28
 		_:
 			return 30
+
+## Returns month grid metadata (start_day, end_day, days_in_month, leading_blank_days, month_title) for a month_offset relative to base_day_offset
+static func get_month_grid_meta(base_day_offset: int, month_offset: int = 0) -> Dictionary:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var ymd := _day_offset_to_ymd(base_day_offset)
+	var total_months := (ymd[0] * 12) + (ymd[1] - 1) + month_offset
+	var target_year := floori(float(total_months) / 12.0)
+	var target_month := posmod(total_months, 12) + 1
+	var days_in_month := _days_in_gregorian_month(target_year, target_month)
+	var start_day := _ymd_to_day_offset(target_year, target_month, 1)
+	var end_day := start_day + days_in_month - 1
+	var leading_blanks := day_of_week(start_day) - 1
+	var month_token := "UI_CAL_MONTH_%02d" % target_month
+	var month_label := TranslationServer.translate(month_token)
+	if month_label == month_token:
+		var fallback_months := ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+		month_label = fallback_months[target_month] if target_month < fallback_months.size() else "%02d" % target_month
+	return {
+		"year": target_year,
+		"month": target_month,
+		"start_day": start_day,
+		"end_day": end_day,
+		"days_in_month": days_in_month,
+		"leading_blank_days": leading_blanks,
+		"month_title": "%s %04d" % [month_label, target_year]
+	}

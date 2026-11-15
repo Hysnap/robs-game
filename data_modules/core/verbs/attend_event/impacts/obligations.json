@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "verb_token": "ATTEND_EVENT",
+    "description": "Records attendance at a scheduled calendar event and resolves any linked personal obligation."
+  },
+  "metric_id": "OBLIGATION",
+  "rules_module": "civic_hierarchy",
+  "model": "ATTEND_EVENT"
+}

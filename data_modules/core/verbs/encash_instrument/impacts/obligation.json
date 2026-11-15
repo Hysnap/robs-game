@@ -1,0 +1,10 @@
+{
+    "_meta": {
+        "version": "1.0.0",
+        "verb_token": "ENCASH_INSTRUMENT",
+        "description": "Encashes a delivered giro voucher or bearer cheque for physical currency in actor custody."
+    },
+    "metric_id": "OBLIGATION",
+    "rules_module": "civic_hierarchy",
+    "model": "ENCASH_INSTRUMENT"
+}

@@ -1,4 +1,4 @@
-# res://scenes/ui/feedback/feedback_manager.gd
+# res://systems/feedback_manager.gd
 class_name FeedbackManager
 extends RefCounted
 

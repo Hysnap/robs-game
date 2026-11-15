@@ -1,0 +1,53 @@
+{
+    "_meta": {
+        "verb_token": "ENCASH_INSTRUMENT",
+        "version": 1,
+        "description": "Form layout, target scopes, and field mapping configuration for ENCASH_INSTRUMENT directives."
+    },
+    "allowed_scopes": [
+        "DISTRICT",
+        "ESTABLISHMENT"
+    ],
+    "target_categories": [
+        {
+            "id": "GIRO_VOUCHER",
+            "label_token": "UI_CAT_GIRO_VOUCHER",
+            "domain": "INSTRUMENT",
+            "item_types": [
+                "GIRO_VOUCHER",
+                "CHEQUE"
+            ]
+        }
+    ],
+    "form_layout": {
+        "target_section": {
+            "visible": true,
+            "required": true,
+            "label_token": "UI_LBL_INSTRUMENT",
+            "domain": "INSTRUMENT",
+            "item_types": [
+                "GIRO_VOUCHER",
+                "CHEQUE"
+            ],
+            "mapped_field": "mail_id"
+        },
+        "amount_section": {
+            "visible": false,
+            "required": false,
+            "label_token": null,
+            "mapped_field": null
+        },
+        "location_section": {
+            "visible": true,
+            "required": true,
+            "label_token": "UI_LBL_COUNTER_LOCATION",
+            "mapped_field": "target_node_id"
+        },
+        "contact_section": {
+            "visible": false,
+            "required": false,
+            "label_token": null,
+            "mapped_field": null
+        }
+    }
+}
