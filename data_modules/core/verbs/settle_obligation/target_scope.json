@@ -1,5 +1,6 @@
 {
   "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
     "verb_token": "SETTLE_OBLIGATION",
     "version": 2,
     "description": "Form layout, target scopes, and field mapping configuration for SETTLE_OBLIGATION directives."
@@ -10,17 +11,18 @@
   ],
   "target_categories": [
     {
-      "id": "COMMODITY",
-      "label_token": "UI_CAT_COMMODITIES",
-      "catalog_source": "commodities"
+      "id": "OBLIGATION",
+      "domain": "OBLIGATION",
+      "direction": "PAYABLE",
+      "label_token": "UI_CAT_OBLIGATION"
     }
   ],
   "form_layout": {
     "target_section": {
       "visible": true,
-      "required": false,
-      "label_token": "UI_LBL_SETTLEMENT_ITEM",
-      "mapped_field": "item_id"
+      "required": true,
+      "label_token": "UI_LBL_OBLIGATION",
+      "mapped_field": "obligation_id"
     },
     "amount_section": {
       "visible": true,
@@ -31,6 +33,13 @@
       "max_value": 10000.0,
       "step": 1.0,
       "mapped_field": "amount"
+    },
+    "rail_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_SETTLEMENT_RAIL",
+      "mapped_field": "rail_code",
+      "default_item_id": "CASH"
     },
     "location_section": {
       "visible": true,

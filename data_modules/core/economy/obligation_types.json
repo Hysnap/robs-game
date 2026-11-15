@@ -1,0 +1,114 @@
+{
+    "_meta": {
+        "version": "1.1.0",
+        "scope": "OBLIGATION_TYPES",
+        "description": "Era-windowed bilateral, commercial, and statutory welfare obligation definitions."
+    },
+    "obligation_types": {
+        "TERM_LOAN": {
+            "label_token": "UI_OBL_TERM_LOAN",
+            "category": "CREDIT",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": true,
+            "allows_recurrence": false,
+            "user_creatable": true
+        },
+        "TRADE_CREDIT": {
+            "label_token": "UI_OBL_TRADE_CREDIT",
+            "category": "COMMERCIAL",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": false,
+            "user_creatable": true
+        },
+        "PROMISSORY_NOTE": {
+            "label_token": "UI_OBL_PROMISSORY_NOTE",
+            "category": "CREDIT",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": true,
+            "allows_recurrence": false,
+            "user_creatable": true
+        },
+        "RENT_LEASE": {
+            "label_token": "UI_OBL_RENT_LEASE",
+            "category": "PROPERTY",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 7,
+            "user_creatable": true
+        },
+        "DEMAND_DEPOSIT": {
+            "label_token": "UI_OBL_DEMAND_DEPOSIT",
+            "category": "BANKING",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": true,
+            "allows_recurrence": false,
+            "user_creatable": false
+        },
+        "UTILITY_ARREARS": {
+            "label_token": "UI_OBL_UTILITY_ARREARS",
+            "category": "INSTITUTIONAL",
+            "valid_from_year": 1800,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "user_creatable": false
+        },
+        "STATE_PENSION": {
+            "label_token": "UI_OBL_STATE_PENSION",
+            "category": "STATUTORY_BENEFIT",
+            "valid_from_year": 1909,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 7,
+            "user_creatable": false
+        },
+        "INCOME_SUPPORT": {
+            "label_token": "UI_OBL_INCOME_SUPPORT",
+            "category": "STATUTORY_BENEFIT",
+            "valid_from_year": 1948,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 14,
+            "user_creatable": false
+        },
+        "UNEMPLOYMENT_BENEFIT": {
+            "label_token": "UI_OBL_UNEMPLOYMENT_BENEFIT",
+            "category": "STATUTORY_BENEFIT",
+            "valid_from_year": 1911,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 14,
+            "user_creatable": false
+        },
+        "CHILD_BENEFIT": {
+            "label_token": "UI_OBL_CHILD_BENEFIT",
+            "category": "STATUTORY_BENEFIT",
+            "valid_from_year": 1946,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 28,
+            "user_creatable": false
+        },
+        "DISABILITY_SUPPORT": {
+            "label_token": "UI_OBL_DISABILITY_SUPPORT",
+            "category": "STATUTORY_BENEFIT",
+            "valid_from_year": 1971,
+            "valid_to_year": 2026,
+            "allows_interest": false,
+            "allows_recurrence": true,
+            "default_recurrence_days": 28,
+            "user_creatable": false
+        }
+    }
+}

@@ -1,5 +1,6 @@
 {
   "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
     "verb_token": "COLLECT_OBLIGATION",
     "version": 2,
     "description": "Form layout, target scopes, and field mapping configuration for COLLECT_OBLIGATION directives."
@@ -8,13 +9,20 @@
     "DISTRICT",
     "ESTABLISHMENT"
   ],
-  "target_categories": [],
+  "target_categories": [
+    {
+      "id": "OBLIGATION",
+      "domain": "OBLIGATION",
+      "direction": "RECEIVABLE",
+      "label_token": "UI_CAT_OBLIGATION"
+    }
+  ],
   "form_layout": {
     "target_section": {
-      "visible": false,
-      "required": false,
-      "label_token": null,
-      "mapped_field": null
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_OBLIGATION",
+      "mapped_field": "obligation_id"
     },
     "amount_section": {
       "visible": true,
@@ -25,6 +33,13 @@
       "max_value": 10000.0,
       "step": 1.0,
       "mapped_field": "amount"
+    },
+    "rail_section": {
+      "visible": true,
+      "required": false,
+      "label_token": "UI_LBL_SETTLEMENT_RAIL",
+      "mapped_field": "rail_code",
+      "default_item_id": "CASH"
     },
     "location_section": {
       "visible": true,

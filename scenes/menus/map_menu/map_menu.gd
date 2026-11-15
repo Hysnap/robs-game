@@ -272,11 +272,6 @@ func build_settings_from_form() -> Dictionary:
 	settings["residential_density_profile"] = profile_id
 	return settings
 
-func _on_radius_slider_value_changed(new_value: float) -> void:
-	var label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid.get_node_or_null("RadiusValueLabel")
-	if label:
-		label.text = str(int(new_value))
-
 ## Dynamically loads residential density profiles from archetypes.json
 func _load_density_profiles_from_archetypes() -> void:
 	_density_profiles.clear()

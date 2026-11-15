@@ -1,7 +1,7 @@
 {
   "_meta": {
     "entity_type": "VERB_TARGET_SCOPE",
-    "verb": "SCOUT",
+    "verb_token": "SCOUT",
     "description": "Targeting rules and dynamic form layout for district-level reconnaissance."
   },
   "target_scopes": [

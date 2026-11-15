@@ -4,7 +4,7 @@ extends SceneTree
 const UICompilerScript = preload("res://tools/ui_compiler/ui_compiler.gd")
 
 const SCHEMA_PATH := "res://data_modules/core/ui_schemas/views/cashbook_ledger.json"
-const GENERATED_SCRIPT_PATH := "res://generated/ui/gen_cashbook_ledger.gd"
+const GENERATED_SCRIPT_PATH := "res://generated/ui/core/gen_cashbook_ledger.gd"
 
 func _init() -> void:
 	SystemLogger.log_info("\n=======================================================")

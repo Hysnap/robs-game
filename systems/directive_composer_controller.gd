@@ -4,9 +4,6 @@ extends RefCounted
 
 const TargetDomainRegistryScript = preload("res://systems/target_domain_registry.gd")
 const VerbRouterScript = preload("res://systems/verb_router.gd")
-const SocietyQueriesScript = preload("res://systems/society_queries.gd")
-const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
-const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
@@ -29,6 +26,10 @@ static func is_verb_user_creatable(verb_token: String) -> bool:
 		return false
 
 	return bool(scope_def.get("visible_in_composer", true))
+
+## Resolves active crew operatives from canonical world_state["residents"] via IntelManager
+static func get_crew_actors(world_state: Dictionary) -> Array[Dictionary]:
+	return IntelManagerScript.get_crew_residents(world_state)
 
 ## Resolves raw targets for an active verb
 static func resolve_targets_for_verb(verb_token: String, world_state: Dictionary) -> Array[Dictionary]:
@@ -79,157 +80,34 @@ static func get_form_layout(verb_token: String) -> Dictionary:
 
 	return layout
 
-## Helper to extract active crew observers from world_state
-static func _build_observers_from_state(world_state: Dictionary) -> Array:
-	var observers: Array = []
-	var staff_dict: Dictionary = world_state.get("staff", {})
-	for staff_id in staff_dict.keys():
-		var member = staff_dict[staff_id]
-		if not (member is Dictionary):
-			continue
-		var obs_id: String = str(member.get("resident_id", staff_id))
-		if obs_id.is_empty():
-			continue
-		var affs: Array = []
-		var home_est_id: String = str(member.get("home_establishment_id", member.get("residence_establishment_id", "")))
-		if not home_est_id.is_empty() and home_est_id != "0":
-			affs.append({"org_scope": "ESTABLISHMENT", "org_id": home_est_id, "clearance": 1.0})
-		var emp_id: String = str(member.get("employer_entity_id", ""))
-		if not emp_id.is_empty() and emp_id != "0":
-			affs.append({
-				"org_scope": "ESTABLISHMENT",
-				"org_id": emp_id,
-				"role_code": str(member.get("role_code", member.get("role", "")))
-			})
-		observers.append({
-			"observer_scope": "RESIDENT",
-			"observer_id": obs_id,
-			"affiliations": affs
-		})
-	return observers
-
-## Builds normalized location list based on continuous 0-100 knowledge pools and active district
+## Filters player-known locations from IntelManager by the active verb's allowed_scopes
 static func build_locations_cache(verb_token: String, active_district_id: String, world_state: Dictionary) -> Array[Dictionary]:
-	var locations: Array[Dictionary] = []
 	var allowed_scopes := get_allowed_scopes(verb_token)
-	var observers := _build_observers_from_state(world_state)
+	var known_locations: Array[Dictionary] = IntelManagerScript.get_known_locations(active_district_id, world_state)
+	if allowed_scopes.is_empty():
+		return known_locations
 
-	# A. Districts Known via Continuous 0-100 Intel Thresholds (if allowed by verb)
-	if allowed_scopes.is_empty() or allowed_scopes.has("DISTRICT"):
-		var districts_map: Dictionary = world_state.get("districts", {})
-		var candidate_ids: Array[String] = []
-		for d_key in districts_map.keys():
-			candidate_ids.append(str(d_key))
-		if not active_district_id.is_empty() and not candidate_ids.has(active_district_id):
-			candidate_ids.append(active_district_id)
+	var filtered: Array[Dictionary] = []
+	for loc in known_locations:
+		var loc_type: String = str(loc.get("type", ""))
+		if allowed_scopes.has(loc_type):
+			filtered.append(loc)
+	return filtered
 
-		for s_id in candidate_ids:
-			var dist_rec: Dictionary = districts_map.get(s_id, {}) if districts_map.has(s_id) and districts_map[s_id] is Dictionary else {}
-			var is_landmark: bool = bool(dist_rec.get("is_public_landmark", false))
-			var score: float = IntelManagerScript.get_collective_score(world_state, observers, "DISTRICT", s_id)
-			if is_landmark and score < 20.0:
-				score = 20.0
-			if s_id != active_district_id and not IntelManagerScript.is_entity_known(score, "DISTRICT"):
-				continue
-
-			var d_name: String = str(dist_rec.get("display_name", ""))
-			if d_name.is_empty() and SocietyQueriesScript != null:
-				var census: Dictionary = SocietyQueriesScript.get_district_census(s_id)
-				d_name = str(census.get("district_name", ""))
-			if d_name.is_empty():
-				d_name = s_id.trim_prefix("DISTRICT_").capitalize().replace("_", " ")
-
-			locations.append({
-				"id": s_id,
-				"type": "DISTRICT",
-				"category": "DISTRICT",
-				"sector": "DISTRICT",
-				"display": d_name,
-				"intel_score": score
-			})
-
-	# B. Known Establishments in active district (if allowed by verb)
-	if (allowed_scopes.is_empty() or allowed_scopes.has("ESTABLISHMENT")) and not active_district_id.is_empty():
-		var estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
-		for e in estabs:
-			var e_id_str: String = str(e.get("establishment_id", ""))
-			var e_score: float = IntelManagerScript.get_collective_score(world_state, observers, "ESTABLISHMENT", e_id_str)
-			if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
-				e_score = 20.0
-			if not IntelManagerScript.is_entity_known(e_score, "ESTABLISHMENT"):
-				continue
-
-			var e_name: String = str(e.get("name", "Unnamed Venue"))
-			var cat_code: String = str(e.get("category_code", ""))
-
-			var is_residential: bool = (cat_code == "RESIDENTIAL_UNIT" or cat_code.begins_with("RESIDENTIAL"))
-			var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
-
-			locations.append({
-				"id": e_id_str,
-				"type": "ESTABLISHMENT",
-				"category": cat_code,
-				"sector": sector,
-				"display": e_name,
-				"intel_score": e_score
-			})
-
-	return locations
-
-## Queries establishment dockets through the Fog-of-War intel filter and extracts known contacts
+## Delegates establishment contact resolution through IntelManager's Fog-of-War filter
 static func resolve_contacts_for_location(location_meta: Dictionary, world_state: Dictionary = {}) -> Array[Dictionary]:
-	var contacts: Array[Dictionary] = []
-	if not location_meta is Dictionary or location_meta.get("type") != "ESTABLISHMENT":
-		return contacts
+	return IntelManagerScript.resolve_known_contacts_for_location(location_meta, world_state)
 
-	var estab_id: int = int(location_meta.get("id", 0))
-	if estab_id <= 0:
-		return contacts
-
-	var sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 0))
-	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(world_state)
-	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, sim_day, intel_ctx)
-	
-	for emp in docket.get("employees", []):
-		if bool(emp.get("is_masked", false)):
-			continue
-		var res_id: int = int(emp.get("resident_id", 0))
-		var emp_name: String = str(emp.get("full_name", ""))
-		var emp_role: String = str(emp.get("role_title", ""))
-		if res_id > 0 and not emp_name.is_empty():
-			contacts.append({
-				"id": str(res_id),
-				"name": emp_name,
-				"role": emp_role,
-				"type": "EMPLOYEE"
-			})
-
-	for res in docket.get("residents", []):
-		if bool(res.get("is_masked", false)):
-			continue
-		var res_id: int = int(res.get("resident_id", 0))
-		var res_name: String = str(res.get("full_name", ""))
-		if res_id > 0 and not res_name.is_empty():
-			contacts.append({
-				"id": str(res_id),
-				"name": res_name,
-				"role": "OCCUPANT",
-				"type": "RESIDENTIAL"
-			})
-
-	return contacts
-
-## Calculates cost estimate incorporating player knowledge and intel-attenuated perception fuzzing
+## Calculates total order estimate using IntelManager's perceived unit cost
 static func calculate_estimate_with_intel(
-	qty: float, 
-	target_meta: Dictionary, 
-	location_meta: Dictionary, 
+	qty: float,
+	target_meta: Dictionary,
+	location_meta: Dictionary,
 	world_state: Dictionary
 ) -> Dictionary:
 	var safe_qty: float = maxf(0.0, qty)
 	var base_cost: float = float(target_meta.get("unit_cost", target_meta.get("base_cost", 0.0)))
 	var item_id: String = str(target_meta.get("id", ""))
-	var venue_id: String = str(location_meta.get("id", ""))
 
 	if safe_qty <= 0.0 or base_cost <= 0.0 or item_id.is_empty():
 		return {
@@ -239,27 +117,12 @@ static func calculate_estimate_with_intel(
 			"confidence_token": "UI_ESTIMATE_VERIFIED"
 		}
 
-	var known_prices: Dictionary = world_state.get("player_knowledge", {}).get("transacted_prices", {})
-	var venue_prices: Dictionary = known_prices.get(venue_id, {})
-	var has_prior_history: bool = venue_prices.has(item_id)
+	var unit_est: Dictionary = IntelManagerScript.estimate_perceived_unit_cost(item_id, base_cost, location_meta, world_state)
+	var perceived_unit_cost: float = float(unit_est.get("perceived_unit_cost", base_cost))
+	var is_exact: bool = bool(unit_est.get("is_exact", true))
 
-	var perceived_unit_cost: float = base_cost
-	var is_exact: bool = true
-
-	if has_prior_history:
-		perceived_unit_cost = float(venue_prices[item_id])
-		is_exact = true
-	else:
-		var is_home: bool = bool(location_meta.get("is_home_turf", false))
-		var venue_score: float = float(location_meta.get("intel_score", 0.0))
-		var scaled_jitter: float = IntelManagerScript.attenuate_fuzz(0.25, 0.02, venue_score)
-		var fuzzed_cost: float = ConditionEvaluatorScript.calculate_fuzzed_ratio(base_cost, is_home, -scaled_jitter, scaled_jitter, 0.10, 0.02)
-		perceived_unit_cost = snappedf(fuzzed_cost, 0.05)
-		is_exact = false
-
-	var total: float = safe_qty * perceived_unit_cost
 	return {
-		"estimated_total": total,
+		"estimated_total": safe_qty * perceived_unit_cost,
 		"perceived_unit_cost": perceived_unit_cost,
 		"is_exact": is_exact,
 		"confidence_token": "UI_ESTIMATE_VERIFIED" if is_exact else "UI_ESTIMATE_SPECULATIVE"
@@ -308,7 +171,26 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	if not amount_field.is_empty():
 		directive[amount_field] = raw_amount
 
-	# 3. Location Section
+	# 3. Settlement Rail & Postal Delivery Section (Optional)
+	var rail_cfg: Dictionary = layout.get("rail_section", {})
+	if not rail_cfg.is_empty():
+		var rail_field: String = str(rail_cfg.get("mapped_field", "rail_code"))
+		var rail_val: String = str(form_data.get("rail_code", form_data.get("settlement_rail", ""))).strip_edges().to_upper()
+		if bool(rail_cfg.get("required", false)) and rail_val.is_empty():
+			push_error("[DirectiveComposerController REJECTED] Settlement rail is required for verb '%s'." % verb)
+			return {}
+		if not rail_val.is_empty():
+			directive["settlement_rail"] = rail_val
+			if not rail_field.is_empty():
+				directive[rail_field] = rail_val
+		var default_item: String = str(rail_cfg.get("default_item_id", "")).strip_edges()
+		if not default_item.is_empty() and not directive.has("item_id"):
+			directive["item_id"] = default_item
+		var postal_val: String = str(form_data.get("postal_class", "")).strip_edges().to_upper()
+		if not postal_val.is_empty():
+			directive["postal_class"] = postal_val
+
+	# 4. Location Section
 	var loc_cfg: Dictionary = layout.get("location_section", {})
 	var loc_field: String = str(loc_cfg.get("mapped_field", "target_node_id"))
 	var loc_id: String = str(form_data.get("target_node_id", "")).strip_edges()
@@ -323,7 +205,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 			directive[loc_field] = loc_id
 	directive["target_scope"] = str(form_data.get("target_scope", "DISTRICT"))
 
-	# 4. Contact Section
+	# 5. Contact Section
 	var contact_cfg: Dictionary = layout.get("contact_section", {})
 	var contact_field: String = str(contact_cfg.get("mapped_field", "counterparty_id"))
 	var contact_id: String = str(form_data.get("counterparty_id", form_data.get("target_resident_id", ""))).strip_edges()

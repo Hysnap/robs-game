@@ -1,12 +1,36 @@
-class_name FeedbackManager extends RefCounted
+# res://scenes/ui/feedback/feedback_manager.gd
+class_name FeedbackManager
+extends RefCounted
 
-static func load_all_feedback(
-	shared_dir: String = "res://data_modules/shared/feedback/", 
-	verbs_dir: String = "res://data_modules/core/verbs/"
-) -> Dictionary:
+const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
+const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
+const DATA_MODULES_ROOT := "res://data_modules/"
+
+## Discovers and loads all shared feedback dictionaries and core/flavour verb feedback.json files via FileSystemCrawler
+static func load_all_feedback(root_dir: String = DATA_MODULES_ROOT) -> Dictionary:
 	var matrix: Dictionary = {"shared": {}, "verbs": {}}
-	_scan_shared(shared_dir, matrix["shared"])
-	_scan_verbs(verbs_dir, matrix["verbs"])
+	var all_json: Array[String] = FileSystemCrawlerScript.find_files_recursive(root_dir, "", ".json")
+
+	for full_path in all_json:
+		if full_path.contains("/feedback/"):
+			var content: Dictionary = ScenarioManifestManagerScript.load_json_file(full_path)
+			for code in content.keys():
+				if code == "_meta":
+					continue
+				if not matrix["shared"].has(code):
+					matrix["shared"][code] = []
+				if content[code] is Array:
+					matrix["shared"][code].append_array(content[code])
+		elif full_path.ends_with("/feedback.json") and full_path.contains("/verbs/"):
+			var verb_content: Dictionary = ScenarioManifestManagerScript.load_json_file(full_path)
+			if not verb_content.is_empty():
+				var verb_token: String = ""
+				if verb_content.has("_meta") and verb_content["_meta"] is Dictionary:
+					verb_token = str(verb_content["_meta"].get("verb_token", "")).strip_edges().to_upper()
+				if verb_token.is_empty():
+					verb_token = full_path.get_base_dir().get_file().strip_edges().to_upper()
+				matrix["verbs"][verb_token] = verb_content
+
 	return matrix
 
 static func _scan_shared(path: String, out_dict: Dictionary) -> void:

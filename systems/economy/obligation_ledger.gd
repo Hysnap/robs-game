@@ -129,12 +129,12 @@ static func adjust_obligation_balance(obligation_id: int, delta: float, current_
 		"status": new_status
 	}
 
-## Resolves the active settlement rail config for the current simulation year from civic_hierarchy
+## Resolves the active settlement rail config for the current simulation year from settlement_rails
 static func get_settlement_rail_config(rail_code: String, current_year: int) -> Dictionary:
-	assert(MANIFEST_MGR.has_module("civic_hierarchy"), "FATAL: [ObligationLedger] Scenario manifest missing 'civic_hierarchy' module.")
-	var civic_data: Dictionary = MANIFEST_MGR.load_module("civic_hierarchy")
-	var rails: Dictionary = civic_data.get("settlement_rails", {})
-	assert(not rails.is_empty(), "FATAL: [ObligationLedger] 'civic_hierarchy' module missing 'settlement_rails'.")
+	assert(MANIFEST_MGR.has_module("settlement_rails"), "FATAL: [ObligationLedger] Scenario manifest missing 'settlement_rails' module.")
+	var rails_data: Dictionary = MANIFEST_MGR.load_module("settlement_rails")
+	var rails: Dictionary = rails_data.get("settlement_rails", {})
+	assert(not rails.is_empty(), "FATAL: [ObligationLedger] 'settlement_rails' module missing 'settlement_rails' dictionary.")
 	var key := rail_code.strip_edges().to_upper()
 	assert(rails.has(key), "FATAL: [ObligationLedger] Unknown settlement rail '%s'." % rail_code)
 	var cfg: Dictionary = rails[key]

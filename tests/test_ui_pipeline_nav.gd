@@ -4,7 +4,7 @@ extends SceneTree
 const UICompilerScript = preload("res://tools/ui_compiler/ui_compiler.gd")
 
 const SCHEMA_PATH := "res://data_modules/core/ui_schemas/views/navigation_bar.json"
-const GENERATED_SCRIPT_PATH := "res://generated/ui/gen_navigation_bar.gd"
+const GENERATED_SCRIPT_PATH := "res://generated/ui/core/gen_navigation_bar.gd"
 
 var _captured_actions: Array[Dictionary] = []
 

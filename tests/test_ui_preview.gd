@@ -19,20 +19,20 @@ func _ready() -> void:
 	add_child(host)
 
 	# 3. Mount Compiled Navigation Component
-	var nav_class = load("res://generated/ui/gen_navigation_bar.gd")
+	var nav_class = load("res://generated/ui/core/gen_navigation_bar.gd")
 	if nav_class:
 		host.set_navigation_component(nav_class.new())
 
 	# 4. Mount Compiled Views
-	var docket_class = load("res://generated/ui/gen_district_docket.gd")
+	var docket_class = load("res://generated/ui/core/gen_district_docket.gd")
 	if docket_class:
 		host.register_view("DOSSIER", docket_class.new())
 
-	var cashbook_class = load("res://generated/ui/gen_cashbook_ledger.gd")
+	var cashbook_class = load("res://generated/ui/core/gen_cashbook_ledger.gd")
 	if cashbook_class:
 		host.register_view("FINANCE", cashbook_class.new())
 
-	var diary_class = load("res://generated/ui/gen_diary_log.gd")
+	var diary_class = load("res://generated/ui/core/gen_diary_log.gd")
 	if diary_class:
 		host.register_view("DIARY", diary_class.new())
 

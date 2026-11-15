@@ -15,6 +15,7 @@ extends RefCounted
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
+const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 
 const DEFAULT_RULES_MODULE: String = "intel_exposure"
 const DEFAULT_METRIC_ID: String = "INTEL_SCORE"
@@ -225,15 +226,6 @@ static func transfer_intel(
 	return apply_effort_impulse(world_state, to_scope, to_id, target_scope, target_id, transferred_effort, transfer_ctx, rules_module, metric_id)
 
 ## Generic declarative saturating impact executor (completely measure- & scope-agnostic)
-## impact_params: {
-##   "observer_scope": String, "observer_id": String,
-##   "target_scope": String, "target_id": String,
-##   "recipient_scope": String, "recipient_id": String,
-##   "subject_scope": String, "subject_id": String,
-##   "multiplier": float (e.g. duration_ticks),
-##   "context": Dictionary (optional distance, access_permeability, etc.),
-##   "secondary_targets": Array of { "target_scope": String, "target_id": String, "effort_ratio": float }
-## }
 static func process_verb_impact(world_state: Dictionary, impact_params: Dictionary, cfg: Dictionary) -> Dictionary:
 	var obs_scope: String = str(cfg.get("observer_scope", impact_params.get("observer_scope", "RESIDENT"))).to_upper().strip_edges()
 	var obs_id: String = str(impact_params.get("observer_id", "")).strip_edges()
@@ -424,4 +416,170 @@ static func build_player_intel_context(ws: Dictionary) -> Dictionary:
 		"world_state": ws,
 		"observers": observers,
 		"crew_resident_ids": crew_ids
+	}
+
+## Returns normalized display descriptors for active crew residents in world_state["residents"]
+static func get_crew_residents(ws: Dictionary) -> Array[Dictionary]:
+	var crew: Array[Dictionary] = []
+	var seen_ids: Array[int] = []
+	var residents_dict: Dictionary = ws.get("residents", {})
+
+	for key in residents_dict.keys():
+		var rec = residents_dict[key]
+		if rec is Dictionary and bool(rec.get("is_crew", true)):
+			var r_id: int = int(rec.get("resident_id", 0))
+			if r_id <= 0 or seen_ids.has(r_id):
+				continue
+			seen_ids.append(r_id)
+			var full_name: String = str(rec.get("name", "")).strip_edges()
+			if full_name.is_empty():
+				full_name = ("%s %s" % [str(rec.get("first_name", "")), str(rec.get("current_surname", ""))]).strip_edges()
+			if full_name.is_empty():
+				continue
+			var role_str: String = str(rec.get("role_title", rec.get("role", ""))).strip_edges()
+			crew.append({
+				"id": str(r_id),
+				"resident_id": r_id,
+				"name": full_name,
+				"role": role_str
+			})
+
+	crew.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["resident_id"]) < int(b["resident_id"])
+	)
+	return crew
+
+## Returns player-known districts and establishments in active_district_id filtered by 0-100 perception thresholds
+static func get_known_locations(active_district_id: String, ws: Dictionary) -> Array[Dictionary]:
+	var locations: Array[Dictionary] = []
+	var intel_ctx: Dictionary = build_player_intel_context(ws)
+	var observers: Array = intel_ctx.get("observers", [])
+
+	# A. Known Districts
+	var districts_map: Dictionary = ws.get("districts", {})
+	var candidate_ids: Array[String] = []
+	for d_key in districts_map.keys():
+		candidate_ids.append(str(d_key))
+	if not active_district_id.is_empty() and not candidate_ids.has(active_district_id):
+		candidate_ids.append(active_district_id)
+
+	for s_id in candidate_ids:
+		var dist_rec: Dictionary = districts_map.get(s_id, {}) if districts_map.has(s_id) and districts_map[s_id] is Dictionary else {}
+		var is_landmark: bool = bool(dist_rec.get("is_public_landmark", false))
+		var score: float = get_collective_score(ws, observers, "DISTRICT", s_id)
+		if is_landmark and score < 20.0:
+			score = 20.0
+		if s_id != active_district_id and not is_entity_known(score, "DISTRICT"):
+			continue
+
+		var d_name: String = str(dist_rec.get("display_name", ""))
+		if d_name.is_empty() and SocietyQueriesScript != null:
+			var census: Dictionary = SocietyQueriesScript.get_district_census(s_id)
+			d_name = str(census.get("district_name", ""))
+		if d_name.is_empty():
+			d_name = s_id.trim_prefix("DISTRICT_").capitalize().replace("_", " ")
+
+		locations.append({
+			"id": s_id,
+			"type": "DISTRICT",
+			"category": "DISTRICT",
+			"sector": "DISTRICT",
+			"display": d_name,
+			"intel_score": score
+		})
+
+	# B. Known Establishments in active district
+	if not active_district_id.is_empty():
+		var estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
+		for e in estabs:
+			var e_id_str: String = str(e.get("establishment_id", ""))
+			var e_score: float = get_collective_score(ws, observers, "ESTABLISHMENT", e_id_str)
+			if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
+				e_score = 20.0
+			if not is_entity_known(e_score, "ESTABLISHMENT"):
+				continue
+
+			var e_name: String = str(e.get("name", ""))
+			var cat_code: String = str(e.get("category_code", ""))
+			var is_residential: bool = (cat_code == "RESIDENTIAL_UNIT" or cat_code.begins_with("RESIDENTIAL"))
+			var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
+
+			locations.append({
+				"id": e_id_str,
+				"type": "ESTABLISHMENT",
+				"category": cat_code,
+				"sector": sector,
+				"display": e_name,
+				"intel_score": e_score
+			})
+
+	return locations
+
+## Queries establishment dockets through the Fog-of-War intel filter and extracts unmasked contacts
+static func resolve_known_contacts_for_location(location_meta: Dictionary, ws: Dictionary) -> Array[Dictionary]:
+	var contacts: Array[Dictionary] = []
+	if not (location_meta is Dictionary) or str(location_meta.get("type", "")) != "ESTABLISHMENT":
+		return contacts
+
+	var estab_id: int = int(location_meta.get("id", 0))
+	if estab_id <= 0:
+		return contacts
+
+	var sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 0))
+	var intel_ctx: Dictionary = build_player_intel_context(ws)
+	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, sim_day, intel_ctx)
+
+	for emp in docket.get("employees", []):
+		if bool(emp.get("is_masked", false)):
+			continue
+		var res_id: int = int(emp.get("resident_id", 0))
+		var emp_name: String = str(emp.get("full_name", ""))
+		var emp_role: String = str(emp.get("role_title", ""))
+		if res_id > 0 and not emp_name.is_empty():
+			contacts.append({
+				"id": str(res_id),
+				"name": emp_name,
+				"role": emp_role,
+				"type": "EMPLOYEE"
+			})
+
+	for res in docket.get("residents", []):
+		if bool(res.get("is_masked", false)):
+			continue
+		var res_id: int = int(res.get("resident_id", 0))
+		var res_name: String = str(res.get("full_name", ""))
+		if res_id > 0 and not res_name.is_empty():
+			contacts.append({
+				"id": str(res_id),
+				"name": res_name,
+				"role": "OCCUPANT",
+				"type": "RESIDENTIAL"
+			})
+
+	return contacts
+
+## Estimates perceived unit price using transacted price memory or intel-attenuated fuzzing
+static func estimate_perceived_unit_cost(item_id: String, base_cost: float, location_meta: Dictionary, ws: Dictionary) -> Dictionary:
+	if base_cost <= 0.0 or item_id.is_empty():
+		return {
+			"perceived_unit_cost": 0.0,
+			"is_exact": true
+		}
+
+	var venue_id: String = str(location_meta.get("id", ""))
+	var known_prices: Dictionary = ws.get("player_knowledge", {}).get("transacted_prices", {})
+	var venue_prices: Dictionary = known_prices.get(venue_id, {})
+	if venue_prices.has(item_id):
+		return {
+			"perceived_unit_cost": float(venue_prices[item_id]),
+			"is_exact": true
+		}
+
+	var is_home: bool = bool(location_meta.get("is_home_turf", false))
+	var venue_score: float = float(location_meta.get("intel_score", 0.0))
+	var scaled_jitter: float = attenuate_fuzz(0.25, 0.02, venue_score)
+	var fuzzed_cost: float = ConditionEvaluatorScript.calculate_fuzzed_ratio(base_cost, is_home, -scaled_jitter, scaled_jitter, 0.10, 0.02)
+	return {
+		"perceived_unit_cost": snappedf(fuzzed_cost, 0.05),
+		"is_exact": false
 	}

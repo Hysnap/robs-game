@@ -1,5 +1,6 @@
 {
   "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
     "verb_token": "CREATE_OBLIGATION",
     "version": 2,
     "description": "Form layout, target scopes, and field mapping configuration for CREATE_OBLIGATION directives."
@@ -8,13 +9,20 @@
     "DISTRICT",
     "ESTABLISHMENT"
   ],
-  "target_categories": [],
+  "target_categories": [
+    {
+      "id": "OBLIGATION_TYPE",
+      "domain": "OBLIGATION_TYPE",
+      "rules_module": "obligation_types",
+      "label_token": "UI_CAT_OBLIGATION_TYPE"
+    }
+  ],
   "form_layout": {
     "target_section": {
-      "visible": false,
-      "required": false,
-      "label_token": null,
-      "mapped_field": null
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_OBLIGATION_TYPE",
+      "mapped_field": "obligation_type"
     },
     "amount_section": {
       "visible": true,
