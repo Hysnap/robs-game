@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "verb_token": "ATTEND_EVENT",
+    "version": 1,
+    "user_creatable": true,
+    "description": "Attend a scheduled public or personal calendar event at its designated location to fulfill linked obligations."
+  },
+  "parameters": {
+    "event_id": {
+      "type": "INT",
+      "required": true
+    },
+    "target_node_id": {
+      "type": "STRING",
+      "required": true
+    }
+  },
+  "steps": [
+    {
+      "step_id": "gate_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": null
+    }
+  ]
+}

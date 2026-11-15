@@ -35,8 +35,6 @@ func get_cell_pitch() -> float:
 	return get_block_size() + get_street_width()
 
 func get_cell_area_sqm() -> float:
-	if city_configuration and city_configuration.has_method("get_standard_lot_area_sqm"):
-		return city_configuration.get_standard_lot_area_sqm()
 	var b_sz := get_block_size()
 	return b_sz * b_sz
 

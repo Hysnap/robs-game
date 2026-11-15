@@ -1,7 +1,7 @@
 {
   "_meta": {
     "entity_type": "VERB_TARGET_SCOPE",
-    "verb": "BUY",
+    "verb_token": "BUY",
     "description": "Targeting rules for purchasing commodities and wholesale inventory."
   },
   "target_scopes": [

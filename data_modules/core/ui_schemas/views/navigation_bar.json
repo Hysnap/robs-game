@@ -12,35 +12,35 @@
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_DIARY",
           "action_signal": "action_clicked",
-          "emit_args": "\"NAV_ROUTE\", {\"domain\": \"DIARY\"}"
+          "emit_args": "\"open_diary\", {}"
         },
         {
           "id": "dossier",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_DOSSIER",
           "action_signal": "action_clicked",
-          "emit_args": "\"NAV_ROUTE\", {\"domain\": \"DOSSIER\"}"
+          "emit_args": "\"open_dossier\", {}"
         },
         {
           "id": "roster",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_ROSTER",
           "action_signal": "action_clicked",
-          "emit_args": "\"NAV_ROUTE\", {\"domain\": \"ROSTER\"}"
+          "emit_args": "\"open_roster\", {}"
         },
         {
           "id": "finance",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_FINANCE",
           "action_signal": "action_clicked",
-          "emit_args": "\"NAV_ROUTE\", {\"domain\": \"FINANCE\"}"
+          "emit_args": "\"open_finance\", {}"
         },
         {
           "id": "styles",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_STYLES",
           "action_signal": "action_clicked",
-          "emit_args": "\"NAV_ROUTE\", {\"domain\": \"STYLES\"}"
+          "emit_args": "\"toggle_styles\", {}"
         }
       ]
     },

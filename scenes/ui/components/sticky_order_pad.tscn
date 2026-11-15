@@ -20,7 +20,7 @@ layout_mode = 2
 [node name="DragHandle" type="Label" parent="VBox/Header" unique_id=89046052]
 layout_mode = 2
 size_flags_horizontal = 3
-text = ":: ORDER SLIP PAD (DRAG) ::"
+text = "UI_PAD_DRAG_HANDLE"
 
 [node name="BtnClose" type="Button" parent="VBox/Header" unique_id=585401304]
 layout_mode = 2
@@ -82,6 +82,14 @@ min_value = 1.0
 max_value = 1000.0
 value = 10.0
 
+[node name="RailOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Scalar/VBox" unique_id=1498093922]
+visible = false
+layout_mode = 2
+
+[node name="PostalOption" type="OptionButton" parent="VBox/NotesGrid/Slot_Scalar/VBox" unique_id=1498093923]
+visible = false
+layout_mode = 2
+
 [node name="Slot_Actor" type="PanelContainer" parent="VBox/NotesGrid" unique_id=2122077675]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -132,7 +140,7 @@ text = "LBL_HDR_TELEMETRY"
 
 [node name="EstimatedCostLabel" type="Label" parent="VBox/NotesGrid/Slot_Telemetry/VBox" unique_id=1600024020]
 layout_mode = 2
-text = "£0.00"
+text = "FMT_CURRENCY"
 
 [node name="ButtonBox" type="HBoxContainer" parent="VBox" unique_id=928360015]
 layout_mode = 2

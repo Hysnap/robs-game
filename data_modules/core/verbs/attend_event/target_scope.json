@@ -1,0 +1,59 @@
+{
+    "_meta": {
+        "verb_token": "ATTEND_EVENT",
+        "version": 1,
+        "description": "Form layout, target scopes, and field mapping configuration for ATTEND_EVENT directives."
+    },
+    "allowed_scopes": [
+        "DISTRICT",
+        "ESTABLISHMENT"
+    ],
+    "target_categories": [
+        {
+            "id": "SIGN_ON_SESSION",
+            "label_token": "UI_CAT_SIGN_ON",
+            "domain": "CALENDAR_EVENT",
+            "event_types": [
+                "SIGN_ON_SESSION"
+            ]
+        },
+        {
+            "id": "CIVIC_AND_SOCIAL",
+            "label_token": "UI_CAT_EVENTS",
+            "domain": "CALENDAR_EVENT",
+            "event_types": [
+                "COURT_HEARING",
+                "FAMILY_BIRTHDAY",
+                "SPORTING_FIXTURE",
+                "BANK_HOLIDAY"
+            ]
+        }
+    ],
+    "form_layout": {
+        "target_section": {
+            "visible": true,
+            "required": true,
+            "label_token": "UI_LBL_CALENDAR_EVENT",
+            "domain": "CALENDAR_EVENT",
+            "mapped_field": "event_id"
+        },
+        "amount_section": {
+            "visible": false,
+            "required": false,
+            "label_token": null,
+            "mapped_field": null
+        },
+        "location_section": {
+            "visible": true,
+            "required": true,
+            "label_token": "UI_LBL_EVENT_VENUE",
+            "mapped_field": "target_node_id"
+        },
+        "contact_section": {
+            "visible": false,
+            "required": false,
+            "label_token": null,
+            "mapped_field": null
+        }
+    }
+}

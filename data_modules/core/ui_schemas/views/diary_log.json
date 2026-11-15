@@ -1,10 +1,17 @@
 {
   "_meta": {
-   "target_class": "GenDiaryLog",
+    "target_class": "GenDiaryLog",
     "extends": "VBoxContainer",
-    "description": "Pre-compiled operational dispatch diary"
+    "description": "Pre-compiled operational dispatch diary with integrated calendar event navigator"
   },
   "sections": [
+    {
+      "id": "signals",
+      "type": "SIGNALS",
+      "signals": [
+        "action_clicked(action_code, payload)"
+      ]
+    },
     {
       "id": "diary_header",
       "header_token": "UI_SEC_DISPATCH_DIARY",
@@ -23,6 +30,19 @@
           "token": "UI_LBL_DISPATCH_COUNT",
           "color": "body",
           "format": "INT"
+        }
+      ]
+    },
+    {
+      "id": "diary_calendar",
+      "header_token": "UI_SEC_DIARY_CALENDAR",
+      "color": "accent",
+      "rows": [
+        {
+          "id": "calendar_nav",
+          "type": "CALENDAR_NAVIGATOR",
+          "field": "calendar_payload",
+          "action_signal": "action_clicked"
         }
       ]
     },

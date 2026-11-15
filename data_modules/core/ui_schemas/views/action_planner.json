@@ -16,7 +16,7 @@
           "type": "BUTTON",
           "token": "UI_BTN_OPEN_ORDER_PAD",
           "action_signal": "action_clicked",
-          "emit_args": "\"OPEN_PAD\""
+          "emit_args": "\"open_order_composer\""
         }
       ]
     },
@@ -39,7 +39,7 @@
           "type": "BUTTON",
           "token": "UI_BTN_SELECT_ALL",
           "action_signal": "action_clicked",
-          "emit_args": "\"SELECT_ALL\""
+          "emit_args": "\"select_all_directives\""
         }
       ]
     },
@@ -47,10 +47,10 @@
       "id": "action_planner_signals",
       "type": "SIGNALS",
       "signals": [
-      "directive_staged(directive)",
-      "execute_shift_requested(staged_directives)",
-      "action_clicked(action_code)"
-    ]
+        "directive_staged(directive)",
+        "execute_shift_requested(staged_directives)",
+        "action_clicked(action_code: String, payload: Dictionary)"
+      ]
     }
   ]
 }

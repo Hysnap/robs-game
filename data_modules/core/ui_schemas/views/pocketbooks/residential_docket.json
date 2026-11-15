@@ -12,8 +12,8 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
-          "action_signal": "route_requested",
-          "emit_args": "\"DOSSIER\", \"\""
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_dossier\", {}"
         }
       ]
     },
@@ -81,7 +81,7 @@
       "id": "residential_doc_signals",
       "type": "SIGNALS",
       "signals": [
-        "route_requested(domain_token: String, target_page_name: String)"
+        "action_clicked(action_code: String, payload: Dictionary)"
       ]
     }
   ]

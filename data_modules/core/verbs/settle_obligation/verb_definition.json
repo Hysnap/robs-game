@@ -1,9 +1,9 @@
 {
   "_meta": {
     "verb_token": "SETTLE_OBLIGATION",
-    "version": 2,
+    "version": 3,
     "user_creatable": true,
-    "description": "Settle or reduce an active financial, service, or commodity obligation with a co-located creditor."
+    "description": "Settle or reduce an active financial, service, or commodity obligation via cash, cheque, or giro rail."
   },
   "parameters": {
     "obligation_id": {
@@ -16,7 +16,7 @@
     },
     "item_id": {
       "type": "STRING",
-      "required": true
+      "required": false
     },
     "amount": {
       "type": "FLOAT",
@@ -29,24 +29,13 @@
     "rail_code": {
       "type": "STRING",
       "required": false
+    },
+    "postal_class": {
+      "type": "STRING",
+      "required": false
     }
   },
   "steps": [
-    {
-      "step_id": "gate_payer_resource",
-      "primitive": "REQUIRE",
-      "params": {
-        "domain": "COMMODITY",
-        "actor": "ORDER_ACTOR",
-        "metric": "PARAM.item_id",
-        "operator": ">=",
-        "value": "PARAM.amount"
-      },
-      "on_failure": {
-        "error_code": "INSUFFICIENT_RESOURCE"
-      },
-      "next_step": "gate_co_location"
-    },
     {
       "step_id": "gate_co_location",
       "primitive": "REQUIRE",
@@ -59,17 +48,6 @@
       },
       "on_failure": {
         "error_code": "INVALID_TARGET"
-      },
-      "next_step": "remit_settlement"
-    },
-    {
-      "step_id": "remit_settlement",
-      "primitive": "TRANSFER_ITEM",
-      "params": {
-        "from": "ORDER_ACTOR",
-        "to": "PARAM.counterparty_id",
-        "item_id": "PARAM.item_id",
-        "quantity": "PARAM.amount"
       },
       "next_step": null
     }

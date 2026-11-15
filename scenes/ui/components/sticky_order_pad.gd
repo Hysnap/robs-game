@@ -9,6 +9,7 @@ signal pad_closed
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.gd")
 const DirectiveComposerControllerScript = preload("res://systems/directive_composer_controller.gd")
+const TargetDomainRegistryScript = preload("res://systems/target_domain_registry.gd")
 
 var drag_handle: Label
 var btn_close: Button
@@ -26,6 +27,8 @@ var opt_verb: OptionButton
 var opt_category: OptionButton
 var opt_target: OptionButton
 var spin_amount: SpinBox
+var opt_rail: OptionButton
+var opt_postal: OptionButton
 var opt_who: OptionButton
 var opt_where_filter: OptionButton
 var opt_where: OptionButton
@@ -48,6 +51,7 @@ var _drag_offset: Vector2 = Vector2.ZERO
 var _cached_targets_for_verb: Array[Dictionary] = []
 var _cached_locations: Array[Dictionary] = []
 var _active_district_id: String = ""
+var _injected_world_state: Dictionary = {}
 
 func _enter_tree() -> void:
 	_bind_and_assert_nodes()
@@ -67,6 +71,8 @@ func _bind_and_assert_nodes() -> void:
 	opt_category = get_node("VBox/NotesGrid/Slot_Target/VBox/CategoryOption") as OptionButton
 	opt_target = get_node("VBox/NotesGrid/Slot_Target/VBox/TargetOption") as OptionButton
 	spin_amount = get_node("VBox/NotesGrid/Slot_Scalar/VBox/AmountSpin") as SpinBox
+	opt_rail = get_node("VBox/NotesGrid/Slot_Scalar/VBox/RailOption") as OptionButton
+	opt_postal = get_node("VBox/NotesGrid/Slot_Scalar/VBox/PostalOption") as OptionButton
 	opt_who = get_node("VBox/NotesGrid/Slot_Actor/VBox/WhoOption") as OptionButton
 	opt_where_filter = get_node("VBox/NotesGrid/Slot_Location/VBox/WhereFilterOption") as OptionButton
 	opt_where = get_node("VBox/NotesGrid/Slot_Location/VBox/WhereOption") as OptionButton
@@ -91,6 +97,8 @@ func _bind_and_assert_nodes() -> void:
 	assert(opt_target != null, "FATAL: [StickyOrderPad] TargetOption node missing from scene hierarchy.")
 	assert(opt_where != null, "FATAL: [StickyOrderPad] WhereOption node missing from scene hierarchy.")
 	assert(spin_amount != null, "FATAL: [StickyOrderPad] AmountSpin node missing from scene hierarchy.")
+	assert(opt_rail != null, "FATAL: [StickyOrderPad] RailOption node missing from scene hierarchy.")
+	assert(opt_postal != null, "FATAL: [StickyOrderPad] PostalOption node missing from scene hierarchy.")
 	assert(slot_action != null, "FATAL: [StickyOrderPad] Slot_Action missing from scene hierarchy.")
 	assert(slot_target != null, "FATAL: [StickyOrderPad] Slot_Target missing from scene hierarchy.")
 	assert(slot_scalar != null, "FATAL: [StickyOrderPad] Slot_Scalar missing from scene hierarchy.")
@@ -114,6 +122,8 @@ func _ready() -> void:
 		
 	if spin_amount:
 		spin_amount.value_changed.connect(func(_val): _recalculate_estimate())
+	if opt_rail:
+		opt_rail.item_selected.connect(_on_rail_selected)
 	if opt_verb:
 		opt_verb.item_selected.connect(_on_verb_selected)
 	if opt_category:
@@ -145,17 +155,22 @@ func open_for_district(district_id: String) -> void:
 	_center_on_screen()
 
 func open_for_context(context: Dictionary) -> void:
+	if context.has("world_state") and context["world_state"] is Dictionary:
+		_injected_world_state = context["world_state"]
 	var target_dist: String = str(context.get("target_district_id", ""))
 	if target_dist.is_empty():
-		var gs = ScenarioManifestManager.get_game_state()
-		if gs != null:
-			if gs.has_method("get_selected_district_id"):
-				target_dist = gs.get_selected_district_id()
-			if target_dist.is_empty() and "world_state" in gs:
-				target_dist = str(gs.world_state.get("player_knowledge", {}).get("home_district_id", ""))
+		var ws := _get_world_state()
+		target_dist = str(ws.get("selected_district_id", ws.get("player_knowledge", {}).get("home_district_id", "")))
 
 	assert(not target_dist.is_empty(), "FATAL: [StickyOrderPad] Could not resolve a valid district for order context.")
 	open_for_district(target_dist)
+
+func _get_world_state() -> Dictionary:
+	if not _injected_world_state.is_empty():
+		return _injected_world_state
+	var gs = ScenarioManifestManager.get_game_state()
+	assert(gs != null and "world_state" in gs, "FATAL: [StickyOrderPad] GameState or world_state is unmounted.")
+	return gs.world_state
 
 func _center_on_screen() -> void:
 	var vp_rect := get_viewport_rect()
@@ -196,15 +211,14 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 
 	var layout: Dictionary = DirectiveComposerControllerScript.get_form_layout(verb_token)
 
-	# 1. Target Slot (Commodity / Entity)
+	# 1. Target Slot (Commodity / Entity / Obligation)
 	var target_cfg: Dictionary = layout.get("target_section", {})
 	var target_visible: bool = bool(target_cfg.get("visible", true))
 	slot_target.visible = target_visible
 
 	if lbl_hdr_target and target_cfg.has("label_token"):
 		var token: String = str(target_cfg["label_token"])
-		var translated: String = tr(token)
-		lbl_hdr_target.text = translated if translated != token else token
+		lbl_hdr_target.text = tr(token)
 
 	# 2. Scalar Slot (Amount / Duration)
 	var amount_cfg: Dictionary = layout.get("amount_section", {})
@@ -213,13 +227,22 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 
 	if lbl_hdr_scalar and amount_cfg.has("label_token"):
 		var token: String = str(amount_cfg["label_token"])
-		var translated: String = tr(token)
-		lbl_hdr_scalar.text = translated if translated != token else token
+		lbl_hdr_scalar.text = tr(token)
 
 	spin_amount.min_value = float(amount_cfg.get("min_value", 1.0))
 	spin_amount.max_value = float(amount_cfg.get("max_value", 999.0))
 	spin_amount.step = float(amount_cfg.get("step", 1.0))
 	spin_amount.value = float(amount_cfg.get("default_value", spin_amount.min_value))
+
+	# 2b. Settlement Rail & Postal Delivery Sub-Selectors
+	var rail_cfg: Dictionary = layout.get("rail_section", {})
+	var rail_visible: bool = bool(rail_cfg.get("visible", false))
+	opt_rail.visible = rail_visible
+	if rail_visible:
+		_refresh_rail_options(_get_world_state(), rail_cfg)
+		_sync_postal_visibility_for_selected_rail(_get_world_state())
+	else:
+		opt_postal.visible = false
 
 	# 3. Location Slot
 	var loc_cfg: Dictionary = layout.get("location_section", {})
@@ -227,8 +250,7 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 
 	if lbl_hdr_location and loc_cfg.has("label_token"):
 		var token: String = str(loc_cfg["label_token"])
-		var translated: String = tr(token)
-		lbl_hdr_location.text = translated if translated != token else token
+		lbl_hdr_location.text = tr(token)
 
 	# 4. Contact Selector
 	var contact_cfg: Dictionary = layout.get("contact_section", {})
@@ -239,12 +261,10 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 
 ## Ingests simulation state and populates form elements
 func _sync_simulation_data() -> void:
-	var gs = ScenarioManifestManager.get_game_state()
-	assert(gs != null and "world_state" in gs, "FATAL: [StickyOrderPad] GameState or world_state is unmounted.")
-	var ws: Dictionary = gs.world_state
+	var ws: Dictionary = _get_world_state()
 
-	# 1. Responsible Party (Actor Slot)
-	_populate_staff_options(ws.get("staff", {}))
+	# 1. Responsible Party (Actor Slot from canonical crew residents)
+	_populate_actor_options(ws)
 
 	# 2. Target Items & Category Drill-Down (Target Slot)
 	_refresh_targets_for_active_verb(ws)
@@ -257,28 +277,62 @@ func _sync_simulation_data() -> void:
 	# 4. Contacts
 	_refresh_contact_options()
 
-func _populate_staff_options(staff_dict: Dictionary) -> void:
+func _refresh_rail_options(ws: Dictionary, rail_cfg: Dictionary = {}) -> void:
+	if opt_rail == null:
+		return
+	opt_rail.clear()
+
+	var rails := TargetDomainRegistryScript.resolve_domain("SETTLEMENT_RAIL", ws, rail_cfg)
+	var idx: int = 0
+	for rail in rails:
+		var token: String = str(rail.get("label_token", rail.get("id", "")))
+		opt_rail.add_item(tr(token), idx)
+		opt_rail.set_item_metadata(idx, rail)
+		idx += 1
+
+func _sync_postal_visibility_for_selected_rail(ws: Dictionary) -> void:
+	if opt_postal == null or opt_rail == null or not opt_rail.visible or opt_rail.item_count == 0:
+		if opt_postal:
+			opt_postal.visible = false
+		return
+
+	var rail_meta = opt_rail.get_item_metadata(opt_rail.selected)
+	var can_post: bool = (rail_meta is Dictionary) and bool(rail_meta.get("can_post", false))
+	opt_postal.visible = can_post
+	if not can_post:
+		return
+
+	opt_postal.clear()
+	var postal_opts := TargetDomainRegistryScript.resolve_domain("POSTAL_CLASS", ws, {})
+	var idx: int = 0
+	for p_opt in postal_opts:
+		var token: String = str(p_opt.get("label_token", p_opt.get("id", "")))
+		opt_postal.add_item(tr(token), idx)
+		opt_postal.set_item_metadata(idx, p_opt)
+		idx += 1
+
+func _on_rail_selected(_idx: int) -> void:
+	_sync_postal_visibility_for_selected_rail(_get_world_state())
+
+func _populate_actor_options(ws: Dictionary) -> void:
 	if opt_who == null:
 		return
 	opt_who.clear()
 
-	if staff_dict.is_empty():
-		var leader_lbl := tr("UI_STAFF_PLAYER_LEADER")
-		if leader_lbl == "UI_STAFF_PLAYER_LEADER":
-			leader_lbl = "Player (Leader)"
-		opt_who.add_item(leader_lbl, 0)
+	var crew_actors := DirectiveComposerControllerScript.get_crew_actors(ws)
+	if crew_actors.is_empty():
+		opt_who.add_item(tr("UI_STAFF_PLAYER_LEADER"), 0)
 		opt_who.set_item_metadata(0, "PLAYER")
 		return
 
 	var idx: int = 0
-	for staff_id in staff_dict.keys():
-		var staff_member = staff_dict[staff_id]
-		if staff_member is Dictionary:
-			var s_name: String = str(staff_member.get("name", staff_id))
-			var s_role: String = str(staff_member.get("role", "OPERATIVE")).capitalize()
-			opt_who.add_item("%s (%s)" % [s_name, s_role], idx)
-			opt_who.set_item_metadata(idx, str(staff_id))
-			idx += 1
+	for actor in crew_actors:
+		var a_name: String = str(actor.get("name", ""))
+		var a_role: String = str(actor.get("role", ""))
+		var display_str: String = "%s (%s)" % [a_name, a_role.capitalize()] if not a_role.is_empty() else a_name
+		opt_who.add_item(display_str, idx)
+		opt_who.set_item_metadata(idx, str(actor.get("id", "")))
+		idx += 1
 
 func _refresh_targets_for_active_verb(ws: Dictionary) -> void:
 	var verb := _get_active_verb()
@@ -294,20 +348,13 @@ func _populate_category_options() -> void:
 	var categories := DirectiveComposerControllerScript.extract_target_categories(_cached_targets_for_verb)
 	
 	# Index 0: ALL
-	var all_label := tr("UI_CAT_ALL")
-	if all_label == "UI_CAT_ALL":
-		all_label = "All Categories"
-	opt_category.add_item(all_label, 0)
+	opt_category.add_item(tr("UI_CAT_ALL"), 0)
 	opt_category.set_item_metadata(0, "ALL")
 
 	var idx: int = 1
 	for cat in categories:
 		var token_key := "UI_CAT_" + cat
-		var cat_label := tr(token_key)
-		if cat_label == token_key:
-			cat_label = cat.capitalize().replace("_", " ")
-
-		opt_category.add_item(cat_label, idx)
+		opt_category.add_item(tr(token_key), idx)
 		opt_category.set_item_metadata(idx, cat)
 		idx += 1
 
@@ -322,11 +369,7 @@ func _apply_category_filter() -> void:
 
 	var filtered := DirectiveComposerControllerScript.filter_targets_by_category(_cached_targets_for_verb, selected_cat)
 	if filtered.is_empty():
-		var none_token := "UI_TARGET_NONE_AVAILABLE"
-		var none_label := tr(none_token)
-		if none_label == none_token:
-			none_label = "[NO TARGETS IN SCOPE]"
-		opt_target.add_item(none_label, 0)
+		opt_target.add_item(tr("UI_TARGET_NONE_AVAILABLE"), 0)
 		opt_target.set_item_metadata(0, {"id": "", "unit_cost": 0.0})
 		_recalculate_estimate()
 		return
@@ -334,10 +377,7 @@ func _apply_category_filter() -> void:
 	var idx: int = 0
 	for item in filtered:
 		var token: String = str(item.get("label_token", item.get("id", "")))
-		var label_str: String = tr(token)
-		if label_str == token:
-			label_str = str(item.get("id")).capitalize().replace("_", " ")
-
+		var label_str: String = str(item.get("display", tr(token)))
 		opt_target.add_item(label_str, idx)
 		opt_target.set_item_metadata(idx, item)
 		idx += 1
@@ -394,10 +434,7 @@ func _refresh_contact_options() -> void:
 		return
 	opt_contact.clear()
 
-	var default_contact := tr("UI_CONTACT_ANYONE_AVAILABLE")
-	if default_contact == "UI_CONTACT_ANYONE_AVAILABLE":
-		default_contact = "[ANYONE AVAILABLE]"
-	opt_contact.add_item(default_contact, 0)
+	opt_contact.add_item(tr("UI_CONTACT_ANYONE_AVAILABLE"), 0)
 	opt_contact.set_item_metadata(0, "")
 
 	if opt_where == null or opt_where.item_count == 0:
@@ -405,8 +442,7 @@ func _refresh_contact_options() -> void:
 
 	var loc_meta = opt_where.get_item_metadata(opt_where.selected)
 	if loc_meta is Dictionary:
-		var gs = ScenarioManifestManager.get_game_state()
-		var ws: Dictionary = gs.world_state if gs != null and "world_state" in gs else {}
+		var ws: Dictionary = _get_world_state()
 		var contacts := DirectiveComposerControllerScript.resolve_contacts_for_location(loc_meta, ws)
 		var idx: int = 1
 		for c in contacts:
@@ -426,8 +462,7 @@ func _select_where_by_id(target_id: String) -> void:
 
 func _on_verb_selected(_idx: int) -> void:
 	var verb := _get_active_verb()
-	var gs = ScenarioManifestManager.get_game_state()
-	var ws: Dictionary = gs.world_state if gs != null and "world_state" in gs else {}
+	var ws: Dictionary = _get_world_state()
 	_apply_form_layout_for_verb(verb)
 	_refresh_targets_for_active_verb(ws)
 	_refresh_where_filters_for_active_verb()
@@ -464,9 +499,7 @@ func _recalculate_estimate() -> void:
 		if meta is Dictionary:
 			location_meta = meta
 
-	var gs = ScenarioManifestManager.get_game_state()
-	var ws: Dictionary = gs.world_state if gs != null and "world_state" in gs else {}
-
+	var ws: Dictionary = _get_world_state()
 	var est_data: Dictionary = DirectiveComposerControllerScript.calculate_estimate_with_intel(
 		qty, 
 		target_meta, 
@@ -480,9 +513,6 @@ func _recalculate_estimate() -> void:
 
 	var fmt_key := "FMT_CURRENCY" if is_exact else "FMT_CURRENCY_ESTIMATE"
 	var fmt_template := tr(fmt_key)
-	if fmt_template == fmt_key:
-		fmt_template = "£{val}" if is_exact else "~£{val}"
-
 	lbl_estimate.text = fmt_template.replace("{val}", num_str)
 
 func _on_pin_pressed() -> void:
@@ -490,14 +520,28 @@ func _on_pin_pressed() -> void:
 	var loc_meta = opt_where.get_item_metadata(opt_where.selected) if opt_where and opt_where.item_count > 0 else {}
 	var contact_meta = opt_contact.get_item_metadata(opt_contact.selected) if opt_contact and opt_contact.item_count > 0 else ""
 	var who_meta = opt_who.get_item_metadata(opt_who.selected) if opt_who and opt_who.item_count > 0 else "PLAYER"
+	var actor_id: String = str(who_meta) if who_meta != null and not str(who_meta).is_empty() else "PLAYER"
+
+	var rail_code: String = ""
+	if opt_rail and opt_rail.visible and opt_rail.item_count > 0:
+		var r_meta = opt_rail.get_item_metadata(opt_rail.selected)
+		rail_code = str(r_meta.get("id", "")) if r_meta is Dictionary else str(r_meta)
+
+	var postal_class: String = ""
+	if opt_postal and opt_postal.visible and opt_postal.item_count > 0:
+		var p_meta = opt_postal.get_item_metadata(opt_postal.selected)
+		postal_class = str(p_meta.get("id", "")) if p_meta is Dictionary else str(p_meta)
 
 	var form_data: Dictionary = {
 		"verb": _get_active_verb(),
-		"initiator_id": str(who_meta),
-		"assigned_to": opt_who.get_item_text(opt_who.selected) if opt_who and opt_who.item_count > 0 else "Player",
+		"initiator_id": actor_id,
+		"assigned_to": actor_id,
+		"assigned_to_name": opt_who.get_item_text(opt_who.selected) if opt_who and opt_who.item_count > 0 else "",
 		"counterparty_id": str(contact_meta) if contact_meta != null else "",
 		"target_item": str(target_meta.get("id", "")) if target_meta is Dictionary else str(target_meta),
 		"amount": float(spin_amount.value) if spin_amount else 1.0,
+		"rail_code": rail_code,
+		"postal_class": postal_class,
 		"target_node_id": str(loc_meta.get("id", "")) if loc_meta is Dictionary else "",
 		"target_node_name": str(loc_meta.get("display", loc_meta.get("id", ""))) if loc_meta is Dictionary else "",
 		"target_scope": str(loc_meta.get("type", "DISTRICT")) if loc_meta is Dictionary else "DISTRICT",
@@ -556,7 +600,6 @@ func _apply_sticky_note_skins() -> void:
 	var palettes: Dictionary = def_json.get("palettes", {})
 	assert(!palettes.is_empty(), "FATAL: [StickyOrderPad] Stationery definition missing 'palettes' dictionary: %s" % def_path)
 
-	# Skin the outer composer cover / backing frame using the active RetroTheme cover style
 	var cover_sb: StyleBoxFlat = RETRO_THEME.create_cover_style()
 	cover_sb.set_corner_radius_all(corner_radius + 2)
 	cover_sb.set_content_margin_all(padding)

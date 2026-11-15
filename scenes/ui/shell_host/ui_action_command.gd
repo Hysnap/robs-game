@@ -2,21 +2,9 @@
 class_name UIActionCommand
 extends RefCounted
 
-enum CommandType {
-	ROUTE_REQUEST,
-	ITEM_SELECTED,
-	ACTION_CLICKED,
-	SLIP_FILED,
-	SWITCH_SHELL
-}
-
-var type: CommandType
-var domain: String = ""
 var action_code: String = ""
 var payload: Dictionary = {}
 
-func _init(p_type: CommandType, p_domain: String = "", p_action_code: String = "", p_payload: Dictionary = {}) -> void:
-	type = p_type
-	domain = p_domain
-	action_code = p_action_code
+func _init(p_action_code: String = "", p_payload: Dictionary = {}) -> void:
+	action_code = p_action_code.strip_edges().to_lower()
 	payload = p_payload

@@ -785,3 +785,51 @@ static func get_audit_labor_by_sector(db = DBManager) -> Array:
 		GROUP BY sec.code
 		ORDER BY budgeted_slots DESC;
 	""")
+
+# ==============================================================================
+# DIARY & CALENDAR OBLIGATION QUERIES
+# ==============================================================================
+
+## Returns a lookup dictionary { event_id: true } of active crew obligations linked to calendar_events
+static func get_crew_linked_event_ids(crew_ids: Array[String], db = DBManager) -> Dictionary:
+	var result: Dictionary = {}
+	if crew_ids.is_empty():
+		return result
+	var escaped_ids: Array[String] = []
+	for cid in crew_ids:
+		var clean := cid.strip_edges()
+		if not clean.is_empty():
+			escaped_ids.append("'%s'" % clean.replace("'", "''"))
+	if escaped_ids.is_empty():
+		return result
+	var crew_in := ", ".join(escaped_ids)
+	var rows: Array = db.query_rows("""
+		SELECT DISTINCT linked_event_id FROM obligations
+		WHERE linked_event_id IS NOT NULL AND linked_event_id > 0
+		  AND status = 'ACTIVE'
+		  AND ((debtor_scope = 'RESIDENT' AND debtor_id IN (%s)) OR (creditor_scope = 'RESIDENT' AND creditor_id IN (%s)));
+	""" % [crew_in, crew_in])
+	for r in rows:
+		result[int(r["linked_event_id"])] = true
+	return result
+
+## Returns active crew obligations due within [start_day, end_day] that are not tied to a calendar_events row
+static func get_crew_standalone_obligations_in_window(crew_ids: Array[String], start_day: int, end_day: int, db = DBManager) -> Array:
+	if crew_ids.is_empty():
+		return []
+	var escaped_ids: Array[String] = []
+	for cid in crew_ids:
+		var clean := cid.strip_edges()
+		if not clean.is_empty():
+			escaped_ids.append("'%s'" % clean.replace("'", "''"))
+	if escaped_ids.is_empty():
+		return []
+	var crew_in := ", ".join(escaped_ids)
+	return db.query_rows("""
+		SELECT * FROM obligations
+		WHERE (linked_event_id IS NULL OR linked_event_id = 0)
+		  AND status = 'ACTIVE'
+		  AND due_day BETWEEN %d AND %d
+		  AND ((debtor_scope = 'RESIDENT' AND debtor_id IN (%s)) OR (creditor_scope = 'RESIDENT' AND creditor_id IN (%s)))
+		ORDER BY due_day ASC, obligation_id ASC;
+	""" % [start_day, end_day, crew_in, crew_in])

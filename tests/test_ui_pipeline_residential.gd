@@ -4,7 +4,7 @@ extends SceneTree
 const UICompilerScript = preload("res://tools/ui_compiler/ui_compiler.gd")
 
 const SCHEMA_PATH := "res://data_modules/core/ui_schemas/views/residential_docket.json"
-const GENERATED_SCRIPT_PATH := "res://generated/ui/gen_residential_docket.gd"
+const GENERATED_SCRIPT_PATH := "res://generated/ui/core/gen_residential_docket.gd"
 
 func _init() -> void:
 	SystemLogger.log_info("\n=======================================================")

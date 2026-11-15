@@ -94,18 +94,21 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 	if not signal_defs.is_empty():
 		lines.append("")
 
-	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")\n")
-	lines.append("var _value_labels: Dictionary = {}")
+	lines.append("const RETRO_THEME = preload(\"res://scenes/ui/shell_host/retro_theme.gd\")")
 
-	# Auto-discover action queue capability from row definitions (NOT _meta)
+	# Auto-discover optional component preloads from row definitions (NOT _meta)
 	var has_action_queue: bool = false
+	var has_calendar_navigator: bool = false
 	for sec in sections:
 		for row in sec.get("rows", []):
 			if bool(row.get("has_action_queue", false)):
 				has_action_queue = true
-				break
-		if has_action_queue:
-			break
+			if str(row.get("type", "")).to_upper() == "CALENDAR_NAVIGATOR":
+				has_calendar_navigator = true
+	if has_calendar_navigator:
+		lines.append("const CalendarNavigator = preload(\"res://scenes/ui/components/calendar_navigator.gd\")")
+	lines.append("")
+	lines.append("var _value_labels: Dictionary = {}")
 	if has_action_queue:
 		lines.append("var _queue: ActionQueuePresenter = ActionQueuePresenter.new()")
 	lines.append("")

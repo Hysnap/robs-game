@@ -4,16 +4,19 @@ extends RefCounted
 
 const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 const VERBS_BASE_DIR := "res://data_modules/core/verbs/"
+const RESOLVERS_BASE_DIR := "res://systems/target_resolvers/"
 
 static var _cached_scopes: Dictionary = {} # "VERB_CODE" -> Dictionary
+static var _cached_resolvers: Dictionary = {} # "DOMAIN_TOKEN" -> GDScript
 static var _initialized: bool = false
 
-## Clears in-memory cached scopes (useful during testing or live-reloading)
+## Clears in-memory cached scopes and resolvers (useful during testing or live-reloading)
 static func clear_cache() -> void:
 	_cached_scopes.clear()
+	_cached_resolvers.clear()
 	_initialized = false
 
-## Eagerly scans and indexes all target_scope.json definitions across N-tiers
+## Eagerly scans and indexes all target_scope.json definitions and pluggable target domain resolvers
 static func _ensure_initialized() -> void:
 	if _initialized:
 		return
@@ -37,10 +40,26 @@ static func _ensure_initialized() -> void:
 			verb_token = str(parsed["_meta"].get("verb_token", "")).strip_edges().to_upper()
 
 		if verb_token.is_empty():
-			# Fallback: derive verb token from directory name
 			verb_token = file_path.get_base_dir().get_file().strip_edges().to_upper()
 
 		_cached_scopes[verb_token] = parsed
+
+	var resolver_files := FileSystemCrawlerScript.find_files_recursive(RESOLVERS_BASE_DIR, "", ".gd")
+	for res_path in resolver_files:
+		var res_script = load(res_path)
+		if res_script == null:
+			push_error("[TargetDomainRegistry FATAL] Failed to load target resolver script: %s" % res_path)
+			continue
+		var const_map: Dictionary = res_script.get_script_constant_map()
+		var primary_token: String = str(const_map.get("DOMAIN_TOKEN", "")).strip_edges().to_upper()
+		if not primary_token.is_empty():
+			_cached_resolvers[primary_token] = res_script
+		var aliases = const_map.get("ALIASES", [])
+		if aliases is Array:
+			for alias in aliases:
+				var clean_alias := str(alias).strip_edges().to_upper()
+				if not clean_alias.is_empty():
+					_cached_resolvers[clean_alias] = res_script
 
 	_initialized = true
 
@@ -50,13 +69,20 @@ static func register_scope_definition(verb_token: String, scope_def: Dictionary)
 	assert(not clean_code.is_empty(), "[TargetDomainRegistry FATAL] Cannot register scope for empty verb token.")
 	_cached_scopes[clean_code] = scope_def
 
+## Allows runtime registration of custom target domain resolver scripts
+static func register_domain_resolver(domain_token: String, resolver_script: Script) -> void:
+	var clean_domain := domain_token.strip_edges().to_upper()
+	assert(not clean_domain.is_empty() and resolver_script != null,
+		"[TargetDomainRegistry FATAL] Invalid domain_token or resolver_script.")
+	_cached_resolvers[clean_domain] = resolver_script
+
 ## Returns the cached target_scope dictionary for a given verb token (O(1) memory lookup)
 static func get_verb_scope_definition(verb_code: String) -> Dictionary:
 	_ensure_initialized()
 	var clean_code: String = verb_code.strip_edges().to_upper()
 	return _cached_scopes.get(clean_code, {})
 
-## Returns the array of allowed spatial/entity scopes (e.g. ["DISTRICT", "ESTABLISHMENT", "STAFF"])
+## Returns the array of allowed spatial/entity scopes (e.g. ["DISTRICT", "ESTABLISHMENT"])
 static func get_allowed_scopes(verb_code: String) -> Array[String]:
 	var def: Dictionary = get_verb_scope_definition(verb_code)
 	var raw_scopes: Array = def.get("allowed_scopes", def.get("target_scopes", []))
@@ -75,9 +101,18 @@ static func get_target_categories(verb_code: String) -> Array[Dictionary]:
 			categories.append(c)
 	return categories
 
-## Resolves a normalized list of target candidates [{ "id": String, "label_token": String, "unit_cost": float, ... }]
-## Emits pure semantic tokens; translation via tr() is deferred to the presentation layer.
+## Resolves candidates directly from a single mounted domain resolver script
+static func resolve_domain(domain_token: String, world_state: Dictionary, config: Dictionary = {}) -> Array[Dictionary]:
+	_ensure_initialized()
+	var clean_domain := domain_token.strip_edges().to_upper()
+	assert(_cached_resolvers.has(clean_domain),
+		"[TargetDomainRegistry FATAL] No pluggable target resolver mounted for domain '%s'." % clean_domain)
+	var resolver_script = _cached_resolvers[clean_domain]
+	return resolver_script.resolve(config, world_state, "")
+
+## Resolves a normalized list of target candidates via pluggable domain resolver scripts
 static func resolve_targets(verb_code: String, world_state: Dictionary, category_id: String = "") -> Array[Dictionary]:
+	_ensure_initialized()
 	var categories: Array[Dictionary] = get_target_categories(verb_code)
 	if categories.is_empty():
 		return []
@@ -98,80 +133,13 @@ static func resolve_targets(verb_code: String, world_state: Dictionary, category
 
 	var aggregated_results: Array[Dictionary] = []
 	for target_cat in cats_to_process:
-		var domain: String = str(target_cat.get("domain", target_cat.get("id", "NONE"))).to_upper()
-		var catalog_source: String = str(target_cat.get("catalog_source", "commodities"))
+		var domain: String = str(target_cat.get("domain", target_cat.get("id", ""))).strip_edges().to_upper()
+		if not _cached_resolvers.has(domain):
+			push_error("[TargetDomainRegistry FATAL] No pluggable target resolver mounted for domain '%s' on verb '%s'." % [domain, verb_code])
+			continue
 
-		match domain:
-			"CURRENCY":
-				aggregated_results.append({
-					"id": "CASH",
-					"label_token": str(target_cat.get("label_token", "UI_CAT_CURRENCY")),
-					"unit_cost": 1.0,
-					"category": "CURRENCY",
-					"sub_category": "CASH",
-					"taxonomy_path": []
-				})
-
-			"NONE":
-				assert(target_cat.has("id") and not str(target_cat["id"]).is_empty(),
-					"FATAL: [TargetDomainRegistry] Category in verb '%s' with domain 'NONE' must define an 'id'." % verb_code)
-				assert(target_cat.has("label_token") and not str(target_cat["label_token"]).is_empty(),
-					"FATAL: [TargetDomainRegistry] Category '%s' in verb '%s' must define a 'label_token'." % [target_cat.get("id"), verb_code])
-
-				aggregated_results.append({
-					"id": str(target_cat["id"]),
-					"label_token": str(target_cat["label_token"]),
-					"unit_cost": float(target_cat.get("unit_cost", 0.0)),
-					"category": str(target_cat.get("id", "")).to_upper(),
-					"sub_category": "",
-					"taxonomy_path": []
-				})
-
-			"COMMODITY", "RECIPE":
-				var catalog: Dictionary = world_state.get(catalog_source, {})
-				if catalog.is_empty():
-					push_warning("[TargetDomainRegistry] Catalog '%s' in world_state is empty for verb '%s'." % [catalog_source, verb_code])
-					continue
-
-				var sorted_keys: Array = catalog.keys()
-				sorted_keys.sort()
-				for item_id in sorted_keys:
-					var item_data = catalog[item_id]
-					var token: String = str(item_id)
-					var cost: float = 0.0
-					var cat: String = ""
-					var subcat: String = ""
-					var tax_path: Array = []
-
-					if item_data is Dictionary:
-						token = str(item_data.get("display_name", item_id))
-						cost = float(item_data.get("base_cost", item_data.get("unit_cost", 0.0)))
-						cat = str(item_data.get("category", "GENERAL")).strip_edges().to_upper()
-						assert(not cat.is_empty(),
-							"FATAL: [TargetDomainRegistry] Item '%s' in catalog '%s' has an empty category!" % [item_id, catalog_source])
-						subcat = str(item_data.get("sub_category", "")).strip_edges().to_upper()
-						tax_path = item_data.get("taxonomy_path", [])
-
-					aggregated_results.append({
-						"id": str(item_id),
-						"label_token": token,
-						"unit_cost": cost,
-						"category": cat,
-						"sub_category": subcat,
-						"taxonomy_path": tax_path
-					})
-
-			"CONTACT":
-				aggregated_results.append({
-					"id": "CONTACT_SELECTED",
-					"label_token": str(target_cat.get("label_token", "UI_TARGET_CONTACT")),
-					"unit_cost": 0.0,
-					"category": "CONTACT",
-					"sub_category": "",
-					"taxonomy_path": []
-				})
-
-			_:
-				push_warning("[TargetDomainRegistry] Unhandled domain '%s' on verb '%s'." % [domain, verb_code])
+		var resolver_script = _cached_resolvers[domain]
+		var resolved: Array[Dictionary] = resolver_script.resolve(target_cat, world_state, verb_code)
+		aggregated_results.append_array(resolved)
 
 	return aggregated_results

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "entity_type": "VERB_TARGET_SCOPE",
-    "verb": "SCOUT",
+    "verb_token": "SCOUT",
     "description": "Targeting rules and dynamic form layout for district-level reconnaissance."
   },
   "target_scopes": [
@@ -17,7 +17,7 @@
     "amount_section": {
       "visible": true,
       "required": true,
-      "label_token": "UI_LBL_DURATION_HOURS",
+      "label_token": "UI_LBL_HOURS",
       "default_value": 2.0,
       "min_value": 1.0,
       "max_value": 8.0,

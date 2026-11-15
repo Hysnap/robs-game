@@ -29,7 +29,7 @@ func build_ui() -> void:
 	btn_diary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_diary.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_diary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_diary.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "DIARY"}))
+	btn_diary.pressed.connect(func(): self.action_clicked.emit("open_diary", {}))
 	_value_labels["diary"] = btn_diary
 	add_child(btn_diary)
 
@@ -39,7 +39,7 @@ func build_ui() -> void:
 	btn_dossier.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_dossier.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_dossier.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_dossier.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "DOSSIER"}))
+	btn_dossier.pressed.connect(func(): self.action_clicked.emit("open_dossier", {}))
 	_value_labels["dossier"] = btn_dossier
 	add_child(btn_dossier)
 
@@ -49,7 +49,7 @@ func build_ui() -> void:
 	btn_roster.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_roster.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_roster.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_roster.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "ROSTER"}))
+	btn_roster.pressed.connect(func(): self.action_clicked.emit("open_roster", {}))
 	_value_labels["roster"] = btn_roster
 	add_child(btn_roster)
 
@@ -59,7 +59,7 @@ func build_ui() -> void:
 	btn_finance.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_finance.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_finance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_finance.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "FINANCE"}))
+	btn_finance.pressed.connect(func(): self.action_clicked.emit("open_finance", {}))
 	_value_labels["finance"] = btn_finance
 	add_child(btn_finance)
 
@@ -69,7 +69,7 @@ func build_ui() -> void:
 	btn_styles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_styles.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_styles.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_styles.pressed.connect(func(): self.action_clicked.emit("NAV_ROUTE", {"domain": "STYLES"}))
+	btn_styles.pressed.connect(func(): self.action_clicked.emit("toggle_styles", {}))
 	_value_labels["styles"] = btn_styles
 	add_child(btn_styles)
 

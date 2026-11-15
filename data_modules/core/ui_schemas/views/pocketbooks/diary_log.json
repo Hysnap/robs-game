@@ -2,9 +2,16 @@
   "_meta": {
     "target_class": "GenDiaryLog",
     "extends": "VBoxContainer",
-    "description": "Pocket notebook dispatch diary and field entries"
+    "description": "Pocket notebook dispatch diary and field entries with integrated calendar event navigator"
   },
   "sections": [
+    {
+      "id": "signals",
+      "type": "SIGNALS",
+      "signals": [
+        "action_clicked(action_code, payload)"
+      ]
+    },
     {
       "id": "diary_header",
       "header_token": "UI_SEC_DISPATCH_DIARY",
@@ -25,6 +32,19 @@
           "color": "body",
           "format": "INT",
           "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "diary_calendar",
+      "header_token": "UI_SEC_DIARY_CALENDAR",
+      "color": "accent",
+      "rows": [
+        {
+          "id": "calendar_nav",
+          "type": "CALENDAR_NAVIGATOR",
+          "field": "calendar_payload",
+          "action_signal": "action_clicked"
         }
       ]
     },

@@ -2,7 +2,7 @@
 # Compiled from: res://data_modules/core/ui_schemas/views/pocketbooks/residential_docket.json
 extends VBoxContainer
 
-signal route_requested(domain_token: String, target_page_name: String)
+signal action_clicked(action_code: String, payload: Dictionary)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
@@ -29,7 +29,7 @@ func build_ui() -> void:
 	btn_btn_back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_back.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_back.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_back.pressed.connect(func(): self.route_requested.emit("DOSSIER", ""))
+	btn_btn_back.pressed.connect(func(): self.action_clicked.emit("open_dossier", {}))
 	_value_labels["btn_back"] = btn_btn_back
 	add_child(btn_btn_back)
 

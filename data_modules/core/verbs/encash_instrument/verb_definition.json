@@ -1,0 +1,35 @@
+{
+    "_meta": {
+        "verb_token": "ENCASH_INSTRUMENT",
+        "version": 1,
+        "user_creatable": true,
+        "description": "Present a delivered giro voucher or bearer cheque over the counter to encash for physical currency."
+    },
+    "parameters": {
+        "mail_id": {
+            "type": "INT",
+            "required": true
+        },
+        "target_node_id": {
+            "type": "STRING",
+            "required": true
+        }
+    },
+    "steps": [
+        {
+            "step_id": "gate_co_location",
+            "primitive": "REQUIRE",
+            "params": {
+                "domain": "LOCATION",
+                "actor": "ORDER_ACTOR",
+                "metric": "current_district_id",
+                "operator": "==",
+                "value": "TARGET_NODE"
+            },
+            "on_failure": {
+                "error_code": "INVALID_TARGET"
+            },
+            "next_step": null
+        }
+    ]
+}
