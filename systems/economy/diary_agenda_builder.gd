@@ -58,7 +58,7 @@ static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Di
 			marked_days[due_d] = true
 			if due_d == selected_day:
 				selected_day_items.append({
-					"title_token": "UI_OBLIGATION_TYPE_%s" % str(obl.get("obligation_type", "DUTY")).to_upper(),
+					"title_token": "UI_OBL_%s" % str(obl.get("obligation_type", "DUTY")).to_upper(),
 					"location_id": "",
 					"location_label": "",
 					"event_id": 0,
