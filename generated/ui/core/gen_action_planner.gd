@@ -4,7 +4,7 @@ extends VBoxContainer
 
 signal directive_staged(directive)
 signal execute_shift_requested(staged_directives)
-signal action_clicked(action_code)
+signal action_clicked(action_code: String, payload: Dictionary)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
@@ -47,7 +47,7 @@ func build_ui() -> void:
 	btn_btn_open_order_pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_open_order_pad.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_open_order_pad.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_open_order_pad.pressed.connect(func(): self.action_clicked.emit("OPEN_PAD"))
+	btn_btn_open_order_pad.pressed.connect(func(): self.action_clicked.emit("open_order_composer"))
 	_value_labels["btn_open_order_pad"] = btn_btn_open_order_pad
 	add_child(btn_btn_open_order_pad)
 
@@ -128,7 +128,7 @@ func build_ui() -> void:
 	btn_btn_select_all.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_select_all.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	btn_btn_select_all.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_select_all.pressed.connect(func(): if "_queue" in self: self._queue.toggle_all())
+	btn_btn_select_all.pressed.connect(func(): self.action_clicked.emit("select_all_directives"))
 	_value_labels["btn_select_all"] = btn_btn_select_all
 	add_child(btn_btn_select_all)
 

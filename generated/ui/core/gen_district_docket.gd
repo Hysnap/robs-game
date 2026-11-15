@@ -2,6 +2,7 @@
 # Compiled from: res://data_modules/core/ui_schemas/views/district_docket.json
 extends VBoxContainer
 
+signal action_clicked(action_code: String, payload: Dictionary)
 signal item_selected(target_route, filter_key)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")

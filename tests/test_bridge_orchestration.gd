@@ -7,6 +7,7 @@ const OperationsControllerScript = preload("res://systems/operations_controller.
 
 func _init() -> void:
 	print("\n--- [Test] Starting MVC Bridge Orchestration Validation ---")
+	OperationsControllerScript.initialize_commands()
 	var passed: bool = true
 	
 	passed = passed and test_route_request_dispatch()
@@ -22,7 +23,6 @@ func _init() -> void:
 func test_route_request_dispatch() -> bool:
 	var view_host = ViewHostScript.new()
 	
-	# FIX: Inject a dummy OuterShell with a mock "CONTENT" slot to silence the warning
 	var dummy_shell = OuterShell.new()
 	var mock_content_slot = Control.new()
 	mock_content_slot.name = "CONTENT"
@@ -31,20 +31,20 @@ func test_route_request_dispatch() -> bool:
 	view_host.shell_node = dummy_shell
 	
 	var dummy_view = Control.new()
-	view_host.register_view("TEST_DOMAIN", dummy_view)
+	view_host.register_view("DIARY", dummy_view)
 	
-	# 1. Simulate UI intent via DTO
-	var cmd = UIActionCommandScript.new(UIActionCommandScript.CommandType.ROUTE_REQUEST, "TEST_DOMAIN")
+	# 1. Simulate UI intent via flat UIActionCommand DTO
+	var cmd = UIActionCommandScript.new("open_diary", {})
 	
-	# 2. Fire across the boundary
+	# 2. Fire across the boundary into dynamic cmd_open_diary.gd
 	OperationsControllerScript.dispatch_ui_command(cmd, view_host, {})
 	
-	# 3. Assert the Controller correctly unpacked and orchestrated the host
-	var success: bool = (view_host._active_domain == "TEST_DOMAIN")
+	# 3. Assert the dynamic command brick orchestrated ViewHost
+	var success: bool = (view_host.get_active_domain() == "DIARY")
 	if success:
-		print("PASS: OperationsController successfully routed UIActionCommand (ROUTE_REQUEST).")
+		print("PASS: OperationsController dynamically routed UIActionCommand ('open_diary').")
 	else:
-		printerr("FAIL: ViewHost active domain is '%s', expected 'TEST_DOMAIN'" % view_host._active_domain)
+		printerr("FAIL: ViewHost active domain is '%s', expected 'DIARY'" % view_host.get_active_domain())
 		
 	view_host.free()
 	dummy_view.free()
@@ -54,19 +54,21 @@ func test_route_request_dispatch() -> bool:
 func test_action_clicked_inbox_dispatch() -> bool:
 	var view_host = ViewHostScript.new()
 	
-	# 1. Simulate slip triage UI intent
-	var cmd = UIActionCommandScript.new(
-		UIActionCommandScript.CommandType.ACTION_CLICKED, 
-		"INBOX", 
-		"DISCARD", 
+	# 1. Simulate slip discard UI intent
+	var discard_cmd = UIActionCommandScript.new(
+		"discard_slip",
 		{"display_text": "Mock discarded slip"}
 	)
+	OperationsControllerScript.dispatch_ui_command(discard_cmd, view_host, {})
+
+	# 2. Simulate slip file UI intent
+	var file_cmd = UIActionCommandScript.new(
+		"file_slip",
+		{"destination": "DIARY", "tick": 1, "display_text": "Mock filed slip"}
+	)
+	OperationsControllerScript.dispatch_ui_command(file_cmd, view_host, {})
 	
-	# 2. Fire across the boundary
-	OperationsControllerScript.dispatch_ui_command(cmd, view_host, {})
-	
-	# Reaching here without a type mismatch or missing property crash proves DTO unboxing works
-	print("PASS: OperationsController safely unboxed UIActionCommand (ACTION_CLICKED / INBOX).")
+	print("PASS: OperationsController dynamically executed 'discard_slip' and 'file_slip' command bricks.")
 	
 	view_host.free()
 	return true

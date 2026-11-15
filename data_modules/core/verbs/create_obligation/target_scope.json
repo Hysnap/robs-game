@@ -29,7 +29,7 @@
     "location_section": {
       "visible": true,
       "required": true,
-      "label_token": "UI_LBL_LOCATION",
+      "label_token": "UI_LBL_VENUE",
       "mapped_field": "target_node_id"
     },
     "contact_section": {

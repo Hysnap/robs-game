@@ -49,7 +49,7 @@
       "signals": [
         "directive_staged(directive)",
         "execute_shift_requested(staged_directives)",
-        "action_clicked(action_code)"
+        "action_clicked(action_code: String, payload: Dictionary)"
       ]
     }
   ]
