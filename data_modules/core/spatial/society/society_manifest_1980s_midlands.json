@@ -51,6 +51,8 @@
 	"settlement_rails": "res://data_modules/core/economy/settlement_rails.json",
 	"building_classes": "res://data_modules/core/spatial/society/building_classes.json",
 	"city_configuration": "res://resources/city/default_european_city.tres",
-	"job_definitions": "res://data_modules/core/spatial/society/job_definitions.json"
+	"job_definitions": "res://data_modules/core/spatial/society/job_definitions.json",
+	"transport_modes": "res://data_modules/core/spatial/transport/transport_modes.json"
   }
 }
+

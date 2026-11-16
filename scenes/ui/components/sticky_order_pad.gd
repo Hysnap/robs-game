@@ -643,36 +643,26 @@ func _apply_sticky_note_skins() -> void:
 		_apply_ink_color_recursive(p, ink_color)
 
 func _apply_ink_color_recursive(node: Node, ink_color: Color) -> void:
-	var mono_font: Font = RETRO_THEME.get_monospace_font()
-
 	if node is Label:
 		node.add_theme_color_override("font_color", ink_color)
-		if mono_font:
-			node.add_theme_font_override("font", mono_font)
 
 	elif node is OptionButton or node is Button:
 		node.add_theme_color_override("font_color", ink_color)
 		node.add_theme_color_override("font_pressed_color", ink_color)
 		node.add_theme_color_override("font_hover_color", ink_color)
 		node.add_theme_color_override("font_focus_color", ink_color)
-		if mono_font:
-			node.add_theme_font_override("font", mono_font)
 
 		if node is OptionButton:
 			var popup: PopupMenu = node.get_popup()
 			if popup:
 				popup.add_theme_color_override("font_color", ink_color)
 				popup.add_theme_color_override("font_hover_color", ink_color)
-				if mono_font:
-					popup.add_theme_font_override("font", mono_font)
 
 	elif node is SpinBox:
 		var line_edit: LineEdit = node.get_line_edit()
 		if line_edit:
 			line_edit.add_theme_color_override("font_color", ink_color)
 			line_edit.add_theme_color_override("font_selected_color", ink_color)
-			if mono_font:
-				line_edit.add_theme_font_override("font", mono_font)
 
 	for child in node.get_children():
 		_apply_ink_color_recursive(child, ink_color)

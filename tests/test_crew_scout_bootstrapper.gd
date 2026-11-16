@@ -22,24 +22,33 @@ func _init() -> void:
 	assert(success, "FAIL: CrewScoutBootstrapper failed to scout and bind crew.")
 	print("✅ Bootstrapper returned success.")
 
-	# 3. Assert canonical resident entries in world_state
+	# 3. Assert canonical integer-keyed resident entries in world_state
 	var residents: Dictionary = world_state.get("residents", {})
-	assert(residents.has("crew_0") and residents.has("crew_1") and residents.has("crew_2"), "FAIL: Missing crew slots in canonical residents registry.")
+	assert(residents.size() == 3, "FAIL: Expected 3 crew operatives in canonical residents registry, got %d." % residents.size())
 	assert(not world_state.has("staff"), "FAIL: Legacy 'staff' pool must not exist in canonical world_state.")
 
-	for slot in ["crew_0", "crew_1", "crew_2"]:
-		var member: Dictionary = residents[slot]
-		assert(int(member.get("resident_id", 0)) > 0, "FAIL: %s missing valid resident_id." % slot)
-		assert(not str(member.get("name", "")).is_empty(), "FAIL: %s missing procedural name." % slot)
-		assert(int(member.get("household_id", 0)) > 0, "FAIL: %s missing household_id." % slot)
+	var seen_slots: Array[String] = []
+	for res_key in residents.keys():
+		assert(res_key is int and int(res_key) > 0, "FAIL: Resident key must be a positive int resident_id, got '%s'." % str(res_key))
+		var member: Dictionary = residents[res_key]
+		var r_id: int = int(member.get("resident_id", 0))
+		var slot_id: String = str(member.get("slot_id", ""))
+		assert(r_id == int(res_key), "FAIL: Resident dictionary key (%d) must match member.resident_id (%d)." % [int(res_key), r_id])
+		assert(not slot_id.is_empty() and not seen_slots.has(slot_id), "FAIL: Invalid or duplicate slot_id '%s'." % slot_id)
+		seen_slots.append(slot_id)
+		assert(not str(member.get("name", "")).is_empty(), "FAIL: %s missing procedural name." % slot_id)
+		assert(int(member.get("household_id", 0)) > 0, "FAIL: %s missing household_id." % slot_id)
 		var cash_balance: float = float(member.get("inventory", {}).get("CASH", 0.0))
 		print("   • Slot %s: %s (Resident #%d, Age %d, Cash: £%.2f)" % [
-			slot, member["name"], member["resident_id"], member["age"], cash_balance
+			slot_id, member["name"], r_id, member["age"], cash_balance
 		])
 
+	assert(seen_slots.has("crew_0") and seen_slots.has("crew_1") and seen_slots.has("crew_2"), "FAIL: Missing expected crew slot_ids.")
+
 	# 4. Verify SQLite secondary contracts and is_active_agent
-	for slot in ["crew_0", "crew_1", "crew_2"]:
-		var r_id: int = int(residents[slot]["resident_id"])
+	for res_key in residents.keys():
+		var r_id: int = int(res_key)
+		var slot_id: String = str(residents[res_key].get("slot_id", ""))
 		
 		# Check active agent flag
 		var r_rows: Array = DB_MANAGER.query_rows("SELECT is_active_agent FROM residents WHERE resident_id = %d;" % r_id)
@@ -47,12 +56,12 @@ func _init() -> void:
 
 		# Check secondary enterprise contract
 		var c_rows: Array = DB_MANAGER.query_rows("""
-			SELECT employer_entity_id, weekly_hours, compensation_rate 
+			SELECT employer_org_id, weekly_hours, compensation_rate 
 			FROM livelihood_contracts 
-			WHERE resident_id = %d AND employer_entity_id = 'CREW_ENTERPRISE';
+			WHERE resident_id = %d AND employer_org_id = 'ORG:CREW_ENTERPRISE';
 		""" % r_id)
-		assert(not c_rows.is_empty(), "FAIL: Resident #%d missing CREW_ENTERPRISE secondary contract." % r_id)
-		print("   • Verified SQLite CREW_ENTERPRISE contract for %s (Resident #%d)" % [slot, r_id])
+		assert(not c_rows.is_empty(), "FAIL: Resident #%d missing ORG:CREW_ENTERPRISE secondary contract." % r_id)
+		print("   • Verified SQLite ORG:CREW_ENTERPRISE contract for %s (Resident #%d)" % [slot_id, r_id])
 
 	print("\n🎉 ALL CREW SCOUT BOOTSTRAPPER CHECKS PASSED CLEANLY.\n")
 	quit(0)

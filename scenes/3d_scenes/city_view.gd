@@ -192,11 +192,14 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 		if view_host != null:
 			view_host.set_desk_inbox(feedback_inbox)
 
-	# F. Query active spread for its era-specific composer modal and bind to action planner
+	# F. Query active spread for its era-specific composer modal and bind to action planner & ViewHost
 	directive_modal = outer_shell.get_slot("MODAL")
 	assert(directive_modal != null, "FATAL: [CityView] Active spread did not supply a MODAL slot.")
 	assert(directive_modal.has_signal("directive_committed"), "FATAL: [CityView] Modal slot does not expose 'directive_committed' signal.")
 	assert(action_planner_view != null and action_planner_view.has_method("add_directive"), "FATAL: [CityView] Action planner view is missing 'add_directive' contract.")
+
+	if view_host != null:
+		view_host.set_order_composer_node(directive_modal)
 
 	if not directive_modal.directive_committed.is_connected(action_planner_view.add_directive):
 		directive_modal.directive_committed.connect(action_planner_view.add_directive)
@@ -243,7 +246,6 @@ func _setup_shell_customizer() -> void:
 func _on_ui_command_dispatched(command: UIActionCommandScript) -> void:
 	var context_refs: Dictionary = {
 		"action_planner": view_host.get_action_component() if view_host != null else null,
-		"directive_modal": directive_modal,
 		"shell_customizer": shell_customizer,
 		"on_shell_switch": Callable(self, "_handle_shell_switch")
 	}

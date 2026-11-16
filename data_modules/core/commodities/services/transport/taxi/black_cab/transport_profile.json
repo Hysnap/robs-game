@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "scope": "SERVICE_BLACK_CAB",
+    "description": "Licensed Hackney carriage street cab. Fastest hailed transit, highest metered fare."
+  },
+  "id": "SERVICE_BLACK_CAB",
+  "display_name": "Hackney Carriage Taxi",
+  "category": "SERVICE",
+  "mode_id": "TAXI",
+  "fallback_tier": 1,
+  "valid_from_year": 1948,
+  "valid_to_year": 2099,
+  "allowed_road_classes": [
+    "MOTORWAY",
+    "ARTERIAL",
+    "HIGH_STREET",
+    "COLLECTOR"
+  ],
+  "stop_strategy_filter": "JUNCTION",
+  "speed_multiplier": 1.15,
+  "headway_minutes_by_sector": {
+    "COMMERCIAL": 4.0,
+    "CIVIC": 5.0,
+    "RESIDENTIAL": 12.0,
+    "INDUSTRIAL": 15.0,
+    "DEFAULT": 10.0
+  },
+  "off_peak_wait_multiplier": 1.2,
+  "can_be_stored": false,
+  "base_fare_drop": 2.20,
+  "unit_type": "DISTANCE_UNIT",
+  "capacity": {
+    "max_passengers_per_unit": 5,
+    "max_cargo_volume_litres": 120.0,
+    "requires_multiple_units_for_groups": true
+  }
+}

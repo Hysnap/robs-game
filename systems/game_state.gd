@@ -4,7 +4,6 @@ extends Node
 ## Signals for reactive UI (Filofax, HUD, Map highlights)
 signal district_selected(district_id: String)
 signal district_updated(district_id: String)
-signal turn_advanced(current_week: int, current_day: int)
 signal world_state_reset
 
 ## Path to active configuration (can be switched by scenario loaders)
@@ -57,40 +56,48 @@ func initialize_fresh_state() -> void:
 		"inventory": {},
 		"commodity_registry": {},
 		"recipe_registry": {},
+		"transport_registry": {},
 		"pending_orders": {},
 		"districts": {},
 		"counterparties": {},
 		"selected_district_id": ""
 	}
 
-	# 2. Ingest starting definitions dynamically from business_rules.cfg
+	# 2. Ingest starting definitions and catalog paths dynamically from business_rules.cfg
 	var config := ConfigFile.new()
 	var err := config.load(active_rules_path)
-	if err == OK:
-		_load_section_into_state(config, "starting_metadata", "metadata")
-		_load_section_into_state(config, "starting_operations", "operations")
-		SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
-	else:
-		SystemLogger.log_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
-		push_error("[GAME_STATE] Failed to load starting configuration from: %s (Error: %d)" % [active_rules_path, err])
-		world_state["metadata"] = {"calendar_year": 1980, "current_week_tick": 1, "current_day_tick": 1, "active_seed": "default-city"}
-		world_state["obligations"] = []
-		world_state["operations"] = {"fatigue": 0.0}
+	assert(err == OK, "FATAL: [GAME_STATE] Failed to load active_rules_path '%s' (Error: %d)" % [active_rules_path, err])
 
-	# 3. Dynamic Catalog Ingestion via CommodityManager (Rule 1 & Rule 8)
-	var core_commodities := "res://data_modules/core/commodities/"
-	world_state["commodity_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(core_commodities)
+	_load_section_into_state(config, "starting_metadata", "metadata")
+	_load_section_into_state(config, "starting_operations", "operations")
+	SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
+
+	# 3. Dynamic Catalog Ingestion via CommodityManager (Rule 1 & Rule 8 — paths from business_rules.cfg)
+	var commodities_root: String = str(config.get_value("catalogs", "commodities_root", "")).strip_edges()
+	var recipes_root: String = str(config.get_value("catalogs", "recipes_root", "")).strip_edges()
+	var transports_root: String = str(config.get_value("catalogs", "transports_root", "")).strip_edges()
+
+	assert(not commodities_root.is_empty(), "FATAL: [GAME_STATE] [catalogs] commodities_root missing in %s" % active_rules_path)
+	assert(not recipes_root.is_empty(), "FATAL: [GAME_STATE] [catalogs] recipes_root missing in %s" % active_rules_path)
+	assert(not transports_root.is_empty(), "FATAL: [GAME_STATE] [catalogs] transports_root missing in %s" % active_rules_path)
+
+	world_state["commodity_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(commodities_root)
 	if world_state["commodity_registry"].is_empty():
-		push_warning("[GAME_STATE] No commodities loaded from %s" % core_commodities)
+		push_warning("[GAME_STATE] No commodities loaded from %s" % commodities_root)
 	else:
 		SystemLogger.log_info("[GAME_STATE] Ingested %d catalog commodities." % world_state["commodity_registry"].size())
 
-	var core_recipes := "res://data_modules/core/recipes/"
-	world_state["recipe_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(core_recipes)
+	world_state["recipe_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(recipes_root)
 	if world_state["recipe_registry"].is_empty():
-		push_warning("[GAME_STATE] No recipes loaded from %s" % core_recipes)
+		push_warning("[GAME_STATE] No recipes loaded from %s" % recipes_root)
 	else:
 		SystemLogger.log_info("[GAME_STATE] Ingested %d recipes." % world_state["recipe_registry"].size())
+
+	world_state["transport_registry"] = COMMODITY_MANAGER.load_hierarchical_transports(transports_root)
+	if world_state["transport_registry"].is_empty():
+		push_warning("[GAME_STATE] No transport service profiles loaded from %s" % transports_root)
+	else:
+		SystemLogger.log_info("[GAME_STATE] Ingested %d transport services." % world_state["transport_registry"].size())
 
 	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
 	world_state_reset.emit()

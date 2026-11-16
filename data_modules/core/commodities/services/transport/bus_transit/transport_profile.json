@@ -1,12 +1,30 @@
 {
   "_meta": {
-    "tier": 4,
     "scope": "SERVICE_BUS_TRANSIT",
     "description": "Municipal double-decker bus. Fixed fare stages."
   },
   "id": "SERVICE_BUS_TRANSIT",
   "display_name": "Municipal Bus",
   "category": "SERVICE",
+  "mode_id": "BUS",
+  "fallback_tier": 3,
+  "valid_from_year": 1920,
+  "valid_to_year": 2099,
+  "allowed_road_classes": [
+    "ARTERIAL",
+    "HIGH_STREET",
+    "COLLECTOR"
+  ],
+  "stop_strategy_filter": "EDGE_MIDPOINT",
+  "speed_multiplier": 1.0,
+  "headway_minutes_by_sector": {
+    "COMMERCIAL": 10.0,
+    "CIVIC": 12.0,
+    "RESIDENTIAL": 20.0,
+    "INDUSTRIAL": 30.0,
+    "DEFAULT": 20.0
+  },
+  "off_peak_wait_multiplier": 1.75,
   "can_be_stored": false,
   "base_fare_drop": 0.50,
   "unit_type": "DISTANCE_UNIT",

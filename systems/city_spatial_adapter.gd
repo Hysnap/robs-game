@@ -3,6 +3,7 @@ class_name CitySpatialAdapter
 extends RefCounted
 
 const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const SPATIAL_ROUTE_PLANNER = preload("res://systems/spatial_route_planner.gd")
 
 static var _archetypes: Dictionary = {}
 
@@ -122,7 +123,11 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		}
 
 		child.set_meta("display_name", display_name)
-	SystemLogger.log_info("[CitySpatialAdapter] Ingested %d districts." % out_world_state["districts"].size())
+	var deployed_stops: Dictionary = SPATIAL_ROUTE_PLANNER.deploy_transit_stops(out_world_state)
+	SystemLogger.log_info("[CitySpatialAdapter] Ingested %d districts and deployed %d transit stops." % [
+		out_world_state["districts"].size(),
+		deployed_stops.size()
+	])
 
 ## Evaluates finalized districts to find a valid, populated residential neighborhood.
 ## Seeds public landmarks and the selected home district into sparse knowledge_pools via IntelManager.

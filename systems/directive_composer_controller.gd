@@ -128,6 +128,17 @@ static func calculate_estimate_with_intel(
 		"confidence_token": "UI_ESTIMATE_VERIFIED" if is_exact else "UI_ESTIMATE_SPECULATIVE"
 	}
 
+## Helper: preserves native int IDs while normalizing numeric strings or keeping non-numeric tokens
+static func _normalize_entity_id(raw_val: Variant) -> Variant:
+	if raw_val == null:
+		return ""
+	if raw_val is int:
+		return raw_val
+	var s_val: String = str(raw_val).strip_edges()
+	if s_val.is_valid_int():
+		return int(s_val)
+	return s_val
+
 ## Validates and constructs normalized directive packet based on verb's configured form_layout
 static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var verb: String = str(form_data.get("verb", "")).strip_edges().to_upper()
@@ -136,17 +147,23 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		return {}
 
 	var layout := get_form_layout(verb)
+	var initiator_val: Variant = _normalize_entity_id(form_data.get("initiator_id", "PLAYER"))
+	if initiator_val is String and str(initiator_val).is_empty():
+		initiator_val = "PLAYER"
+
+	var assigned_val: Variant = _normalize_entity_id(form_data.get("assigned_to", initiator_val))
+	if assigned_val is String and str(assigned_val).is_empty():
+		assigned_val = initiator_val
+
 	var directive: Dictionary = {
 		"verb": verb,
-		"initiator_id": str(form_data.get("initiator_id", "PLAYER")).strip_edges(),
-		"assigned_to": str(form_data.get("assigned_to", "Player")).strip_edges(),
+		"initiator_id": initiator_val,
+		"assigned_to": assigned_val,
 		"config": {
 			"unit_cost": float(form_data.get("unit_cost", 0.0)),
 			"exposure_modifier": float(form_data.get("exposure_modifier", 1.0))
 		}
 	}
-	if directive["initiator_id"].is_empty():
-		directive["initiator_id"] = "PLAYER"
 
 	# 1. Target Section (Item / Entity)
 	var target_cfg: Dictionary = layout.get("target_section", {})
@@ -193,12 +210,13 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	# 4. Location Section
 	var loc_cfg: Dictionary = layout.get("location_section", {})
 	var loc_field: String = str(loc_cfg.get("mapped_field", "target_node_id"))
-	var loc_id: String = str(form_data.get("target_node_id", "")).strip_edges()
-	var loc_name: String = str(form_data.get("target_node_name", loc_id)).strip_edges()
-	if bool(loc_cfg.get("required", false)) and loc_id.is_empty():
+	var loc_id: Variant = _normalize_entity_id(form_data.get("target_node_id", ""))
+	var loc_empty: bool = (loc_id is int and loc_id <= 0) or (loc_id is String and str(loc_id).is_empty())
+	var loc_name: String = str(form_data.get("target_node_name", str(loc_id))).strip_edges()
+	if bool(loc_cfg.get("required", false)) and loc_empty:
 		push_error("[DirectiveComposerController REJECTED] Target location is required for verb '%s'." % verb)
 		return {}
-	if not loc_id.is_empty():
+	if not loc_empty:
 		directive["target_node_id"] = loc_id
 		directive["target_node_name"] = loc_name
 		if not loc_field.is_empty():
@@ -208,23 +226,28 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	# 5. Contact Section
 	var contact_cfg: Dictionary = layout.get("contact_section", {})
 	var contact_field: String = str(contact_cfg.get("mapped_field", "counterparty_id"))
-	var contact_id: String = str(form_data.get("counterparty_id", form_data.get("target_resident_id", ""))).strip_edges()
-	if bool(contact_cfg.get("required", false)) and contact_id.is_empty():
+	var raw_contact: Variant = form_data.get("counterparty_id", form_data.get("target_resident_id", ""))
+	var contact_id: Variant = _normalize_entity_id(raw_contact)
+	var contact_empty: bool = (contact_id is int and contact_id <= 0) or (contact_id is String and str(contact_id).is_empty())
+	if bool(contact_cfg.get("required", false)) and contact_empty:
 		push_error("[DirectiveComposerController REJECTED] Contact/Counterparty is required for verb '%s'." % verb)
 		return {}
-	if not contact_id.is_empty():
+	if not contact_empty:
 		directive["counterparty_id"] = contact_id
 		if not contact_field.is_empty():
 			directive[contact_field] = contact_id
 
 	# Optional Trade Supplier Key Parity
-	if form_data.has("supplier_id") and not str(form_data["supplier_id"]).is_empty():
-		directive["supplier_id"] = str(form_data["supplier_id"]).strip_edges()
-	elif not contact_id.is_empty() and not directive.has("supplier_id"):
+	if form_data.has("supplier_id"):
+		var sup_id: Variant = _normalize_entity_id(form_data["supplier_id"])
+		var sup_empty: bool = (sup_id is int and sup_id <= 0) or (sup_id is String and str(sup_id).is_empty())
+		if not sup_empty:
+			directive["supplier_id"] = sup_id
+	elif not contact_empty and not directive.has("supplier_id"):
 		directive["supplier_id"] = contact_id
 
 	return directive
-
+	
 ## Filters cached locations by sector/type
 static func filter_locations(cached_locations: Array[Dictionary], filter_type: String) -> Array[Dictionary]:
 	var f_upper := filter_type.strip_edges().to_upper()

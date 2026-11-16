@@ -24,8 +24,8 @@
     "location_section": {
       "visible": true,
       "required": true,
-      "label_token": "UI_LBL_VENUE",
-      "mapped_field": "target_node_id"
+      "label_token": "UI_LBL_DESTINATION",
+      "mapped_field": "destination_district_id"
     },
     "contact_section": {
       "visible": false,

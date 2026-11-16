@@ -121,6 +121,7 @@ static func load_game(slot_id: String) -> bool:
 	var catalogs_repaired: Variant = _ensure_catalog_registries(parsed, slot_id)
 	if catalogs_repaired == null:
 		return false
+	_normalize_integer_entity_keys(parsed)
 
 	var main_loop := Engine.get_main_loop()
 	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
@@ -247,6 +248,7 @@ static func load_turn_snapshot(slot_id: String, turn_index: int) -> Dictionary:
 	if not (parsed is Dictionary):
 		push_error("[SaveManager] Corrupted snapshot JSON: %s" % file_path)
 		return {}
+	_normalize_integer_entity_keys(parsed)
 
 	var main_loop := Engine.get_main_loop()
 	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
@@ -309,3 +311,18 @@ static func get_latest_save_slot() -> String:
 	base_da.list_dir_end()
 
 	return latest_slot
+
+## Restores canonical int keys on residents and establishments dictionaries after JSON deserialization
+static func _normalize_integer_entity_keys(state: Dictionary) -> void:
+	for pool_name in ["residents", "establishments"]:
+		if not state.has(pool_name) or not (state[pool_name] is Dictionary):
+			continue
+		var raw_pool: Dictionary = state[pool_name]
+		var normalized_pool: Dictionary = {}
+		for raw_key in raw_pool.keys():
+			var key_str := str(raw_key)
+			if key_str.is_valid_int():
+				normalized_pool[int(key_str)] = raw_pool[raw_key]
+			else:
+				normalized_pool[raw_key] = raw_pool[raw_key]
+		state[pool_name] = normalized_pool

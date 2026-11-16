@@ -1,0 +1,9 @@
+{
+    "_meta": {
+        "version": "1.0.0",
+        "verb_token": "TRAVEL",
+        "description": "Applies computed multi-modal route plan impacts (fare, operational time, travel fatigue) via ImpactRouter."
+    },
+    "metric_id": "TRANSPORT_ROUTE",
+    "model": "ROUTE_PLAN_IMPACTS"
+}
