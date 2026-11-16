@@ -23,9 +23,11 @@
         {
           "id": "tenancy_header",
           "type": "HEADER_BLOCK",
-          "color": "body",
+          "title_color": "body",
           "field": "name",
-          "subtitle_field": "residence_type"
+          "subtitle_field": "residence_type",
+          "subtitle_color": "body",
+          "autowrap": true
         }
       ]
     },
@@ -67,6 +69,8 @@
           "id": "occupants_list",
           "type": "ITEM_LIST",
           "field": "residents_summary",
+          "autowrap": true,
+          "color": "body",
           "min_height": 120
         }
       ]

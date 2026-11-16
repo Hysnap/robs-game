@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "target_class": "GenOperativeDossier",
+    "extends": "VBoxContainer",
+    "description": "Operational status, current district, return-to-base setting, fatigue, and personal inventory for a crew operative."
+  },
+  "sections": [
+    {
+      "id": "header_section",
+      "header_token": "UI_HDR_OPERATIVE_DOSSIER",
+      "color": "body",
+      "rows": [
+        {
+          "id": "operative_header",
+          "type": "HEADER_BLOCK",
+          "color": "body",
+          "field": "operative_name",
+          "title_color": "body",
+          "subtitle_color": "body",
+          "subtitle_field": "role_title",
+          "title_font_size": 12,
+          "subtitle_font_size": 10,
+          "show_separator": true,
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "status_section",
+      "header_token": "UI_HDR_OPERATIONS",
+      "color": "body",
+      "rows": [
+        {
+          "id": "current_location_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_CURRENT_LOCATION",
+          "field": "current_location_name",
+          "font_size": 8,
+          "color": "body"
+        },
+        {
+          "id": "base_location_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_BASE_LOCATION",
+          "field": "base_location_name",
+          "font_size": 8,
+          "color": "body"
+        },
+        {
+          "id": "return_to_base_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_RETURN_TO_BASE",
+          "field": "return_to_base_status",
+          "font_size": 8,
+          "color": "body"
+        },
+        {
+          "id": "fatigue_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_FATIGUE",
+          "field": "fatigue_display",
+          "font_size": 8,
+          "color": "body"
+        },
+        {
+          "id": "cash_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_CASH_HELD",
+          "field": "cash_display",
+          "font_size": 8,
+          "color": "body"
+        }
+      ]
+    },
+    {
+      "id": "inventory_section",
+      "header_token": "UI_HDR_PERSONAL_INVENTORY",
+      "font_size": 8,
+      "color": "body",
+      "rows": [
+        {
+          "id": "inventory_list",
+          "type": "ITEM_LIST",
+          "token": "UI_LBL_INVENTORY_ITEMS",
+          "field": "inventory_lines",
+          "font_size": 8,
+          "color": "body",
+          "min_height": 120
+        }
+      ]
+    },
+    {
+      "id": "navigation_section",
+      "header_token": "UI_HDR_CREW_DOSSIER",
+      "font_size": 8,
+      "color": "body",
+      "rows": [
+        {
+          "id": "op_btn_back",
+          "type": "BUTTON",
+          "token": "UI_BTN_BACK_ROSTER",
+          "font_size": 10,
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_roster\", {}"
+        }
+      ]
+    },
+    {
+      "id": "operative_doc_signals",
+      "type": "SIGNALS",
+      "signals": [
+        "action_clicked(action_code: String, payload: Dictionary)"
+      ]
+    }
+  ]
+}

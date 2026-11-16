@@ -212,6 +212,66 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		})
 		diary_memos.append(TranslationServer.translate("FEEDBACK_CYCLE_IDLE"))
 
+	# 1b. Per-Operative Auto Return-to-Base (runs regardless of shift directive failures/halts)
+	var default_base_id: String = str(world_state.get("operations", {}).get("home_district_id", "")).strip_edges()
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var seen_return_ids: Dictionary = {}
+
+	for res_key in residents_dict.keys():
+		var rec = residents_dict[res_key]
+		if not (rec is Dictionary) or not bool(rec.get("is_crew", true)):
+			continue
+		if not bool(rec.get("auto_return_to_base", false)):
+			continue
+
+		var canonical_id: Variant = rec.get("resident_id", res_key)
+		var agent_str: String = str(canonical_id)
+		if seen_return_ids.has(agent_str):
+			continue
+		seen_return_ids[agent_str] = true
+
+		var target_base_id: String = str(rec.get("base_district_id", default_base_id)).strip_edges()
+		if target_base_id.is_empty():
+			target_base_id = default_base_id
+
+		var current_loc: String = str(rec.get("current_district_id", "")).strip_edges()
+		if target_base_id.is_empty() or current_loc == target_base_id:
+			continue
+
+		var base_name: String = str(world_state.get("districts", {}).get(target_base_id, {}).get("display_name", target_base_id))
+		var return_directive: Dictionary = {
+			"verb": "TRAVEL",
+			"initiator_id": canonical_id,
+			"assigned_to": canonical_id,
+			"destination_district_id": target_base_id,
+			"target_node_id": target_base_id,
+			"target_node_name": base_name,
+			"target_scope": "DISTRICT",
+			"service_id": "AUTO",
+			"auto_generated_return": true
+			}
+
+		var author_str: String = _resolve_directive_author(world_state, return_directive)
+		var ret_res: Dictionary = execute_directive(world_state, return_directive)
+		var ret_success: bool = bool(ret_res.get("success", false))
+
+		executed_events.append({
+			"trigger_type": "ACTION_RESOLUTION",
+			"day_offset": current_day,
+			"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
+			"week": current_week,
+			"day_of_week": _CalendarHelper.day_of_week(current_day),
+			"verb": "TRAVEL",
+			"target_item": "",
+			"success": ret_success,
+			"message": ret_res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")),
+			"author": author_str,
+			"target_node_id": target_base_id,
+			"directive_snapshot": return_directive.duplicate(true)
+		})
+		diary_memos.append(ret_res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")))
+
+
 	# 2. Advance Temporal Offset via CalendarHelper & Roll Daily Obligation / Postal / Calendar Ledger
 	var days_to_advance := 1
 	match horizon:

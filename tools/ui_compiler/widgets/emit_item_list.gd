@@ -8,6 +8,8 @@ static func emit_build(row: Dictionary) -> Array[String]:
 	var r_id: String = row.get("id", "widget")
 	var is_reorderable: bool = bool(row.get("reorderable", false))
 	var min_h: int = int(row.get("min_height", 120))
+	var color_token: String = str(row.get("color", "")).strip_edges()
+	var font_size: int = int(row.get("font_size", 0))
 
 	if is_reorderable:
 		lines.append("\tvar box_" + r_id + " := VBoxContainer.new()")
@@ -19,6 +21,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 		lines.append("\tlist_" + r_id + ".name = \"" + r_id + "_list\"")
 		lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
 		lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+		if not color_token.is_empty():
+			lines.append("\tlist_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + color_token + "\"))")
+		if font_size > 0:
+			lines.append("\tlist_" + r_id + ".add_theme_font_size_override(\"font_size\", %d)" % font_size)
 		lines.append("\tbox_" + r_id + ".add_child(list_" + r_id + ")")
 		lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
 
@@ -81,6 +87,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 		lines.append("\tlist_" + r_id + ".name = \"" + r_id + "\"")
 		lines.append("\tlist_" + r_id + ".custom_minimum_size = Vector2(0, " + str(min_h) + ")")
 		lines.append("\tlist_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")
+		if not color_token.is_empty():
+			lines.append("\tlist_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + color_token + "\"))")
+		if font_size > 0:
+			lines.append("\tlist_" + r_id + ".add_theme_font_size_override(\"font_size\", %d)" % font_size)
 		lines.append("\t_value_labels[\"" + r_id + "\"] = list_" + r_id)
 		lines.append("\tadd_child(list_" + r_id + ")\n")
 

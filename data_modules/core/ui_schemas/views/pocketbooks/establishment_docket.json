@@ -12,6 +12,7 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
+          "font_size": 8,
           "action_signal": "action_clicked",
           "emit_args": "\"open_dossier\", {}"
         }
@@ -28,8 +29,8 @@
           "subtitle_field": "category_title",
           "title_color": "body",
           "subtitle_color": "body",
-          "title_font_size": 15,
-          "subtitle_font_size": 11,
+          "title_font_size": 12,
+          "subtitle_font_size": 10,
           "show_separator": true,
           "autowrap": true
         }
@@ -45,6 +46,7 @@
           "field": "district_name",
           "type": "TEXT_METRIC",
           "color": "body",
+          "font_size": 8,
           "token": "UI_LBL_DISTRICT_WARD",
           "autowrap": true
         },
@@ -53,6 +55,7 @@
           "field": "capacity",
           "type": "TEXT_METRIC",
           "color": "body",
+          "font_size": 8,
           "format": "INT",
           "token": "UI_LBL_VENUE_CAPACITY",
           "autowrap": true
@@ -62,6 +65,7 @@
     {
       "id": "catchment_overview",
       "header_token": "UI_HDR_MARKET_CATCHMENT",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
@@ -69,6 +73,7 @@
           "field": "total_catchment_population",
           "type": "TEXT_METRIC",
           "color": "body",
+          "font_size": 8,
           "format": "INT",
           "token": "UI_LBL_CATCHMENT_POPULATION",
           "autowrap": true
@@ -78,6 +83,7 @@
           "field": "total_catchment_households",
           "type": "TEXT_METRIC",
           "color": "body",
+          "font_size": 8,
           "format": "INT",
           "token": "UI_LBL_CATCHMENT_HOUSEHOLDS",
           "autowrap": true
@@ -87,6 +93,7 @@
           "field": "avg_neighbor_disposable_income",
           "type": "TEXT_METRIC",
           "color": "body",
+          "font_size": 8,
           "format": "CURRENCY",
           "token": "UI_LBL_NEIGHBORHOOD_INCOME",
           "autowrap": true
@@ -96,11 +103,13 @@
     {
       "id": "personnel_overview",
       "header_token": "UI_HDR_ACTIVE_CONTRACTS",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
           "id": "personnel_list",
           "type": "ITEM_LIST",
+          "font_size": 8,
           "field": "personnel_summary",
           "min_height": 76
         }

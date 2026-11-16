@@ -12,6 +12,7 @@
           "id": "btn_back",
           "type": "BUTTON",
           "token": "UI_BTN_BACK_DOSSIER",
+          "font_size": 8,
           "action_signal": "action_clicked",
           "emit_args": "\"open_dossier\", {}"
         }
@@ -28,8 +29,8 @@
           "subtitle_field": "residence_type",
           "title_color": "body",
           "subtitle_color": "body",
-          "title_font_size": 15,
-          "subtitle_font_size": 11,
+          "title_font_size": 12,
+          "subtitle_font_size": 10,
           "show_separator": true,
           "autowrap": true
         }
@@ -38,11 +39,14 @@
     {
       "id": "tenancy_details",
       "header_token": "UI_HDR_TENANCY_STATUS",
+      "font_size": 8,
+      "color": "body",
       "rows": [
         {
           "id": "door_num",
           "field": "unit_door_number",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "token": "UI_LBL_DOOR_NUMBER",
           "autowrap": true
@@ -51,6 +55,7 @@
           "id": "ward",
           "field": "district_name",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "token": "UI_LBL_DISTRICT_WARD",
           "autowrap": true
@@ -59,6 +64,7 @@
           "id": "local_pub",
           "field": "local_pub_name",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "token": "UI_LBL_LOCAL_TAPROOM",
           "autowrap": true
@@ -68,10 +74,14 @@
     {
       "id": "residents_roster",
       "header_token": "UI_HDR_HOUSEHOLD_RESIDENTS",
+      "font_size": 8,
+      "color": "body",
       "rows": [
         {
           "id": "occupants_list",
           "type": "ITEM_LIST",
+          "font_size": 8,
+          "color": "body",
           "field": "residents_summary",
           "min_height": 84
         }

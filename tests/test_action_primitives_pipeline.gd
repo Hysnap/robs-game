@@ -4,6 +4,9 @@ extends SceneTree
 const EngineResultScript = preload("res://systems/engine_result.gd")
 const ActionPrimitivesScript = preload("res://systems/action_pipeline/action_primitives.gd")
 const ActionPipelineRunnerScript = preload("res://systems/action_pipeline/action_pipeline_runner.gd")
+const CommodityManagerScript = preload("res://systems/commodity_manager.gd")
+
+const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 
 func _init() -> void:
 	print("\n--- [Test] Starting Pure Primitives & Action Pipeline Stress Suite ---")
@@ -24,8 +27,22 @@ func _init() -> void:
 		printerr("--- [Test] PRIMITIVE & PIPELINE STRESS TESTS FAILED ---\n")
 		quit(1)
 
+func _resolve_transports_root() -> String:
+	var cfg := ConfigFile.new()
+	assert(cfg.load(BUSINESS_RULES_PATH) == OK, "FATAL: Failed to load business_rules.cfg in test.")
+	var root := str(cfg.get_value("catalogs", "transports_root", "")).strip_edges()
+	assert(not root.is_empty(), "FATAL: [catalogs] transports_root missing from business_rules.cfg.")
+	return root
+
 func _create_fixture_state() -> Dictionary:
+	var transports := CommodityManagerScript.load_hierarchical_transports(_resolve_transports_root())
+	assert(not transports.is_empty(), "FATAL: Transport catalog loaded empty in test fixture.")
+
 	return {
+		"metadata": {
+			"calendar_year": 1980
+		},
+		"transport_registry": transports,
 		"residents": {
 			"op_01": {
 				"name": "Mick Jenkins",
@@ -57,9 +74,17 @@ func _create_fixture_state() -> Dictionary:
 		},
 		"districts": {
 			"DISTRICT_MARKET": {
+				"district_id": "DISTRICT_MARKET",
+				"display_name": "Market Quarter",
+				"spatial_anchor": Vector2(0.0, 0.0),
+				"spatial_radius": 100.0,
 				"venues": {}
 			},
 			"DISTRICT_HQ": {
+				"district_id": "DISTRICT_HQ",
+				"display_name": "Headquarters",
+				"spatial_anchor": Vector2(225.0, 0.0),
+				"spatial_radius": 100.0,
 				"venues": {}
 			}
 		}
@@ -154,7 +179,12 @@ func test_primitive_move_actor() -> bool:
 		printerr("FAIL: MOVE_ACTOR failed to migrate op_02 to DISTRICT_MARKET, found: ", new_loc)
 		return false
 
-	print("PASS: Primitive MOVE_ACTOR spatial migration validated.")
+	var route_plan: Dictionary = directive.get("context", {}).get("route_plan", {})
+	if not bool(route_plan.get("reachable", false)):
+		printerr("FAIL: MOVE_ACTOR did not attach a reachable route_plan to directive context.")
+		return false
+
+	print("PASS: Primitive MOVE_ACTOR spatial migration and route plan validated.")
 	return true
 
 func test_primitive_transfer_item() -> bool:
@@ -268,8 +298,6 @@ func test_pipeline_pure_buy_success() -> bool:
 	var sup_cash: float = float(ws["establishments"]["supplier_01"]["inventory"].get("CASH", 0.0))
 	var sup_beer: float = float(ws["establishments"]["supplier_01"]["inventory"].get("BEER_KEG", 0.0))
 
-	# op_01 started with 50 CASH, 2 BEER. Paid 20 CASH, received 5 BEER -> 30 CASH, 7 BEER
-	# supplier started with 100 CASH, 20 BEER -> 120 CASH, 15 BEER
 	if not is_equal_approx(op_cash, 30.0) or not is_equal_approx(op_beer, 7.0):
 		printerr("FAIL: Buyer post-BUY state corrupted. Cash: %f, Beer: %f" % [op_cash, op_beer])
 		return false

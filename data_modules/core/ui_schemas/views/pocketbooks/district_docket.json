@@ -15,8 +15,8 @@
           "subtitle_field": "type_title",
           "title_color": "body",
           "subtitle_color": "body",
-          "title_font_size": 15,
-          "subtitle_font_size": 11,
+          "title_font_size": 12,
+          "subtitle_font_size": 10,
           "show_separator": true,
           "autowrap": true
         }
@@ -25,6 +25,7 @@
     {
       "id": "intel_status_header",
       "header_token": "UI_HDR_SURVEY_INTELLIGENCE",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
@@ -32,6 +33,7 @@
           "field": "intel_status_token",
           "type": "BADGE_STATUS",
           "format": "TOKEN",
+          "font_size": 8,
           "color": "body",
           "token": "UI_LBL_INTEL_STATUS",
           "autowrap": true
@@ -41,12 +43,14 @@
     {
       "id": "demographics_overview",
       "header_token": "UI_HDR_WARD_DEMOGRAPHICS",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
           "id": "pop",
           "field": "active_population",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "INT",
           "token": "UI_LBL_ACTIVE_POPULATION",
@@ -56,6 +60,7 @@
           "id": "households",
           "field": "total_households",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "INT",
           "token": "UI_LBL_TOTAL_HOUSEHOLDS",
@@ -65,6 +70,7 @@
           "id": "unemployment_tier",
           "field": "unemployment_bucket_token",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_UNEMPLOYMENT_TIER",
@@ -74,6 +80,7 @@
           "id": "income",
           "field": "income_bucket_token",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_DISPOSABLE_INCOME",
@@ -96,6 +103,8 @@
           "action_signal": "item_selected",
           "route_field": "detail_route",
           "target_route": "ESTABLISHMENT_DOCKET",
+          "font_size": 8,
+          "color": "body",
           "autowrap": true
         }
       ]
@@ -103,12 +112,14 @@
     {
       "id": "security_environment",
       "header_token": "UI_HDR_SECURITY_ENVIRONMENT",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
           "id": "zhi",
           "field": "zone_health_bucket_token",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_ZONE_HEALTH",
@@ -118,6 +129,7 @@
           "id": "heat",
           "field": "heat_bucket_token",
           "type": "TEXT_METRIC",
+          "font_size": 8,
           "color": "body",
           "format": "TOKEN",
           "token": "UI_LBL_POLICE_HEAT",
@@ -128,6 +140,8 @@
     {
       "id": "field_observations",
       "type": "INSCRIPTIONS",
+      "font_size": 8,
+      "color": "body",
       "header_token": "UI_SEC_FIELD_OBSERVATIONS"
     },
     {
