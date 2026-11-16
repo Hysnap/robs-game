@@ -41,6 +41,60 @@ func build_ui() -> void:
 	sec_operational_docket.add_child(sep_operational_docket)
 	add_child(sec_operational_docket)
 
+	var row_active_operative_row := HBoxContainer.new()
+	row_active_operative_row.name = "active_operative_row"
+	row_active_operative_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var lbl_active_operative_row := Label.new()
+	lbl_active_operative_row.text = tr("UI_LBL_ACTIVE_OPERATIVE")
+	lbl_active_operative_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_active_operative_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row_active_operative_row.add_child(lbl_active_operative_row)
+	var val_active_operative_row := Label.new()
+	val_active_operative_row.name = "active_operative_row_value"
+	val_active_operative_row.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_active_operative_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_active_operative_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_active_operative_row.add_child(val_active_operative_row)
+	_value_labels["active_operative_row"] = val_active_operative_row
+	add_child(row_active_operative_row)
+
+	var btn_btn_cycle_operative := Button.new()
+	btn_btn_cycle_operative.name = "btn_cycle_operative"
+	btn_btn_cycle_operative.text = tr("UI_BTN_SWITCH_OPERATIVE")
+	btn_btn_cycle_operative.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_cycle_operative.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_cycle_operative.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_cycle_operative.pressed.connect(func(): self.action_clicked.emit("cycle_planner_operative"))
+	_value_labels["btn_cycle_operative"] = btn_btn_cycle_operative
+	add_child(btn_btn_cycle_operative)
+
+	var row_return_to_base_row := HBoxContainer.new()
+	row_return_to_base_row.name = "return_to_base_row"
+	row_return_to_base_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var lbl_return_to_base_row := Label.new()
+	lbl_return_to_base_row.text = tr("UI_LBL_RETURN_TO_BASE")
+	lbl_return_to_base_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_return_to_base_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row_return_to_base_row.add_child(lbl_return_to_base_row)
+	var val_return_to_base_row := Label.new()
+	val_return_to_base_row.name = "return_to_base_row_value"
+	val_return_to_base_row.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val_return_to_base_row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	val_return_to_base_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row_return_to_base_row.add_child(val_return_to_base_row)
+	_value_labels["return_to_base_row"] = val_return_to_base_row
+	add_child(row_return_to_base_row)
+
+	var btn_btn_toggle_return_base := Button.new()
+	btn_btn_toggle_return_base.name = "btn_toggle_return_base"
+	btn_btn_toggle_return_base.text = tr("UI_BTN_TOGGLE_RETURN_BASE")
+	btn_btn_toggle_return_base.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_toggle_return_base.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_toggle_return_base.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_toggle_return_base.pressed.connect(func(): self.action_clicked.emit("toggle_return_to_base"))
+	_value_labels["btn_toggle_return_base"] = btn_btn_toggle_return_base
+	add_child(btn_btn_toggle_return_base)
+
 	var btn_btn_open_order_pad := Button.new()
 	btn_btn_open_order_pad.name = "btn_open_order_pad"
 	btn_btn_open_order_pad.text = tr("UI_BTN_OPEN_ORDER_PAD")
@@ -135,6 +189,18 @@ func build_ui() -> void:
 	_queue.queue_changed.connect(_on_queue_changed)
 
 func bind_data(data: Dictionary) -> void:
+	if _value_labels.has("active_operative_row"):
+		var ctrl = _value_labels["active_operative_row"]
+		if not data.has("active_operative_display") or data["active_operative_display"] == null:
+			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
+		else:
+			ctrl.text = str(data["active_operative_display"]) + ""
+	if _value_labels.has("return_to_base_row"):
+		var ctrl = _value_labels["return_to_base_row"]
+		if not data.has("return_to_base_display") or data["return_to_base_display"] == null:
+			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
+		else:
+			ctrl.text = str(data["return_to_base_display"]) + ""
 	if _value_labels.has("queue_list"):
 		var ctrl = _value_labels["queue_list"]
 		if ctrl is ItemList:

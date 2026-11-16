@@ -8,6 +8,7 @@
     {
       "id": "header_section",
       "header_token": "UI_HDR_CREW_DOSSIER",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
@@ -15,7 +16,9 @@
           "type": "HEADER_BLOCK",
           "field": "enterprise_title",
           "title_color": "body",
+          "title_font_size": 12,
           "subtitle_color": "body",
+          "subtitle_font_size": 10,
           "subtitle_field": "home_district_name",
           "show_separator": true,
           "autowrap": true
@@ -25,6 +28,7 @@
     {
       "id": "operative_list_section",
       "header_token": "UI_HDR_ACTIVE_OPERATIVES",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
@@ -36,6 +40,8 @@
           "label_field": "name",
           "sublabel_field": "summary_line",
           "action_signal": "item_selected",
+          "font_size": 8,
+          "color": "body",
           "autowrap": true
         }
       ]
@@ -43,6 +49,7 @@
     {
       "id": "known_contacts_section",
       "header_token": "UI_HDR_KNOWN_CONTACTS",
+      "font_size": 8,
       "color": "body",
       "rows": [
         {
@@ -54,6 +61,8 @@
           "label_field": "name",
           "sublabel_field": "summary_line",
           "action_signal": "item_selected",
+          "font_size": 8,
+          "color": "body",
           "autowrap": true
         }
       ]
@@ -61,6 +70,8 @@
     {
       "id": "dossier_notes_section",
       "type": "INSCRIPTIONS",
+      "font_size": 8,
+      "color": "body",
       "header_token": "UI_SEC_FIELD_OBSERVATIONS"
     }
   ]

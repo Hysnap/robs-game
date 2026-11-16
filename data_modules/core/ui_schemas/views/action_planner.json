@@ -12,6 +12,36 @@
       "color": "body",
       "rows": [
         {
+          "id": "active_operative_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_ACTIVE_OPERATIVE",
+          "field": "active_operative_display",
+          "default_text": "Active Operative"
+        },
+        {
+          "id": "btn_cycle_operative",
+          "type": "BUTTON",
+          "token": "UI_BTN_SWITCH_OPERATIVE",
+          "default_text": "Switch Operative",
+          "action_signal": "action_clicked",
+          "emit_args": "\"cycle_planner_operative\""
+        },
+        {
+          "id": "return_to_base_row",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_RETURN_TO_BASE",
+          "field": "return_to_base_display",
+          "default_text": "Return to Base at Turn End"
+        },
+        {
+          "id": "btn_toggle_return_base",
+          "type": "BUTTON",
+          "token": "UI_BTN_TOGGLE_RETURN_BASE",
+          "default_text": "Toggle Return to Base",
+          "action_signal": "action_clicked",
+          "emit_args": "\"toggle_return_to_base\""
+        },
+        {
           "id": "btn_open_order_pad",
           "type": "BUTTON",
           "token": "UI_BTN_OPEN_ORDER_PAD",

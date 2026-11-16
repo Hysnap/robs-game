@@ -168,7 +168,8 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 	# Sub-Docket Inspection Views
 	view_host.register_view("ESTABLISHMENT_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_establishment_docket.gd", current_year))
 	view_host.register_view("RESIDENTIAL_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_residential_docket.gd", current_year))
-
+	view_host.register_view("OPERATIVE_DOSSIER", ShellRegistryScript.instantiate_generated_view("gen_operative_dossier.gd", current_year))
+	
 	# D. Mount Interactive Action Planner into ACTION slot
 	var action_planner_view: Control = ShellRegistryScript.instantiate_generated_view("gen_action_planner.gd", current_year)
 	if outer_shell:

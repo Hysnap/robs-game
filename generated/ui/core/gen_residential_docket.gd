@@ -42,6 +42,7 @@ func build_ui() -> void:
 	title_tenancy_header.name = "tenancy_header_title"
 	title_tenancy_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_tenancy_header.theme_type_variation = &"HeaderTitle"
+	title_tenancy_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	title_tenancy_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_tenancy_header.add_child(title_tenancy_header)
 	_value_labels["tenancy_header_title"] = title_tenancy_header
@@ -49,6 +50,7 @@ func build_ui() -> void:
 	sub_tenancy_header.name = "tenancy_header_subtitle"
 	sub_tenancy_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sub_tenancy_header.theme_type_variation = &"HeaderSubtitle"
+	sub_tenancy_header.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	sub_tenancy_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box_tenancy_header.add_child(sub_tenancy_header)
 	_value_labels["tenancy_header_subtitle"] = sub_tenancy_header
@@ -146,6 +148,7 @@ func build_ui() -> void:
 	list_occupants_list.name = "occupants_list"
 	list_occupants_list.custom_minimum_size = Vector2(0, 120)
 	list_occupants_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_occupants_list.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
 	_value_labels["occupants_list"] = list_occupants_list
 	add_child(list_occupants_list)
 

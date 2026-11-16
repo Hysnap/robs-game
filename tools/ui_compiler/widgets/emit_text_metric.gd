@@ -9,6 +9,7 @@ static func emit_build(row: Dictionary) -> Array[String]:
 	var r_token: String = row.get("token", "")
 	var wrap_enabled: bool = bool(row.get("autowrap", true))
 	var color_token: String = str(row.get("color", "")).strip_edges()
+	var font_size: int = int(row.get("font_size", 0))
 
 	lines.append("\tvar row_" + r_id + " := HBoxContainer.new()")
 	lines.append("\trow_" + r_id + ".name = \"" + r_id + "\"")
@@ -21,6 +22,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 		lines.append(
             "\tlbl_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + color_token + "\"))"
         )
+	if font_size > 0:
+		lines.append(
+			"\tlbl_" + r_id + ".add_theme_font_size_override(\"font_size\", %d)" % font_size
+		)
 	if wrap_enabled:
 		lines.append("\tlbl_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 	lines.append("\trow_" + r_id + ".add_child(lbl_" + r_id + ")")
@@ -32,6 +37,10 @@ static func emit_build(row: Dictionary) -> Array[String]:
 		lines.append(
             "\tval_" + r_id + ".add_theme_color_override(\"font_color\", RETRO_THEME.get_ink_color(\"" + color_token + "\"))"
         )
+	if font_size > 0:
+		lines.append(
+			"\tval_" + r_id + ".add_theme_font_size_override(\"font_size\", %d)" % font_size
+		)
 	if wrap_enabled:
 		lines.append("\tval_" + r_id + ".autowrap_mode = TextServer.AUTOWRAP_WORD_SMART")
 		lines.append("\tval_" + r_id + ".size_flags_horizontal = Control.SIZE_EXPAND_FILL")

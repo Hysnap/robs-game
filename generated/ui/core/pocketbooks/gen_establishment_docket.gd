@@ -28,6 +28,7 @@ func build_ui() -> void:
 	btn_btn_back.text = tr("UI_BTN_BACK_DOSSIER")
 	btn_btn_back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_btn_back.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_back.add_theme_font_size_override("font_size", 8)
 	btn_btn_back.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	btn_btn_back.pressed.connect(func(): self.action_clicked.emit("open_dossier", {}))
 	_value_labels["btn_back"] = btn_btn_back
@@ -79,12 +80,14 @@ func build_ui() -> void:
 	lbl_ward.text = tr("UI_LBL_DISTRICT_WARD")
 	lbl_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_ward.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	lbl_ward.add_theme_font_size_override("font_size", 8)
 	lbl_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_ward.add_child(lbl_ward)
 	var val_ward := Label.new()
 	val_ward.name = "ward_value"
 	val_ward.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_ward.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	val_ward.add_theme_font_size_override("font_size", 8)
 	val_ward.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_ward.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_ward.add_child(val_ward)
@@ -98,12 +101,14 @@ func build_ui() -> void:
 	lbl_capacity.text = tr("UI_LBL_VENUE_CAPACITY")
 	lbl_capacity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_capacity.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	lbl_capacity.add_theme_font_size_override("font_size", 8)
 	lbl_capacity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_capacity.add_child(lbl_capacity)
 	var val_capacity := Label.new()
 	val_capacity.name = "capacity_value"
 	val_capacity.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_capacity.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	val_capacity.add_theme_font_size_override("font_size", 8)
 	val_capacity.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_capacity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_capacity.add_child(val_capacity)
@@ -132,12 +137,14 @@ func build_ui() -> void:
 	lbl_catchment_pop.text = tr("UI_LBL_CATCHMENT_POPULATION")
 	lbl_catchment_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_catchment_pop.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	lbl_catchment_pop.add_theme_font_size_override("font_size", 8)
 	lbl_catchment_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_catchment_pop.add_child(lbl_catchment_pop)
 	var val_catchment_pop := Label.new()
 	val_catchment_pop.name = "catchment_pop_value"
 	val_catchment_pop.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_catchment_pop.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	val_catchment_pop.add_theme_font_size_override("font_size", 8)
 	val_catchment_pop.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_catchment_pop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_catchment_pop.add_child(val_catchment_pop)
@@ -151,12 +158,14 @@ func build_ui() -> void:
 	lbl_catchment_hh.text = tr("UI_LBL_CATCHMENT_HOUSEHOLDS")
 	lbl_catchment_hh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_catchment_hh.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	lbl_catchment_hh.add_theme_font_size_override("font_size", 8)
 	lbl_catchment_hh.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_catchment_hh.add_child(lbl_catchment_hh)
 	var val_catchment_hh := Label.new()
 	val_catchment_hh.name = "catchment_hh_value"
 	val_catchment_hh.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_catchment_hh.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	val_catchment_hh.add_theme_font_size_override("font_size", 8)
 	val_catchment_hh.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_catchment_hh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_catchment_hh.add_child(val_catchment_hh)
@@ -170,12 +179,14 @@ func build_ui() -> void:
 	lbl_catchment_income.text = tr("UI_LBL_NEIGHBORHOOD_INCOME")
 	lbl_catchment_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_catchment_income.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	lbl_catchment_income.add_theme_font_size_override("font_size", 8)
 	lbl_catchment_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row_catchment_income.add_child(lbl_catchment_income)
 	var val_catchment_income := Label.new()
 	val_catchment_income.name = "catchment_income_value"
 	val_catchment_income.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val_catchment_income.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	val_catchment_income.add_theme_font_size_override("font_size", 8)
 	val_catchment_income.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	val_catchment_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row_catchment_income.add_child(val_catchment_income)
@@ -201,6 +212,7 @@ func build_ui() -> void:
 	list_personnel_list.name = "personnel_list"
 	list_personnel_list.custom_minimum_size = Vector2(0, 76)
 	list_personnel_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_personnel_list.add_theme_font_size_override("font_size", 8)
 	_value_labels["personnel_list"] = list_personnel_list
 	add_child(list_personnel_list)
 

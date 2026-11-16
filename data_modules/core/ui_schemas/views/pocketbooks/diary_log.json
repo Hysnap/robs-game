@@ -16,12 +16,14 @@
       "id": "diary_header",
       "header_token": "UI_SEC_DISPATCH_DIARY",
       "color": "body",
+      "font_size": 8,
       "rows": [
         {
           "id": "current_week",
           "field": "current_week_tick",
           "token": "UI_LBL_CURRENT_WEEK",
           "color": "body",
+          "font_size": 8,
           "format": "INT",
           "autowrap": true
         },
@@ -30,6 +32,7 @@
           "field": "total_dispatched_orders",
           "token": "UI_LBL_DISPATCH_COUNT",
           "color": "body",
+          "font_size": 8,
           "format": "INT",
           "autowrap": true
         }
@@ -39,11 +42,14 @@
       "id": "diary_calendar",
       "header_token": "UI_SEC_DIARY_CALENDAR",
       "color": "accent",
+      "font_size": 8,
       "rows": [
         {
           "id": "calendar_nav",
           "type": "CALENDAR_NAVIGATOR",
           "field": "calendar_payload",
+          "font_size": 8,
+          "color": "body",
           "action_signal": "action_clicked"
         }
       ]
@@ -51,6 +57,8 @@
     {
       "id": "inscriptions",
       "type": "INSCRIPTIONS",
+      "font_size": 8,
+      "color": "body",
       "header_token": "UI_SEC_DISPATCH_INSCRIPTIONS"
     }
   ]
