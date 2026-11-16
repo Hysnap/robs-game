@@ -1,0 +1,187 @@
+{
+    "_meta": {
+        "version": "1.0.0",
+        "scope": "TRANSPORT_MODES",
+        "description": "Modular physical transport modes, multi-leg access rules, procedural stop placement rules, selectable routing policies, and fallback hierarchy."
+    },
+    "default_routing_policy": "SHORTEST",
+    "road_classes": {
+        "MOTORWAY": {
+            "label_token": "UI_ROAD_CLASS_MOTORWAY",
+            "network_layer": "ROAD",
+            "default_speed_kph": 110.0,
+            "pedestrian_allowed": false
+        },
+        "ARTERIAL": {
+            "label_token": "UI_ROAD_CLASS_ARTERIAL",
+            "network_layer": "ROAD",
+            "default_speed_kph": 64.0,
+            "pedestrian_allowed": true
+        },
+        "HIGH_STREET": {
+            "label_token": "UI_ROAD_CLASS_HIGH_STREET",
+            "network_layer": "ROAD",
+            "default_speed_kph": 32.0,
+            "pedestrian_allowed": true
+        },
+        "COLLECTOR": {
+            "label_token": "UI_ROAD_CLASS_COLLECTOR",
+            "network_layer": "ROAD",
+            "default_speed_kph": 48.0,
+            "pedestrian_allowed": true
+        },
+        "ALLEY": {
+            "label_token": "UI_ROAD_CLASS_ALLEY",
+            "network_layer": "ROAD",
+            "default_speed_kph": 16.0,
+            "pedestrian_allowed": true
+        },
+        "RAIL_MAINLINE": {
+            "label_token": "UI_ROAD_CLASS_RAIL_MAINLINE",
+            "network_layer": "RAIL",
+            "default_speed_kph": 120.0,
+            "pedestrian_allowed": false
+        },
+        "RAIL_SUBURBAN": {
+            "label_token": "UI_ROAD_CLASS_RAIL_SUBURBAN",
+            "network_layer": "RAIL",
+            "default_speed_kph": 65.0,
+            "pedestrian_allowed": false
+        }
+    },
+    "routing_policies": {
+        "SHORTEST": {
+            "label_token": "UI_ROUTE_POLICY_SHORTEST",
+            "description": "Minimum physical distance along valid network edges."
+        },
+        "FASTEST": {
+            "label_token": "UI_ROUTE_POLICY_FASTEST",
+            "description": "Minimum total elapsed travel time including access walks and wait times."
+        },
+        "LEAST_POPULATED": {
+            "label_token": "UI_ROUTE_POLICY_LEAST_POPULATED",
+            "population_weight": 1.5,
+            "description": "Avoids densely populated districts and crowded streets."
+        },
+        "LEAST_POLICED": {
+            "label_token": "UI_ROUTE_POLICY_LEAST_POLICED",
+            "police_heat_weight": 3.0,
+            "description": "Avoids high police heat and heavily patrolled corridors."
+        },
+        "WAYPOINT_ROUTE": {
+            "label_token": "UI_ROUTE_POLICY_WAYPOINT",
+            "description": "Visits specified intermediate district or stop waypoints in order."
+        }
+    },
+    "fallback_hierarchy": [
+        "SERVICE_BLACK_CAB",
+        "SERVICE_MINI_CAB",
+        "SERVICE_BUS_TRANSIT",
+        "SERVICE_WALK"
+    ],
+    "modes": {
+        "WALK": {
+            "label_token": "UI_TRANSIT_MODE_WALK",
+            "network_layer": "ROAD",
+            "entry_access_mode": null,
+            "exit_access_mode": null,
+            "base_speed_kph": 5.0,
+            "fatigue_per_km": 0.015,
+            "requires_item": null,
+            "stop_placement": null
+        },
+        "BIKE": {
+            "label_token": "UI_TRANSIT_MODE_BIKE",
+            "network_layer": "ROAD",
+            "entry_access_mode": null,
+            "exit_access_mode": null,
+            "base_speed_kph": 15.0,
+            "fatigue_per_km": 0.008,
+            "requires_item": "BICYCLE",
+            "stop_placement": null
+        },
+        "BUS": {
+            "label_token": "UI_TRANSIT_MODE_BUS",
+            "network_layer": "ROAD",
+            "entry_access_mode": "WALK",
+            "exit_access_mode": "WALK",
+            "base_speed_kph": 24.0,
+            "fatigue_per_km": 0.002,
+            "requires_item": null,
+            "stop_placement": {
+                "strategy": "EDGE_MIDPOINT",
+                "min_spacing_m": 200.0,
+                "eligible_road_classes": [
+                    "ARTERIAL",
+                    "HIGH_STREET",
+                    "COLLECTOR"
+                ],
+                "district_density_multipliers": {
+                    "DEFAULT": 1.0
+                }
+            }
+        },
+        "TAXI": {
+            "label_token": "UI_TRANSIT_MODE_TAXI",
+            "network_layer": "ROAD",
+            "entry_access_mode": "WALK",
+            "exit_access_mode": "WALK",
+            "base_speed_kph": 32.0,
+            "fatigue_per_km": 0.001,
+            "requires_item": null,
+            "stop_placement": {
+                "strategy": "JUNCTION",
+                "min_spacing_m": 400.0,
+                "eligible_road_classes": [
+                    "ARTERIAL",
+                    "HIGH_STREET",
+                    "COLLECTOR"
+                ],
+                "district_density_multipliers": {
+                    "DEFAULT": 1.0
+                }
+            }
+        },
+        "CAR": {
+            "label_token": "UI_TRANSIT_MODE_CAR",
+            "network_layer": "ROAD",
+            "entry_access_mode": "WALK",
+            "exit_access_mode": "WALK",
+            "base_speed_kph": 40.0,
+            "fatigue_per_km": 0.003,
+            "requires_item": "MOTOR_CAR",
+            "stop_placement": {
+                "strategy": "JUNCTION",
+                "min_spacing_m": 450.0,
+                "eligible_road_classes": [
+                    "ARTERIAL",
+                    "HIGH_STREET",
+                    "COLLECTOR"
+                ],
+                "district_density_multipliers": {
+                    "DEFAULT": 1.0
+                }
+            }
+        },
+        "RAIL": {
+            "label_token": "UI_TRANSIT_MODE_RAIL",
+            "network_layer": "RAIL",
+            "entry_access_mode": "WALK",
+            "exit_access_mode": "WALK",
+            "base_speed_kph": 55.0,
+            "fatigue_per_km": 0.001,
+            "requires_item": null,
+            "stop_placement": {
+                "strategy": "JUNCTION",
+                "min_spacing_m": 1200.0,
+                "eligible_road_classes": [
+                    "RAIL_MAINLINE",
+                    "RAIL_SUBURBAN"
+                ],
+                "district_density_multipliers": {
+                    "DEFAULT": 1.0
+                }
+            }
+        }
+    }
+}

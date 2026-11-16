@@ -329,13 +329,13 @@ func _append_grid_boxes_header(parent_vbox: VBoxContainer, grid_cfg: Dictionary,
 func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
 	slip["destination"] = destination
-	top_card_action.emit("FILE", slip)
+	top_card_action.emit("file_slip", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 
 func _on_discard_pressed(slip: Dictionary) -> void:
 	_pending_slips.pop_front()
-	top_card_action.emit("DISCARD", slip)
+	top_card_action.emit("discard_slip", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
 

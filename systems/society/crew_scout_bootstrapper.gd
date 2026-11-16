@@ -143,7 +143,8 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		res_inv["CASH"] = float(res_inv.get("CASH", 0.0)) + starting_pocket_cash
 		resident_entry["inventory"] = res_inv
 
-		resident_entry["id"] = slot_id
+		resident_entry["id"] = r_id
+		resident_entry["slot_id"] = slot_id
 		resident_entry["resident_id"] = r_id
 		resident_entry["name"] = profile.get("full_name", "")
 		resident_entry["age"] = profile.get("age", 0)
@@ -157,7 +158,7 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		resident_entry["primary_role_id"] = profile.get("role_title_id", 0)
 		resident_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
 
-		world_state["residents"][slot_id] = resident_entry
+		world_state["residents"][r_id] = resident_entry
 
 	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
 	if leader_home_estab_id > 0:
@@ -172,17 +173,16 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 	if not starting_inv.is_empty() and leader_home_estab_id > 0:
 		if not world_state.has("establishments"):
 			world_state["establishments"] = {}
-		var est_key := str(leader_home_estab_id)
-		if not world_state["establishments"].has(est_key):
-			world_state["establishments"][est_key] = {
+		if not world_state["establishments"].has(leader_home_estab_id):
+			world_state["establishments"][leader_home_estab_id] = {
 				"establishment_id": leader_home_estab_id,
 				"district_id": home_district_id,
 				"inventory": {}
 			}
-		var inv: Dictionary = world_state["establishments"][est_key].get("inventory", {})
+		var inv: Dictionary = world_state["establishments"][leader_home_estab_id].get("inventory", {})
 		for comm_id in starting_inv.keys():
 			inv[comm_id] = float(inv.get(comm_id, 0.0)) + float(starting_inv[comm_id])
-		world_state["establishments"][est_key]["inventory"] = inv
+		world_state["establishments"][leader_home_estab_id]["inventory"] = inv
 
 	return true
 

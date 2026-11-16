@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "scope": "SERVICE_MINI_CAB",
+    "description": "Licensed mini cab. Fast, effortless, metered private hire."
+  },
+  "id": "SERVICE_MINI_CAB",
+  "display_name": "Private Hire Mini Cab Taxi",
+  "category": "SERVICE",
+  "mode_id": "TAXI",
+  "fallback_tier": 2,
+  "valid_from_year": 1960,
+  "valid_to_year": 2099,
+  "allowed_road_classes": [
+    "MOTORWAY",
+    "ARTERIAL",
+    "HIGH_STREET",
+    "COLLECTOR"
+  ],
+  "stop_strategy_filter": "JUNCTION",
+  "speed_multiplier": 1.0,
+  "headway_minutes_by_sector": {
+    "COMMERCIAL": 8.0,
+    "CIVIC": 10.0,
+    "RESIDENTIAL": 14.0,
+    "INDUSTRIAL": 18.0,
+    "DEFAULT": 14.0
+  },
+  "off_peak_wait_multiplier": 1.25,
+  "can_be_stored": false,
+  "base_fare_drop": 1.20,
+  "unit_type": "DISTANCE_UNIT",
+  "capacity": {
+    "max_passengers_per_unit": 4,
+    "max_cargo_volume_litres": 75.0,
+    "requires_multiple_units_for_groups": true
+  }
+}

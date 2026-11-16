@@ -13,6 +13,7 @@ var _views: Dictionary = {}
 var _active_domain: String = ""
 var _desk_inbox: Control = null
 var _action_component: Control = null
+var _order_composer: Control = null
 
 func _ready() -> void:
 	if shell_node == null:
@@ -48,6 +49,14 @@ func set_action_component(action_control: Control) -> void:
 
 func get_action_component() -> Control:
 	return _action_component
+
+func set_order_composer_node(composer_control: Control) -> void:
+	assert(is_instance_valid(composer_control), "FATAL: [ViewHost] Invalid order composer control passed to set_order_composer_node().")
+	_order_composer = composer_control
+
+func get_order_composer_node() -> Control:
+	assert(is_instance_valid(_order_composer), "FATAL: [ViewHost] Order composer node accessed before registration.")
+	return _order_composer
 
 ## Mounts any compiled navigation widget into the shell's generic NAV slot
 func set_navigation_component(nav_bar: Control) -> void:
@@ -177,6 +186,7 @@ func clear_registered_views() -> void:
 			v.queue_free()
 	_views.clear()
 	_action_component = null
+	_order_composer = null
 
 ## Cleanly frees all registered view instances and clears cached references
 func cleanup() -> void:
@@ -189,6 +199,7 @@ func cleanup() -> void:
 	_views.clear()
 	_active_domain = ""
 	_action_component = null
+	_order_composer = null
 
 	if is_instance_valid(_desk_inbox) and _desk_inbox.get_parent() == null:
 		_desk_inbox.free()

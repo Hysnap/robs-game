@@ -438,7 +438,7 @@ static func get_crew_residents(ws: Dictionary) -> Array[Dictionary]:
 				continue
 			var role_str: String = str(rec.get("role_title", rec.get("role", ""))).strip_edges()
 			crew.append({
-				"id": str(r_id),
+				"id": r_id,
 				"resident_id": r_id,
 				"name": full_name,
 				"role": role_str
@@ -492,8 +492,10 @@ static func get_known_locations(active_district_id: String, ws: Dictionary) -> A
 	if not active_district_id.is_empty():
 		var estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
 		for e in estabs:
-			var e_id_str: String = str(e.get("establishment_id", ""))
-			var e_score: float = get_collective_score(ws, observers, "ESTABLISHMENT", e_id_str)
+			var estab_id: int = int(e.get("establishment_id", 0))
+			if estab_id <= 0:
+				continue
+			var e_score: float = get_collective_score(ws, observers, "ESTABLISHMENT", str(estab_id))
 			if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
 				e_score = 20.0
 			if not is_entity_known(e_score, "ESTABLISHMENT"):
@@ -505,7 +507,7 @@ static func get_known_locations(active_district_id: String, ws: Dictionary) -> A
 			var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
 
 			locations.append({
-				"id": e_id_str,
+				"id": estab_id,
 				"type": "ESTABLISHMENT",
 				"category": cat_code,
 				"sector": sector,
@@ -537,7 +539,7 @@ static func resolve_known_contacts_for_location(location_meta: Dictionary, ws: D
 		var emp_role: String = str(emp.get("role_title", ""))
 		if res_id > 0 and not emp_name.is_empty():
 			contacts.append({
-				"id": str(res_id),
+				"id": res_id,
 				"name": emp_name,
 				"role": emp_role,
 				"type": "EMPLOYEE"
@@ -550,7 +552,7 @@ static func resolve_known_contacts_for_location(location_meta: Dictionary, ws: D
 		var res_name: String = str(res.get("full_name", ""))
 		if res_id > 0 and not res_name.is_empty():
 			contacts.append({
-				"id": str(res_id),
+				"id": res_id,
 				"name": res_name,
 				"role": "OCCUPANT",
 				"type": "RESIDENTIAL"

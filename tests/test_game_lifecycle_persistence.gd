@@ -6,6 +6,7 @@ const TEST_SOCIETY_FACTORY = preload("res://tests/test_society_factory.gd")
 const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootstrapper.gd")
 const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
 const SAVE_MANAGER = preload("res://systems/save_manager.gd")
+const SCENARIO_MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
 func _init() -> void:
 	print("\n========================================================")
@@ -24,7 +25,7 @@ func _init() -> void:
 	var world_state: Dictionary = TEST_SOCIETY_FACTORY.create_test_world(2, 2, "lifecycle-persist-seed")
 	world_state["metadata"]["active_slot_id"] = test_slot
 
-	var home_district: String = str(world_state.get("player_knowledge", {}).get("home_district_id", ""))
+	var home_district: String = str(world_state.get("operations", {}).get("home_district_id", ""))
 	assert(not home_district.is_empty(), "FAIL: TestSocietyFactory failed to resolve home district.")
 	print("  ✓ Test society active. Home District: %s" % home_district)
 
@@ -33,18 +34,19 @@ func _init() -> void:
 	var scout_ok: bool = CREW_SCOUT_BOOTSTRAPPER.scout_and_bind_starting_crew(world_state, home_district)
 	assert(scout_ok, "FAIL: CrewScoutBootstrapper failed to assemble starting crew.")
 
-	var staff: Dictionary = world_state.get("staff", {})
-	assert(staff.has("crew_0") and staff.has("crew_1") and staff.has("crew_2"), "FAIL: Staff slots missing from world_state.")
+	var residents: Dictionary = world_state.get("residents", {})
+	assert(residents.size() == 3, "FAIL: Expected 3 crew residents in world_state, got %d." % residents.size())
 	print("  ✓ Recruited 3 procedural operatives:")
-	for slot in ["crew_0", "crew_1", "crew_2"]:
+	for res_key in residents.keys():
+		assert(res_key is int and int(res_key) > 0, "FAIL: Expected int resident_id key, got '%s'." % str(res_key))
 		print("     • %s: %s (Resident #%d, Age %d)" % [
-			slot, staff[slot]["name"], staff[slot]["resident_id"], staff[slot]["age"]
+			residents[res_key]["slot_id"], residents[res_key]["name"], res_key, residents[res_key]["age"]
 		])
 
 	# 4. Advance Simulation Turn Cycle
 	print("\n[STEP 3] Advancing simulation turn cycle...")
 	var day_start: int = int(world_state["metadata"]["current_sim_day"])
-	var cycle_result: Dictionary = SIM_CONTROLLER.process_turn_cycle(world_state, [])
+	var _cycle_result: Dictionary = SIM_CONTROLLER.process_turn_cycle(world_state, [])
 	var day_after: int = int(world_state["metadata"]["current_sim_day"])
 
 	assert(day_after == day_start + 1, "FAIL: SimController did not advance sim day by 1 (%d -> %d)." % [day_start, day_after])
@@ -63,13 +65,20 @@ func _init() -> void:
 
 	# 6. Simulate Clean Reload
 	print("\n[STEP 5] Simulating clean reload: wiping memory and reloading slot...")
+	var gs = SCENARIO_MANIFEST_MANAGER.get_game_state()
+	if gs != null and "world_state" in gs:
+		gs.world_state = {}
+
 	var load_ok: bool = SAVE_MANAGER.load_game(test_slot)
 	assert(load_ok, "FAIL: SaveManager.load_game() returned false.")
 
-	var state_file := FileAccess.open("%s/game_state.json" % SAVE_MANAGER.get_slot_dir(test_slot), FileAccess.READ)
-	assert(state_file != null, "FAIL: Could not read persisted game_state.json.")
-	var restored_state: Dictionary = JSON.parse_string(state_file.get_as_text())
-	state_file.close()
+	var restored_state: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
+	if restored_state.is_empty():
+		var state_file := FileAccess.open("%s/game_state.json" % SAVE_MANAGER.get_slot_dir(test_slot), FileAccess.READ)
+		assert(state_file != null, "FAIL: Could not read persisted game_state.json.")
+		restored_state = JSON.parse_string(state_file.get_as_text())
+		state_file.close()
+		SAVE_MANAGER._normalize_integer_entity_keys(restored_state)
 
 	# 7. Assert Post-Reload Invariants
 	print("\n[STEP 6] Asserting post-reload invariants across disk and SQLite...")
@@ -77,23 +86,26 @@ func _init() -> void:
 	assert(loaded_day == day_after, "FAIL: Loaded current_sim_day (%d) does not match expected (%d)." % [loaded_day, day_after])
 	print("  ✓ Persisted temporal day preserved: %d" % loaded_day)
 
-	var loaded_staff: Dictionary = restored_state.get("staff", {})
-	for slot in ["crew_0", "crew_1", "crew_2"]:
-		assert(loaded_staff.has(slot), "FAIL: Loaded save is missing crew slot '%s'." % slot)
-		assert(loaded_staff[slot]["resident_id"] == staff[slot]["resident_id"], "FAIL: Resident ID mismatch for slot %s." % slot)
-		assert(loaded_staff[slot]["name"] == staff[slot]["name"], "FAIL: Name mismatch for slot %s." % slot)
-		print("  ✓ Restored operative %s: %s (Resident #%d)" % [slot, loaded_staff[slot]["name"], loaded_staff[slot]["resident_id"]])
+	var loaded_residents: Dictionary = restored_state.get("residents", {})
+	for res_key in residents.keys():
+		assert(loaded_residents.has(res_key), "FAIL: Loaded save is missing integer resident_id key %d." % res_key)
+		assert(int(loaded_residents[res_key]["resident_id"]) == int(res_key), "FAIL: Resident ID mismatch for key %d." % res_key)
+		assert(loaded_residents[res_key]["name"] == residents[res_key]["name"], "FAIL: Name mismatch for resident #%d." % res_key)
+		print("  ✓ Restored operative %s: %s (Resident #%d)" % [
+			loaded_residents[res_key]["slot_id"], loaded_residents[res_key]["name"], res_key
+		])
 
 	# Verify secondary enterprise contracts still exist in the re-mounted database
-	for slot in ["crew_0", "crew_1", "crew_2"]:
-		var r_id: int = int(loaded_staff[slot]["resident_id"])
+	for res_key in loaded_residents.keys():
+		var r_id: int = int(res_key)
 		var c_rows: Array = DB_MANAGER.query_rows("""
-			SELECT employer_entity_id, weekly_hours, compensation_rate
-			FROM livelihood_contracts
-			WHERE resident_id = %d AND employer_entity_id = 'CREW_ENTERPRISE';
+			SELECT employer_org_id, weekly_hours, compensation_rate 
+			FROM livelihood_contracts 
+			WHERE resident_id = %d AND employer_org_id = 'ORG:CREW_ENTERPRISE';
 		""" % r_id)
-		assert(not c_rows.is_empty(), "FAIL: Re-mounted database is missing CREW_ENTERPRISE contract for resident #%d." % r_id)
-	print("  ✓ SQLite CREW_ENTERPRISE contracts verified across all restored operatives.")
+		assert(not c_rows.is_empty(), "FAIL: Re-mounted database is missing ORG:CREW_ENTERPRISE contract for resident #%d." % r_id)
+	print("  ✓ SQLite ORG:CREW_ENTERPRISE contracts verified across all restored operatives.")
 
 	print("\n🎉 ALL GAME LIFECYCLE & PERSISTENCE CHECKS PASSED CLEANLY.\n")
 	quit(0)
+	

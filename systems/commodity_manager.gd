@@ -1,10 +1,16 @@
 # res://systems/commodity_manager.gd
 class_name CommodityManager extends RefCounted
 
-## Recursively scans folders and builds the inheritance registry
+## Recursively scans folders and builds the commodity/recipe inheritance registry
 static func load_hierarchical_commodities(root_dir_path: String) -> Dictionary:
 	var registry: Dictionary = {}
-	_scan_directory_recursive(root_dir_path, root_dir_path, {}, {}, registry)
+	_scan_directory_recursive(root_dir_path, root_dir_path, {}, {}, registry, ["item_profile.json", "recipe_profile.json"], true)
+	return registry
+
+## Recursively scans folders and builds the operational transport service registry (transport_profile.json)
+static func load_hierarchical_transports(root_dir_path: String) -> Dictionary:
+	var registry: Dictionary = {}
+	_scan_directory_recursive(root_dir_path, root_dir_path, {}, {}, registry, ["transport_profile.json"], false)
 	return registry
 
 static func _scan_directory_recursive(
@@ -12,7 +18,9 @@ static func _scan_directory_recursive(
 	current_path: String, 
 	inherited_traits: Dictionary, 
 	inherited_activations: Dictionary, 
-	out_registry: Dictionary
+	out_registry: Dictionary,
+	accepted_leaf_names: Array[String] = ["item_profile.json", "recipe_profile.json"],
+	allow_flat_json: bool = true
 ) -> void:
 	var dir = DirAccess.open(current_path)
 	if not dir:
@@ -39,19 +47,20 @@ static func _scan_directory_recursive(
 		_deep_merge_dict(current_scope_traits, base_data)
 
 	# -------------------------------------------------------------
-	# 2. INGEST LOCAL VERB IMPACT FOLDERS (buy/, sell/, make/)
+	# 2. INGEST LOCAL VERB IMPACT FOLDERS (buy/, sell/, make/, travel/)
 	# -------------------------------------------------------------
 	var local_verb_activations = _load_verb_impact_files(current_path)
 	_merge_activations(current_scope_activations, local_verb_activations)
 
 	# -------------------------------------------------------------
-	# 3. READ LEAF PROFILE (item_profile.json or recipe_profile.json)
+	# 3. READ LEAF PROFILE (matching accepted_leaf_names)
 	# -------------------------------------------------------------
 	var leaf_file = ""
-	if FileAccess.file_exists(current_path.path_join("item_profile.json")):
-		leaf_file = current_path.path_join("item_profile.json")
-	elif FileAccess.file_exists(current_path.path_join("recipe_profile.json")):
-		leaf_file = current_path.path_join("recipe_profile.json")
+	for candidate_leaf in accepted_leaf_names:
+		var candidate_path := current_path.path_join(candidate_leaf)
+		if FileAccess.file_exists(candidate_path):
+			leaf_file = candidate_path
+			break
 
 	if leaf_file != "":
 		var leaf_data = _read_json(leaf_file)
@@ -77,9 +86,9 @@ static func _scan_directory_recursive(
 		if dir.current_is_dir() and not entry_name.begins_with("."):
 			var upper_name = entry_name.to_upper()
 			# Skip impact verb folders from being scanned as commodity tiers
-			if upper_name != "BUY" and upper_name != "SELL" and upper_name != "MAKE" and upper_name != "ORDER" and upper_name != "PAY" and upper_name != "RECEIVE":
-				_scan_directory_recursive(root_path, sub_path, current_scope_traits, current_scope_activations, out_registry)
-		elif entry_name.ends_with(".json") and entry_name != "_base.json" and entry_name != "item_profile.json" and entry_name != "recipe_profile.json":
+			if upper_name != "BUY" and upper_name != "SELL" and upper_name != "MAKE" and upper_name != "ORDER" and upper_name != "PAY" and upper_name != "RECEIVE" and upper_name != "TRAVEL":
+				_scan_directory_recursive(root_path, sub_path, current_scope_traits, current_scope_activations, out_registry, accepted_leaf_names, allow_flat_json)
+		elif allow_flat_json and entry_name.ends_with(".json") and entry_name != "_base.json" and entry_name != "item_profile.json" and entry_name != "recipe_profile.json" and entry_name != "transport_profile.json":
 			# Flat item support (e.g. beer.json)
 			var flat_data = _read_json(sub_path)
 			if flat_data is Dictionary and not flat_data.is_empty():

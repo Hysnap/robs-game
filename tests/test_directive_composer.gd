@@ -43,8 +43,8 @@ func _init() -> void:
 	print("\n--- [SUITE 2] Testing District Name Resolution ---")
 	var mock_world_state: Dictionary = {
 		"metadata": {"current_sim_day": 10},
-		"staff": {
-			"crew_0": {"resident_id": "101", "name": "Leader"}
+		"residents": {
+			101: {"id": 101, "resident_id": 101, "name": "Leader", "is_crew": true}
 		},
 		"knowledge_pools": {},
 		"districts": {
@@ -131,9 +131,9 @@ func _init() -> void:
 	# Subtest 4.1: Commodity Procurement (BUY)
 	var buy_form: Dictionary = {
 		"verb": "BUY",
-		"initiator_id": "PLAYER",
-		"assigned_to": "Billy (Runner)",
-		"counterparty_id": "LANDLORD_BOB",
+		"initiator_id": 101,
+		"assigned_to": 101,
+		"counterparty_id": 202,
 		"target_item": "BEER_STRONG_LAGER",
 		"amount": 20.0,
 		"target_node_id": "DISTRICT_NECHELLS_01",
@@ -146,9 +146,9 @@ func _init() -> void:
 	assert(buy_packet.get("verb") == "BUY", "FAILED: Verb mismatch.")
 	assert(buy_packet.get("item_id") == "BEER_STRONG_LAGER", "FAILED: item_id was not mapped from target_item.")
 	assert(buy_packet.get("amount") == 20.0, "FAILED: Amount mismatch.")
-	assert(buy_packet.get("assigned_to") == "Billy (Runner)", "FAILED: Assigned staff mismatch.")
-	assert(buy_packet.get("supplier_id") == "LANDLORD_BOB", "FAILED: supplier_id was not mapped.")
-	print("  ✓ PASS: BUY directive cleanly built with mapped schema fields.")
+	assert(buy_packet.get("assigned_to") == 101 and buy_packet.get("assigned_to") is int, "FAILED: Assigned resident_id must be int 101.")
+	assert(buy_packet.get("supplier_id") == 202 and buy_packet.get("supplier_id") is int, "FAILED: supplier_id must be int 202.")
+	print("  ✓ PASS: BUY directive cleanly built with mapped schema fields and canonical int IDs.")
 
 	# Subtest 4.2: BUY Intentional Rejections (Core Rule 4)
 	print("  [Expecting intentional rejection errors below]:")
@@ -166,8 +166,8 @@ func _init() -> void:
 	# Subtest 4.3: District Reconnaissance (SCOUT)
 	var scout_form: Dictionary = {
 		"verb": "SCOUT",
-		"initiator_id": "PLAYER",
-		"assigned_to": "op_01",
+		"initiator_id": 101,
+		"assigned_to": 101,
 		"amount": 3.0,
 		"target_node_id": "DISTRICT_MARKET",
 		"target_scope": "DISTRICT"
