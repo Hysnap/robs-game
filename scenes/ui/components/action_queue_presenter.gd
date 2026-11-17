@@ -8,25 +8,28 @@ signal directive_added(directive: Dictionary)
 signal directive_removed(directive: Dictionary)
 
 var _staged_directives: Array[Dictionary] = []
-var _active_operative_id: String = ""
+var _active_operative_id: Variant = null
 
-## Sets the active operative filter ("" shows all crew; a resident_id/slot_id filters to that operative)
-func set_active_operative_filter(operative_id: String) -> void:
-	_active_operative_id = operative_id.strip_edges()
+## Sets the active operative filter (null shows all crew; an int resident_id or "PLAYER" filters to that operative)
+func set_active_operative_filter(operative_id: Variant) -> void:
+	if operative_id is String and str(operative_id).strip_edges().is_empty():
+		_active_operative_id = null
+	else:
+		_active_operative_id = operative_id
 	_notify_queue_changed(-1)
 
-## Returns the active operative filter ID
-func get_active_operative_filter() -> String:
+## Returns the active operative filter ID (null when showing all crew)
+func get_active_operative_filter() -> Variant:
 	return _active_operative_id
 
 ## Returns matching indices into _staged_directives for the active operative filter
 func _get_visible_indices() -> Array[int]:
 	var indices: Array[int] = []
 	for i in range(_staged_directives.size()):
-		if _active_operative_id.is_empty():
+		if _active_operative_id == null:
 			indices.append(i)
 		else:
-			var assignee := str(_staged_directives[i].get("assigned_to", _staged_directives[i].get("initiator_id", ""))).strip_edges()
+			var assignee: Variant = _staged_directives[i].get("assigned_to", _staged_directives[i].get("initiator_id", null))
 			if assignee == _active_operative_id:
 				indices.append(i)
 	return indices
@@ -44,8 +47,8 @@ func add_directive(directive: Dictionary) -> void:
 		directive["is_selected"] = true
 	_staged_directives.append(directive)
 
-	var assignee := str(directive.get("assigned_to", directive.get("initiator_id", ""))).strip_edges()
-	if not _active_operative_id.is_empty() and not assignee.is_empty() and _active_operative_id != assignee:
+	var assignee: Variant = directive.get("assigned_to", directive.get("initiator_id", null))
+	if _active_operative_id != null and assignee != null and _active_operative_id != assignee:
 		_active_operative_id = assignee
 
 	directive_added.emit(directive)
@@ -134,14 +137,13 @@ func consume_selected_directives() -> Array[Dictionary]:
 	return to_execute
 
 ## Returns a duplicate of all staged directives (or filtered if operative_id is supplied)
-func get_staged_directives(operative_id: String = "") -> Array[Dictionary]:
-	var filter_id := operative_id.strip_edges()
-	if filter_id.is_empty():
+func get_staged_directives(operative_id: Variant = null) -> Array[Dictionary]:
+	if operative_id == null or (operative_id is String and str(operative_id).strip_edges().is_empty()):
 		return _staged_directives.duplicate(true)
 	var out: Array[Dictionary] = []
 	for d in _staged_directives:
-		var assignee := str(d.get("assigned_to", d.get("initiator_id", ""))).strip_edges()
-		if assignee == filter_id:
+		var assignee: Variant = d.get("assigned_to", d.get("initiator_id", null))
+		if assignee == operative_id:
 			out.append(d.duplicate(true))
 	return out
 
@@ -166,14 +168,14 @@ func get_display_lines() -> Array[String]:
 		var verb: String = str(d.get("verb", "ORDER"))
 		var item: String = str(d.get("target_item", ""))
 		var qty: float = float(d.get("amount", 0.0))
-		var assignee: String = str(d.get("assigned_to", d.get("initiator_id", "Player")))
+		var assignee_label: String = str(d.get("assigned_to_name", d.get("assigned_to", d.get("initiator_id", "Player"))))
 		var target_node: String = str(d.get("target_node_name", d.get("target_node_id", "")))
 		if target_node.is_empty():
 			target_node = str(d.get("target_node_id", ""))
 		var contact: String = str(d.get("counterparty_id", ""))
 
 		var line := "%d. %s [%s] %s x%.0f @ %s (Assigned: %s)" % [
-			v_idx + 1, check_marker, verb, item, qty, target_node, assignee
+			v_idx + 1, check_marker, verb, item, qty, target_node, assignee_label
 		]
 		if not contact.is_empty():
 			line += " [Contact: %s]" % contact

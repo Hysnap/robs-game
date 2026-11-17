@@ -1,0 +1,91 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/menus/load_game_menu/load_game_menu.gd" id="1_load_menu"]
+
+[node name="LoadGameMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_load_menu")
+
+[node name="Backdrop" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterMargin" type="MarginContainer" parent="Backdrop"]
+layout_mode = 2
+theme_override_constants/margin_left = 80
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 80
+theme_override_constants/margin_bottom = 48
+
+[node name="CardPanel" type="PanelContainer" parent="Backdrop/CenterMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="CardVBox" type="VBoxContainer" parent="Backdrop/CenterMargin/CardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LblTitle" type="Label" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+text = "UI_HDR_LOAD_CAMPAIGN"
+horizontal_alignment = 1
+
+[node name="HSepTop" type="HSeparator" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+
+[node name="NominatedBox" type="VBoxContainer" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="LblNominatedHdr" type="Label" parent="Backdrop/CenterMargin/CardPanel/CardVBox/NominatedBox"]
+layout_mode = 2
+text = "UI_HDR_NOMINATED_SAVE"
+
+[node name="LblNominatedSummary" type="Label" parent="Backdrop/CenterMargin/CardPanel/CardVBox/NominatedBox"]
+layout_mode = 2
+text = "UI_LBL_NO_SAVES_FOUND"
+autowrap_mode = 2
+
+[node name="BtnResumeNominated" type="Button" parent="Backdrop/CenterMargin/CardPanel/CardVBox/NominatedBox"]
+layout_mode = 2
+text = "UI_BTN_RESUME_NOMINATED"
+
+[node name="HSepMid" type="HSeparator" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+
+[node name="LblAllSavesHdr" type="Label" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+text = "UI_HDR_ALL_SAVES"
+
+[node name="SaveList" type="ItemList" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="ActionRow" type="HBoxContainer" parent="Backdrop/CenterMargin/CardPanel/CardVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnLoadSelected" type="Button" parent="Backdrop/CenterMargin/CardPanel/CardVBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UI_BTN_LOAD_SELECTED"
+
+[node name="BtnDeleteSave" type="Button" parent="Backdrop/CenterMargin/CardPanel/CardVBox/ActionRow"]
+layout_mode = 2
+text = "UI_BTN_DELETE_SAVE"
+
+[node name="BtnBack" type="Button" parent="Backdrop/CenterMargin/CardPanel/CardVBox/ActionRow"]
+layout_mode = 2
+text = "MENU_BACK"

@@ -3,11 +3,16 @@ class_name OuterShell
 extends PanelContainer
 
 signal close_requested
+signal save_game_requested
+signal end_turn_requested
 signal shell_switch_requested(shell_id: String)
 
 const DEFAULT_SHELL_SIZE := Vector2(980.0, 560.0)
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 @onready var drag_handle: Control = get_node_or_null("Layout/HeaderBar/DragHandle")
+@onready var save_btn: Button = get_node_or_null("Layout/HeaderBar/BtnSaveGame")
+@onready var end_turn_btn: Button = get_node_or_null("Layout/HeaderBar/BtnEndTurn")
 @onready var shell_option: OptionButton = get_node_or_null("Layout/HeaderBar/ShellOption")
 @onready var close_btn: Button = get_node_or_null("Layout/HeaderBar/BtnClose")
 @onready var spread_holder: MarginContainer = get_node_or_null("Layout/SpreadHolder")
@@ -18,6 +23,15 @@ var _active_spread: Node = null
 var _is_populating_shells: bool = false
 
 func _ready() -> void:
+	RETRO_THEME.register_theme_listener(_on_theme_changed)
+	_on_theme_changed()
+
+	if save_btn != null:
+		save_btn.text = tr("UI_BTN_SAVE_GAME")
+		save_btn.pressed.connect(func(): save_game_requested.emit())
+	if end_turn_btn != null:
+		end_turn_btn.text = tr("UI_HUD_BTN_END_TURN")
+		end_turn_btn.pressed.connect(func(): end_turn_requested.emit())
 	if close_btn != null:
 		close_btn.pressed.connect(func(): close_requested.emit())
 	if shell_option != null:
@@ -25,6 +39,20 @@ func _ready() -> void:
 	if drag_handle:
 		drag_handle.mouse_filter = Control.MOUSE_FILTER_STOP
 		drag_handle.gui_input.connect(_on_drag_input)
+
+func _exit_tree() -> void:
+	RETRO_THEME.unregister_theme_listener(_on_theme_changed)
+
+func _on_theme_changed() -> void:
+	theme = RETRO_THEME.create_godot_theme()
+
+## Enables or disables the header Save Game button (e.g. disabled when ironman_mode is active)
+func set_save_enabled(enabled: bool) -> void:
+	var btn: Button = save_btn if save_btn != null else get_node_or_null("Layout/HeaderBar/BtnSaveGame") as Button
+	if btn == null:
+		return
+	btn.disabled = not enabled
+	btn.modulate = Color.WHITE if enabled else Color(0.6, 0.6, 0.6, 0.65)
 
 ## Resizes OuterShell window frame from the active shell_manifest.json window_size entry
 func apply_shell_window_size(manifest: Dictionary) -> void:

@@ -50,7 +50,6 @@ func _ready() -> void:
 	# 3. HUD wiring
 	if game_hud != null:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
-		game_hud.end_turn_requested.connect(_on_end_turn_requested)
 		if game_hud.has_signal("toggle_messages_inbox_requested"):
 			game_hud.toggle_messages_inbox_requested.connect(_toggle_feedback_inbox_visibility)
 
@@ -296,17 +295,6 @@ func _toggle_workspace_visibility() -> void:
 
 		if view_host != null:
 			OperationsControllerScript.refresh_domain_view(view_host.get_active_domain(), view_host)
-
-func _on_end_turn_requested() -> void:
-	var staged: Array = []
-	var active_planner: Control = view_host.get_action_component() if view_host != null else null
-	if is_instance_valid(active_planner):
-		if active_planner.has_method("consume_selected_directives"):
-			staged = active_planner.consume_selected_directives()
-		elif active_planner.has_method("get_staged_directives"):
-			staged = active_planner.get_staged_directives()
-
-	OperationsControllerScript.execute_staged_cycle(staged, view_host)
 
 func _toggle_feedback_inbox_visibility() -> void:
 	if feedback_inbox == null or workspace_canvas == null:

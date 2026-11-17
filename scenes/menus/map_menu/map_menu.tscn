@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://b3hsm84ltxcbu"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" uid="uid://d15e3bqmj57b4" path="res://scenes/menus/map_menu/map_menu.gd" id="1_3k8dc"]
+[ext_resource type="Script" path="res://scenes/menus/map_menu/map_menu.gd" id="1_3k8dc"]
 
-[node name="MapMenu" type="Control" unique_id=304661838]
+[node name="MapMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,89 +11,89 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3k8dc")
 
-[node name="BackGround" type="PanelContainer" parent="." unique_id=330356311]
+[node name="BackGround" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -8.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxControlsContainer" type="VBoxContainer" parent="." unique_id=355657311]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -246.5
-offset_top = -230.5
-offset_right = 246.5
-offset_bottom = 230.5
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Label" type="Label" parent="VBoxControlsContainer" unique_id=478195892]
+[node name="CenterMargin" type="MarginContainer" parent="BackGround"]
 layout_mode = 2
-text = "City Creator/loader"
-horizontal_alignment = 1
+theme_override_constants/margin_left = 180
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 180
+theme_override_constants/margin_bottom = 48
 
-[node name="HSeparator" type="HSeparator" parent="VBoxControlsContainer" unique_id=1806319141]
-layout_mode = 2
-
-[node name="HBoxCityName" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1726369385]
-layout_mode = 2
-
-[node name="Label2" type="Label" parent="VBoxControlsContainer/HBoxCityName" unique_id=1624212387]
-layout_mode = 2
-text = "City Name"
-
-[node name="LineEditCityName" type="LineEdit" parent="VBoxControlsContainer/HBoxCityName" unique_id=10598260]
+[node name="CardPanel" type="PanelContainer" parent="BackGround/CenterMargin"]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Pls Enter Name for city"
+size_flags_vertical = 3
+
+[node name="VBoxControlsContainer" type="VBoxContainer" parent="BackGround/CenterMargin/CardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
+layout_mode = 2
+text = "UI_HDR_CITY_CREATOR"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
+layout_mode = 2
+
+[node name="HBoxCityName" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxCityName"]
+layout_mode = 2
+text = "UI_LBL_CITY_NAME"
+
+[node name="LineEditCityName" type="LineEdit" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxCityName"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "UI_HINT_CITY_NAME"
 alignment = 1
 max_length = 40
 expand_to_text_length = true
 
-[node name="HBoxSeedID" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=734107859]
+[node name="HBoxSeedID" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxSeedID" unique_id=1257286795]
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxSeedID"]
 layout_mode = 2
-text = "Seed Id "
+text = "UI_LBL_SEED_ID"
 
-[node name="seed_text" type="LineEdit" parent="VBoxControlsContainer/HBoxSeedID" unique_id=606301945]
-propagate_maximum_size = true
+[node name="seed_text" type="LineEdit" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxSeedID"]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Enter an alpha numeric seed"
+placeholder_text = "UI_HINT_SEED_ID"
 max_length = 30
 expand_to_text_length = true
 emoji_menu_enabled = false
 select_all_on_focus = true
 
-[node name="HSeparator2" type="HSeparator" parent="VBoxControlsContainer" unique_id=1313901814]
+[node name="HSeparator2" type="HSeparator" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="VBoxCitySize" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1690527355]
+[node name="VBoxCitySize" type="VBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="Label3" type="Label" parent="VBoxControlsContainer/VBoxCitySize" unique_id=800153827]
+[node name="Label3" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize"]
 layout_mode = 2
-text = "City Size"
+text = "UI_HDR_CITY_SIZE"
 horizontal_alignment = 1
 
-[node name="HBoxCityGrid" type="HBoxContainer" parent="VBoxControlsContainer/VBoxCitySize" unique_id=1809189029]
+[node name="HBoxCityGrid" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize"]
 layout_mode = 2
 
-[node name="GridWidthLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=755559848]
+[node name="GridWidthLabel" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 visible = false
 layout_mode = 2
 text = "Width"
 
-[node name="GridWidth" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1594206458]
+[node name="GridWidth" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -101,12 +101,12 @@ min_value = 5.0
 value = 5.0
 rounded = true
 
-[node name="GridHeightLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=613480715]
+[node name="GridHeightLabel" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 visible = false
 layout_mode = 2
 text = "Height"
 
-[node name="GridHeight" type="SpinBox" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=136003089]
+[node name="GridHeight" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -114,152 +114,136 @@ min_value = 5.0
 value = 5.0
 rounded = true
 
-[node name="RadiusSliderLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1287798827]
+[node name="RadiusSliderLabel" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 layout_mode = 2
-text = "City Radius in Blocks"
+text = "UI_LBL_CITY_RADIUS"
 
-[node name="HSlider" type="HSlider" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=883094067]
+[node name="HSlider" type="HSlider" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 6.0
 max_value = 25.0
-value = 6.0
+value = 14.0
 rounded = true
 
-[node name="RadiusValueLabel" type="Label" parent="VBoxControlsContainer/VBoxCitySize/HBoxCityGrid" unique_id=1080430484]
+[node name="RadiusValueLabel" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid"]
 custom_minimum_size = Vector2(35, 0)
 layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HBoxContainer5" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1087251699]
+[node name="HBoxContainer5" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1068555990]
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxContainer5"]
 layout_mode = 2
-text = "City Block Size"
+text = "Block Size"
 
-[node name="BlockSize" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer5" unique_id=1043954260]
+[node name="BlockSize" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxContainer5"]
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 500.0
 
-[node name="HBoxContainer6" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1374230830]
+[node name="HBoxContainer6" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer6" unique_id=1725636807]
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxContainer6"]
 layout_mode = 2
-text = "Chance of Vacant Block"
+text = "UI_LBL_VACANT_BLOCK_CHANCE"
 
-[node name="VacantBlockChance" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer6" unique_id=85632914]
+[node name="VacantBlockChance" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/HBoxContainer6"]
 layout_mode = 2
 size_flags_horizontal = 3
 suffix = "%"
 
-[node name="HBoxContainer10" type="HBoxContainer" parent="VBoxControlsContainer" unique_id=1749167412]
+[node name="HSeparator3" type="HSeparator" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
+layout_mode = 2
+
+[node name="Vbox2" type="VBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2"]
+layout_mode = 2
+text = "UI_HDR_ZONE_RATIOS"
+
+[node name="HBoxContainer" type="VBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2"]
+layout_mode = 2
+
+[node name="HBoxContainer7" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7"]
+layout_mode = 2
+text = "UI_LBL_ZONE_RES"
+
+[node name="ResidentialRatio" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7"]
+layout_mode = 2
+size_flags_horizontal = 3
+suffix = "%"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2"]
+layout_mode = 2
+text = "UI_LBL_ZONE_COM"
+
+[node name="CommercialRatio" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+suffix = "%"
+
+[node name="HBoxContainer9" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9"]
+layout_mode = 2
+text = "UI_LBL_ZONE_IND"
+
+[node name="IndustrialRatio" type="SpinBox" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9"]
+layout_mode = 2
+size_flags_horizontal = 3
+suffix = "%"
+
+[node name="HBoxContainer11" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2"]
 visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/HBoxContainer10" unique_id=1292359055]
-layout_mode = 2
-text = "Building Density"
-
-[node name="BuildingDensity" type="SpinBox" parent="VBoxControlsContainer/HBoxContainer10" unique_id=651104695]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="HSeparator3" type="HSeparator" parent="VBoxControlsContainer" unique_id=387699350]
-layout_mode = 2
-
-[node name="Vbox2" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1939998373]
-layout_mode = 2
-
-[node name="Label2" type="Label" parent="VBoxControlsContainer/Vbox2" unique_id=689647285]
-layout_mode = 2
-text = "Ratio Residential - Commercial - Industrial"
-
-[node name="HBoxContainer" type="VBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=997997164]
-propagate_maximum_size = false
-layout_mode = 2
-
-[node name="HBoxContainer7" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1308591597]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=635661925]
-layout_mode = 2
-text = "Res %"
-
-[node name="ResidentialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7" unique_id=1115999667]
-layout_mode = 2
-size_flags_horizontal = 3
-suffix = "%"
-
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1350004796]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=166110774]
-layout_mode = 2
-text = "Com %"
-
-[node name="CommercialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2" unique_id=1956787371]
-layout_mode = 2
-size_flags_horizontal = 3
-suffix = "%"
-
-[node name="HBoxContainer9" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2/HBoxContainer" unique_id=1121579891]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=861449238]
-layout_mode = 2
-text = "Ind %"
-
-[node name="IndustrialRatio" type="SpinBox" parent="VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9" unique_id=1291494675]
-layout_mode = 2
-size_flags_horizontal = 3
-suffix = "%"
-
-[node name="HBoxContainer11" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=2113325430]
-visible = false
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=1225378585]
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer11"]
 layout_mode = 2
 text = "Residential SubDivs"
 
-[node name="ResidentialSubdivs" type="CheckButton" parent="VBoxControlsContainer/Vbox2/HBoxContainer11" unique_id=120543125]
+[node name="ResidentialSubdivs" type="CheckButton" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxContainer11"]
 layout_mode = 2
 
-[node name="HBoxResidentialDensity" type="HBoxContainer" parent="VBoxControlsContainer/Vbox2" unique_id=1054842501]
+[node name="HBoxResidentialDensity" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/Vbox2/HBoxResidentialDensity" unique_id=1424373810]
+[node name="Label" type="Label" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxResidentialDensity"]
 layout_mode = 2
-text = "Residential Character"
+text = "UI_LBL_RESIDENTIAL_DENSITY"
 
-[node name="OptionDensityProfile" type="OptionButton" parent="VBoxControlsContainer/Vbox2/HBoxResidentialDensity" unique_id=417549463]
+[node name="OptionDensityProfile" type="OptionButton" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxResidentialDensity"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HSeparator4" type="HSeparator" parent="VBoxControlsContainer" unique_id=1262867589]
+[node name="HSeparator4" type="HSeparator" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="Generate_Reload" type="VBoxContainer" parent="VBoxControlsContainer" unique_id=1071178738]
+[node name="Generate_Reload" type="VBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxControlsContainer/Generate_Reload" unique_id=2039371530]
+[node name="HBoxContainer" type="HBoxContainer" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Generate_Reload"]
 layout_mode = 2
-text = "Generate/Reload"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxControlsContainer/Generate_Reload" unique_id=505421367]
-layout_mode = 2
+theme_override_constants/separation = 12
 alignment = 1
 
-[node name="ButtonRecallCity" type="Button" parent="VBoxControlsContainer/Generate_Reload/HBoxContainer" unique_id=637068152]
+[node name="ButtonGenerateCity" type="Button" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Generate_Reload/HBoxContainer"]
 layout_mode = 2
-text = "Reload city based on Seed"
+size_flags_horizontal = 3
+text = "UI_BTN_GENERATE_CITY"
 
-[node name="ButtonGenerateCity" type="Button" parent="VBoxControlsContainer/Generate_Reload/HBoxContainer" unique_id=1820146840]
+[node name="ButtonBack" type="Button" parent="BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Generate_Reload/HBoxContainer"]
 layout_mode = 2
-text = "Generate new city and save
-"
+text = "MENU_BACK"

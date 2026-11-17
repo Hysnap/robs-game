@@ -49,11 +49,6 @@ size_flags_horizontal = 3
 alignment = 2
 theme_override_constants/separation = 16
 
-[node name="BtnEndTurn" type="Button" parent="MarginContainer/TopBar/HBoxRight" unique_id=19840101]
-custom_minimum_size = Vector2(160, 38)
-layout_mode = 2
-text = "UI_HUD_BTN_END_TURN"
-
 [node name="LblDateTick" type="Label" parent="MarginContainer/TopBar/HBoxRight" unique_id=1376666574]
 layout_mode = 2
 text = "UI_HUD_TIMELINE_TICK"

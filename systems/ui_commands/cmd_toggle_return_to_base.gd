@@ -9,8 +9,8 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 	if not is_instance_valid(planner_view) or not ("_queue" in planner_view):
 		return
 
-	var active_op_id: String = planner_view._queue.get_active_operative_filter()
-	if active_op_id.is_empty():
+	var active_op_id: Variant = planner_view._queue.get_active_operative_filter()
+	if active_op_id == null or not (active_op_id is int):
 		SystemLogger.log_warn("[CmdToggleReturnToBase] Cannot toggle return-to-base while ALL operatives filter is active.")
 		return
 
@@ -20,17 +20,11 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 
 	var ws: Dictionary = gs.world_state
 	var residents_dict: Dictionary = ws.get("residents", {})
-	var target_rec: Dictionary = {}
-
-	for res_key in residents_dict.keys():
-		var rec = residents_dict[res_key]
-		if rec is Dictionary and str(rec.get("resident_id", res_key)).strip_edges() == active_op_id:
-			target_rec = rec
-			break
-
-	if target_rec.is_empty():
-		push_error("[CmdToggleReturnToBase] FAIL_LOUD: Operative '%s' not found in canonical residents registry." % active_op_id)
+	if not residents_dict.has(active_op_id):
+		push_error("[CmdToggleReturnToBase] FAIL_LOUD: Operative '%s' not found in canonical residents registry." % str(active_op_id))
 		return
+
+	var target_rec: Dictionary = residents_dict[active_op_id]
 
 	var new_state: bool = not bool(target_rec.get("auto_return_to_base", false))
 	target_rec["auto_return_to_base"] = new_state

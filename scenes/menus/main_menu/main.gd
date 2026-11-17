@@ -1,83 +1,63 @@
+# res://scenes/menus/main_menu/main.gd
 extends Control
-# Called when the node enters the scene tree for the first time.
 
-@onready var continue_button: Button = get_node_or_null("WelcomeScreen/ColorRect/VBoxContainer/ContinueGame")
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+const SHELL_REGISTRY = preload("res://scenes/ui/shell_host/shell_registry.gd")
+
+@onready var title_label: Label = $Backdrop/CenterMargin/CardPanel/VBoxContainer/TitleLabel
+@onready var new_city_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/OpenMapMenu
+@onready var continue_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/OpenGeneratedCity
+@onready var exit_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/Exit
 
 func _ready() -> void:
-    SystemLogger.log_info("[MainMenu] Main menu ready.")
-    _update_continue_button_state()
+	if RETRO_THEME.active_profile_id.is_empty():
+		var active_shell: String = SHELL_REGISTRY.get_configured_shell_id()
+		RETRO_THEME.load_all_catalog_profiles(active_shell)
+	theme = RETRO_THEME.create_godot_theme()
 
-## Updates the button appearance/state depending on whether a valid save exists
+	var backdrop := get_node_or_null("Backdrop") as PanelContainer
+	if backdrop:
+		backdrop.add_theme_stylebox_override("panel", RETRO_THEME.create_cover_style())
+	var card_panel := get_node_or_null("Backdrop/CenterMargin/CardPanel") as PanelContainer
+	if card_panel:
+		card_panel.add_theme_stylebox_override("panel", RETRO_THEME.create_page_style())
+
+	_apply_localized_labels()
+	new_city_button.pressed.connect(_on_open_map_menu_pressed)
+	continue_button.pressed.connect(_on_continue_game_pressed)
+	exit_button.pressed.connect(_on_exit_pressed)
+
+	SystemLogger.log_info("[MainMenu] Main menu ready.")
+	_update_continue_button_state()
+
+func _apply_localized_labels() -> void:
+	title_label.text = tr("MENU_GAME_TITLE")
+	new_city_button.text = tr("MENU_NEW_CITY")
+	continue_button.text = tr("MENU_CONTINUE_GAME")
+	exit_button.text = tr("MENU_EXIT")
+
+## Updates the Continue button state depending on whether at least one valid save slot exists
 func _update_continue_button_state() -> void:
-    if continue_button == null:
-        return
+	if continue_button == null:
+		return
 
-    var has_memory_city: bool = not GameState.world_state.get("districts", {}).is_empty()
-    var latest_slot: String = SaveManager.get_latest_save_slot()
-
-    if has_memory_city or not latest_slot.is_empty():
-        continue_button.disabled = false
-        continue_button.modulate = Color.WHITE
-    else:
-        continue_button.disabled = true
-        continue_button.modulate = Color(0.5, 0.5, 0.5, 0.6) # Dimmed if no game exists
-
-func _on_open_generated_city_pressed() -> void:
-    # 1. If GameState already has districts in memory, jump straight in
-    if not GameState.world_state.get("districts", {}).is_empty():
-        _launch_city_view()
-        return
-
-	# 2. Otherwise check if saved slot_01 exists on disk and load it
-    if FileAccess.file_exists("user://saves/slot_01/game_state.json"):
-        SystemLogger.log_info("[MainMenu] Existing save found in slot_01. Loading game...")
-        if SaveManager.load_game("slot_01"):
-            _launch_city_view()
-            return
-
-	# 3. If neither exists, route to loader to generate a fresh city
-    SystemLogger.log_info("[MainMenu] No existing city or save found. Launching initial generator...")
-    var error := get_tree().change_scene_to_file("res://scenes/menus/city_generator_loader.tscn")
-    if error != OK:
-        SystemLogger.log_error("Could not open city generator loader. Error Code: %s" % error)
-        push_error("Could not open city generator loader. Error Code: %s" % error)
+	var has_saves: bool = not SaveManager.list_save_slots().is_empty()
+	continue_button.disabled = not has_saves
+	continue_button.modulate = Color.WHITE if has_saves else Color(0.5, 0.5, 0.5, 0.6)
 
 func _on_open_map_menu_pressed() -> void:
-    # "CREATE CITY": Configuration setup for a fresh procedural world
-    var error := get_tree().change_scene_to_file("res://scenes/menus/map_menu/map_menu.tscn")
-    if error != OK:
-        SystemLogger.log_error("[MainMenu] Could not open map_menu.tscn: %s" % error)
-        push_error("[MainMenu] Could not open map_menu.tscn: %s" % error)
+	var error := get_tree().change_scene_to_file("res://scenes/menus/map_menu/map_menu.tscn")
+	if error != OK:
+		SystemLogger.log_error("[MainMenu] Could not open map_menu.tscn: %s" % error)
+		push_error("[MainMenu] Could not open map_menu.tscn: %s" % error)
 
 func _on_continue_game_pressed() -> void:
-	# 1. Fast Path: Current session already has the city in memory
-    if not GameState.world_state.get("districts", {}).is_empty():
-        SystemLogger.log_info("[MainMenu] Resuming active in-memory city session...")
-        _launch_city_view()
-        return
-
-	# 2. Disk Path: Find and mount the most recently modified save slot
-    var latest_slot: String = SaveManager.get_latest_save_slot()
-    if not latest_slot.is_empty():
-        SystemLogger.log_info("[MainMenu] Loading latest save slot: '%s'..." % latest_slot)
-        if SaveManager.load_game(latest_slot):
-            _launch_city_view()
-            return
-        else:
-            SystemLogger.log_error("[MainMenu] Failed to load save slot: %s" % latest_slot)
-            push_error("[MainMenu] Failed to load save slot: %s" % latest_slot)
-
-	# 3. Fallback: No save found
-    SystemLogger.log_warn("[MainMenu] No existing game save found to continue.")
-    push_warning("[MainMenu] No existing game save found to continue.")
-
-func _launch_city_view() -> void:
-    var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
-    if error != OK:
-        SystemLogger.log_error("Could not open 3d cityview. Error Code: %s" % error)
-        push_error("Could not open 3d cityview. Error Code: %s" % error)
+	var error := get_tree().change_scene_to_file("res://scenes/menus/load_game_menu/load_game_menu.tscn")
+	if error != OK:
+		SystemLogger.log_error("[MainMenu] Could not open load_game_menu.tscn: %s" % error)
+		push_error("[MainMenu] Could not open load_game_menu.tscn: %s" % error)
 
 func _on_exit_pressed() -> void:
-    if OS.has_feature("editor"):
-        SystemLogger.log_info("Returning to the Godot editor...")
-    get_tree().quit()
+	if OS.has_feature("editor"):
+		SystemLogger.log_info("Returning to the Godot editor...")
+	get_tree().quit()

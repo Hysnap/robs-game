@@ -69,12 +69,16 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 		state_file.close()
 
 	# 2. Save metadata header for load menus
-	var current_day: int = int(state_to_save.get("metadata", {}).get("current_sim_day", 29219))
+	var meta_in: Dictionary = state_to_save.get("metadata", {})
+	var current_day: int = int(meta_in.get("current_sim_day", 29219))
+	var population_count: int = int(meta_in.get("total_population", state_to_save.get("residents", {}).size()))
 	var meta := {
 		"slot_id": slot_id,
-		"seed_id": state_to_save.get("metadata", {}).get("active_seed", "default"),
+		"city_name": str(meta_in.get("city_name", slot_id)),
+		"seed_id": str(meta_in.get("active_seed", "default")),
 		"current_sim_day": current_day,
-		"current_week_tick": state_to_save.get("metadata", {}).get("current_week_tick", 1),
+		"current_week_tick": int(meta_in.get("current_week_tick", 1)),
+		"population": population_count,
 		"timestamp": Time.get_datetime_string_from_system(),
 		"district_count": state_to_save.get("districts", {}).size()
 	}
@@ -312,17 +316,160 @@ static func get_latest_save_slot() -> String:
 
 	return latest_slot
 
-## Restores canonical int keys on residents and establishments dictionaries after JSON deserialization
-static func _normalize_integer_entity_keys(state: Dictionary) -> void:
-	for pool_name in ["residents", "establishments"]:
-		if not state.has(pool_name) or not (state[pool_name] is Dictionary):
-			continue
-		var raw_pool: Dictionary = state[pool_name]
-		var normalized_pool: Dictionary = {}
-		for raw_key in raw_pool.keys():
-			var key_str := str(raw_key)
-			if key_str.is_valid_int():
-				normalized_pool[int(key_str)] = raw_pool[raw_key]
+# Returns all valid save slots in user://saves/ sorted newest-first, flagging the nominated latest save
+static func list_save_slots() -> Array[Dictionary]:
+	var slots: Array[Dictionary] = []
+	var base_da := DirAccess.open(SAVES_BASE_DIR)
+	if base_da == null:
+		return slots
+	base_da.list_dir_begin()
+	var dir_name := base_da.get_next()
+	while dir_name != "":
+		if base_da.current_is_dir() and not dir_name.begins_with("."):
+			var slot_dir := "%s/%s" % [SAVES_BASE_DIR, dir_name]
+			var state_path := "%s/game_state.json" % slot_dir
+			var db_path := "%s/society.db" % slot_dir
+			if FileAccess.file_exists(state_path) and FileAccess.file_exists(db_path):
+				var entry := _read_slot_summary(dir_name, slot_dir, state_path)
+				slots.append(entry)
+		dir_name = base_da.get_next()
+	base_da.list_dir_end()
+
+	slots.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("modified_unix", 0)) > int(b.get("modified_unix", 0))
+	)
+
+	if not slots.is_empty():
+		slots[0]["is_nominated"] = true
+
+	return slots
+
+static func _read_slot_summary(slot_id: String, slot_dir: String, state_path: String) -> Dictionary:
+	var mod_time: int = int(FileAccess.get_modified_time(state_path))
+	var meta_path := "%s/meta.json" % slot_dir
+	var info: Dictionary = {
+		"slot_id": slot_id,
+		"city_name": slot_id,
+		"seed_id": "default",
+		"current_sim_day": 0,
+		"current_week_tick": 1,
+		"population": 0,
+		"district_count": 0,
+		"timestamp": "",
+		"modified_unix": mod_time,
+		"is_nominated": false
+		}
+	if FileAccess.file_exists(meta_path):
+		var mf := FileAccess.open(meta_path, FileAccess.READ)
+		if mf != null:
+			var parsed_meta = JSON.parse_string(mf.get_as_text())
+			mf.close()
+			if parsed_meta is Dictionary:
+				for k in parsed_meta.keys():
+					info[k] = parsed_meta[k]
+
+	# Hydrate missing population/city_name from game_state.json for older saves
+	if int(info.get("population", 0)) <= 0 or str(info.get("city_name", "")) == slot_id:
+		var sf := FileAccess.open(state_path, FileAccess.READ)
+		if sf != null:
+			var parsed_state = JSON.parse_string(sf.get_as_text())
+			sf.close()
+			if parsed_state is Dictionary:
+				var m: Dictionary = parsed_state.get("metadata", {})
+				if str(info.get("city_name", "")) == slot_id and m.has("city_name"):
+					info["city_name"] = str(m["city_name"])
+				if int(info.get("current_sim_day", 0)) == 0 and m.has("current_sim_day"):
+					info["current_sim_day"] = int(m["current_sim_day"])
+				if int(info.get("population", 0)) <= 0:
+					info["population"] = int(m.get("total_population", parsed_state.get("residents", {}).size()))
+
+	return info
+
+
+## Deletes a save slot directory and all files inside it
+static func delete_save_slot(slot_id: String) -> bool:
+	var clean_id := slot_id.strip_edges()
+	if clean_id.is_empty() or clean_id.contains("..") or clean_id.contains("/"):
+		return false
+	var slot_dir := get_slot_dir(clean_id)
+	if not DirAccess.dir_exists_absolute(slot_dir):
+		return false
+	_remove_dir_recursive(slot_dir)
+	SystemLogger.log_info("[SaveManager] Deleted save slot: %s" % clean_id)
+	return true
+
+static func _remove_dir_recursive(dir_path: String) -> void:
+	var da := DirAccess.open(dir_path)
+	if da == null:
+		return
+	da.list_dir_begin()
+	var entry_name := da.get_next()
+	while entry_name != "":
+		if not entry_name.begins_with("."):
+			var full := dir_path.path_join(entry_name)
+			if da.current_is_dir():
+				_remove_dir_recursive(full)
 			else:
-				normalized_pool[raw_key] = raw_pool[raw_key]
-		state[pool_name] = normalized_pool
+				da.remove(entry_name)
+		entry_name = da.get_next()
+	da.list_dir_end()
+	DirAccess.remove_absolute(dir_path)
+
+## Restores canonical int keys and inner integer IDs after JSON deserialization for multi-thousand-turn save compatibility
+static func _normalize_integer_entity_keys(state: Dictionary) -> void:
+	if state.has("residents") and state["residents"] is Dictionary:
+		var raw_res: Dictionary = state["residents"]
+		var norm_res: Dictionary = {}
+		for raw_key in raw_res.keys():
+			var rec = raw_res[raw_key]
+			var key_str := str(raw_key)
+			var canonical_id: int = int(key_str) if key_str.is_valid_int() else 0
+			if rec is Dictionary:
+				for id_field in ["resident_id", "id", "establishment_id", "home_establishment_id"]:
+					if rec.has(id_field) and str(rec[id_field]).is_valid_int():
+						rec[id_field] = int(rec[id_field])
+				if int(rec.get("resident_id", 0)) > 0:
+					canonical_id = int(rec["resident_id"])
+				elif canonical_id > 0:
+					rec["resident_id"] = canonical_id
+			if canonical_id > 0:
+				norm_res[canonical_id] = rec
+			else:
+				norm_res[raw_key] = rec
+		state["residents"] = norm_res
+
+	if state.has("establishments") and state["establishments"] is Dictionary:
+		var raw_est: Dictionary = state["establishments"]
+		var norm_est: Dictionary = {}
+		for raw_key in raw_est.keys():
+			var rec = raw_est[raw_key]
+			var key_str := str(raw_key)
+			var canonical_id: int = int(key_str) if key_str.is_valid_int() else 0
+			if rec is Dictionary:
+				for id_field in ["establishment_id", "id"]:
+					if rec.has(id_field) and str(rec[id_field]).is_valid_int():
+						rec[id_field] = int(rec[id_field])
+				if int(rec.get("establishment_id", 0)) > 0:
+					canonical_id = int(rec["establishment_id"])
+				elif canonical_id > 0:
+					rec["establishment_id"] = canonical_id
+			if canonical_id > 0:
+				norm_est[canonical_id] = rec
+			else:
+				norm_est[raw_key] = rec
+		state["establishments"] = norm_est
+
+	if state.has("todo_backlog") and state["todo_backlog"] is Array:
+		for item in state["todo_backlog"]:
+			if item is Dictionary:
+				for ref_field in ["assigned_to", "initiator_id", "counterparty_id"]:
+					if item.has(ref_field) and str(item[ref_field]).is_valid_int():
+						item[ref_field] = int(item[ref_field])
+
+	if state.has("pending_orders") and state["pending_orders"] is Dictionary:
+		for order_key in state["pending_orders"].keys():
+			var ord_rec = state["pending_orders"][order_key]
+			if ord_rec is Dictionary:
+				for ref_field in ["assigned_to", "initiator_id", "counterparty_id"]:
+					if ord_rec.has(ref_field) and str(ord_rec[ref_field]).is_valid_int():
+						ord_rec[ref_field] = int(ord_rec[ref_field])
