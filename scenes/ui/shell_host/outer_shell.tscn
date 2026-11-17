@@ -25,6 +25,18 @@ mouse_filter = 0
 mouse_default_cursor_shape = 13
 text = ":: EXECUTIVE WORKSPACE (DRAG) ::"
 
+[node name="BtnSaveGame" type="Button" parent="Layout/HeaderBar"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+focus_mode = 0
+text = "UI_BTN_SAVE_GAME"
+
+[node name="BtnEndTurn" type="Button" parent="Layout/HeaderBar"]
+custom_minimum_size = Vector2(110, 24)
+layout_mode = 2
+focus_mode = 0
+text = "UI_HUD_BTN_END_TURN"
+
 [node name="ShellOption" type="OptionButton" parent="Layout/HeaderBar"]
 custom_minimum_size = Vector2(210, 24)
 layout_mode = 2

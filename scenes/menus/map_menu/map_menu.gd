@@ -1,18 +1,21 @@
+# res://scenes/menus/map_menu/map_menu.gd
 extends Control
 
 signal generate_city_requested(settings: Dictionary)
-signal recall_city_requested(city_name: String)
 
-@onready var radius_slider: HSlider = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
-@onready var radius_label: Label = $VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/RadiusValueLabel
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+const SHELL_REGISTRY = preload("res://scenes/ui/shell_host/shell_registry.gd")
 
-var _density_profiles: Array[Dictionary] = [] # Array of { "id": String, "label": String, "index": int }
+@onready var radius_slider: HSlider = $BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
+@onready var radius_label: Label = $BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/RadiusValueLabel
+
+var _density_profiles: Array[Dictionary] = []
 var _default_density_index: int = 0
 
 const DEFAULT_SETTINGS := {
 	"city_name": "New City",
 	"seed_id": "default-city",
-	"city_radius": 14, # <-- Add this line
+	"city_radius": 14,
 	"grid_width": 28,
 	"grid_height": 39,
 	"block_size": 200.0,
@@ -28,14 +31,14 @@ const DEFAULT_SETTINGS := {
 	"enable_random_extensions": true,
 	"random_extensions_count": 5,
 	"extension_spawn_chance": 0.4,
-	"district_mode": 1, ## ("Noise Based", "Zoned Areas", "Random Mix")
+	"district_mode": 1,
 	"residential_ratio": 55,
 	"commercial_ratio": 15,
 	"industrial_ratio": 30,
 	"noise_scale": 0.1,
 	"enable_residential_subdivisions": false,
-	"subdivision_mode": 0, # ("Fixed Layout", "Random Layout")
-	"subdivision_layout": 0, # ("2X2", "2X3", "3x3")
+	"subdivision_mode": 0,
+	"subdivision_layout": 0,
 	"subdivision_street_width": 8,
 	"residential_buildings_min": 6,
 	"residential_buildings_max": 12,
@@ -49,7 +52,7 @@ const DEFAULT_SETTINGS := {
 	"industrial_buildings_max": 12,
 	"industrial_spacing": 20.0,
 	"industrial_border_margin": 5,
-	"rotation_mode": 1, # ("Free", "90 Degrees", "No Rotation")
+	"rotation_mode": 1,
 	"scale_variation": 0.3,
 	"generate_roads": true,
 	"generate_intersections": true,
@@ -59,40 +62,67 @@ const DEFAULT_SETTINGS := {
 	"ground_height_offset": -0.1
 }
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	# 1. Load dynamic density profiles first
+	if RETRO_THEME.active_profile_id.is_empty():
+		var active_shell: String = SHELL_REGISTRY.get_configured_shell_id()
+		RETRO_THEME.load_all_catalog_profiles(active_shell)
+	theme = RETRO_THEME.create_godot_theme()
+
+	var bg := get_node_or_null("BackGround") as PanelContainer
+	if bg:
+		bg.add_theme_stylebox_override("panel", RETRO_THEME.create_cover_style())
+	var card_panel := get_node_or_null("BackGround/CenterMargin/CardPanel") as PanelContainer
+	if card_panel:
+		card_panel.add_theme_stylebox_override("panel", RETRO_THEME.create_page_style())
+
+	_apply_localized_labels()
 	_load_density_profiles_from_archetypes()
-	
-	# 2. Apply defaults & setup UI
 	apply_default_settings()
-	
-	# Connect buttons
-	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonGenerateCity.pressed.connect(_on_generate_city_pressed)
-	$VBoxControlsContainer/Generate_Reload/HBoxContainer/ButtonRecallCity.pressed.connect(_on_recall_city_pressed)
-	
-	# 1. Connect the slider signal so the label updates live!
+
+	var root_vbox := $BackGround/CenterMargin/CardPanel/VBoxControlsContainer
+	root_vbox.get_node("Generate_Reload/HBoxContainer/ButtonGenerateCity").pressed.connect(_on_generate_city_pressed)
+	root_vbox.get_node("Generate_Reload/HBoxContainer/ButtonBack").pressed.connect(_on_back_pressed)
+
 	if radius_slider:
 		radius_slider.value_changed.connect(_on_radius_slider_changed)
 		_on_radius_slider_changed(radius_slider.value)
+
+func _apply_localized_labels() -> void:
+	var v := $BackGround/CenterMargin/CardPanel/VBoxControlsContainer
+	v.get_node("Label").text = tr("UI_HDR_CITY_CREATOR")
+	v.get_node("HBoxCityName/Label2").text = tr("UI_LBL_CITY_NAME")
+	v.get_node("HBoxCityName/LineEditCityName").placeholder_text = tr("UI_HINT_CITY_NAME")
+	v.get_node("HBoxSeedID/Label").text = tr("UI_LBL_SEED_ID")
+	v.get_node("HBoxSeedID/seed_text").placeholder_text = tr("UI_HINT_SEED_ID")
+	v.get_node("VBoxCitySize/Label3").text = tr("UI_HDR_CITY_SIZE")
+	v.get_node("VBoxCitySize/HBoxCityGrid/RadiusSliderLabel").text = tr("UI_LBL_CITY_RADIUS")
+	v.get_node("HBoxContainer6/Label").text = tr("UI_LBL_VACANT_BLOCK_CHANCE")
+	v.get_node("Vbox2/Label2").text = tr("UI_HDR_ZONE_RATIOS")
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer7/Label").text = tr("UI_LBL_ZONE_RES")
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer2/Label").text = tr("UI_LBL_ZONE_COM")
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer9/Label").text = tr("UI_LBL_ZONE_IND")
+	v.get_node("Vbox2/HBoxResidentialDensity/Label").text = tr("UI_LBL_RESIDENTIAL_DENSITY")
+	v.get_node("Generate_Reload/HBoxContainer/ButtonGenerateCity").text = tr("UI_BTN_GENERATE_CITY")
+	v.get_node("Generate_Reload/HBoxContainer/ButtonBack").text = tr("MENU_BACK")
 
 func _on_radius_slider_changed(val: float) -> void:
 	if radius_label:
 		radius_label.text = str(int(val))
 
 func apply_default_settings() -> void:
-	$VBoxControlsContainer/HBoxCityName/LineEditCityName.text = DEFAULT_SETTINGS["city_name"]
-	$VBoxControlsContainer/HBoxSeedID/seed_text.text = DEFAULT_SETTINGS["seed_id"]
-	$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridWidth.value = DEFAULT_SETTINGS["grid_width"]
-	$VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/GridHeight.value = DEFAULT_SETTINGS["grid_height"]
-	$VBoxControlsContainer/HBoxContainer5/BlockSize.value = DEFAULT_SETTINGS["block_size"]
-	$VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value = DEFAULT_SETTINGS["empty_block_chance"]
-	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value = DEFAULT_SETTINGS["residential_ratio"]
-	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio.value = DEFAULT_SETTINGS["commercial_ratio"]
-	$VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value = DEFAULT_SETTINGS["industrial_ratio"]
-	$VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed = DEFAULT_SETTINGS["enable_residential_subdivisions"]
+	var v := $BackGround/CenterMargin/CardPanel/VBoxControlsContainer
+	v.get_node("HBoxCityName/LineEditCityName").text = DEFAULT_SETTINGS["city_name"]
+	v.get_node("HBoxSeedID/seed_text").text = DEFAULT_SETTINGS["seed_id"]
+	v.get_node("VBoxCitySize/HBoxCityGrid/GridWidth").value = DEFAULT_SETTINGS["grid_width"]
+	v.get_node("VBoxCitySize/HBoxCityGrid/GridHeight").value = DEFAULT_SETTINGS["grid_height"]
+	v.get_node("HBoxContainer5/BlockSize").value = DEFAULT_SETTINGS["block_size"]
+	v.get_node("HBoxContainer6/VacantBlockChance").value = DEFAULT_SETTINGS["empty_block_chance"]
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio").value = DEFAULT_SETTINGS["residential_ratio"]
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio").value = DEFAULT_SETTINGS["commercial_ratio"]
+	v.get_node("Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio").value = DEFAULT_SETTINGS["industrial_ratio"]
+	v.get_node("Vbox2/HBoxContainer11/ResidentialSubdivs").button_pressed = DEFAULT_SETTINGS["enable_residential_subdivisions"]
 	var default_r: int = int(DEFAULT_SETTINGS["city_radius"])
-	
+
 	if radius_slider:
 		radius_slider.value = default_r
 	if radius_label:
@@ -117,30 +147,13 @@ func _on_generate_city_pressed() -> void:
 		SystemLogger.log_error("Could not open generated city. Error code: %s" % error)
 		push_error("Could not open generated city. Error code: %s" % error)
 
-func _on_recall_city_pressed() -> void:
-	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
-	if city_name.is_empty():
-		SystemLogger.log_error("Enter a city name before recalling a city.")
-		push_error("Enter a city name before recalling a city.")
-		return
-	var seed_id: String = $VBoxControlsContainer/HBoxSeedID/seed_text.text.strip_edges()
-	if seed_id.is_empty():
-		SystemLogger.log_error("Enter a seed before recalling a city.")
-		push_error("Enter a seed before recalling a city.")
-		return
-
-	var settings := load_city_settings(city_name, seed_id)
-	if settings.is_empty():
-		return
-	if not write_json_file("user://cities/last_generated.json", settings):
-		return
-
-	get_tree().set_meta("pending_city_settings", settings)
-	recall_city_requested.emit(city_name)
-	var error := get_tree().change_scene_to_file("res://scenes/3d_scenes/node_3d.tscn")
+func _on_back_pressed() -> void:
+	var main_scene_path: String = str(ProjectSettings.get_setting("application/run/main_scene", ""))
+	assert(not main_scene_path.is_empty(), "FATAL: [MapMenu] 'application/run/main_scene' is not configured in ProjectSettings.")
+	var error := get_tree().change_scene_to_file(main_scene_path)
 	if error != OK:
-		SystemLogger.log_error("Could not open recalled city. Error code: %s" % error)
-		push_error("Could not open recalled city. Error code: %s" % error)
+		SystemLogger.log_error("[MapMenu] Could not open main scene '%s': %s" % [main_scene_path, error])
+		push_error("[MapMenu] Could not open main scene '%s': %s" % [main_scene_path, error])
 
 func seed_text_to_int(seed_text: String) -> int:
 	return seed_text.strip_edges().hash()
@@ -223,19 +236,20 @@ func read_json_file(file_path: String) -> Dictionary:
 	return parsed
 
 func build_settings_from_form() -> Dictionary:
-	var city_name: String = $VBoxControlsContainer/HBoxCityName/LineEditCityName.text.strip_edges()
+	var v := $BackGround/CenterMargin/CardPanel/VBoxControlsContainer
+	var city_name: String = v.get_node("HBoxCityName/LineEditCityName").text.strip_edges()
 	if city_name.is_empty():
 		SystemLogger.log_error("Enter a city name before generating a city.")
 		push_error("Enter a city name before generating a city.")
 		return {}
-	var seed_id: String = $VBoxControlsContainer/HBoxSeedID/seed_text.text.strip_edges()
+	var seed_id: String = v.get_node("HBoxSeedID/seed_text").text.strip_edges()
 	if seed_id.is_empty():
 		SystemLogger.log_error("Enter a seed before generating a city.")
 		push_error("Enter a seed before generating a city.")
 		return {}
-	var residential_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio.value)
-	var commercial_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio.value)
-	var industrial_percent: int = int($VBoxControlsContainer/Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio.value)
+	var residential_percent: int = int(v.get_node("Vbox2/HBoxContainer/HBoxContainer7/ResidentialRatio").value)
+	var commercial_percent: int = int(v.get_node("Vbox2/HBoxContainer/HBoxContainer2/CommercialRatio").value)
+	var industrial_percent: int = int(v.get_node("Vbox2/HBoxContainer/HBoxContainer9/IndustrialRatio").value)
 	var residential_ratio := float(residential_percent) / 100.0
 	var commercial_ratio := float(commercial_percent) / 100.0
 	var industrial_ratio := float(industrial_percent) / 100.0
@@ -250,10 +264,9 @@ func build_settings_from_form() -> Dictionary:
 	settings["city_name"] = city_name
 	settings["seed_id"] = seed_id
 	settings["seed"] = seed_text_to_int(seed_id)
-	settings["block_size"] = $VBoxControlsContainer/HBoxContainer5/BlockSize.value
-	var vacant_block_percent: int = int($VBoxControlsContainer/HBoxContainer6/VacantBlockChance.value)
+	settings["block_size"] = v.get_node("HBoxContainer5/BlockSize").value
+	var vacant_block_percent: int = int(v.get_node("HBoxContainer6/VacantBlockChance").value)
 	settings["empty_block_chance"] = float(vacant_block_percent) / 100.0
-	# Read the actual City Radius slider
 	var radius_val: int = int(radius_slider.value) if radius_slider else 14
 	settings["city_radius"] = radius_val
 	settings["grid_width"] = radius_val * 2
@@ -261,9 +274,8 @@ func build_settings_from_form() -> Dictionary:
 	settings["residential_ratio"] = residential_ratio / ratio_total
 	settings["commercial_ratio"] = commercial_ratio / ratio_total
 	settings["industrial_ratio"] = industrial_ratio / ratio_total
-	settings["enable_residential_subdivisions"] = ($VBoxControlsContainer/Vbox2/HBoxContainer11/ResidentialSubdivs.button_pressed)
-	# Pass the profile ID string ("suburban", "balanced", or "dense")
-	var density_opt = $VBoxControlsContainer/Vbox2/HBoxResidentialDensity/OptionDensityProfile
+	settings["enable_residential_subdivisions"] = v.get_node("Vbox2/HBoxContainer11/ResidentialSubdivs").button_pressed
+	var density_opt = v.get_node("Vbox2/HBoxResidentialDensity/OptionDensityProfile")
 	var profile_id: String = "balanced"
 	if density_opt and density_opt.item_count > 0:
 		var meta = density_opt.get_selected_metadata()
@@ -272,32 +284,18 @@ func build_settings_from_form() -> Dictionary:
 	settings["residential_density_profile"] = profile_id
 	return settings
 
-## Dynamically loads residential density profiles from archetypes.json
 func _load_density_profiles_from_archetypes() -> void:
 	_density_profiles.clear()
-	
-	# Resolve archetypes JSON path
-	var path := "res://data_modules/core/spatial/districts/archetypes.json"
-	if ScenarioManifestManager.has_module("archetypes"):
-		path = ScenarioManifestManager.get_module_path("archetypes")
 
-	if not FileAccess.file_exists(path):
-		return
-
-	var f := FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return
-	var parsed = JSON.parse_string(f.get_as_text())
-	f.close()
-
-	if not (parsed is Dictionary and parsed.has("setup")):
-		return
+	var parsed: Dictionary = ScenarioManifestManager.load_module("archetypes")
+	assert(parsed.has("setup") and parsed["setup"] is Dictionary,
+		"FATAL: [MapMenu] Archetypes module missing 'setup' configuration block.")
 
 	var density_cfg: Dictionary = parsed["setup"].get("density_profiles", {})
 	var default_key: String = str(density_cfg.get("default_profile", "balanced"))
 	var profiles_dict: Dictionary = density_cfg.get("profiles", {})
 
-	var density_opt: OptionButton = $VBoxControlsContainer/Vbox2/HBoxResidentialDensity/OptionDensityProfile
+	var density_opt: OptionButton = $BackGround/CenterMargin/CardPanel/VBoxControlsContainer/Vbox2/HBoxResidentialDensity/OptionDensityProfile
 	if density_opt:
 		density_opt.clear()
 

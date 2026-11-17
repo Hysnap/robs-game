@@ -19,23 +19,54 @@ func _ready() -> void:
 	if shell_node == null:
 		shell_node = get_parent() as OuterShell
 	_connect_shell_signals()
+	_refresh_ironman_save_state()
 	SystemLogger.log_info("[ViewHost] View host ready.")
 
 func _exit_tree() -> void:
 	cleanup()
 
 func _connect_shell_signals() -> void:
-	if shell_node != null and shell_node.has_signal("shell_switch_requested"):
+	if shell_node == null:
+		return
+	if shell_node.has_signal("shell_switch_requested"):
 		var cb := Callable(self, "_on_shell_switch_requested")
 		if not shell_node.is_connected("shell_switch_requested", cb):
 			shell_node.connect("shell_switch_requested", cb)
+	if shell_node.has_signal("save_game_requested"):
+		var save_cb := Callable(self, "_on_save_game_requested")
+		if not shell_node.is_connected("save_game_requested", save_cb):
+			shell_node.connect("save_game_requested", save_cb)
+	if shell_node.has_signal("end_turn_requested"):
+		var end_cb := Callable(self, "_on_end_turn_requested")
+		if not shell_node.is_connected("end_turn_requested", end_cb):
+			shell_node.connect("end_turn_requested", end_cb)
 
 func _on_shell_switch_requested(shell_id: String) -> void:
 	ui_command_dispatched.emit(UIActionCommand.new("switch_shell", {"shell_id": shell_id}))
 
+func _on_save_game_requested() -> void:
+	ui_command_dispatched.emit(UIActionCommand.new("save_game", {}))
+
+func _on_end_turn_requested() -> void:
+	ui_command_dispatched.emit(UIActionCommand.new("commit_turn_cycle", {}))
+
+func _refresh_ironman_save_state() -> void:
+	var gs = ScenarioManifestManager.get_game_state()
+	var is_ironman: bool = false
+	if gs != null and "world_state" in gs:
+		is_ironman = bool(gs.world_state.get("metadata", {}).get("ironman_mode", false))
+	sync_save_button_state(is_ironman)
+
+## Updates the OuterShell Save Game button enabled state (disabled when ironman_mode is true)
+func sync_save_button_state(is_ironman: bool) -> void:
+	_connect_shell_signals()
+	if shell_node != null and shell_node.has_method("set_save_enabled"):
+		shell_node.set_save_enabled(not is_ironman)
+
 ## Populates the OuterShell workspace switcher with year-unlocked shells
 func sync_shell_selector(shells: Array[Dictionary], active_shell_id: String) -> void:
 	_connect_shell_signals()
+	_refresh_ironman_save_state()
 	if shell_node != null and shell_node.has_method("populate_shell_options"):
 		shell_node.populate_shell_options(shells, active_shell_id)
 

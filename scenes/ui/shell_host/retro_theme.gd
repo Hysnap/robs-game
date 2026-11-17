@@ -151,6 +151,8 @@ static func save_user_profile(profile_name: String, target_shell: String = "filo
 	cfg.set_value(profile_name, "ink_muted", color_ink_muted.to_html())
 	cfg.save(USER_PROFILES_PATH)
 	load_user_profiles_from_disk()
+	active_profile_id = profile_name
+	notify_theme_changed()
 
 ## Shared StyleBox helpers for presentation wrappers
 static func create_cover_style() -> StyleBoxFlat:
@@ -187,3 +189,81 @@ static func get_ink_color(token: String) -> Color:
 
 	assert(c is Color, "[RetroTheme FATAL] Color token '%s' is not configured as a valid Color." % token)
 	return c
+
+## Builds a complete Godot Theme resource from the active palette for menus and standard controls
+static func create_godot_theme() -> Theme:
+	var t := Theme.new()
+	var mono := get_monospace_font()
+	t.default_font = mono
+	t.default_font_size = 14
+
+	# Label
+	t.set_color("font_color", "Label", color_ink_body)
+	t.set_color("font_shadow_color", "Label", Color(0, 0, 0, 0))
+
+	# Button (dark trim fill with light paper text, or bordered paper button with dark ink)
+	var btn_normal := StyleBoxFlat.new()
+	btn_normal.bg_color = color_page_bg.darkened(0.06)
+	btn_normal.border_color = color_binder_trim
+	btn_normal.set_border_width_all(2)
+	btn_normal.set_corner_radius_all(3)
+	btn_normal.set_content_margin_all(8)
+
+	var btn_hover := btn_normal.duplicate() as StyleBoxFlat
+	btn_hover.bg_color = color_ink_accent
+	btn_hover.border_color = color_binder_cover
+
+	var btn_pressed := btn_normal.duplicate() as StyleBoxFlat
+	btn_pressed.bg_color = color_binder_cover
+
+	var btn_disabled := btn_normal.duplicate() as StyleBoxFlat
+	btn_disabled.bg_color = color_page_bg.darkened(0.12)
+	btn_disabled.border_color = color_ruled_line
+
+	t.set_stylebox("normal", "Button", btn_normal)
+	t.set_stylebox("hover", "Button", btn_hover)
+	t.set_stylebox("pressed", "Button", btn_pressed)
+	t.set_stylebox("disabled", "Button", btn_disabled)
+	t.set_stylebox("focus", "Button", btn_hover)
+	t.set_color("font_color", "Button", color_ink_body)
+	t.set_color("font_hover_color", "Button", color_page_bg)
+	t.set_color("font_pressed_color", "Button", color_page_bg)
+	t.set_color("font_focus_color", "Button", color_page_bg)
+	t.set_color("font_disabled_color", "Button", color_ink_muted)
+
+	# LineEdit
+	var input_sb := StyleBoxFlat.new()
+	input_sb.bg_color = Color.WHITE
+	input_sb.border_color = color_binder_trim
+	input_sb.set_border_width_all(1)
+	input_sb.set_corner_radius_all(2)
+	input_sb.set_content_margin_all(6)
+	t.set_stylebox("normal", "LineEdit", input_sb)
+	t.set_stylebox("focus", "LineEdit", input_sb)
+	t.set_color("font_color", "LineEdit", color_ink_body)
+	t.set_color("font_placeholder_color", "LineEdit", color_ink_muted)
+	t.set_color("caret_color", "LineEdit", color_ink_accent)
+
+	# ItemList
+	var list_sb := StyleBoxFlat.new()
+	list_sb.bg_color = color_page_bg.darkened(0.03)
+	list_sb.border_color = color_ruled_line
+	list_sb.set_border_width_all(1)
+	list_sb.set_content_margin_all(6)
+
+	var list_sel_sb := StyleBoxFlat.new()
+	list_sel_sb.bg_color = color_ink_accent
+	list_sel_sb.border_color = color_binder_cover
+	list_sel_sb.set_border_width_all(1)
+	list_sel_sb.set_corner_radius_all(2)
+	list_sel_sb.set_content_margin_all(4)
+
+	t.set_stylebox("panel", "ItemList", list_sb)
+	t.set_stylebox("selected", "ItemList", list_sel_sb)
+	t.set_stylebox("selected_focus", "ItemList", list_sel_sb)
+	t.set_color("font_color", "ItemList", color_ink_body)
+	t.set_color("font_hovered_color", "ItemList", color_ink_accent)
+	t.set_color("font_selected_color", "ItemList", color_page_bg)
+	t.set_color("guide_color", "ItemList", color_ruled_line)
+
+	return t

@@ -4,12 +4,10 @@ extends CanvasLayer
 
 signal toggle_filofax_requested
 signal toggle_messages_inbox_requested
-signal end_turn_requested
 
 @onready var btn_main_menu: Button = $MarginContainer/TopBar/HBoxLeft/BtnMainMenu
 @onready var btn_toggle_filofax: Button = $MarginContainer/TopBar/HBoxLeft/BtnFilofax
 @onready var btn_messages_alert: Button = $MarginContainer/TopBar/HBoxLeft/BtnMessagesAlert
-@onready var btn_end_turn: Button = $MarginContainer/TopBar/HBoxRight/BtnEndTurn
 @onready var lbl_date_tick: Label = $MarginContainer/TopBar/HBoxRight/LblDateTick
 @onready var lbl_ticker_status: Label = $MarginContainer/BottomBar/LblTickerStatus
 
@@ -27,10 +25,6 @@ func _ready() -> void:
 	if btn_messages_alert:
 		btn_messages_alert.pressed.connect(func(): toggle_messages_inbox_requested.emit())
 
-	if btn_end_turn:
-		btn_end_turn.text = tr("UI_HUD_BTN_END_TURN")
-		btn_end_turn.pressed.connect(func(): end_turn_requested.emit())
-
 	if lbl_ticker_status:
 		lbl_ticker_status.text = tr("UI_HUD_TICKER_STATUS_DEFAULT")
 
@@ -42,9 +36,11 @@ func _ready() -> void:
 	_refresh_timeline_display()
 
 func _on_return_to_main_menu_pressed() -> void:
-	var error := get_tree().change_scene_to_file("res://scenes/menus/main_menu/main.tscn")
+	var main_scene_path: String = str(ProjectSettings.get_setting("application/run/main_scene", ""))
+	assert(not main_scene_path.is_empty(), "FATAL: [GameHUD] 'application/run/main_scene' is not configured in ProjectSettings.")
+	var error := get_tree().change_scene_to_file(main_scene_path)
 	if error != OK:
-		push_error("[GameHUD] Failed returning to main menu. Error: %s" % error)
+		push_error("[GameHUD] Failed returning to main menu '%s'. Error: %s" % [main_scene_path, error])
 
 func _on_turn_advanced(_current_tick: int) -> void:
 	_refresh_timeline_display()

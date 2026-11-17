@@ -518,9 +518,9 @@ func _recalculate_estimate() -> void:
 func _on_pin_pressed() -> void:
 	var target_meta = opt_target.get_item_metadata(opt_target.selected) if opt_target and opt_target.item_count > 0 else {}
 	var loc_meta = opt_where.get_item_metadata(opt_where.selected) if opt_where and opt_where.item_count > 0 else {}
-	var contact_meta = opt_contact.get_item_metadata(opt_contact.selected) if opt_contact and opt_contact.item_count > 0 else ""
+	var contact_meta = opt_contact.get_item_metadata(opt_contact.selected) if opt_contact and opt_contact.item_count > 0 else null
 	var who_meta = opt_who.get_item_metadata(opt_who.selected) if opt_who and opt_who.item_count > 0 else "PLAYER"
-	var actor_id: String = str(who_meta) if who_meta != null and not str(who_meta).is_empty() else "PLAYER"
+	var actor_id: Variant = who_meta if who_meta != null and str(who_meta) != "" else "PLAYER"
 
 	var rail_code: String = ""
 	if opt_rail and opt_rail.visible and opt_rail.item_count > 0:
@@ -532,17 +532,20 @@ func _on_pin_pressed() -> void:
 		var p_meta = opt_postal.get_item_metadata(opt_postal.selected)
 		postal_class = str(p_meta.get("id", "")) if p_meta is Dictionary else str(p_meta)
 
+	var raw_node_id: Variant = loc_meta.get("id", "") if loc_meta is Dictionary else ""
+	var raw_contact_id: Variant = contact_meta if contact_meta != null and str(contact_meta) != "" else ""
+
 	var form_data: Dictionary = {
 		"verb": _get_active_verb(),
 		"initiator_id": actor_id,
 		"assigned_to": actor_id,
 		"assigned_to_name": opt_who.get_item_text(opt_who.selected) if opt_who and opt_who.item_count > 0 else "",
-		"counterparty_id": str(contact_meta) if contact_meta != null else "",
+		"counterparty_id": raw_contact_id,
 		"target_item": str(target_meta.get("id", "")) if target_meta is Dictionary else str(target_meta),
 		"amount": float(spin_amount.value) if spin_amount else 1.0,
 		"rail_code": rail_code,
 		"postal_class": postal_class,
-		"target_node_id": str(loc_meta.get("id", "")) if loc_meta is Dictionary else "",
+		"target_node_id": raw_node_id,
 		"target_node_name": str(loc_meta.get("display", loc_meta.get("id", ""))) if loc_meta is Dictionary else "",
 		"target_scope": str(loc_meta.get("type", "DISTRICT")) if loc_meta is Dictionary else "DISTRICT",
 		"unit_cost": float(target_meta.get("unit_cost", 0.0)) if target_meta is Dictionary else 0.0,
