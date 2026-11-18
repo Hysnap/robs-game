@@ -1,3 +1,37 @@
 {
-    "godotTools.editorPath.godot4": "l:\\SteamLibrary\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe"
+    "godotTools.editorPath.godot4": "l:\\SteamLibrary\\steamapps\\common\\Godot Engine\\godot.windows.opt.tools.64.exe",
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[gdscript]": {
+        "editor.defaultFormatter": "geequlim.godot-tools"
+    },
+    "[sql]": {
+        "editor.defaultFormatter": "inferrinizzard.prettier-sql-vscode"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "workbench.editorAssociations": {
+        "*.gddoc": "gddoc",
+        "*.csv": "csv.editor",
+        "*.tsv": "csv.editor",
+        "*.tab": "csv.editor",
+        "*.psv": "csv.editor"
+    },
+    "files.associations": {
+        "*.gd": "gdscript",
+        "*.tscn": "gdscene",
+        "*.godot": "gdresource",
+        "*.tres": "gdresource",
+        "*.import": "gdresource",
+        "*.gdns": "gdresource",
+        "*.gdnlib": "gdresource",
+        "*.gdextension": "gdresource",
+        "*.gdshader": "gdshader",
+        "*.gdshaderinc": "gdshader"
+    }
 }

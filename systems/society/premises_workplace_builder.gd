@@ -157,7 +157,7 @@ static func run(
 				) VALUES (%d, '%s', 0, 'MAIN', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
 			""" % [institution_estab_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
-			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id)
+			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id, capacity)
 			current_slot_id = expand_staffing_slots(
 				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
 				inst_sector, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
@@ -235,7 +235,7 @@ static func run(
 					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
 				""" % [embedded_estab_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
-				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id)
+				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id, c_cap)
 				current_slot_id = expand_staffing_slots(
 					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
 					c_sector, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
@@ -342,10 +342,10 @@ static func run(
 
 						household_inserts.append("""
 							INSERT INTO households (
-								household_id, establishment_id, residence_type_id,
-								wealth_bracket_id, local_pub_id, ethnicity_id, religion_id,
+								household_id, establishment_id, head_resident_id, residence_type_id,
+								wealth_bracket_id, ethnicity_id, religion_id,
 								valid_from, valid_to, change_reason_id
-							) VALUES (%d, %d, %d, %d, NULL, %d, %d, %d, NULL, %d);
+							) VALUES (%d, %d, NULL, %d, %d, %d, %d, %d, NULL, %d);
 						""" % [
 							current_household_id, est_id, res_type_id,
 							wealth_bracket, eth_id, religion_id, sim_start_day, reason_world_gen_id
@@ -424,8 +424,8 @@ static func run(
 						commercial_instances_by_type[cat_code] = []
 					commercial_instances_by_type[cat_code].append(center_vec)
 
-					_register_est_cat(by_cat, cat_code, est_id, dist_id)
-					_register_est_cat(by_cat, "COMMERCIAL", est_id, dist_id)
+					_register_est_cat(by_cat, cat_code, est_id, dist_id, cap)
+					_register_est_cat(by_cat, "COMMERCIAL", est_id, dist_id, cap)
 
 					if is_vacant == 0:
 						assert(tenancy.has("sector"), "FATAL: Commercial tenancy '%s' missing mandatory 'sector' field!" % cat_code)
@@ -462,8 +462,8 @@ static func run(
 						) VALUES (%d, '%s', %d, 'WORKS', NULL, '%s', %d, %d, 0, %d, NULL, %d);
 					""" % [est_id, dist_id, b_idx, i_title.replace("'", "''"), i_cat_id, i_cap, sim_start_day, reason_world_gen_id])
    
-					_register_est_cat(by_cat, i_code, est_id, dist_id)
-					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id)
+					_register_est_cat(by_cat, i_code, est_id, dist_id, i_cap)
+					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id, i_cap)
 
 					assert(ind_tenancy.has("sector"), "FATAL: Industrial tenancy '%s' missing mandatory 'sector' field!" % i_code)
 					var ind_sector: String = str(ind_tenancy["sector"]).to_upper()
@@ -854,10 +854,10 @@ static func pick_tenancy(rng: RandomNumberGenerator, primary_classes: Dictionary
 
 	return pool[0]["data"]
 
-static func _register_est_cat(by_cat: Dictionary, cat_name: String, est_id: int, dist_id: String) -> void:
+static func _register_est_cat(by_cat: Dictionary, cat_name: String, est_id: int, dist_id: String, capacity: int = 100) -> void:
 	if not by_cat.has(cat_name):
 		by_cat[cat_name] = []
-	by_cat[cat_name].append({"id": est_id, "district_id": dist_id})
+	by_cat[cat_name].append({"id": est_id, "district_id": dist_id, "capacity": capacity})
 
 static func roll_household_culture(cultural: Dictionary, rng: RandomNumberGenerator, district_type: String) -> Dictionary:
 	var weights_key := "high_density" if district_type.begins_with("high_density") else ("commercial" if district_type == "commercial" else "suburban_low_density")
