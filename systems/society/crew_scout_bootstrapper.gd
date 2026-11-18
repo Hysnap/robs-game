@@ -37,11 +37,22 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 	# 4. Assemble indexed candidate context payload
 	var by_household: Dictionary = {}
 	var unique_candidates: Dictionary = {}
+	var relatives_by_resident: Dictionary = {}
 
 	for row in candidate_rows:
 		var r_id: int = int(row.get("resident_id", 0))
 		var h_id: int = int(row.get("household_id", 0))
-		unique_candidates[r_id] = row
+		if not unique_candidates.has(r_id):
+			unique_candidates[r_id] = row
+		if not relatives_by_resident.has(r_id):
+			relatives_by_resident[r_id] = []
+		var rel_id: int = int(row.get("relative_id", 0))
+		if rel_id > 0:
+			relatives_by_resident[r_id].append({
+				"relative_id": rel_id,
+				"relationship_code": str(row.get("relationship_code", "")),
+				"affinity_score": float(row.get("affinity_score", 0.0))
+			})
 
 		if not by_household.has(h_id):
 			by_household[h_id] = []
@@ -52,6 +63,7 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		"candidate_rows": candidate_rows,
 		"by_household": by_household,
 		"unique_candidates": unique_candidates,
+		"relatives_by_resident": relatives_by_resident,
 		"target_count": target_count
 	}
 
@@ -132,7 +144,7 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		if i == 0 or bool(slot_cfg.get("is_leader", false)):
 			leader_home_estab_id = home_estab_id
 
-		# Guarantee reciprocal FAMILY edges exist in social_relationships for all co-residents of this household
+		# Guarantee reciprocal household edges exist in social_relationships for all co-residents of this household
 		SOCIETY_QUERIES.ensure_household_kinship_edges(hh_id, current_sim_day)
 
 		var resident_entry: Dictionary = slot_cfg.duplicate(true)
@@ -153,6 +165,13 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		resident_entry["establishment_id"] = home_estab_id
 		resident_entry["home_establishment_id"] = home_estab_id
 		resident_entry["current_district_id"] = home_district_id
+		resident_entry["church_id"] = profile.get("church_id", null)
+		resident_entry["local_pub_id"] = profile.get("local_pub_id", null)
+		resident_entry["openness"] = float(profile.get("openness", 0.5))
+		resident_entry["conscientiousness"] = float(profile.get("conscientiousness", 0.5))
+		resident_entry["extraversion"] = float(profile.get("extraversion", 0.5))
+		resident_entry["agreeableness"] = float(profile.get("agreeableness", 0.5))
+		resident_entry["neuroticism"] = float(profile.get("neuroticism", 0.5))
 		resident_entry["primary_employer_org_id"] = profile.get("employer_org_id", "")
 		resident_entry["primary_employer_establishment_id"] = int(profile.get("employer_establishment_id", 0))
 		resident_entry["primary_role_id"] = profile.get("role_title_id", 0)

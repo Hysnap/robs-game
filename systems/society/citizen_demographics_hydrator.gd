@@ -82,7 +82,7 @@ static func run(
 					church_estabs.append(cid)
 
 	var pub_estabs: Array = []
-	for pb_cat in ["PUB", "PUBLIC_HOUSE", "SOCIAL_CLUB", "HOSPITALITY"]:
+	for pb_cat in ["LOCAL_PUB", "PUB", "PUBLIC_HOUSE", "SOCIAL_CLUB", "HOSPITALITY"]:
 		if cat_estab_ids.has(pb_cat):
 			for pid in cat_estab_ids[pb_cat]:
 				if not pub_estabs.has(pid):
@@ -127,7 +127,7 @@ static func run(
 	SystemLogger.log_info("  [Pass 3] Hydrating %d households with OCEAN traits, kinship trees, and individual anchors..." % total_hh)
 
 	# --------------------------------------------------------------------------
-	# STAGE 1: Standard Household Hydration & Local Tied Youth Relocation
+	# STAGE 1: Standard Household Hydration & Local Tied Youth Relocation (50% -> 75%)
 	# --------------------------------------------------------------------------
 	for hh in generated_households:
 		hh_idx += 1
@@ -358,7 +358,6 @@ static func run(
 				"age_years": age_years,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"church_id": church_id,
 				"local_pub_id": -1,
 				"employer_establishment_id": assigned_est_id,
 				"role_code": occ_title,
@@ -423,8 +422,8 @@ static func run(
 				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph
 			)
 
-		# Flush batches every 500 households
-		if hh_idx % 500 == 0:
+		# Flush batches every 250 households for low peak RAM and smooth progress bar updates
+		if hh_idx % 250 == 0:
 			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
 			var db_t0: int = Time.get_ticks_msec()
 			_flush_stage1_batches(
@@ -433,12 +432,13 @@ static func run(
 			)
 			var db_time: int = Time.get_ticks_msec() - db_t0
 
-			SystemLogger.log_info("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
-				hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
-			])
+			if hh_idx % 1000 == 0:
+				SystemLogger.log_info("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
+					hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
+				])
 
 			if on_progress.is_valid():
-				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 35.0)
+				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 25.0)
 				on_progress.call(pct, 100.0, "Hydrating Citizens: ~%d pop (%d/%d homes)" % [current_resident_id - 1, hh_idx, total_hh])
 				if not is_headless:
 					var main_loop = Engine.get_main_loop()
@@ -455,6 +455,13 @@ static func run(
 	# --------------------------------------------------------------------------
 	# STAGE 2: External Migrant Influx (Unmarried Newcomers for Remaining Tied Slots)
 	# --------------------------------------------------------------------------
+	if on_progress.is_valid():
+		on_progress.call(75.5, 100.0, "Assigning Work-Tied Housing & Migrant Influx...")
+		if not is_headless:
+			var main_loop = Engine.get_main_loop()
+			if main_loop is SceneTree:
+				await (main_loop as SceneTree).process_frame
+
 	var influx_resident_inserts: Array[String] = []
 	var influx_contract_inserts: Array[String] = []
 	var influx_hh_inserts: Array[String] = []
@@ -522,7 +529,6 @@ static func run(
 				"age_years": migrant_age,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"church_id": church_id,
 				"local_pub_id": -1,
 				"employer_establishment_id": influx_est_id,
 				"role_code": role_key,
@@ -616,15 +622,18 @@ static func run(
 		DB_MANAGER.execute_batch(influx_slot_updates)
 
 	# --------------------------------------------------------------------------
-	# STAGE 3: Cross-Household Extended Kinship Tree Weaving (1st & 2nd Degree)
+	# STAGE 3: Cross-Household Extended Kinship Tree Weaving (76% -> 85%)
 	# --------------------------------------------------------------------------
 	var extended_kin_edges: Array[String] = []
-	FAMILY_WEAVER.weave_extended_family_trees(
+	var extended_kin_count: int = await FAMILY_WEAVER.weave_extended_family_trees(
 		extended_kin_edges, residents_by_id, kinship_rules,
-		reason_world_gen_id, kin_graph, rng
+		reason_world_gen_id, kin_graph, rng, on_progress
 	)
-	if not extended_kin_edges.is_empty():
-		DB_MANAGER.execute_batch(extended_kin_edges)
+
+	# Release heavy resident & kinship working dictionaries before Pass 4
+	residents_by_id.clear()
+	kin_graph.clear()
+	workplace_cohort_pubs.clear()
 
 	# --------------------------------------------------------------------------
 	# STAGE 4: Intake-Cohort Peer Relationship Weaving (Tied Accommodation)
@@ -655,6 +664,9 @@ static func run(
 							context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
 						) VALUES (%d, %d, %d, NULL, 0.75, %d, NULL, %d);
 					""" % [b, a, rel_civic_peer_id, sim_start_day, reason_world_gen_id])
+					if cohort_edge_inserts.size() >= 1000:
+						DB_MANAGER.execute_batch(cohort_edge_inserts)
+						cohort_edge_inserts.clear()
 
 	if not cohort_edge_inserts.is_empty():
 		DB_MANAGER.execute_batch(cohort_edge_inserts)
@@ -662,9 +674,12 @@ static func run(
 	for d_id in districts.keys():
 		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()
 
+	if on_progress.is_valid():
+		on_progress.call(85.0, 100.0, "Pass 3 Complete: %d Citizens Hydrated" % (current_resident_id - 1))
+
 	var total_time_ms: int = Time.get_ticks_msec() - pass3_start_ms
 	SystemLogger.log_info("  ✓ Pass 3 Completed in %dms | Created %d citizens (%d local relocated, %d external influx, %d extended kin edges)." % [
-		total_time_ms, current_resident_id - 1, local_tied_relocated_count, external_tied_influx_count, extended_kin_edges.size()
+		total_time_ms, current_resident_id - 1, local_tied_relocated_count, external_tied_influx_count, extended_kin_count
 	])
 	GENERATION_AUDITOR.log_tied_housing_audit(available_tied_housing, local_tied_relocated_count, external_tied_influx_count)
 	GENERATION_AUDITOR.audit_generated_jobs_by_education()
@@ -746,20 +761,3 @@ static func pick_anchor(
 		return int(list[rng.randi() % list.size()]["id"])
 
 	return 1
-
-## Forwarding wrappers for external test callers
-static func resolve_citizen_demographics(
-	demographics: Dictionary, rng: RandomNumberGenerator, age_years: int, is_male: bool,
-	unemp_rate: float, edu_code: String, is_married: bool, has_child_under_5: bool, has_child_5_to_15: bool
-) -> Dictionary:
-	return HOUSEHOLD_COMPOSER.resolve_citizen_demographics(
-		demographics, rng, age_years, is_male, unemp_rate, edu_code, is_married, has_child_under_5, has_child_5_to_15
-	)
-
-static func resolve_citizen_education(
-	demographics: Dictionary, rng: RandomNumberGenerator, age_years: int, is_male: bool, is_high_density: bool
-) -> String:
-	return HOUSEHOLD_COMPOSER.resolve_citizen_education(demographics, rng, age_years, is_male, is_high_density)
-
-static func audit_generated_jobs_by_education() -> void:
-	GENERATION_AUDITOR.audit_generated_jobs_by_education()

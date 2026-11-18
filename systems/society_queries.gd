@@ -78,6 +78,7 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 		var hh_rows: Array = DBManager.query_rows("""
 			SELECT 
 				h.household_id,
+				h.head_resident_id,
 				l_res.title AS residence_type,
 				h.wealth_bracket_id,
 				l_eth.title AS ethnicity,
@@ -87,7 +88,8 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 			JOIN system_labels l_res ON h.residence_type_id = l_res.label_id
 			JOIN system_labels l_eth ON h.ethnicity_id = l_eth.label_id
 			JOIN system_labels l_rel ON h.religion_id = l_rel.label_id
-			LEFT JOIN establishments e_pub ON h.local_pub_id = e_pub.establishment_id
+			LEFT JOIN residents r_head ON h.head_resident_id = r_head.resident_id
+			LEFT JOIN establishments e_pub ON r_head.local_pub_id = e_pub.establishment_id
 			WHERE h.establishment_id = %d AND h.valid_to IS NULL;
 		""" % estab_id)
 
@@ -101,11 +103,22 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 				CAST((%d - r.dob) / 365.25 AS INTEGER) AS age,
 				l_edu.title AS education,
 				l_role.title AS occupation,
-				c.compensation_rate * c.weekly_hours AS weekly_wage
+				c.compensation_rate * c.weekly_hours AS weekly_wage,
+				r.church_id,
+				e_church.name AS church_name,
+				r.local_pub_id,
+				e_pub.name AS local_pub_name,
+				r.openness,
+				r.conscientiousness,
+				r.extraversion,
+				r.agreeableness,
+				r.neuroticism
 			FROM residents r
 			JOIN households h ON r.household_id = h.household_id
 			JOIN system_labels l_gen ON r.gender_id = l_gen.label_id
 			JOIN system_labels l_edu ON r.education_level_id = l_edu.label_id
+			LEFT JOIN establishments e_church ON r.church_id = e_church.establishment_id
+			LEFT JOIN establishments e_pub ON r.local_pub_id = e_pub.establishment_id
 			LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id AND c.valid_to IS NULL
 			LEFT JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 			WHERE h.establishment_id = %d AND r.dod IS NULL;
@@ -142,6 +155,10 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 						"education": "UI_INTEL_UNKNOWN",
 						"occupation": "UI_INTEL_UNKNOWN",
 						"weekly_wage": null,
+						"church_id": null,
+						"church_name": "UI_INTEL_UNKNOWN",
+						"local_pub_id": null,
+						"local_pub_name": "UI_INTEL_UNKNOWN",
 						"is_masked": true
 					})
 			res_rows = masked_residents
@@ -402,7 +419,7 @@ static func get_known_contacts_for_crew(player_context: Dictionary, current_sim_
 
 	return contacts
 
-## Ensures reciprocal FAMILY edges exist in social_relationships for all living members of a household
+## Ensures reciprocal household peer/family edges exist in social_relationships for all living members of a household
 static func ensure_household_kinship_edges(household_id: int, sim_start_day: int = 29219) -> void:
 	assert(household_id > 0, "FATAL: [SocietyQueries] household_id must be positive.")
 	var members: Array = DBManager.query_rows("""
@@ -414,7 +431,7 @@ static func ensure_household_kinship_edges(household_id: int, sim_start_day: int
 	if members.size() <= 1:
 		return
 
-	var rel_family_id: int = DBManager.get_label_id("RELATIONSHIP_TYPE", "FAMILY")
+	var rel_family_id: int = DBManager.get_label_id("RELATIONSHIP_TYPE", "HOUSEHOLD_PEER")
 	var reason_id: int = DBManager.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 	var statements: Array[String] = []
 
@@ -467,12 +484,14 @@ static func find_kinship_crew_candidates(district_id: String, min_age: int = 18,
 			r.current_surname,
 			CAST((%d - r.dob) / 365.25 AS INTEGER) AS age,
 			sr.to_resident_id AS relative_id,
+			l_rel.code AS relationship_code,
 			sr.affinity_score
 		FROM residents r
 		JOIN households h ON r.household_id = h.household_id
 		JOIN establishments e ON h.establishment_id = e.establishment_id
 		LEFT JOIN social_relationships sr ON r.resident_id = sr.from_resident_id
-		LEFT JOIN system_labels l_rel ON sr.relationship_type_id = l_rel.label_id AND l_rel.code = 'FAMILY'
+		LEFT JOIN system_labels l_rel ON sr.relationship_type_id = l_rel.label_id
+			AND l_rel.code NOT IN ('CIVIC_PEER', 'DRINKING_MATE', 'CONGREGATIONAL')
 		WHERE e.district_id = '%s'
 		  AND r.dod IS NULL
 		  AND r.dob <= %d AND r.dob >= %d
@@ -481,7 +500,7 @@ static func find_kinship_crew_candidates(district_id: String, min_age: int = 18,
 	
 	return DBManager.query_rows(sql)
 
-## Returns core profile and primary livelihood for an operative
+## Returns core profile, OCEAN traits, individual anchors, and primary livelihood for an operative
 static func get_resident_profile(resident_id: int, current_sim_day: int = 29219) -> Dictionary:
 	var sql := """
 		SELECT 
@@ -492,6 +511,13 @@ static func get_resident_profile(resident_id: int, current_sim_day: int = 29219)
 			r.first_name || ' ' || r.current_surname AS full_name,
 			CAST((%d - r.dob) / 365.25 AS INTEGER) AS age,
 			r.gender_id,
+			r.church_id,
+			r.local_pub_id,
+			r.openness,
+			r.conscientiousness,
+			r.extraversion,
+			r.agreeableness,
+			r.neuroticism,
 			c.role_title_id,
 			c.contract_class_id,
 			c.employer_org_id,

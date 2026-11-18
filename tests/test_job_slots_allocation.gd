@@ -24,7 +24,11 @@ func _init() -> void:
 	var job_defs: Dictionary = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
 	var cultural: Dictionary = MANIFEST_MGR.load_module("cultural_demographics")
 	var demographics: Dictionary = MANIFEST_MGR.load_module("demographics")
-	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon")
+	var lexicon: Dictionary = MANIFEST_MGR.load_module("lexicon").duplicate(true)
+	var spatial_lexicon: Dictionary = MANIFEST_MGR.load_module("spatial_lexicon")
+	for k in spatial_lexicon.keys():
+		if k != "_meta":
+			lexicon[k] = spatial_lexicon[k]
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1984
@@ -82,8 +86,8 @@ func _init() -> void:
 		archetypes, 
 		building_classes, 
 		job_defs, 
-		lexicon,
 		cultural, 
+		lexicon,
 		rng, 
 		Callable()
 	)
