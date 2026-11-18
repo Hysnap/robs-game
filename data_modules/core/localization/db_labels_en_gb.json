@@ -38,18 +38,89 @@
 	{ "domain": "RELATIONSHIP_TYPE", "code": "WORK_MATE", "title": "Workplace Friend", "description": "Close Co-workers or peers met via work." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CONGREGATIONAL", "title": "Congregational Parishioner", "description": "Shared church, temple, or faith community affiliation." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CIVIC_PEER", "title": "Workplace Colleague", "description": "Co-workers or peers at the same establishment." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "COLLEAGUE", "title": "Workplace Colleague", "description": "Co-workers or peers at the same establishment." },
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "COLLEAGUE",
+		"title": "Professioanl Colleague",
+		"description": "Professional co-workers or peers at the same establishment."
+	},
 	{ "domain": "RELATIONSHIP_TYPE", "code": "LINE_MANAGER", "title": "Workplace Line Manager", "description": "Direct Superior at the same establishment." },
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "SENIOR_MANAGER",
+		"title": "Workplace Senior Manager",
+		"description": "Workplace Superior at the same establishment."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "OWNER_MANAGER",
+		"title": "Workplace Owner Manager",
+		"description": "Workplace Owner for the workplace establishment."
+	},
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CUSTOMER", "title": "Workplace Customer", "description": "Customers met whilst at work." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "NEIGHBOUR", "title": "Street Neighbour", "description": "Close residential proximity association." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CELLMATE", "title": "Inmate Associate", "description": "Shared custodial incarceration wing or workshop." },
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "RESIDENCE_SHARE",
+		"title": "Residetial Associate",
+		"description": "Shared a residence."
+	},
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CRIMINAL_ACCOMPLICE", "title": "Criminal Accomplice", "description": "Shared active association in illicit enterprises." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "SCHOOL", "title": "School Class Mate", "description": "Attended a school or college at the same time." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "FRIEND", "title": "Friend", "description": "Friend, Amigo, chum for what ever reason they get on." },
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "FATHER",
+		"title": "Father",
+		"description": "Male parent of child."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "MOTHER",
+		"title": "Mother",
+		"description": "Female parent of child."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "SON",
+		"title": "Son",
+		"description": "Male child of parent."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "DAUGHTER",
+		"title": "Daughter",
+		"description": "Female child of parent."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "BROTHER",
+		"title": "Brother",
+		"description": "Male sibling sharing one or both parents."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "SISTER",
+		"title": "Sister",
+		"description": "Female sibling sharing one or both parents."
+	},
 	{ "domain": "RELATIONSHIP_TYPE", "code": "UNCLE", "title": "Uncle", "description": "Brother of Mother or Father, or Husband of Aunt." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "AUNT", "title": "Aunt", "description": "Sister of Mother or Father, or Wife of Uncle." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "GRANDFATHER", "title": "Grand Father", "description": "Father of Mother or Father" },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "GRANDMOTHER", "title": "Grand Mother", "description": "Mother of Mother or Father" },
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "GRANDSON",
+		"title": "Grandson",
+		"description": "Male grandchild of grandparent."
+	},
+	{
+		"domain": "RELATIONSHIP_TYPE",
+		"code": "GRANDDAUGHTER",
+		"title": "Granddaughter",
+		"description": "Female grandchild of grandparent."
+	},
 	{ "domain": "RELATIONSHIP_TYPE", "code": "COUSIN", "title": "Cousin", "description": "Child of Uncle or Aunt." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "NIECE", "title": "Niece", "description": "Female Child of Sibling." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "NEPHEW", "title": "Nephew", "description": "Male Child of Sibling." },
@@ -109,16 +180,112 @@
 	{ "domain": "ETHNICITY", "code": "WHITE_IRISH", "title": "White Irish", "description": "Irish heritage and descent." },
 	{ "domain": "ETHNICITY", "code": "AFRO_CARIBBEAN", "title": "Afro-Caribbean", "description": "Commonwealth West Indian and Caribbean diaspora." },
 	{ "domain": "ETHNICITY", "code": "SOUTH_ASIAN", "title": "South Asian", "description": "Indian, Pakistani, and Bangladeshi diaspora." },
+	{
+		"domain": "ETHNICITY",
+		"code": "CHINESE",
+		"title": "Far Eastern",
+		"description": "Thai, Koren, Vietnamese, Chinese, Japanese and Far East diaspora."
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "EUROPEAN_POLISH_CZECH",
+		"title": "Polish/Czech/Central European",
+		"description": "Polish, Czech and Central European diaspora."
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "EUROPEAN_UKRAINIAN_EASTERN",
+		"title": "Ukrainian/Eastern European",
+		"description": "Ukranian, Russian, Estonian, Romanian and Eastern European diaspora"
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "EUROPEAN_ITALIAN_MEDITERRANEAN",
+		"title": "Italian/Greek/Spanish/Mediterranean",
+		"description": "Italian, Greek, Spanish, YugoSlavia and Mediterranean diaspora."
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "EUROPEAN_JEWISH",
+		"title": "European Jewish",
+		"description": "Eastern, Central and Western European Jewish diaspora."
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "EUROPEAN_WESTERN_OTHER",
+		"title": "Western Other",
+		"description": "French, Dutch, German, Scandinavian and Western European diaspora."
+	},
+	{
+		"domain": "ETHNICITY",
+		"code": "OTHER",
+		"title": "Other",
+		"description": "Other diaspora."
+	},
 
 	{ "domain": "RELIGION", "code": "PROTESTANT_COFE", "title": "Church of England (Anglican)", "description": "Protestant Anglican communion." },
 	{ "domain": "RELIGION", "code": "CATHOLIC", "title": "Roman Catholic", "description": "Roman Catholic communion." },
+	{
+		"domain": "RELIGION",
+		"code": "EASTERN_ORTHODOX",
+		"title": "Eastern Orthodox",
+		"description": "Eastern Orthodox communion."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "JEWISH_ORTHODOX",
+		"title": "Jewish Orthodox",
+		"description": "Jewish Orthodox communion."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "JEWISH_PROGRESSIVE",
+		"title": "Jewish Progressive",
+		"description": "Progressive Jewish communion."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "JEWISH_CONSERVATIVE",
+		"title": "Jewish Conservative",
+		"description": "Masorti/Conservative Jewish communion."
+	},
 	{ "domain": "RELIGION", "code": "PROTESTANT_OTHER", "title": "Other Protestant / Nonconformist", "description": "Methodist, Baptist, or other non-Anglican Protestant faith." },
 	{ "domain": "RELIGION", "code": "PENTECOSTAL_PROTESTANT", "title": "Pentecostal Protestant", "description": "Evangelical and Pentecostal assembly." },
 	{ "domain": "RELIGION", "code": "RASTAFARI", "title": "Rastafari", "description": "Rastafari movement and faith." },
 	{ "domain": "RELIGION", "code": "MUSLIM", "title": "Muslim / Islam", "description": "Islamic congregation." },
+	{
+		"domain": "RELIGION",
+		"code": "MUSLIM_SUNNI",
+		"title": "Muslim / Sunni Islam",
+		"description": "Sunni Islamic congregation."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "MUSLIM_SHIA",
+		"title": "Muslim / Shia Islam",
+		"description": "Shia Islamic congregation."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "MUSLIM_IBADI",
+		"title": "Muslim / Ibadi Islam",
+		"description": "Ibadi Islamic congregation."
+	},
+	{
+		"domain": "RELIGION",
+		"code": "MUSLIM_SALAFISM",
+		"title": "Muslim / Salafism / Wahhabism Islam",
+		"description": "Salafist Islamic congregation."
+	},
 	{ "domain": "RELIGION", "code": "SIKH", "title": "Sikh", "description": "Sikh Gurdwara congregation." },
 	{ "domain": "RELIGION", "code": "HINDU", "title": "Hindu", "description": "Hindu Mandir congregation." },
 	{ "domain": "RELIGION", "code": "SECULAR_NONE", "title": "Secular / None", "description": "Secular, unaffiliated, or non-practicing." },
+	{
+		"domain": "RELIGION",
+		"code": "BUDDIST",
+		"title": "Buddist",
+		"description": "Buddist congregation."
+	},
 
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "UNIVERSITY_OR_POLYTECHNIC", "title": "Higher Education Campus", "description": "Polytechnic or university campus for advanced degrees." },
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOSPITAL", "title": "District General Hospital", "description": "Regional medical infirmary and emergency health facility." },

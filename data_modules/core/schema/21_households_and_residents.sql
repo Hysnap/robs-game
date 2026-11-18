@@ -1,0 +1,56 @@
+-- res://data_modules/core/schema/tables/21_households_and_residents.sql
+-- Tier 21: Domestic Households and Individual Residents (with Personal Anchors & OCEAN Traits)
+
+CREATE TABLE IF NOT EXISTS households (
+	household_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	establishment_id INTEGER NOT NULL,
+	head_resident_id INTEGER DEFAULT NULL,
+	residence_type_id INTEGER NOT NULL,
+	wealth_bracket_id INTEGER NOT NULL DEFAULT 1,
+	ethnicity_id INTEGER NOT NULL,
+	religion_id INTEGER NOT NULL,
+	valid_from INTEGER NOT NULL,
+	valid_to INTEGER,
+	change_reason_id INTEGER,
+	FOREIGN KEY (residence_type_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (establishment_id) REFERENCES establishments(establishment_id) ON DELETE NO ACTION,
+	FOREIGN KEY (wealth_bracket_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS residents (
+	resident_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	household_id INTEGER NOT NULL,
+	first_name TEXT NOT NULL,
+	birth_surname TEXT NOT NULL,
+	current_surname TEXT NOT NULL,
+	dob INTEGER NOT NULL,
+	dod INTEGER,
+	death_reason_id INTEGER,
+	gender_id INTEGER NOT NULL,
+	education_level_id INTEGER NOT NULL,
+	ethnicity_id INTEGER NOT NULL,
+	religion_id INTEGER NOT NULL,
+	church_id INTEGER DEFAULT NULL,
+	local_pub_id INTEGER DEFAULT NULL,
+	openness REAL NOT NULL DEFAULT 0.5,
+	conscientiousness REAL NOT NULL DEFAULT 0.5,
+	extraversion REAL NOT NULL DEFAULT 0.5,
+	agreeableness REAL NOT NULL DEFAULT 0.5,
+	neuroticism REAL NOT NULL DEFAULT 0.5,
+	is_active_agent INTEGER DEFAULT 0,
+	valid_from INTEGER NOT NULL,
+	valid_to INTEGER,
+	change_reason_id INTEGER,
+	FOREIGN KEY (household_id) REFERENCES households(household_id) ON DELETE NO ACTION,
+	FOREIGN KEY (death_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (gender_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (education_level_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (ethnicity_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (church_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
+	FOREIGN KEY (local_pub_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
+	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+);

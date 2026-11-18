@@ -1,0 +1,63 @@
+{
+    "_meta": {
+        "module": "ocean_personality_rules",
+        "era": "1980s",
+        "description": "Core Big Five (OCEAN) personality distribution, parental heritability, and social cohort venue selection rules."
+    },
+    "traits": [
+        "openness",
+        "conscientiousness",
+        "extraversion",
+        "agreeableness",
+        "neuroticism"
+    ],
+    "baseline_distribution": {
+        "mean": 0.50,
+        "std_dev": 0.16,
+        "min_bound": 0.05,
+        "max_bound": 0.95
+    },
+    "heritability": {
+        "parental_midpoint_weight": 0.50,
+        "individual_variance_weight": 0.50,
+        "spousal_assortative_mating_blend": 0.25
+    },
+    "job_matching_weights": {
+        "exact_education_tier_bonus": 3.0,
+        "one_tier_overqualified_multiplier": 0.35,
+        "two_plus_tiers_overqualified_multiplier": 0.04,
+        "ocean_affinity_scale": 1.5
+    },
+    "venue_cohort_selection": {
+        "child_inherits_parent_church_probability": 0.90,
+        "spouse_shares_head_church_probability": 0.88,
+        "secular_attends_church_probability": 0.08,
+        "practicing_attends_church_probability": 0.78,
+        "sibling_local_pub_pull_probability": 0.65,
+        "pub_cohort_base_weights": {
+            "WORKPLACE_COHORT": 0.42,
+            "SIBLING_COHORT": 0.22,
+            "CHURCH_COHORT": 0.18,
+            "NEIGHBOURHOOD_COHORT": 0.18
+        },
+        "pub_cohort_trait_modifiers": {
+            "WORKPLACE_COHORT": {
+                "extraversion": 0.25,
+                "conscientiousness": 0.10
+            },
+            "SIBLING_COHORT": {
+                "agreeableness": 0.25,
+                "extraversion": 0.15
+            },
+            "CHURCH_COHORT": {
+                "conscientiousness": 0.25,
+                "agreeableness": 0.30,
+                "openness": -0.10
+            },
+            "NEIGHBOURHOOD_COHORT": {
+                "openness": 0.10,
+                "neuroticism": 0.15
+            }
+        }
+    }
+}

@@ -313,6 +313,44 @@
   ],
   "education_attainment_model": {
     "default_code": "NO_FORMAL",
+    "ocean_tier_nudges": {
+      "NO_FORMAL": {
+        "openness": -0.04,
+        "conscientiousness": -0.02
+      },
+      "BASIC_SECONDARY": {
+        "openness": -0.02,
+        "conscientiousness": 0.00
+      },
+      "O_LEVELS_CSE": {
+        "openness": 0.00,
+        "conscientiousness": 0.02
+      },
+      "ENHANCED_SECONDARY": {
+        "openness": 0.03,
+        "conscientiousness": 0.03
+      },
+      "A_LEVELS": {
+        "openness": 0.04,
+        "conscientiousness": 0.04
+      },
+      "PRE_UNI_SECONDARY": {
+        "openness": 0.05,
+        "conscientiousness": 0.05
+      },
+      "POLYTECHNIC_DIPLOMA": {
+        "openness": 0.06,
+        "conscientiousness": 0.06
+      },
+      "UNIVERSITY_DEGREE": {
+        "openness": 0.10,
+        "conscientiousness": 0.08
+      },
+      "DEGREE_OR_HIGHER": {
+        "openness": 0.10,
+        "conscientiousness": 0.08
+      }
+    },
     "cohort_attainment_rates": [
       {
         "age_min": 16,

@@ -2,8 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.3.0",
-    "description": "Master dictionary of baseline occupational roles, qualifications, hours, wage rates, age boundaries, and institutional intel clearance."
+    "version": "1.4.0",
+    "description": "Master dictionary of baseline occupational roles, qualifications, hours, wage rates, age boundaries, institutional intel clearance, social tiers, and OCEAN affinities."
   },
   "roles": {
     "COMMERCIAL_CLEANER": {
@@ -17,7 +17,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "extraversion": -0.10,
+        "openness": -0.05,
+        "neuroticism": 0.00
+      }
     },
     "SCHOOL_MEALS_STAFF": {
       "display_name": "School Meals Assistant / Dinner Lady",
@@ -30,7 +38,15 @@
       "age_min": 16,
       "age_max": 62,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.35,
+        "extraversion": 0.20,
+        "conscientiousness": 0.20,
+        "openness": 0.00,
+        "neuroticism": -0.10
+      }
     },
     "SCHOOL_CARETAKER": {
       "display_name": "School Caretaker & Custodian",
@@ -43,7 +59,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.10,
+        "extraversion": 0.00,
+        "openness": -0.05,
+        "neuroticism": -0.15
+      }
     },
     "CIVIC_CLERK_OR_OFFICIAL": {
       "display_name": "Clerical Officer / Administrator",
@@ -57,7 +81,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "extraversion": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "CLERK": {
       "display_name": "Clerical Officer",
@@ -71,7 +103,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "extraversion": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "CIVIC_OFFICIAL": {
       "display_name": "Senior Executive Officer",
@@ -85,7 +125,15 @@
       "age_min": 28,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "extraversion": 0.25,
+        "openness": 0.20,
+        "agreeableness": -0.05,
+        "neuroticism": -0.25
+      }
     },
     "COUNCIL_MANUAL_LABOUR": {
       "display_name": "Council Direct Labour / Dustman / Highways",
@@ -99,7 +147,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.20,
+        "extraversion": 0.15,
+        "agreeableness": 0.10,
+        "openness": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "MUNICIPAL_BUS_DRIVER": {
       "display_name": "Municipal Corporation Bus Driver",
@@ -113,7 +169,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.10,
+        "extraversion": 0.10,
+        "openness": 0.00,
+        "neuroticism": -0.25
+      }
     },
     "PRIMARY_TEACHER": {
       "display_name": "Primary School Teacher",
@@ -127,7 +191,15 @@
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.50,
+        "conscientiousness": 0.35,
+        "openness": 0.25,
+        "extraversion": 0.25,
+        "neuroticism": -0.20
+      }
     },
     "TEACHER_OR_STAFF": {
       "display_name": "Comprehensive Secondary Teacher",
@@ -141,7 +213,15 @@
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.40,
+        "conscientiousness": 0.35,
+        "openness": 0.30,
+        "extraversion": 0.25,
+        "neuroticism": -0.20
+      }
     },
     "LECTURER": {
       "display_name": "Higher Education Lecturer",
@@ -155,7 +235,15 @@
       "age_min": 26,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.55,
+        "conscientiousness": 0.35,
+        "extraversion": 0.20,
+        "agreeableness": 0.15,
+        "neuroticism": -0.10
+      }
     },
     "LECTURER_OR_ADMIN": {
       "display_name": "Higher Education Lecturer / Administrator",
@@ -169,7 +257,15 @@
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.50,
+        "conscientiousness": 0.40,
+        "extraversion": 0.15,
+        "agreeableness": 0.15,
+        "neuroticism": -0.10
+      }
     },
     "CONSULTANT": {
       "display_name": "NHS Senior Hospital Consultant",
@@ -183,7 +279,15 @@
       "age_min": 35,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.35,
+        "extraversion": 0.20,
+        "agreeableness": 0.15,
+        "neuroticism": -0.35
+      }
     },
     "HOSPITAL_DOCTOR": {
       "display_name": "Hospital Physician",
@@ -197,7 +301,15 @@
       "age_min": 25,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "agreeableness": 0.30,
+        "openness": 0.30,
+        "extraversion": 0.15,
+        "neuroticism": -0.30
+      }
     },
     "HOSPITAL_RESIDENT_DOCTOR": {
       "display_name": "Hospital Registrar",
@@ -211,7 +323,15 @@
       "age_min": 23,
       "age_max": 34,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "agreeableness": 0.25,
+        "openness": 0.30,
+        "extraversion": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "HOSPITAL_NURSE": {
       "display_name": "State Registered Nurse",
@@ -225,7 +345,15 @@
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.50,
+        "conscientiousness": 0.40,
+        "extraversion": 0.20,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "STUDENT_NURSE": {
       "display_name": "Student Nurse",
@@ -239,7 +367,15 @@
       "age_min": 18,
       "age_max": 25,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.45,
+        "conscientiousness": 0.30,
+        "extraversion": 0.20,
+        "openness": 0.15,
+        "neuroticism": -0.15
+      }
     },
     "HOSPITAL_SUPPORT_STAFF": {
       "display_name": "Hospital Orderly",
@@ -253,7 +389,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.30,
+        "conscientiousness": 0.25,
+        "extraversion": 0.10,
+        "openness": 0.00,
+        "neuroticism": -0.15
+      }
     },
     "AMBULANCE_CREW": {
       "display_name": "Ambulance Driver",
@@ -267,7 +411,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "agreeableness": 0.35,
+        "extraversion": 0.20,
+        "openness": 0.10,
+        "neuroticism": -0.35
+      }
     },
     "DHSS_OFFICER": {
       "display_name": "DHSS Executive Officer",
@@ -281,7 +433,15 @@
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.05,
+        "openness": 0.00,
+        "extraversion": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "PRISON_OFFICER": {
       "display_name": "HM Prison Officer",
@@ -295,7 +455,15 @@
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.15,
+        "agreeableness": -0.15,
+        "openness": -0.10,
+        "neuroticism": -0.35
+      }
     },
     "POLICE_OFFICER": {
       "display_name": "Uniformed Police Officer",
@@ -309,7 +477,15 @@
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": true,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.20,
+        "agreeableness": 0.05,
+        "openness": -0.05,
+        "neuroticism": -0.35
+      }
     },
     "POLICE_CONSTABLE": {
       "display_name": "Probationary Police Constable",
@@ -323,7 +499,15 @@
       "age_min": 18,
       "age_max": 28,
       "is_field_worker": true,
-      "intel_clearance": 0.4
+      "intel_clearance": 0.4,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "extraversion": 0.20,
+        "agreeableness": 0.10,
+        "openness": 0.00,
+        "neuroticism": -0.30
+      }
     },
     "DETECTIVE": {
       "display_name": "Plain Clothes Officer",
@@ -337,7 +521,15 @@
       "age_min": 24,
       "age_max": 60,
       "is_field_worker": true,
-      "intel_clearance": 0.85
+      "intel_clearance": 0.85,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.30,
+        "extraversion": 0.20,
+        "agreeableness": -0.05,
+        "neuroticism": -0.35
+      }
     },
     "PARK_KEEPER": {
       "display_name": "Municipal Park Keeper & Gardener",
@@ -351,7 +543,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.30,
+        "agreeableness": 0.15,
+        "openness": 0.10,
+        "extraversion": -0.10,
+        "neuroticism": -0.15
+      }
     },
     "GROUNDSMAN_OR_STEWARD": {
       "display_name": "Groundsman / Event Steward",
@@ -365,7 +565,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.25,
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "openness": 0.00,
+        "neuroticism": -0.15
+      }
     },
     "CLERGY": {
       "display_name": "Parish Minister",
@@ -379,7 +587,15 @@
       "age_min": 24,
       "age_max": 70,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.55,
+        "conscientiousness": 0.45,
+        "extraversion": 0.30,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "CARETAKER": {
       "display_name": "Caretaker",
@@ -393,7 +609,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.15,
+        "extraversion": -0.05,
+        "openness": -0.05,
+        "neuroticism": -0.15
+      }
     },
     "CLERGY_OR_CARETAKER": {
       "display_name": "Church Custodian",
@@ -407,7 +631,15 @@
       "age_min": 21,
       "age_max": 70,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "agreeableness": 0.40,
+        "conscientiousness": 0.40,
+        "extraversion": 0.10,
+        "openness": 0.00,
+        "neuroticism": -0.20
+      }
     },
     "PRACTICE_STAFF": {
       "display_name": "Medical Receptionist",
@@ -421,7 +653,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "agreeableness": 0.35,
+        "extraversion": 0.25,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COMMERCIAL_SERVICE": {
       "display_name": "Shop Worker",
@@ -435,7 +675,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "agreeableness": 0.30,
+        "conscientiousness": 0.20,
+        "openness": 0.05,
+        "neuroticism": -0.10
+      }
     },
     "MANUAL_WORKS": {
       "display_name": "Site Laborer",
@@ -449,7 +697,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "extraversion": 0.15,
+        "agreeableness": 0.10,
+        "openness": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "BUILDING_TRADESMAN": {
       "display_name": "Skilled Tradesman (Bricklayer / Joiner / Sparky)",
@@ -463,7 +719,15 @@
       "age_min": 20,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "extraversion": 0.15,
+        "agreeableness": 0.10,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "DISPATCHER_OR_CONTROLLER": {
       "display_name": "Minicab Dispatcher",
@@ -477,7 +741,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "extraversion": 0.30,
+        "agreeableness": 0.05,
+        "openness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "CAB_DRIVER": {
       "display_name": "Private Hire Cab Driver",
@@ -491,7 +763,15 @@
       "age_min": 21,
       "age_max": 70,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.30,
+        "conscientiousness": 0.20,
+        "openness": 0.15,
+        "agreeableness": 0.10,
+        "neuroticism": -0.15
+      }
     },
     "OFFICE_MANAGER": {
       "display_name": "Office Supervisor",
@@ -505,7 +785,15 @@
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.30,
+        "openness": 0.10,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "DEPOT_MANAGER": {
       "display_name": "Foreman",
@@ -519,7 +807,15 @@
       "age_min": 28,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.35,
+        "openness": 0.05,
+        "agreeableness": -0.05,
+        "neuroticism": -0.30
+      }
     },
     "WORKS_CONVENOR": {
       "display_name": "Union Shop Steward",
@@ -533,7 +829,15 @@
       "age_min": 30,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.50,
+        "conscientiousness": 0.35,
+        "openness": 0.25,
+        "agreeableness": 0.15,
+        "neuroticism": -0.20
+      }
     },
     "VEHICLE_MECHANIC": {
       "display_name": "Commercial Fitter / Motor Mechanic",
@@ -547,7 +851,15 @@
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "openness": 0.10,
+        "agreeableness": 0.10,
+        "extraversion": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COACH_OR_LORRY_DRIVER": {
       "display_name": "HGV / Long-Distance Coach Driver",
@@ -561,7 +873,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "openness": 0.10,
+        "extraversion": 0.00,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "POSTAL_CLERK": {
       "display_name": "Postal Clerk",
@@ -575,7 +895,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": 0.15,
+        "openness": 0.00,
+        "neuroticism": -0.15
+      }
     },
     "SPORTSMAN": {
       "display_name": "Sports Ground Staff / Athlete",
@@ -589,7 +917,15 @@
       "age_min": 18,
       "age_max": 35,
       "is_field_worker": true,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.40,
+        "conscientiousness": 0.35,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "APPRENTICE_BAKER": {
       "display_name": "Apprentice Baker",
@@ -603,7 +939,15 @@
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.30,
+        "agreeableness": 0.20,
+        "openness": 0.15,
+        "extraversion": 0.05,
+        "neuroticism": -0.10
+      }
     },
     "APPRENTICE_BUTCHER": {
       "display_name": "Apprentice Butcher",
@@ -617,7 +961,15 @@
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.30,
+        "extraversion": 0.15,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "neuroticism": -0.10
+      }
     },
     "APPRENTICE_HAIRDRESSER": {
       "display_name": "Apprentice Hairdresser",
@@ -631,7 +983,15 @@
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.40,
+        "agreeableness": 0.30,
+        "openness": 0.25,
+        "conscientiousness": 0.20,
+        "neuroticism": -0.10
+      }
     },
     "BAKER": {
       "display_name": "Baker / Master Confectioner",
@@ -645,7 +1005,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.20,
+        "openness": 0.15,
+        "extraversion": 0.10,
+        "neuroticism": -0.15
+      }
     },
     "BANK_MANAGER": {
       "display_name": "Bank Branch Manager",
@@ -659,7 +1027,15 @@
       "age_min": 30,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "extraversion": 0.25,
+        "openness": 0.10,
+        "agreeableness": 0.00,
+        "neuroticism": -0.30
+      }
     },
     "BANK_TELLER": {
       "display_name": "Bank Cashier / Teller",
@@ -673,7 +1049,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": 0.15,
+        "openness": 0.00,
+        "neuroticism": -0.20
+      }
     },
     "BOOKMAKER": {
       "display_name": "Bookmaker",
@@ -687,7 +1071,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.40,
+        "conscientiousness": 0.35,
+        "openness": 0.15,
+        "agreeableness": -0.10,
+        "neuroticism": -0.25
+      }
     },
     "BUSINESS_ADVISOR": {
       "display_name": "Commercial Business Advisor",
@@ -701,7 +1093,15 @@
       "age_min": 25,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.30,
+        "openness": 0.25,
+        "agreeableness": 0.10,
+        "neuroticism": -0.20
+      }
     },
     "BUTCHER": {
       "display_name": "Master Butcher",
@@ -715,7 +1115,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "extraversion": 0.25,
+        "agreeableness": 0.20,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COURT_CLERK_LEGAL": {
       "display_name": "Clerk to the Justices",
@@ -729,7 +1137,15 @@
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.25,
+        "extraversion": 0.10,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "ESTATE_AGENT": {
       "display_name": "Estate Agent",
@@ -743,7 +1159,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.50,
+        "conscientiousness": 0.30,
+        "openness": 0.15,
+        "agreeableness": 0.05,
+        "neuroticism": -0.20
+      }
     },
     "FIREFIGHTER": {
       "display_name": "Firefighter (Leading Fireman / Fireman)",
@@ -757,7 +1181,15 @@
       "age_min": 19,
       "age_max": 55,
       "is_field_worker": true,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.30,
+        "agreeableness": 0.25,
+        "openness": 0.05,
+        "neuroticism": -0.40
+      }
     },
     "FIRE_OFFICER": {
       "display_name": "Station Officer",
@@ -771,7 +1203,15 @@
       "age_min": 26,
       "age_max": 55,
       "is_field_worker": true,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "extraversion": 0.35,
+        "agreeableness": 0.15,
+        "openness": 0.10,
+        "neuroticism": -0.40
+      }
     },
     "FORKLIFT_DRIVER": {
       "display_name": "Forklift Truck Driver",
@@ -785,7 +1225,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "extraversion": 0.05,
+        "agreeableness": 0.10,
+        "openness": 0.00,
+        "neuroticism": -0.20
+      }
     },
     "HAIRDRESSER_OR_BARBER": {
       "display_name": "Stylist / Barber",
@@ -799,7 +1247,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "agreeableness": 0.35,
+        "openness": 0.25,
+        "conscientiousness": 0.25,
+        "neuroticism": -0.10
+      }
     },
     "INVESTMENT_ADVISOR": {
       "display_name": "Investment / Securities Advisor",
@@ -813,7 +1269,15 @@
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.35,
+        "openness": 0.25,
+        "agreeableness": -0.05,
+        "neuroticism": -0.25
+      }
     },
     "KITCHEN_STAFF": {
       "display_name": "Cook / Kitchen Porter",
@@ -827,7 +1291,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.30,
+        "extraversion": 0.15,
+        "openness": 0.10,
+        "agreeableness": 0.10,
+        "neuroticism": -0.10
+      }
     },
     "LAUNDRY_WORKER": {
       "display_name": "Launderette / Dry Cleaning Attendant",
@@ -841,7 +1313,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.20,
+        "extraversion": 0.10,
+        "openness": -0.05,
+        "neuroticism": -0.05
+      }
     },
     "LEGAL_EXECUTIVE": {
       "display_name": "Legal Executive",
@@ -855,7 +1335,15 @@
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "openness": 0.20,
+        "extraversion": 0.15,
+        "agreeableness": 0.05,
+        "neuroticism": -0.20
+      }
     },
     "LIBRARIAN": {
       "display_name": "Chartered Borough Librarian",
@@ -869,7 +1357,15 @@
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.50,
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": -0.10,
+        "neuroticism": -0.15
+      }
     },
     "LIBRARY_ASSISTANT": {
       "display_name": "Library Assistant",
@@ -883,7 +1379,15 @@
       "age_min": 17,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.4
+      "intel_clearance": 0.4,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "openness": 0.35,
+        "conscientiousness": 0.35,
+        "agreeableness": 0.25,
+        "extraversion": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "LOANS_OFFICER": {
       "display_name": "Bank Advances & Loans Officer",
@@ -897,7 +1401,15 @@
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.50,
+        "extraversion": 0.20,
+        "openness": 0.10,
+        "agreeableness": 0.00,
+        "neuroticism": -0.25
+      }
     },
     "PETROL_PUMP_ATTENDANT": {
       "display_name": "Forecourt Petrol Pump Attendant",
@@ -911,7 +1423,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.20,
+        "extraversion": 0.20,
+        "agreeableness": 0.20,
+        "openness": 0.00,
+        "neuroticism": -0.10
+      }
     },
     "PHARMACIST": {
       "display_name": "Dispensing Chemist / MPS Pharmacist",
@@ -925,7 +1445,15 @@
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "agreeableness": 0.30,
+        "openness": 0.25,
+        "extraversion": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "RESTAURANT_MANAGER": {
       "display_name": "Restaurant / Takeaway Manager",
@@ -939,7 +1467,15 @@
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "conscientiousness": 0.40,
+        "agreeableness": 0.20,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "RETAIL_COUNTER_STAFF": {
       "display_name": "Counter Assistant / Shop Assistant",
@@ -953,7 +1489,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.40,
+        "agreeableness": 0.35,
+        "conscientiousness": 0.20,
+        "openness": 0.05,
+        "neuroticism": -0.10
+      }
     },
     "SERVING_STAFF": {
       "display_name": "Waiter / Waitress / Table Service",
@@ -967,7 +1511,15 @@
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "agreeableness": 0.35,
+        "conscientiousness": 0.20,
+        "openness": 0.10,
+        "neuroticism": -0.15
+      }
     },
     "SHOP_MANAGER": {
       "display_name": "Retail Shop Manager",
@@ -981,7 +1533,15 @@
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.40,
+        "agreeableness": 0.20,
+        "openness": 0.10,
+        "neuroticism": -0.25
+      }
     },
     "SOLICITOR": {
       "display_name": "Practising Solicitor",
@@ -995,7 +1555,15 @@
       "age_min": 24,
       "age_max": 68,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.30,
+        "extraversion": 0.25,
+        "agreeableness": 0.00,
+        "neuroticism": -0.30
+      }
     },
     "TOOLMAKER_FITTER": {
       "display_name": "Precision Toolmaker / Fitter",
@@ -1009,7 +1577,15 @@
       "age_min": 20,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.15,
+        "agreeableness": 0.10,
+        "extraversion": 0.00,
+        "neuroticism": -0.20
+      }
     },
     "WAREHOUSE_OPERATIVE": {
       "display_name": "Warehouseman / Picker & Packer",
@@ -1023,7 +1599,15 @@
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "extraversion": 0.05,
+        "openness": -0.05,
+        "neuroticism": -0.10
+      }
     },
     "WELDER_FABRICATOR": {
       "display_name": "Plater / Welder / Fabricator",
@@ -1037,7 +1621,15 @@
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.40,
+        "openness": 0.05,
+        "agreeableness": 0.10,
+        "extraversion": 0.05,
+        "neuroticism": -0.20
+      }
     },
     "HIGHER_ED_STUDENT": {
       "display_name": "Polytechnic / University Undergraduate",
@@ -1051,7 +1643,15 @@
       "age_min": 18,
       "age_max": 24,
       "is_field_worker": false,
-      "intel_clearance": 0.2
+      "intel_clearance": 0.2,
+      "social_tier": "ENCLAVE",
+      "ocean_affinities": {
+        "openness": 0.45,
+        "conscientiousness": 0.25,
+        "extraversion": 0.25,
+        "agreeableness": 0.15,
+        "neuroticism": 0.05
+      }
     },
     "PRISON_INMATE": {
       "display_name": "Custodial Inmate",
@@ -1065,7 +1665,15 @@
       "age_min": 17,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.1
+      "intel_clearance": 0.1,
+      "social_tier": "ENCLAVE",
+      "ocean_affinities": {
+        "conscientiousness": -0.20,
+        "agreeableness": -0.25,
+        "extraversion": 0.10,
+        "openness": 0.00,
+        "neuroticism": 0.20
+      }
     }
   }
 }
