@@ -5,8 +5,9 @@ extends RefCounted
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SPATIAL_RESOLVER = preload("res://systems/spatial_demand_resolver.gd")
+const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
-## Pass 2: Populates physical establishments, households, and job slots with authentic UK addresses and era-accurate business names
+## Pass 2: Populates physical establishments, organizations, households, and standardized job slots
 static func run(
 	world_state: Dictionary,
 	archetypes: Dictionary,
@@ -39,6 +40,7 @@ static func run(
 	var available_job_slots: Array[Dictionary] = []
 	var available_tied_housing: Dictionary = {}
 	var proprietor_hints: Dictionary = {}
+	var employer_wage_biases: Dictionary = {}
 
 	var est_id: int = 1
 	var current_household_id: int = 1
@@ -70,26 +72,43 @@ static func run(
 	var comm_naming: Dictionary = lexicon.get("commercial_naming", {})
 	assert(not comm_naming.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'commercial_naming' in spatial lexicon.")
 
-	# 0. Seed Canonical Institutional & Corporate Organizations
-	var org_inserts: Array[String] = [
-		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:CIVIC', 'Municipal & Civic Authority', 'CIVIC', 'FORMAL', 'STANDARD', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id],
-		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:DHSS', 'Department of Health & Social Security', 'INSTITUTION', 'FORMAL', 'GIRO_ISSUER', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id],
-		"INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('ORG:POST_OFFICE', 'General Post Office', 'INSTITUTION', 'FORMAL', 'GIRO_AGENT', %d, NULL, %d);" % [sim_start_day, reason_world_gen_id]
-	]
+	# 0. Seed Canonical Organizations from civic_hierarchy module (ORG:CIVIC, ORG:NHS, ORG:POST_OFFICE, Banks, etc.)
+	var civic_cfg: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
+	var institutions_cfg: Dictionary = civic_cfg.get("institutions", {})
+	var default_civic_org_id: String = str(institutions_cfg.get("default_civic_org_id", "ORG:CIVIC"))
+	var seeded_orgs: Array = institutions_cfg.get("seeded_organizations", [])
+
+	var org_inserts: Array[String] = []
 	var brand_org_map: Dictionary = {}
-	var bank_brands: Array = comm_naming.get("era_brands", {}).get("BANK_BRANCH", [])
-	for entry in bank_brands:
-		if entry is Dictionary:
-			var b_name: String = str(entry.get("name", ""))
-			if not b_name.is_empty():
-				var slug: String = b_name.to_upper().replace(" ", "_").replace("'", "").replace(".", "")
-				var org_id: String = "ORG:%s" % slug
-				var rail_cls: String = "BUILDING_SOCIETY" if b_name.to_lower().contains("society") or b_name.to_lower().contains("halifax") or b_name.to_lower().contains("nationwide") or b_name.to_lower().contains("abbey") else "CLEARING_BANK"
-				brand_org_map[b_name] = org_id
-				org_inserts.append("INSERT OR IGNORE INTO organizations (org_id, display_name, org_type, legal_status, institution_rail_class, valid_from, valid_to, change_reason_id) VALUES ('%s', '%s', 'INSTITUTION', 'FORMAL', '%s', %d, NULL, %d);" % [
-					org_id, b_name.replace("'", "''"), rail_cls, sim_start_day, reason_world_gen_id
-				])
-	DB_MANAGER.execute_batch(org_inserts)
+	var category_org_map: Dictionary = {}
+	var org_pay_cadences: Dictionary = {}
+
+	for org_def in seeded_orgs:
+		if not (org_def is Dictionary):
+			continue
+		var oid: String = str(org_def.get("org_id", "")).strip_edges()
+		if oid.is_empty():
+			continue
+		var dname: String = str(org_def.get("display_name", oid)).replace("'", "''")
+		var otype: String = str(org_def.get("org_type", "INSTITUTION"))
+		var lstatus: String = str(org_def.get("legal_status", "FORMAL"))
+		var rclass: String = str(org_def.get("institution_rail_class", "STANDARD"))
+		org_pay_cadences[oid] = str(org_def.get("default_pay_cadence", "MONTHLY"))
+
+		org_inserts.append("""
+			INSERT OR IGNORE INTO organizations (
+				org_id, display_name, org_type, legal_status, institution_rail_class,
+				valid_from, valid_to, change_reason_id
+			) VALUES ('%s', '%s', '%s', '%s', '%s', %d, NULL, %d);
+		""" % [oid, dname, otype, lstatus, rclass, sim_start_day, reason_world_gen_id])
+
+		for m_title in org_def.get("matched_titles", []):
+			brand_org_map[str(m_title)] = oid
+		for m_cat in org_def.get("matched_categories", []):
+			category_org_map[str(m_cat)] = oid
+
+	if not org_inserts.is_empty():
+		DB_MANAGER.execute_batch(org_inserts)
 
 	for dist_id in districts.keys():
 		var d: Dictionary = districts[dist_id]
@@ -149,18 +168,20 @@ static func run(
 			var capacity: int = int(inst.get("default_capacity", 250))
 			var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_name)
 			var institution_estab_id: int = est_id
+			var inst_owner_org: String = str(category_org_map.get(cat_name, default_civic_org_id))
 
 			estab_inserts.append("""
 				INSERT INTO establishments (
 					establishment_id, district_id, building_index, unit_door_number,
 					owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-				) VALUES (%d, '%s', 0, 'MAIN', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
-			""" % [institution_estab_id, dist_id, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
+				) VALUES (%d, '%s', 0, 'MAIN', '%s', '%s', %d, %d, 0, %d, NULL, %d);
+			""" % [institution_estab_id, dist_id, inst_owner_org, display_label, cat_id, capacity, sim_start_day, reason_world_gen_id])
 
 			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id, capacity)
+			employer_wage_biases[institution_estab_id] = 0.0
 			current_slot_id = expand_staffing_slots(
 				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
-				inst_sector, inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+				inst_sector, inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng
 			)
 			est_id += 1
 
@@ -196,9 +217,9 @@ static func run(
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
 							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', 0, '%s', 'ORG:CIVIC', '%s', %d, 2, 1, %d, NULL, %d);
+						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 2, 1, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, unit_door,
+						est_id, dist_id, unit_door, inst_owner_org,
 						unit_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
 					])
 
@@ -227,18 +248,20 @@ static func run(
 				var c_cap: int = int(c_inst.get("default_capacity", 250))
 				var c_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", c_cat_name)
 				var embedded_estab_id: int = est_id
+				var c_owner_org: String = str(category_org_map.get(c_cat_name, default_civic_org_id))
 
 				estab_inserts.append("""
 					INSERT INTO establishments (
 						establishment_id, district_id, building_index, unit_door_number,
 						owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', 'ORG:CIVIC', '%s', %d, %d, 0, %d, NULL, %d);
-				""" % [embedded_estab_id, dist_id, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
+					) VALUES (%d, '%s', 0, 'CIVIC_PARCEL', '%s', '%s', %d, %d, 0, %d, NULL, %d);
+				""" % [embedded_estab_id, dist_id, c_owner_org, c_display, c_cat_id, c_cap, sim_start_day, reason_world_gen_id])
 
 				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id, c_cap)
+				employer_wage_biases[embedded_estab_id] = 0.0
 				current_slot_id = expand_staffing_slots(
 					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
-					c_sector, c_inst, job_definitions, sim_start_day, reason_world_gen_id, rng
+					c_sector, c_inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng
 				)
 				est_id += 1
 
@@ -259,9 +282,9 @@ static func run(
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
 							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-						) VALUES (%d, '%s', 0, '%s', 'ORG:CIVIC', '%s', %d, 4, 1, %d, NULL, %d);
+						) VALUES (%d, '%s', 0, '%s', '%s', '%s', %d, 4, 1, %d, NULL, %d);
 					""" % [
-						est_id, dist_id, e_door,
+						est_id, dist_id, e_door, c_owner_org,
 						e_title.replace("'", "''"), res_unit_cat_id, sim_start_day, reason_world_gen_id
 					])
 
@@ -324,7 +347,7 @@ static func run(
 
 					var is_vacant: int = 1 if (rng.randf() < 0.03) else 0
 
-					var res_owner_sql: String = "'ORG:CIVIC'" if tenure_type == "COUNCIL_TENANT" else "NULL"
+					var res_owner_sql: String = "'%s'" % default_civic_org_id if tenure_type == "COUNCIL_TENANT" else "NULL"
 					estab_inserts.append("""
 						INSERT INTO establishments (
 							establishment_id, district_id, building_index, unit_door_number,
@@ -407,10 +430,13 @@ static func run(
 						cap = 0
 
 					var comm_owner_sql: String = "NULL"
-					if brand_org_map.has(display_title):
-						comm_owner_sql = "'%s'" % str(brand_org_map[display_title])
-					elif cat_code == "POST_OFFICE":
-						comm_owner_sql = "'ORG:POST_OFFICE'"
+					if category_org_map.has(cat_code):
+						comm_owner_sql = "'%s'" % str(category_org_map[cat_code])
+					else:
+						for b_title in brand_org_map.keys():
+							if display_title == b_title or display_title.begins_with("%s (" % b_title):
+								comm_owner_sql = "'%s'" % str(brand_org_map[b_title])
+								break
 
 					var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_code)
 					estab_inserts.append("""
@@ -430,9 +456,11 @@ static func run(
 					if is_vacant == 0:
 						assert(tenancy.has("sector"), "FATAL: Commercial tenancy '%s' missing mandatory 'sector' field!" % cat_code)
 						var comm_sector: String = str(tenancy["sector"]).to_upper()
+						var wage_bias: float = 0.0 if comm_owner_sql != "NULL" else _roll_employer_wage_bias(rng)
+						employer_wage_biases[est_id] = wage_bias
 						current_slot_id = expand_staffing_slots(
 							available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
-							comm_sector, tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+							comm_sector, tenancy, job_definitions, wage_bias, sim_start_day, reason_world_gen_id, rng
 						)
 
 					est_id += 1
@@ -461,15 +489,17 @@ static func run(
 							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
 						) VALUES (%d, '%s', %d, 'WORKS', NULL, '%s', %d, %d, 0, %d, NULL, %d);
 					""" % [est_id, dist_id, b_idx, i_title.replace("'", "''"), i_cat_id, i_cap, sim_start_day, reason_world_gen_id])
-   
+
 					_register_est_cat(by_cat, i_code, est_id, dist_id, i_cap)
 					_register_est_cat(by_cat, "INDUSTRIAL", est_id, dist_id, i_cap)
 
 					assert(ind_tenancy.has("sector"), "FATAL: Industrial tenancy '%s' missing mandatory 'sector' field!" % i_code)
 					var ind_sector: String = str(ind_tenancy["sector"]).to_upper()
+					var ind_wage_bias: float = _roll_employer_wage_bias(rng)
+					employer_wage_biases[est_id] = ind_wage_bias
 					current_slot_id = expand_staffing_slots(
 						available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
-						ind_sector, ind_tenancy, job_definitions, sim_start_day, reason_world_gen_id, rng
+						ind_sector, ind_tenancy, job_definitions, ind_wage_bias, sim_start_day, reason_world_gen_id, rng
 					)
 					est_id += 1
 
@@ -516,8 +546,22 @@ static func run(
 		"district_residents_map": district_residents_map,
 		"available_job_slots": available_job_slots,
 		"available_tied_housing": available_tied_housing,
-		"proprietor_hints": proprietor_hints
+		"proprietor_hints": proprietor_hints,
+		"employer_wage_biases": employer_wage_biases,
+		"org_pay_cadences": org_pay_cadences
 	}
+
+## Rolls an employer-level wage generosity bias [-1.0..+1.0] representing owner generosity & future-planning vs. greed
+static func _roll_employer_wage_bias(rng: RandomNumberGenerator) -> float:
+	# Triangular/normal-ish draw centered around 0.0 (midpoint rate)
+	return clampf((rng.randf() + rng.randf() - 1.0), -1.0, 1.0)
+
+## Computes an establishment's wage generosity bias directly from a proprietor/manager's OCEAN personality traits
+static func compute_ocean_wage_bias(ocean_traits: Dictionary) -> float:
+	var agreeableness: float = float(ocean_traits.get("agreeableness", 0.5))
+	var conscientiousness: float = float(ocean_traits.get("conscientiousness", 0.5))
+	var openness: float = float(ocean_traits.get("openness", 0.5))
+	return clampf((0.45 * agreeableness) + (0.35 * conscientiousness) + (0.20 * openness) - 0.50, -1.0, 1.0)
 
 ## Resolves an era-appropriate brand, pub, location-anchored, or family proprietor business title
 static func _generate_business_name(
@@ -625,6 +669,73 @@ static func _extract_housing_profiles(arch: Dictionary) -> Array[Dictionary]:
 		result.append(hp)
 	return result
 
+## Resolves standardized schedule, wage bracket, and unsocial/shift uplift for a role
+static func resolve_standardized_compensation(
+	master_job: Dictionary,
+	job_definitions: Dictionary,
+	employer_wage_bias: float,
+	estab_multiplier: float = 1.0,
+	estab_bonus: float = 0.0
+) -> Dictionary:
+	var work_schedules: Dictionary = job_definitions.get("work_schedules", {})
+	var wage_brackets: Dictionary = job_definitions.get("wage_brackets", {})
+	var shift_uplifts: Dictionary = job_definitions.get("shift_uplifts", {})
+	var shift_rotations: Dictionary = job_definitions.get("shift_rotations", {})
+
+	var sched_key: String = str(master_job.get("work_schedule", ""))
+	assert(not sched_key.is_empty() and work_schedules.has(sched_key), "FATAL: [PremisesWorkplaceBuilder] Role missing valid 'work_schedule' key '%s'." % sched_key)
+	var sched_def: Dictionary = work_schedules[sched_key]
+
+	var bracket_key: String = str(master_job.get("wage_bracket", ""))
+	assert(not bracket_key.is_empty() and wage_brackets.has(bracket_key), "FATAL: [PremisesWorkplaceBuilder] Role missing valid 'wage_bracket' key '%s'." % bracket_key)
+	var bracket_def: Dictionary = wage_brackets[bracket_key]
+
+	var schedule_window: String = str(sched_def.get("schedule_window", "DAYTIME"))
+	var weekly_hours: float = float(sched_def.get("weekly_hours", 37.5))
+	var pay_cadence: String = str(sched_def.get("pay_cadence", "WEEKLY"))
+	var pay_basis: String = str(bracket_def.get("pay_basis", "HOURLY"))
+
+	var min_rate: float = float(bracket_def.get("min_rate", 0.0))
+	var mid_rate: float = float(bracket_def.get("midpoint_rate", 0.0))
+	var max_rate: float = float(bracket_def.get("max_rate", 0.0))
+
+	if pay_basis == "FLAT_STIPEND":
+		return {
+			"schedule_window": schedule_window,
+			"weekly_hours": weekly_hours,
+			"pay_cadence": pay_cadence,
+			"pay_basis": pay_basis,
+			"hourly_rate": 0.0
+		}
+
+	# Employer OCEAN bias modulates rate around bracket midpoint
+	var base_rate: float = mid_rate
+	if employer_wage_bias >= 0.0:
+		base_rate = mid_rate + (employer_wage_bias * (max_rate - mid_rate))
+	else:
+		base_rate = mid_rate + (employer_wage_bias * (mid_rate - min_rate))
+
+	# Unsocial hours & rotating shift uplift applies to HOURLY roles
+	var uplift_pct: float = 0.0
+	if pay_basis == "HOURLY":
+		if schedule_window == "SHIFTS_ROTATING":
+			var rot_key: String = str(sched_def.get("rotation_pattern", "THREE_SHIFT_STANDARD"))
+			var rot_def: Dictionary = shift_rotations.get(rot_key, {})
+			var splits: Dictionary = rot_def.get("shift_splits", {})
+			for s_win in splits.keys():
+				uplift_pct += float(splits[s_win]) * float(shift_uplifts.get(s_win, 0.0))
+		else:
+			uplift_pct = float(shift_uplifts.get(schedule_window, 0.0))
+
+	var final_rate: float = snappedf(((base_rate * (1.0 + uplift_pct)) * estab_multiplier) + estab_bonus, 0.05)
+	return {
+		"schedule_window": schedule_window,
+		"weekly_hours": weekly_hours,
+		"pay_cadence": pay_cadence,
+		"pay_basis": pay_basis,
+		"hourly_rate": final_rate
+	}
+
 static func expand_staffing_slots(
 	slots_array: Array[Dictionary],
 	sql_inserts: Array[String],
@@ -634,6 +745,7 @@ static func expand_staffing_slots(
 	sector_category_code: String, 
 	host_def: Dictionary, 
 	job_definitions: Dictionary,
+	employer_wage_bias: float,
 	sim_start_day: int,
 	reason_id: int,
 	rng: RandomNumberGenerator
@@ -677,27 +789,19 @@ static func expand_staffing_slots(
 			assert(not edu_req.is_empty(), "FATAL: Role '%s' missing mandatory 'education_required'!" % job_code)
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
 
-			var schedule_code: String = str(item.get("schedule_window", master_job.get("schedule_window", "")))
-			assert(not schedule_code.is_empty(), "FATAL: Role '%s' missing mandatory 'schedule_window'!" % job_code)
-			var sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", schedule_code)
+			var role_multiplier: float = float(item.get("wage_multiplier", estab_multiplier))
+			var role_bonus: float = float(item.get("wage_bonus", estab_bonus))
+			var comp: Dictionary = resolve_standardized_compensation(master_job, job_definitions, employer_wage_bias, role_multiplier, role_bonus)
 
-			var hours: float = float(item.get("weekly_hours", master_job.get("weekly_hours", 37.5)))
+			var schedule_code: String = str(item.get("schedule_window", comp["schedule_window"]))
+			var sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", schedule_code)
+			var hours: float = float(item.get("weekly_hours", comp["weekly_hours"]))
+			var resolved_rate: float = float(item["hourly_rate"]) if item.has("hourly_rate") else float(comp["hourly_rate"])
+
 			var is_field: bool = bool(item.get("is_field_worker", master_job.get("is_field_worker", false)))
 			var tied_res: String = str(item.get("tied_accomodation", ""))
-
-			var resolved_rate: float = 3.50
-			if item.has("hourly_rate"):
-				resolved_rate = float(item["hourly_rate"])
-			elif master_job.has("hourly_rate_range"):
-				var r_range: Array = master_job["hourly_rate_range"]
-				var base_rate: float = rng.randf_range(float(r_range[0]), float(r_range[1]))
-				var role_multiplier: float = float(item.get("wage_multiplier", estab_multiplier))
-				var role_bonus: float = float(item.get("wage_bonus", estab_bonus))
-				resolved_rate = snappedf((base_rate * role_multiplier) + role_bonus, 0.05)
-			elif master_job.has("hourly_rate"):
-				resolved_rate = float(master_job["hourly_rate"])
-			else:
-				assert(false, "FATAL: No hourly rate or range declared for role '%s'!" % job_code)
+			var social_tier: String = str(master_job.get("social_tier", "STAFF"))
+			var intel_clearance: float = float(master_job.get("intel_clearance", 0.3))
 
 			var count_range: Array = item.get("target_count", [1, 1])
 			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
@@ -720,6 +824,10 @@ static func expand_staffing_slots(
 					"edu_req": edu_req,
 					"min_education_level_id": edu_id,
 					"schedule_window_id": sched_id,
+					"pay_cadence": comp["pay_cadence"],
+					"pay_basis": comp["pay_basis"],
+					"social_tier": social_tier,
+					"intel_clearance": intel_clearance,
 					"rate": resolved_rate,
 					"hours": hours,
 					"is_field_worker": is_field,
@@ -762,25 +870,22 @@ static func expand_staffing_slots(
 			assert(false, "FATAL: Fallback role '%s' missing mandatory 'contract_type' in building_classes or job_definitions!" % fallback_job)
 
 		var contract_type_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", contract_type_code)
-
 		var contract_class: String = str(master.get("contract_class", "FORMAL_LEGAL"))
 		var formal_class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
-
 		var default_edu: String = str(master.get("education_required", "NO_FORMAL"))
 		var fallback_edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", default_edu)
-
-		var fallback_sched_code: String = str(master.get("schedule_window", "DAYTIME"))
-		var fallback_sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", fallback_sched_code)
-
-		var default_hours: float = float(master.get("weekly_hours", 37.5))
-		var r_range: Array = master.get("hourly_rate_range", [3.20, 3.80])
 		var fallback_role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", fallback_job)
+
+		var comp: Dictionary = resolve_standardized_compensation(master, job_definitions, employer_wage_bias, estab_multiplier, estab_bonus)
+		var fallback_sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", str(comp["schedule_window"]))
+		var default_hours: float = float(comp["weekly_hours"])
+		var rate: float = float(comp["hourly_rate"])
+		var social_tier: String = str(master.get("social_tier", "STAFF"))
+		var intel_clearance: float = float(master.get("intel_clearance", 0.3))
 
 		for _i in range(count):
 			var s_id: int = slot_id_counter
 			slot_id_counter += 1
-
-			var rate: float = snappedf(rng.randf_range(float(r_range[0]), float(r_range[1])) * estab_multiplier, 0.05)
 
 			slots_array.append({
 				"slot_id": s_id,
@@ -795,6 +900,10 @@ static func expand_staffing_slots(
 				"edu_req": default_edu,
 				"min_education_level_id": fallback_edu_id,
 				"schedule_window_id": fallback_sched_id,
+				"pay_cadence": comp["pay_cadence"],
+				"pay_basis": comp["pay_basis"],
+				"social_tier": social_tier,
+				"intel_clearance": intel_clearance,
 				"rate": rate,
 				"hours": default_hours,
 				"is_field_worker": false,

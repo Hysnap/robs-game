@@ -3,6 +3,7 @@ class_name FamilyTreeWeaver
 extends RefCounted
 
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const SQL_BATCH_FLUSH_LIMIT := 1000
 
 ## Extracts and validates the kinship_weaving_rules block from demographics_cfg
@@ -81,7 +82,7 @@ static func _flush_sql_buffer_if_needed(sql_out: Array[String], force: bool = fa
 		DB_MANAGER.execute_batch(sql_out)
 		sql_out.clear()
 
-## Weaves intra-household directional nuclear edges (Spouses, Parents/Children, Siblings, or Flatmates)
+## Weaves intra-household directional nuclear edges (Spouses with realistic marriage date, Parents/Children, Siblings, or Flatmates)
 static func weave_intra_household_edges(
 	sql_out: Array[String],
 	members: Array[Dictionary],
@@ -89,7 +90,8 @@ static func weave_intra_household_edges(
 	home_estab_id: int,
 	kinship_rules: Dictionary,
 	reason_id: int,
-	out_kin_graph: Dictionary
+	out_kin_graph: Dictionary,
+	rng: RandomNumberGenerator = null
 ) -> void:
 	var bonds_cfg: Dictionary = kinship_rules["bonds"]
 	var parents: Array[Dictionary] = []
@@ -105,11 +107,34 @@ static func weave_intra_household_edges(
 		else:
 			peers.append(m)
 
-	# 1. Spousal / Partner Bond
+	# 1. Spousal / Partner Bond with realistic marriage/union day offset
 	if parents.size() >= 2:
 		var p1: Dictionary = parents[0]
 		var p2: Dictionary = parents[1]
-		var bond_start: int = maxi(int(p1["dob"]), int(p2["dob"]))
+		var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
+		var younger_dob: int = maxi(int(p1["dob"]), int(p2["dob"]))
+		var earliest_adult_day: int = younger_dob + int(round(18.0 * 365.25))
+		var latest_union_day: int = sim_start_day
+
+		if not children.is_empty():
+			var eldest_child_dob: int = sim_start_day
+			for c in children:
+				eldest_child_dob = mini(eldest_child_dob, int(c["dob"]))
+			latest_union_day = mini(sim_start_day, eldest_child_dob - 270)
+
+		var bond_start: int = earliest_adult_day
+		if latest_union_day > earliest_adult_day:
+			var span: int = mini(latest_union_day - earliest_adult_day, int(round(10.0 * 365.25)))
+			var offset: int = rng.randi_range(0, span) if rng != null else int(round(float(span) * 0.5))
+			bond_start = earliest_adult_day + offset
+		else:
+			bond_start = mini(sim_start_day, latest_union_day)
+
+		p1["marriage_day"] = bond_start
+		p2["marriage_day"] = bond_start
+		p1["is_married"] = is_married_couple
+		p2["is_married"] = is_married_couple
+
 		var couple_bond_key: String = "MARRIED_SPOUSE" if is_married_couple else "UNMARRIED_COUPLE"
 		_append_bond_pair_sql(sql_out, bonds_cfg, couple_bond_key, couple_bond_key, p1, p2, home_estab_id, bond_start, reason_id)
 

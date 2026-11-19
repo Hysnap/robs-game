@@ -129,15 +129,15 @@ static func _apply_calendar_event_impacts(
 		if not recipient_id.is_empty():
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
 
-## Processes complete operational cycle: resolves directives, advances time via CalendarHelper,
-## triggers ambient drift, rolls daily obligation/postal/calendar ledger, and returns structured cycle report.
+## Processes complete operational cycle across adaptive horizons (day/shift/week/month/quarter)
+## and partitions active/impacted districts (fine resolution) from background districts (coarse cohort rollover).
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
 	var meta: Dictionary = world_state.get("metadata", {})
 	var start_day: int = int(meta.get("current_sim_day", _CalendarHelper.get_simulation_start_day()))
 	var current_day: int = start_day
 	var current_week: int = _CalendarHelper.day_to_week(current_day)
-	var horizon: String = meta.get("time_horizon", "day").to_lower()
+	var horizon: String = str(meta.get("time_horizon", "day")).to_lower().strip_edges()
 	var executed_events: Array = []
 	var diary_memos: Array[String] = []
 
@@ -249,7 +249,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			"target_scope": "DISTRICT",
 			"service_id": "AUTO",
 			"auto_generated_return": true
-			}
+		}
 
 		var author_str: String = _resolve_directive_author(world_state, return_directive)
 		var ret_res: Dictionary = execute_directive(world_state, return_directive)
@@ -271,14 +271,11 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		})
 		diary_memos.append(ret_res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")))
 
-
-	# 2. Advance Temporal Offset via CalendarHelper & Roll Daily Obligation / Postal / Calendar Ledger
-	var days_to_advance := 1
-	match horizon:
-		"day", "shift":
-			days_to_advance = 1
-		"week":
-			days_to_advance = _CalendarHelper.get_days_per_tick()
+	# 2. Resolve Adaptive Horizon Span & Partition Active vs. Background Districts
+	var days_to_advance: int = _resolve_horizon_days(horizon)
+	var district_partition: Dictionary = _partition_districts_by_horizon(world_state, staged_directives)
+	meta["active_districts_in_horizon"] = district_partition["active_districts"]
+	meta["background_district_count"] = district_partition["background_count"]
 
 	var crossed_boundary := _CalendarHelper.crosses_week_boundary(start_day, days_to_advance)
 	var obligation_rollover := {
@@ -333,17 +330,74 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
-	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (week rollover=%s)." % [current_day, crossed_boundary])
+	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (horizon=%s, active_districts=%d, background_districts=%d, week_rollover=%s)." % [
+		current_day, horizon, district_partition["active_districts"].size(), district_partition["background_count"], crossed_boundary
+	])
 
 	return {
 		"current_sim_day": current_day,
 		"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 		"week": meta["current_week_tick"],
 		"day_of_week": dow,
+		"time_horizon": horizon,
+		"active_districts": district_partition["active_districts"],
+		"background_district_count": district_partition["background_count"],
 		"week_rollover": crossed_boundary,
 		"obligation_rollover": obligation_rollover,
 		"executed_events": executed_events,
 		"diary_memos": diary_memos
+	}
+
+## Maps planning time_horizon ('day', 'shift', 'week', 'month', 'quarter') to day step count
+static func _resolve_horizon_days(horizon: String) -> int:
+	match horizon:
+		"day", "shift":
+			return 1
+		"week":
+			return _CalendarHelper.get_days_per_tick()
+		"month":
+			return _CalendarHelper.get_days_per_tick() * 4
+		"quarter":
+			return _CalendarHelper.get_days_per_tick() * 12
+		_:
+			return 1
+
+## Partitions districts into fine-resolution active/impacted districts vs. coarse cohort background districts
+static func _partition_districts_by_horizon(world_state: Dictionary, staged_directives: Array) -> Dictionary:
+	var active_set: Dictionary = {}
+	var all_districts: Dictionary = world_state.get("districts", {})
+	var home_dist: String = str(world_state.get("operations", {}).get("home_district_id", "")).strip_edges()
+	if not home_dist.is_empty() and all_districts.has(home_dist):
+		active_set[home_dist] = true
+
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	for r_key in residents_dict.keys():
+		var rec = residents_dict[r_key]
+		if rec is Dictionary:
+			var cur_d: String = str(rec.get("current_district_id", "")).strip_edges()
+			if not cur_d.is_empty() and all_districts.has(cur_d):
+				active_set[cur_d] = true
+			var base_d: String = str(rec.get("base_district_id", "")).strip_edges()
+			if not base_d.is_empty() and all_districts.has(base_d):
+				active_set[base_d] = true
+
+	for d in staged_directives:
+		if not (d is Dictionary):
+			continue
+		for k in ["target_node_id", "destination_district_id", "origin_district_id"]:
+			var d_cand: String = str(d.get(k, "")).strip_edges()
+			if not d_cand.is_empty() and all_districts.has(d_cand):
+				active_set[d_cand] = true
+
+	var active_list: Array[String] = []
+	for d_id in active_set.keys():
+		active_list.append(str(d_id))
+	active_list.sort()
+
+	var bg_count: int = maxi(0, all_districts.size() - active_list.size())
+	return {
+		"active_districts": active_list,
+		"background_count": bg_count
 	}
 
 static func _append_ledger_rollover_events(

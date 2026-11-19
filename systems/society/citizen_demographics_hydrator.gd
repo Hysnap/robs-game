@@ -12,7 +12,7 @@ const FAMILY_WEAVER = preload("res://systems/society/family_tree_weaver.gd")
 const ANCHOR_ALLOCATOR = preload("res://systems/society/unified_anchor_allocator.gd")
 const GENERATION_AUDITOR = preload("res://systems/society/society_generation_auditor.gd")
 
-## Pass 3: Orchestrates household composition, OCEAN personalities, kinship trees, labor, and individual social anchors
+## Pass 3: Orchestrates household composition, OCEAN personalities, kinship trees, labor, org governance, and calendar schedules
 static func run(
 	physical_state: Dictionary,
 	demographics: Dictionary,
@@ -31,6 +31,7 @@ static func run(
 
 	var archetypes_cfg: Dictionary = MANIFEST_MANAGER.load_module("archetypes")
 	var ocean_rules: Dictionary = MANIFEST_MANAGER.load_module("ocean_personality")
+	var civic_cfg: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
 	var kinship_rules: Dictionary = FAMILY_WEAVER.get_kinship_rules(demographics)
 	var edu_rank_map: Dictionary = HOUSEHOLD_COMPOSER.get_education_rank_map(demographics)
 	var job_roles_cfg: Dictionary = job_definitions.get("roles", job_definitions)
@@ -102,6 +103,7 @@ static func run(
 
 	var resident_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
+	var org_member_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
 	var slot_updates: Array[String] = []
 	var resident_updates: Array[String] = []
@@ -234,6 +236,7 @@ static func run(
 			var assigned_est_id: int = 0
 			var active_contract_class_id: int = -1
 			var active_role_title_id: int = -1
+			var active_sched_id: int = default_daytime_id
 
 			var candidate_ctx: Dictionary = {
 				"resident_id": r_id,
@@ -269,12 +272,27 @@ static func run(
 					compensation_rate = float(slot["rate"])
 					active_contract_class_id = int(slot["contract_class_id"])
 					active_role_title_id = int(slot["role_title_id"])
+					active_sched_id = int(slot.get("schedule_window_id", default_daytime_id))
 
 					if slot.has("slot_id"):
 						slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
 							r_id, int(slot["slot_id"])
 						])
-					
+
+					# Bind organization governance membership for leadership/executive roles at owned establishments
+					var slot_tier: String = str(slot.get("social_tier", "STAFF"))
+					var slot_clearance: float = float(slot.get("intel_clearance", 0.3))
+					if slot_tier == "MANAGEMENT" or slot_clearance >= 0.85:
+						var auth_mask: int = 3 if slot_clearance >= 1.0 else 1
+						org_member_inserts.append("""
+							INSERT OR IGNORE INTO organization_members (
+								org_id, resident_id, role_code, authority_mask, valid_from, valid_to, change_reason_id
+							)
+							SELECT owner_org_id, %d, '%s', %d, %d, NULL, %d
+							FROM establishments
+							WHERE establishment_id = %d AND owner_org_id IS NOT NULL AND owner_org_id != '';
+						""" % [r_id, occ_title, auth_mask, sim_start_day, reason_world_gen_id, assigned_est_id])
+
 					if proprietor_hints.has(assigned_est_id) and is_head:
 						var hint: Dictionary = proprietor_hints[assigned_est_id]
 						proprietor_hints.erase(assigned_est_id)
@@ -342,8 +360,18 @@ static func run(
 					hh_sibling_school_by_cat[anchor_cat] = assigned_est_id
 				if assigned_est_id <= 0:
 					assigned_est_id = pick_anchor(demographics, by_cat, by_cat_and_district, anchor_cat, hh_dist_id, rng)
+				if job_roles_cfg.has(occ_title):
+					var comp: Dictionary = PremisesWorkplaceBuilder.resolve_standardized_compensation(job_roles_cfg[occ_title], job_definitions, 0.0)
+					weekly_hours = float(comp["weekly_hours"])
+					compensation_rate = float(comp["hourly_rate"])
+					active_sched_id = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", str(comp["schedule_window"]))
 			else:
 				assigned_est_id = pick_anchor(demographics, by_cat, by_cat_and_district, anchor_cat, hh_dist_id, rng)
+				if job_roles_cfg.has(occ_title):
+					var comp: Dictionary = PremisesWorkplaceBuilder.resolve_standardized_compensation(job_roles_cfg[occ_title], job_definitions, 0.0)
+					weekly_hours = float(comp["weekly_hours"])
+					compensation_rate = float(comp["hourly_rate"])
+					active_sched_id = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", str(comp["schedule_window"]))
 
 			if assigned_est_id <= 0:
 				assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
@@ -411,15 +439,15 @@ static func run(
 					%d, (SELECT owner_org_id FROM establishments WHERE establishment_id = %d), %d, %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, assigned_est_id, assigned_est_id, class_id, role_id, contract_std_id, default_daytime_id,
+				r_id, assigned_est_id, assigned_est_id, class_id, role_id, contract_std_id, active_sched_id,
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
-		# 5. Weave Directional Intra-Household Nuclear Kinship Edges
+		# 5. Weave Directional Intra-Household Nuclear Kinship Edges (with realistic marriage dates)
 		if hh_member_records.size() > 1:
 			FAMILY_WEAVER.weave_intra_household_edges(
 				edge_inserts, hh_member_records, is_married_couple,
-				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph
+				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph, rng
 			)
 
 		# Flush batches every 250 households for low peak RAM and smooth progress bar updates
@@ -427,7 +455,7 @@ static func run(
 			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
 			var db_t0: int = Time.get_ticks_msec()
 			_flush_stage1_batches(
-				resident_inserts, contract_inserts, edge_inserts,
+				resident_inserts, contract_inserts, org_member_inserts, edge_inserts,
 				slot_updates, tied_household_inserts, resident_updates
 			)
 			var db_time: int = Time.get_ticks_msec() - db_t0
@@ -448,7 +476,7 @@ static func run(
 			chunk_start_ms = Time.get_ticks_msec()
 
 	_flush_stage1_batches(
-		resident_inserts, contract_inserts, edge_inserts,
+		resident_inserts, contract_inserts, org_member_inserts, edge_inserts,
 		slot_updates, tied_household_inserts, resident_updates
 	)
 
@@ -464,6 +492,7 @@ static func run(
 
 	var influx_resident_inserts: Array[String] = []
 	var influx_contract_inserts: Array[String] = []
+	var influx_org_member_inserts: Array[String] = []
 	var influx_hh_inserts: Array[String] = []
 	var influx_slot_updates: Array[String] = []
 	var remaining_unfilled_slots: Array[Dictionary] = []
@@ -581,6 +610,7 @@ static func run(
 
 			var class_id: int = int(slot["contract_class_id"])
 			var role_id: int = int(slot["role_title_id"])
+			var slot_sched_id: int = int(slot.get("schedule_window_id", default_daytime_id))
 
 			influx_contract_inserts.append("""
 				INSERT INTO livelihood_contracts (
@@ -591,9 +621,22 @@ static func run(
 					%d, (SELECT owner_org_id FROM establishments WHERE establishment_id = %d), %d, %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
 				);
 			""" % [
-				r_id, influx_est_id, influx_est_id, class_id, role_id, contract_std_id, default_daytime_id,
+				r_id, influx_est_id, influx_est_id, class_id, role_id, contract_std_id, slot_sched_id,
 				float(slot["hours"]), float(slot["rate"]), sim_start_day, reason_world_gen_id
 			])
+
+			var slot_tier: String = str(slot.get("social_tier", "STAFF"))
+			var slot_clearance: float = float(slot.get("intel_clearance", 0.3))
+			if slot_tier == "MANAGEMENT" or slot_clearance >= 0.85:
+				var auth_mask: int = 3 if slot_clearance >= 1.0 else 1
+				influx_org_member_inserts.append("""
+					INSERT OR IGNORE INTO organization_members (
+						org_id, resident_id, role_code, authority_mask, valid_from, valid_to, change_reason_id
+					)
+					SELECT owner_org_id, %d, '%s', %d, %d, NULL, %d
+					FROM establishments
+					WHERE establishment_id = %d AND owner_org_id IS NOT NULL AND owner_org_id != '';
+				""" % [r_id, role_key, auth_mask, sim_start_day, reason_world_gen_id, influx_est_id])
 
 			if slot.has("slot_id"):
 				influx_slot_updates.append("UPDATE workplace_job_slots SET is_filled = 1, active_resident_id = %d WHERE slot_id = %d;" % [
@@ -619,7 +662,12 @@ static func run(
 		DB_MANAGER.execute_batch(influx_hh_inserts)
 		DB_MANAGER.execute_batch(influx_resident_inserts)
 		DB_MANAGER.execute_batch(influx_contract_inserts)
+		if not influx_org_member_inserts.is_empty():
+			DB_MANAGER.execute_batch(influx_org_member_inserts)
 		DB_MANAGER.execute_batch(influx_slot_updates)
+
+	# Ensure every seeded organization has at least senior contracted representatives in organization_members
+	_backfill_seeded_org_leadership(sim_start_day, reason_world_gen_id)
 
 	# --------------------------------------------------------------------------
 	# STAGE 3: Cross-Household Extended Kinship Tree Weaving (76% -> 85%)
@@ -671,6 +719,11 @@ static func run(
 	if not cohort_edge_inserts.is_empty():
 		DB_MANAGER.execute_batch(cohort_edge_inserts)
 
+	# --------------------------------------------------------------------------
+	# STAGE 5: Layer A Civic & Employer Recurring Schedule Bricks (calendar_events)
+	# --------------------------------------------------------------------------
+	_seed_layer_a_calendar_schedules(civic_cfg, sim_start_day)
+
 	for d_id in districts.keys():
 		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()
 
@@ -684,9 +737,182 @@ static func run(
 	GENERATION_AUDITOR.log_tied_housing_audit(available_tied_housing, local_tied_relocated_count, external_tied_influx_count)
 	GENERATION_AUDITOR.audit_generated_jobs_by_education()
 
+## Ensures seeded organizations have senior contracted staff registered in organization_members
+static func _backfill_seeded_org_leadership(sim_start_day: int, reason_id: int) -> void:
+	DB_MANAGER.execute_batch(["""
+		INSERT OR IGNORE INTO organization_members (
+			org_id, resident_id, role_code, authority_mask, valid_from, valid_to, change_reason_id
+		)
+		SELECT c.employer_org_id, c.resident_id, l_role.code, 2, %d, NULL, %d
+		FROM livelihood_contracts c
+		JOIN system_labels l_role ON c.role_title_id = l_role.label_id
+		WHERE c.employer_org_id IS NOT NULL
+		  AND c.employer_org_id != ''
+		  AND c.valid_to IS NULL
+		  AND c.compensation_rate >= 4.50
+		GROUP BY c.employer_org_id, c.resident_id;
+	""" % [sim_start_day, reason_id]])
+
+## Seeds Layer A recurring civic, benefit, holiday, and employer payday rules into calendar_events
+static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_day: int) -> void:
+	var schedules: Dictionary = civic_cfg.get("civic_schedules", {})
+	var authority_org: String = str(schedules.get("authority_org_id", "ORG:CIVIC"))
+	var events_sql: Array[String] = []
+
+	# 1. 5-Cohort Balanced Unemployment Sign-On (Mon-Fri Fortnightly) & Cascaded Giro Disbursement
+	var sign_on_cfg: Dictionary = schedules.get("unemployment_sign_on", {})
+	var cohort_weekdays: Array = sign_on_cfg.get("cohort_weekdays", [1, 2, 3, 4, 5])
+	var sign_on_rec: int = int(sign_on_cfg.get("recurrence_days", 14))
+	var giro_offset_wd: int = int(sign_on_cfg.get("giro_settlement_working_days", 3))
+	var sign_on_cat: String = str(sign_on_cfg.get("sign_on_location_category", "JOBCENTRE"))
+	var giro_cat: String = str(sign_on_cfg.get("giro_encash_location_category", "POST_OFFICE"))
+
+	for idx in range(cohort_weekdays.size()):
+		var cohort_num: int = idx + 1
+		var target_dow: int = int(cohort_weekdays[idx])
+		var first_sign_day: int = _next_day_for_weekday(sim_start_day, target_dow)
+		var first_giro_day: int = CALENDAR_HELPER.add_working_days(first_sign_day, giro_offset_wd, "POSTAL")
+
+		var sign_impacts := JSON.stringify([{"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "SIGN_ON"}])
+		events_sql.append("""
+			INSERT INTO calendar_events (
+				event_type, title_token, organizer_scope, organizer_id,
+				location_scope, location_id, start_day, end_day, recurrence_days,
+				visibility_scope, impacts_json, status, created_day
+			) VALUES (
+				'SIGN_ON_DAY', 'UI_CAL_SIGN_ON_COHORT_%d', 'ORG', '%s',
+				'CATEGORY', '%s', %d, %d, %d,
+				'PUBLIC', '%s', 'SCHEDULED', %d
+			);
+		""" % [cohort_num, authority_org, sign_on_cat, first_sign_day, first_sign_day, sign_on_rec, sign_impacts, sim_start_day])
+
+		var giro_impacts := JSON.stringify([{"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "GIRO_ENCASH"}])
+		events_sql.append("""
+			INSERT INTO calendar_events (
+				event_type, title_token, organizer_scope, organizer_id,
+				location_scope, location_id, start_day, end_day, recurrence_days,
+				visibility_scope, impacts_json, status, created_day
+			) VALUES (
+				'GIRO_DAY', 'UI_CAL_GIRO_COHORT_%d', 'ORG', '%s',
+				'CATEGORY', '%s', %d, %d, %d,
+				'PUBLIC', '%s', 'SCHEDULED', %d
+			);
+		""" % [cohort_num, authority_org, giro_cat, first_giro_day, first_giro_day, sign_on_rec, giro_impacts, sim_start_day])
+
+	# 2. State Pension Weekly Payday at Post Offices
+	var pension_cfg: Dictionary = schedules.get("state_pension", {})
+	var pension_dow: int = int(pension_cfg.get("weekday", 1))
+	var pension_rec: int = int(pension_cfg.get("recurrence_days", 7))
+	var pension_cat: String = str(pension_cfg.get("encash_location_category", "POST_OFFICE"))
+	var first_pension_day: int = _next_day_for_weekday(sim_start_day, pension_dow)
+	var pension_impacts := JSON.stringify([{"cohort": "PENSIONERS", "action": "STATE_PENSION_DISBURSEMENT"}])
+	events_sql.append("""
+		INSERT INTO calendar_events (
+			event_type, title_token, organizer_scope, organizer_id,
+			location_scope, location_id, start_day, end_day, recurrence_days,
+			visibility_scope, impacts_json, status, created_day
+		) VALUES (
+			'PENSION_DAY', 'UI_CAL_STATE_PENSION_DAY', 'ORG', '%s',
+			'CATEGORY', '%s', %d, %d, %d,
+			'PUBLIC', '%s', 'SCHEDULED', %d
+		);
+	""" % [authority_org, pension_cat, first_pension_day, first_pension_day, pension_rec, pension_impacts, sim_start_day])
+
+	# 3. Organization-Inherited & Default Employer Paydays
+	var default_paydays: Dictionary = schedules.get("employer_default_paydays", {})
+	var weekly_cfg: Dictionary = default_paydays.get("WEEKLY", {"weekday": 5, "recurrence_days": 7})
+	var monthly_cfg: Dictionary = default_paydays.get("MONTHLY", {"recurrence_days": 28})
+	var first_weekly_pay: int = _next_day_for_weekday(sim_start_day, int(weekly_cfg.get("weekday", 5)))
+	var weekly_rec: int = int(weekly_cfg.get("recurrence_days", 7))
+	var monthly_rec: int = int(monthly_cfg.get("recurrence_days", 28))
+
+	# Global fallback paydays for independent single-site employers
+	events_sql.append("""
+		INSERT INTO calendar_events (
+			event_type, title_token, organizer_scope, organizer_id,
+			location_scope, location_id, start_day, end_day, recurrence_days,
+			visibility_scope, impacts_json, status, created_day
+		) VALUES (
+			'WEEKLY_PAYDAY', 'UI_CAL_WEEKLY_PAYDAY', 'GLOBAL', 'INDEPENDENT_EMPLOYERS',
+			'GLOBAL', 'ALL', %d, %d, %d,
+			'PUBLIC', '[{"pay_cadence":"WEEKLY"}]', 'SCHEDULED', %d
+		);
+	""" % [first_weekly_pay, first_weekly_pay, weekly_rec, sim_start_day])
+
+	events_sql.append("""
+		INSERT INTO calendar_events (
+			event_type, title_token, organizer_scope, organizer_id,
+			location_scope, location_id, start_day, end_day, recurrence_days,
+			visibility_scope, impacts_json, status, created_day
+		) VALUES (
+			'MONTHLY_PAYDAY', 'UI_CAL_MONTHLY_PAYDAY', 'GLOBAL', 'INDEPENDENT_EMPLOYERS',
+			'GLOBAL', 'ALL', %d, %d, %d,
+			'PUBLIC', '[{"pay_cadence":"MONTHLY"}]', 'SCHEDULED', %d
+		);
+	""" % [sim_start_day + monthly_rec, sim_start_day + monthly_rec, monthly_rec, sim_start_day])
+
+	# Organization-specific payday schedules inherited from civic_hierarchy institutions
+	var seeded_orgs: Array = civic_cfg.get("institutions", {}).get("seeded_organizations", [])
+	for org_def in seeded_orgs:
+		if not (org_def is Dictionary):
+			continue
+		var oid: String = str(org_def.get("org_id", "")).strip_edges()
+		if oid.is_empty():
+			continue
+		var cadence_raw: String = str(org_def.get("default_pay_cadence", "MONTHLY"))
+		var is_weekly: bool = cadence_raw.begins_with("WEEKLY")
+		var ev_type: String = "WEEKLY_PAYDAY" if is_weekly else "MONTHLY_PAYDAY"
+		var start_d: int = first_weekly_pay if is_weekly else (sim_start_day + monthly_rec)
+		var rec_d: int = weekly_rec if is_weekly else monthly_rec
+		var org_impacts := JSON.stringify([{"org_id": oid, "pay_cadence": "WEEKLY" if is_weekly else "MONTHLY"}])
+		events_sql.append("""
+			INSERT INTO calendar_events (
+				event_type, title_token, organizer_scope, organizer_id,
+				location_scope, location_id, start_day, end_day, recurrence_days,
+				visibility_scope, impacts_json, status, created_day
+			) VALUES (
+				'%s', 'UI_CAL_%s', 'ORG', '%s',
+				'ORG', '%s', %d, %d, %d,
+				'PUBLIC', '%s', 'SCHEDULED', %d
+			);
+		""" % [ev_type, ev_type, oid, oid, start_d, start_d, rec_d, org_impacts, sim_start_day])
+
+	# 4. Public Holidays for Current & Next Simulation Year
+	var start_year: int = CALENDAR_HELPER.day_to_year(sim_start_day)
+	for yr in [start_year, start_year + 1]:
+		var yr_holidays: Dictionary = CALENDAR_HELPER._get_holidays_for_year(yr)
+		var postal_map: Dictionary = yr_holidays.get("POSTAL", {})
+		for h_day_raw in postal_map.keys():
+			var h_day: int = int(h_day_raw)
+			if h_day < sim_start_day:
+				continue
+			var h_id: String = str(postal_map[h_day_raw])
+			var hol_impacts := JSON.stringify([{"holiday_id": h_id, "uplift": "BANK_HOLIDAY"}])
+			events_sql.append("""
+				INSERT INTO calendar_events (
+					event_type, title_token, organizer_scope, organizer_id,
+					location_scope, location_id, start_day, end_day, recurrence_days,
+					visibility_scope, impacts_json, status, created_day
+				) VALUES (
+					'PUBLIC_HOLIDAY', 'UI_HOLIDAY_%s', 'ORG', '%s',
+					'GLOBAL', 'ALL', %d, %d, 0,
+					'PUBLIC', '%s', 'SCHEDULED', %d
+				);
+			""" % [h_id, authority_org, h_day, h_day, hol_impacts, sim_start_day])
+
+	if not events_sql.is_empty():
+		DB_MANAGER.execute_batch(events_sql)
+		SystemLogger.log_info("  ✓ Seeded %d Layer A recurring civic, holiday, and employer calendar schedules." % events_sql.size())
+
+static func _next_day_for_weekday(base_day: int, target_dow: int) -> int:
+	var current_dow: int = CALENDAR_HELPER.day_of_week(base_day)
+	var delta: int = posmod(target_dow - current_dow, 7)
+	return base_day + delta
+
 static func _flush_stage1_batches(
 	resident_inserts: Array[String],
 	contract_inserts: Array[String],
+	org_member_inserts: Array[String],
 	edge_inserts: Array[String],
 	slot_updates: Array[String],
 	tied_household_inserts: Array[String],
@@ -698,6 +924,9 @@ static func _flush_stage1_batches(
 	if not contract_inserts.is_empty():
 		DB_MANAGER.execute_batch(contract_inserts)
 		contract_inserts.clear()
+	if not org_member_inserts.is_empty():
+		DB_MANAGER.execute_batch(org_member_inserts)
+		org_member_inserts.clear()
 	if not edge_inserts.is_empty():
 		DB_MANAGER.execute_batch(edge_inserts)
 		edge_inserts.clear()

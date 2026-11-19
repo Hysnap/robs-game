@@ -5,9 +5,11 @@ extends RefCounted
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const SCENARIO_MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 ## Scouts related young adults in the home district using the configured strategy pipeline,
-## binds secondary grey-economy contracts in SQLite, and stamps operative profiles into world_state["residents"].
+## binds secondary grey-economy contracts & org memberships in SQLite, projects Layer B crew/kin milestones,
+## and stamps operative profiles into world_state["residents"].
 static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_id: String) -> bool:
 	assert(not home_district_id.is_empty(), "FATAL: [CrewScoutBootstrapper] home_district_id cannot be empty.")
 	assert(SCENARIO_MANIFEST_MANAGER.has_module("startpoint"), "FATAL: [CrewScoutBootstrapper] Missing 'startpoint' module.")
@@ -97,14 +99,17 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		schedule_id = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", sched_fallback)
 
 	var bindings: Array[Dictionary] = []
+	var crew_org_member_sql: Array[String] = []
 
-	# 7. Build contract bindings dynamically driven by starting_staff definitions
+	# 7. Build contract bindings & organization memberships dynamically driven by starting_staff definitions
 	for i in range(target_count):
 		var slot_id: String = staff_slots[i]
 		var slot_cfg: Dictionary = starting_staff_configs[slot_id]
 		var r_id: int = selected_resident_ids[i]
 		var role_str: String = str(slot_cfg.get("role", "RUNNER"))
 		var role_title_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", role_str)
+		var is_leader: bool = (i == 0 or bool(slot_cfg.get("is_leader", false)))
+		var auth_mask: int = 3 if is_leader else 1
 
 		bindings.append({
 			"resident_id": r_id,
@@ -118,11 +123,19 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 			"start_day": current_sim_day
 		})
 
+		crew_org_member_sql.append("""
+			INSERT OR IGNORE INTO organization_members (
+				org_id, resident_id, role_code, authority_mask, valid_from, valid_to, change_reason_id
+			) VALUES ('%s', %d, '%s', %d, %d, NULL, %d);
+		""" % [employer_org_id.replace("'", "''"), r_id, role_str.replace("'", "''"), auth_mask, current_sim_day, reason_world_gen_id])
+
 	# 8. Execute batch inserts and agent activation in SQLite
 	var db_ok: bool = SOCIETY_QUERIES.bind_crew_contracts_and_activate(bindings)
 	if not db_ok:
 		push_error("[CrewScoutBootstrapper] Failed to execute database contract binding batch.")
 		return false
+	if not crew_org_member_sql.is_empty():
+		DB_MANAGER.execute_batch(crew_org_member_sql)
 
 	# 9. Hydrate canonical world_state["residents"] directly from database profile and slot config
 	if not world_state.has("residents"):
@@ -179,7 +192,10 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 
 		world_state["residents"][r_id] = resident_entry
 
-	# 10. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
+	# 10. Project Layer B Personal & Kinship Milestones (Birthdays & Wedding Anniversaries) into calendar_events
+	project_personal_milestones_for_agents(selected_resident_ids, current_sim_day)
+
+	# 11. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
 	if leader_home_estab_id > 0:
 		DB_MANAGER.execute_batch([
 			"UPDATE organizations SET hq_establishment_id = %d WHERE org_id = '%s';" % [
@@ -204,6 +220,115 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		world_state["establishments"][leader_home_estab_id]["inventory"] = inv
 
 	return true
+
+## Reusable Layer B Lego Brick: projects annual BIRTHDAY and WEDDING_ANNIVERSARY calendar_events
+## for active agents and their 1st/2nd-degree kin (supports pre-1900 negative DOB offsets cleanly).
+static func project_personal_milestones_for_agents(agent_ids: Array[int], current_sim_day: int) -> void:
+	if agent_ids.is_empty():
+		return
+	var id_strs: Array[String] = []
+	for aid in agent_ids:
+		if aid > 0:
+			id_strs.append(str(aid))
+	if id_strs.is_empty():
+		return
+	var in_clause := ", ".join(id_strs)
+
+	# Gather crew + co-residents + 1st-degree kin
+	var person_rows: Array = DB_MANAGER.query_rows("""
+		SELECT DISTINCT r.resident_id, r.dob, h.establishment_id
+		FROM residents r
+		JOIN households h ON r.household_id = h.household_id
+		WHERE r.dod IS NULL AND (
+			r.resident_id IN (%s)
+			OR r.household_id IN (SELECT household_id FROM residents WHERE resident_id IN (%s))
+			OR r.resident_id IN (
+				SELECT sr.to_resident_id
+				FROM social_relationships sr
+				JOIN system_labels l ON sr.relationship_type_id = l.label_id
+				WHERE sr.from_resident_id IN (%s)
+				  AND sr.valid_to IS NULL
+				  AND l.code NOT IN ('CIVIC_PEER', 'DRINKING_MATE', 'CONGREGATIONAL')
+			)
+		);
+	""" % [in_clause, in_clause, in_clause])
+
+	var current_year: int = CALENDAR_HELPER.day_to_year(current_sim_day)
+	var events_sql: Array[String] = []
+
+	for p in person_rows:
+		var r_id: int = int(p.get("resident_id", 0))
+		var dob_offset: int = int(p.get("dob", 0))
+		var home_est: int = int(p.get("establishment_id", 1))
+		if r_id <= 0:
+			continue
+		var ymd: Array[int] = CALENDAR_HELPER._day_offset_to_ymd(dob_offset)
+		var b_month: int = ymd[1]
+		var b_day: int = mini(ymd[2], CALENDAR_HELPER._days_in_gregorian_month(current_year, b_month))
+		var next_bday: int = CALENDAR_HELPER._ymd_to_day_offset(current_year, b_month, b_day)
+		if next_bday < current_sim_day:
+			var next_yr := current_year + 1
+			var next_d := mini(ymd[2], CALENDAR_HELPER._days_in_gregorian_month(next_yr, b_month))
+			next_bday = CALENDAR_HELPER._ymd_to_day_offset(next_yr, b_month, next_d)
+
+		var b_impacts := JSON.stringify([ {"resident_id": r_id, "milestone": "BIRTHDAY"}])
+		events_sql.append("""
+			INSERT INTO calendar_events (
+				event_type, title_token, organizer_scope, organizer_id,
+				location_scope, location_id, start_day, end_day, recurrence_days,
+				visibility_scope, impacts_json, status, created_day
+			) VALUES (
+				'BIRTHDAY', 'UI_CAL_BIRTHDAY', 'RESIDENT', '%d',
+				'ESTABLISHMENT', '%d', %d, %d, 365,
+				'HOUSEHOLD', '%s', 'SCHEDULED', %d
+			);
+		""" % [r_id, home_est, next_bday, next_bday, b_impacts, current_sim_day])
+
+	# Project wedding anniversaries from MARRIED_SPOUSE edges in social_relationships
+	var marriage_rows: Array = DB_MANAGER.query_rows("""
+		SELECT DISTINCT
+			MIN(sr.from_resident_id, sr.to_resident_id) AS spouse_a,
+			MAX(sr.from_resident_id, sr.to_resident_id) AS spouse_b,
+			sr.valid_from AS marriage_day,
+			COALESCE(sr.context_establishment_id, 1) AS home_est
+		FROM social_relationships sr
+		JOIN system_labels l ON sr.relationship_type_id = l.label_id
+		WHERE l.code IN ('HUSBAND', 'WIFE')
+		  AND sr.valid_to IS NULL
+		  AND (sr.from_resident_id IN (%s) OR sr.to_resident_id IN (%s));
+	""" % [in_clause, in_clause])
+
+	for m in marriage_rows:
+		var sp_a: int = int(m.get("spouse_a", 0))
+		var sp_b: int = int(m.get("spouse_b", 0))
+		var m_offset: int = int(m.get("marriage_day", 0))
+		var home_est: int = int(m.get("home_est", 1))
+		if sp_a <= 0 or sp_b <= 0:
+			continue
+		var m_ymd: Array[int] = CALENDAR_HELPER._day_offset_to_ymd(m_offset)
+		var m_month: int = m_ymd[1]
+		var m_day: int = mini(m_ymd[2], CALENDAR_HELPER._days_in_gregorian_month(current_year, m_month))
+		var next_anniv: int = CALENDAR_HELPER._ymd_to_day_offset(current_year, m_month, m_day)
+		if next_anniv < current_sim_day:
+			var next_yr := current_year + 1
+			var next_d := mini(m_ymd[2], CALENDAR_HELPER._days_in_gregorian_month(next_yr, m_month))
+			next_anniv = CALENDAR_HELPER._ymd_to_day_offset(next_yr, m_month, next_d)
+
+		var a_impacts := JSON.stringify([ {"spouse_a": sp_a, "spouse_b": sp_b, "milestone": "WEDDING_ANNIVERSARY"}])
+		events_sql.append("""
+			INSERT INTO calendar_events (
+				event_type, title_token, organizer_scope, organizer_id,
+				location_scope, location_id, start_day, end_day, recurrence_days,
+				visibility_scope, impacts_json, status, created_day
+			) VALUES (
+				'WEDDING_ANNIVERSARY', 'UI_CAL_WEDDING_ANNIVERSARY', 'RESIDENT', '%d',
+				'ESTABLISHMENT', '%d', %d, %d, 365,
+				'HOUSEHOLD', '%s', 'SCHEDULED', %d
+			);
+		""" % [sp_a, home_est, next_anniv, next_anniv, a_impacts, current_sim_day])
+
+	if not events_sql.is_empty():
+		DB_MANAGER.execute_batch(events_sql)
 
 ## Iterates through the strategy pipeline, instantiating each strategy file dynamically
 static func _execute_pipeline(pipeline: Array, base_context: Dictionary) -> Array[int]:
