@@ -117,13 +117,13 @@ func set_home_district(district_id: String) -> void:
 
 	set_selected_district(district_id)
 
-	# Anchor starting crew roster to this district and seed initial local district intel
-	var staff_dict: Dictionary = world_state.get("staff", {})
-	for staff_id in staff_dict.keys():
-		if staff_dict[staff_id] is Dictionary:
-			var member: Dictionary = staff_dict[staff_id]
-			member["current_district_id"] = district_id
-			var obs_id: String = str(member.get("resident_id", staff_id))
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	for res_key in residents_dict.keys():
+		var rec = residents_dict[res_key]
+		if rec is Dictionary and bool(rec.get("is_crew", true)):
+			rec["current_district_id"] = district_id
+			var r_id: int = int(rec.get("resident_id", 0))
+			var obs_id: String = str(r_id) if r_id > 0 else str(res_key)
 			if not obs_id.is_empty():
 				INTEL_MANAGER.apply_effort_impulse(
 					world_state,
@@ -135,7 +135,6 @@ func set_home_district(district_id: String) -> void:
 					{"distance": 0.0, "access_permeability": 1.0}
 				)
 
-	# Physically anchor pending starting inventory into the leader's residence
 	_anchor_starting_inventory_to_home(district_id)
 
 	district_updated.emit(district_id)
@@ -145,29 +144,37 @@ func _anchor_starting_inventory_to_home(district_id: String) -> void:
 	if _pending_starting_inventory.is_empty():
 		return
 
-	var districts: Dictionary = world_state.get("districts", {})
-	if not districts.has(district_id):
+	var estabs: Dictionary = world_state.get("establishments", {})
+	if estabs.is_empty():
 		return
 
-	var venues: Dictionary = districts[district_id].get("venues", {})
-	var target_venue_id: String = ""
+	var target_estab_key: Variant = null
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	for res_key in residents_dict.keys():
+		var rec = residents_dict[res_key]
+		if rec is Dictionary and bool(rec.get("is_crew", true)) and bool(rec.get("is_leader", false)):
+			var home_est_id: int = int(rec.get("home_establishment_id", rec.get("establishment_id", 0)))
+			if home_est_id > 0 and estabs.has(home_est_id):
+				target_estab_key = home_est_id
+			elif home_est_id > 0 and estabs.has(str(home_est_id)):
+				target_estab_key = str(home_est_id)
+			break
 
-	var leader_data: Dictionary = world_state.get("staff", {}).get("crew_0", {})
-	var res_est_id: String = str(leader_data.get("establishment_id", leader_data.get("residence_establishment_id", "")))
-	
-	if not res_est_id.is_empty() and venues.has(res_est_id):
-		target_venue_id = res_est_id
-	elif not venues.is_empty():
-		target_venue_id = str(venues.keys()[0])
+	if target_estab_key == null:
+		for e_key in estabs.keys():
+			var e_rec = estabs[e_key]
+			if e_rec is Dictionary and str(e_rec.get("district_id", "")) == district_id:
+				target_estab_key = e_key
+				break
 
-	if not target_venue_id.is_empty():
-		var target_venue: Dictionary = venues[target_venue_id]
-		if not target_venue.has("inventory"):
-			target_venue["inventory"] = {}
+	if target_estab_key != null:
+		var target_est: Dictionary = estabs[target_estab_key]
+		if not target_est.has("inventory") or not (target_est["inventory"] is Dictionary):
+			target_est["inventory"] = {}
 		for item_k in _pending_starting_inventory.keys():
 			var qty: float = float(_pending_starting_inventory[item_k])
-			target_venue["inventory"][item_k] = float(target_venue["inventory"].get(item_k, 0.0)) + qty
-		SystemLogger.log_info("[GAME_STATE] Anchored starting inventory into establishment '%s' in '%s'." % [target_venue_id, district_id])
+			target_est["inventory"][item_k] = float(target_est["inventory"].get(item_k, 0.0)) + qty
+		SystemLogger.log_info("[GAME_STATE] Anchored starting inventory into establishment '%s' in '%s'." % [str(target_estab_key), district_id])
 		_pending_starting_inventory.clear()
 
 ## Helper to dynamically map all keys in a config section without hardcoding property names
@@ -182,25 +189,45 @@ func _load_section_into_state(config: ConfigFile, section_name: String, target_d
 ## Builds the active crew observer descriptor list for IntelManager collective queries
 func get_player_observers() -> Array:
 	var observers: Array = []
-	var staff_dict: Dictionary = world_state.get("staff", {})
-	for staff_id in staff_dict.keys():
-		var member = staff_dict[staff_id]
-		if not (member is Dictionary):
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var ops_cfg: Dictionary = world_state.get("operations", {})
+	var crew_org_id: String = str(ops_cfg.get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
+	var hq_estab_id: int = int(ops_cfg.get("hq_establishment_id", 0))
+	var seen_ids: Array[int] = []
+
+	for res_key in residents_dict.keys():
+		var rec = residents_dict[res_key]
+		if not (rec is Dictionary) or not bool(rec.get("is_crew", true)):
 			continue
-		var obs_id: String = str(member.get("resident_id", staff_id))
+		var r_id: int = int(rec.get("resident_id", 0))
+		if r_id > 0 and seen_ids.has(r_id):
+			continue
+		if r_id > 0:
+			seen_ids.append(r_id)
+
+		var obs_id: String = str(r_id) if r_id > 0 else str(res_key)
 		if obs_id.is_empty():
 			continue
+
 		var affs: Array = []
-		var home_est_id: String = str(member.get("home_establishment_id", member.get("residence_establishment_id", "")))
-		if not home_est_id.is_empty() and home_est_id != "0":
-			affs.append({"org_scope": "ESTABLISHMENT", "org_id": home_est_id, "clearance": 1.0})
-		var emp_id: String = str(member.get("employer_entity_id", ""))
-		if not emp_id.is_empty() and emp_id != "0":
+		if not crew_org_id.is_empty():
+			var crew_clearance: float = 1.0 if bool(rec.get("is_leader", false)) else float(rec.get("crew_clearance", 0.85))
+			affs.append({"org_scope": "ORG", "org_id": crew_org_id, "clearance": crew_clearance})
+		if hq_estab_id > 0:
+			affs.append({"org_scope": "ESTABLISHMENT", "org_id": str(hq_estab_id), "clearance": 1.0})
+
+		var home_est_id: int = int(rec.get("home_establishment_id", rec.get("establishment_id", 0)))
+		if home_est_id > 0:
+			affs.append({"org_scope": "ESTABLISHMENT", "org_id": str(home_est_id), "clearance": 1.0})
+
+		var work_est_id: int = int(rec.get("primary_employer_establishment_id", 0))
+		if work_est_id > 0:
 			affs.append({
 				"org_scope": "ESTABLISHMENT",
-				"org_id": emp_id,
-				"role_code": str(member.get("role_code", member.get("role", "")))
+				"org_id": str(work_est_id),
+				"role_code": str(rec.get("primary_role_code", rec.get("role_title", rec.get("role", "")))).strip_edges()
 			})
+
 		observers.append({
 			"observer_scope": "RESIDENT",
 			"observer_id": obs_id,

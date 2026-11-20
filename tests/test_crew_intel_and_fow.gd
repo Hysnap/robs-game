@@ -169,19 +169,30 @@ func _test_crew_addresses_and_kinship(world_state: Dictionary) -> bool:
 				SELECT sr.to_resident_id
 				FROM social_relationships sr
 				JOIN system_labels l ON sr.relationship_type_id = l.label_id
-				WHERE sr.from_resident_id = %d AND l.code = 'FAMILY' AND sr.valid_to IS NULL;
+				WHERE sr.from_resident_id = %d
+				  AND l.code IN ('FAMILY', 'HUSBAND', 'WIFE', 'PARTNER', 'FATHER', 'MOTHER', 'SON', 'DAUGHTER', 'BROTHER', 'SISTER', 'HOUSEHOLD_PEER')
+				  AND sr.valid_to IS NULL;
 			""" % r_id)
 			if family_edges.is_empty():
-				printerr("FAIL [Test 2]: Operative %d shares household %d but has no FAMILY edges." % [r_id, hh_id])
+				printerr("FAIL [Test 2]: Operative %d shares household %d but has no kinship edges." % [r_id, hh_id])
 				return false
 
-	var leader_est_dict: Dictionary = world_state.get("establishments", {}).get(str(leader_estab_id), {})
+	var leader_est_dict: Dictionary = world_state.get("establishments", {}).get(leader_estab_id, {})
 	var stash_cash: float = float(leader_est_dict.get("inventory", {}).get("CASH", 0.0))
 	if stash_cash <= 0.0:
 		printerr("FAIL [Test 2]: Starting stash was not anchored to leader home establishment %d." % leader_estab_id)
 		return false
 
-	print("PASS [Test 2]: All %d crew operatives anchored to physical homes, kinship edges verified, £%.2f stash anchored." % [residents.size(), stash_cash])
+	var known_locs: Array[Dictionary] = INTEL_MANAGER.get_known_locations("block_0_0", world_state)
+	var known_est_count: int = 0
+	for loc in known_locs:
+		if str(loc.get("type", "")) == "ESTABLISHMENT":
+			known_est_count += 1
+	if known_est_count <= 0:
+		printerr("FAIL [Test 2]: No establishments surfaced in block_0_0 via flood-down/trickle-up knowledge_pools.")
+		return false
+
+	print("PASS [Test 2]: All %d crew operatives anchored to physical homes, kinship edges verified, £%.2f stash anchored, %d establishments known." % [residents.size(), stash_cash, known_est_count])
 	return true
 
 ## Test 3 (Item c): Secondary Relationship Firewall blocks 2nd-degree acquaintance leaks until continuous intel impulse
@@ -289,7 +300,8 @@ func _test_household_and_workplace_fog_of_war(world_state: Dictionary) -> bool:
 	var known_est_strs: Array[String] = ["0"]
 	for crew_id in intel_ctx.get("crew_resident_ids", []):
 		var prof: Dictionary = SOCIETY_QUERIES.get_resident_profile(int(crew_id), 29219)
-		var emp_est_id: int = int(prof.get("employer_establishment_id", 0))
+		var raw_emp = prof.get("employer_establishment_id", null)
+		var emp_est_id: int = int(raw_emp) if raw_emp != null else 0
 		if emp_est_id > 0:
 			known_est_strs.append(str(emp_est_id))
 

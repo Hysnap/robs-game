@@ -2,8 +2,272 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.3.0",
-    "description": "Master dictionary of baseline occupational roles, qualifications, hours, wage rates, age boundaries, and institutional intel clearance."
+    "version": "1.5.0",
+    "description": "Master dictionary of standardized work schedules, rotating shift splits, unsocial hours uplifts, wage brackets, and occupational roles."
+  },
+  "shift_uplifts": {
+    "DAYTIME": 0.0,
+    "MORNING": 0.1,
+    "EVENING": 0.15,
+    "WEEKEND": 0.25,
+    "NIGHT": 0.33,
+    "BANK_HOLIDAY": 1.0
+  },
+  "shift_rotations": {
+    "THREE_SHIFT_STANDARD": {
+      "cycle_days": 7,
+      "days_on": 5,
+      "days_off": 2,
+      "shift_splits": {
+        "MORNING": 0.4,
+        "EVENING": 0.4,
+        "NIGHT": 0.2
+      }
+    },
+    "CONTINENTAL_4_ON_4_OFF": {
+      "cycle_days": 8,
+      "days_on": 4,
+      "days_off": 4,
+      "shift_splits": {
+        "MORNING": 0.34,
+        "EVENING": 0.33,
+        "NIGHT": 0.33
+      }
+    },
+    "TWO_SHIFT_SPLIT": {
+      "cycle_days": 7,
+      "days_on": 5,
+      "days_off": 2,
+      "shift_splits": {
+        "MORNING": 0.6,
+        "EVENING": 0.4
+      }
+    }
+  },
+  "work_schedules": {
+    "DAYTIME_STANDARD_30": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 30.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "DAYTIME_STANDARD_36": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 36.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "DAYTIME_STANDARD_37": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 37.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "DAYTIME_STANDARD_37_5": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 37.5,
+      "pay_cadence": "MONTHLY"
+    },
+    "DAYTIME_STANDARD_38": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 38.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "DAYTIME_STANDARD_39": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 39.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "DAYTIME_STANDARD_40": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 40.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "DAYTIME_STANDARD_42": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 42.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "DAYTIME_EXECUTIVE_45": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 45.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "DAYTIME_ACADEMIC_30": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 30.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "DAYTIME_ACADEMIC_35": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 35.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "EARLY_MORNING_38": {
+      "schedule_window": "MORNING",
+      "weekly_hours": 38.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "EARLY_MORNING_40": {
+      "schedule_window": "MORNING",
+      "weekly_hours": 40.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "EVENING_LATE_30": {
+      "schedule_window": "EVENING",
+      "weekly_hours": 30.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "EVENING_SUPERVISORY_44": {
+      "schedule_window": "EVENING",
+      "weekly_hours": 44.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "PART_TIME_DAYTIME_15": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 15.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "PART_TIME_EVENING_20": {
+      "schedule_window": "EVENING",
+      "weekly_hours": 20.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "WEEKEND_PART_TIME_18": {
+      "schedule_window": "WEEKEND",
+      "weekly_hours": 18.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "WEEKEND_PART_TIME_25": {
+      "schedule_window": "WEEKEND",
+      "weekly_hours": 25.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ENCLAVE_DAYTIME_20": {
+      "schedule_window": "DAYTIME",
+      "weekly_hours": 20.0,
+      "pay_cadence": "CIVIC_STIPEND"
+    },
+    "ROTATING_SHIFTS_37_5": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "THREE_SHIFT_STANDARD",
+      "weekly_hours": 37.5,
+      "pay_cadence": "MONTHLY"
+    },
+    "ROTATING_SHIFTS_38": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "TWO_SHIFT_SPLIT",
+      "weekly_hours": 38.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ROTATING_SHIFTS_39": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "THREE_SHIFT_STANDARD",
+      "weekly_hours": 39.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "ROTATING_SHIFTS_40": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "THREE_SHIFT_STANDARD",
+      "weekly_hours": 40.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ROTATING_SHIFTS_42": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "CONTINENTAL_4_ON_4_OFF",
+      "weekly_hours": 42.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ROTATING_SHIFTS_44": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "THREE_SHIFT_STANDARD",
+      "weekly_hours": 44.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "MEDICAL_ROTATING_48": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "CONTINENTAL_4_ON_4_OFF",
+      "weekly_hours": 48.0,
+      "pay_cadence": "MONTHLY"
+    },
+    "MEDICAL_ROTATING_54": {
+      "schedule_window": "SHIFTS_ROTATING",
+      "rotation_pattern": "CONTINENTAL_4_ON_4_OFF",
+      "weekly_hours": 54.0,
+      "pay_cadence": "MONTHLY"
+    }
+  },
+  "wage_brackets": {
+    "BRACKET_CUSTODIAL": {
+      "pay_basis": "HOURLY",
+      "min_rate": 0.5,
+      "midpoint_rate": 0.85,
+      "max_rate": 1.2
+    },
+    "BRACKET_ENCLAVE_GRANT": {
+      "pay_basis": "FLAT_STIPEND",
+      "min_rate": 0.0,
+      "midpoint_rate": 0.0,
+      "max_rate": 0.0,
+      "flat_weekly_stipend": 48.0
+    },
+    "BRACKET_APPRENTICE": {
+      "pay_basis": "HOURLY",
+      "min_rate": 1.9,
+      "midpoint_rate": 2.25,
+      "max_rate": 2.6
+    },
+    "BRACKET_UNSKILLED": {
+      "pay_basis": "HOURLY",
+      "min_rate": 2.6,
+      "midpoint_rate": 3.0,
+      "max_rate": 3.4
+    },
+    "BRACKET_SEMI_SKILLED": {
+      "pay_basis": "HOURLY",
+      "min_rate": 3.1,
+      "midpoint_rate": 3.55,
+      "max_rate": 4.0
+    },
+    "BRACKET_CLERICAL": {
+      "pay_basis": "HOURLY",
+      "min_rate": 3.2,
+      "midpoint_rate": 3.7,
+      "max_rate": 4.2
+    },
+    "BRACKET_PROTECTIVE": {
+      "pay_basis": "HOURLY",
+      "min_rate": 3.6,
+      "midpoint_rate": 4.1,
+      "max_rate": 4.6
+    },
+    "BRACKET_SKILLED_TRADE": {
+      "pay_basis": "HOURLY",
+      "min_rate": 3.7,
+      "midpoint_rate": 4.45,
+      "max_rate": 5.2
+    },
+    "BRACKET_SUPERVISORY": {
+      "pay_basis": "HOURLY",
+      "min_rate": 3.8,
+      "midpoint_rate": 4.6,
+      "max_rate": 5.4
+    },
+    "BRACKET_PROFESSIONAL": {
+      "pay_basis": "SALARIED",
+      "min_rate": 4.2,
+      "midpoint_rate": 5.2,
+      "max_rate": 6.2
+    },
+    "BRACKET_SENIOR_MANAGEMENT": {
+      "pay_basis": "SALARIED",
+      "min_rate": 5.0,
+      "midpoint_rate": 6.75,
+      "max_rate": 8.5
+    },
+    "BRACKET_EXECUTIVE_SPECIALIST": {
+      "pay_basis": "SALARIED",
+      "min_rate": 6.5,
+      "midpoint_rate": 9.25,
+      "max_rate": 12.0
+    }
   },
   "roles": {
     "COMMERCIAL_CLEANER": {
@@ -11,39 +275,60 @@
       "contract_class": "FORMAL_LEGAL",
       "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
-      "weekly_hours": 20.0,
-      "hourly_rate_range": [2.6, 3.1],
-      "schedule_window": "EVENING",
+      "work_schedule": "PART_TIME_EVENING_20",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "extraversion": -0.1,
+        "openness": -0.05,
+        "neuroticism": 0.0
+      }
     },
     "SCHOOL_MEALS_STAFF": {
       "display_name": "School Meals Assistant / Dinner Lady",
       "contract_class": "FORMAL_LEGAL",
       "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
-      "weekly_hours": 15.0,
-      "hourly_rate_range": [2.7, 3.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "PART_TIME_DAYTIME_15",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 62,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.35,
+        "extraversion": 0.2,
+        "conscientiousness": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.1
+      }
     },
     "SCHOOL_CARETAKER": {
       "display_name": "School Caretaker & Custodian",
       "contract_class": "FORMAL_LEGAL",
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.4, 3.9],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.1,
+        "extraversion": 0.0,
+        "openness": -0.05,
+        "neuroticism": -0.15
+      }
     },
     "CIVIC_CLERK_OR_OFFICIAL": {
       "display_name": "Clerical Officer / Administrator",
@@ -51,13 +336,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.4, 4.1],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "extraversion": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "CLERK": {
       "display_name": "Clerical Officer",
@@ -65,13 +357,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.4, 4.1],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "extraversion": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "CIVIC_OFFICIAL": {
       "display_name": "Senior Executive Officer",
@@ -79,13 +378,20 @@
       "contract_type": "STANDARD",
       "education_required": "UNIVERSITY_DEGREE",
       "max_commute": 20000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [5.0, 6.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 28,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "extraversion": 0.25,
+        "openness": 0.2,
+        "agreeableness": -0.05,
+        "neuroticism": -0.25
+      }
     },
     "COUNCIL_MANUAL_LABOUR": {
       "display_name": "Council Direct Labour / Dustman / Highways",
@@ -93,13 +399,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.2,
+        "extraversion": 0.15,
+        "agreeableness": 0.1,
+        "openness": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "MUNICIPAL_BUS_DRIVER": {
       "display_name": "Municipal Corporation Bus Driver",
@@ -107,13 +420,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 42.0,
-      "hourly_rate_range": [3.8, 4.4],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_42",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.1,
+        "extraversion": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.25
+      }
     },
     "PRIMARY_TEACHER": {
       "display_name": "Primary School Teacher",
@@ -121,13 +441,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 35.0,
-      "hourly_rate_range": [4.0, 4.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_35",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.5,
+        "conscientiousness": 0.35,
+        "openness": 0.25,
+        "extraversion": 0.25,
+        "neuroticism": -0.2
+      }
     },
     "TEACHER_OR_STAFF": {
       "display_name": "Comprehensive Secondary Teacher",
@@ -135,13 +462,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 35.0,
-      "hourly_rate_range": [4.2, 5.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_35",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.4,
+        "conscientiousness": 0.35,
+        "openness": 0.3,
+        "extraversion": 0.25,
+        "neuroticism": -0.2
+      }
     },
     "LECTURER": {
       "display_name": "Higher Education Lecturer",
@@ -149,13 +483,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 37.0,
-      "hourly_rate_range": [5.0, 6.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 26,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.55,
+        "conscientiousness": 0.35,
+        "extraversion": 0.2,
+        "agreeableness": 0.15,
+        "neuroticism": -0.1
+      }
     },
     "LECTURER_OR_ADMIN": {
       "display_name": "Higher Education Lecturer / Administrator",
@@ -163,13 +504,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 37.0,
-      "hourly_rate_range": [4.5, 6.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.5,
+        "conscientiousness": 0.4,
+        "extraversion": 0.15,
+        "agreeableness": 0.15,
+        "neuroticism": -0.1
+      }
     },
     "CONSULTANT": {
       "display_name": "NHS Senior Hospital Consultant",
@@ -177,13 +525,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 45.0,
-      "hourly_rate_range": [8.5, 12.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_EXECUTIVE_45",
+      "wage_bracket": "BRACKET_EXECUTIVE_SPECIALIST",
       "age_min": 35,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.35,
+        "extraversion": 0.2,
+        "agreeableness": 0.15,
+        "neuroticism": -0.35
+      }
     },
     "HOSPITAL_DOCTOR": {
       "display_name": "Hospital Physician",
@@ -191,13 +546,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 48.0,
-      "hourly_rate_range": [6.2, 7.8],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "MEDICAL_ROTATING_48",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 25,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "agreeableness": 0.3,
+        "openness": 0.3,
+        "extraversion": 0.15,
+        "neuroticism": -0.3
+      }
     },
     "HOSPITAL_RESIDENT_DOCTOR": {
       "display_name": "Hospital Registrar",
@@ -205,13 +567,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 5000,
-      "weekly_hours": 54.0,
-      "hourly_rate_range": [5.5, 6.8],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "MEDICAL_ROTATING_54",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 23,
       "age_max": 34,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "agreeableness": 0.25,
+        "openness": 0.3,
+        "extraversion": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "HOSPITAL_NURSE": {
       "display_name": "State Registered Nurse",
@@ -219,13 +588,20 @@
       "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 20000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [4.2, 5.1],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.5,
+        "conscientiousness": 0.4,
+        "extraversion": 0.2,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "STUDENT_NURSE": {
       "display_name": "Student Nurse",
@@ -233,13 +609,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [2.6, 3.2],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_37_5",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 18,
       "age_max": 25,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.45,
+        "conscientiousness": 0.3,
+        "extraversion": 0.2,
+        "openness": 0.15,
+        "neuroticism": -0.15
+      }
     },
     "HOSPITAL_SUPPORT_STAFF": {
       "display_name": "Hospital Orderly",
@@ -247,13 +630,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.0, 3.5],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_40",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.3,
+        "conscientiousness": 0.25,
+        "extraversion": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.15
+      }
     },
     "AMBULANCE_CREW": {
       "display_name": "Ambulance Driver",
@@ -261,13 +651,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.8, 4.4],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_40",
+      "wage_bracket": "BRACKET_PROTECTIVE",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "agreeableness": 0.35,
+        "extraversion": 0.2,
+        "openness": 0.1,
+        "neuroticism": -0.35
+      }
     },
     "DHSS_OFFICER": {
       "display_name": "DHSS Executive Officer",
@@ -275,13 +672,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.0,
-      "hourly_rate_range": [3.5, 4.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.05,
+        "openness": 0.0,
+        "extraversion": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "PRISON_OFFICER": {
       "display_name": "HM Prison Officer",
@@ -289,13 +693,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 39.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_39",
+      "wage_bracket": "BRACKET_PROTECTIVE",
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": false,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.15,
+        "agreeableness": -0.15,
+        "openness": -0.1,
+        "neuroticism": -0.35
+      }
     },
     "POLICE_OFFICER": {
       "display_name": "Uniformed Police Officer",
@@ -303,13 +714,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 39.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_39",
+      "wage_bracket": "BRACKET_PROTECTIVE",
       "age_min": 21,
       "age_max": 60,
       "is_field_worker": true,
-      "intel_clearance": 0.6
+      "intel_clearance": 0.6,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.2,
+        "agreeableness": 0.05,
+        "openness": -0.05,
+        "neuroticism": -0.35
+      }
     },
     "POLICE_CONSTABLE": {
       "display_name": "Probationary Police Constable",
@@ -317,13 +735,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.5, 4.2],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_40",
+      "wage_bracket": "BRACKET_PROTECTIVE",
       "age_min": 18,
       "age_max": 28,
       "is_field_worker": true,
-      "intel_clearance": 0.4
+      "intel_clearance": 0.4,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "extraversion": 0.2,
+        "agreeableness": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.3
+      }
     },
     "DETECTIVE": {
       "display_name": "Plain Clothes Officer",
@@ -331,13 +756,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 39.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_39",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 24,
       "age_max": 60,
       "is_field_worker": true,
-      "intel_clearance": 0.85
+      "intel_clearance": 0.85,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.3,
+        "extraversion": 0.2,
+        "agreeableness": -0.05,
+        "neuroticism": -0.35
+      }
     },
     "PARK_KEEPER": {
       "display_name": "Municipal Park Keeper & Gardener",
@@ -345,13 +777,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [3.0, 3.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.3,
+        "agreeableness": 0.15,
+        "openness": 0.1,
+        "extraversion": -0.1,
+        "neuroticism": -0.15
+      }
     },
     "GROUNDSMAN_OR_STEWARD": {
       "display_name": "Groundsman / Event Steward",
@@ -359,13 +798,20 @@
       "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 18.0,
-      "hourly_rate_range": [3.0, 3.4],
-      "schedule_window": "WEEKEND",
+      "work_schedule": "WEEKEND_PART_TIME_18",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.25,
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "openness": 0.0,
+        "neuroticism": -0.15
+      }
     },
     "CLERGY": {
       "display_name": "Parish Minister",
@@ -373,13 +819,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 35.0,
-      "hourly_rate_range": [3.2, 4.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_35",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 24,
       "age_max": 70,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "agreeableness": 0.55,
+        "conscientiousness": 0.45,
+        "extraversion": 0.3,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "CARETAKER": {
       "display_name": "Caretaker",
@@ -387,13 +840,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.0, 3.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.15,
+        "extraversion": -0.05,
+        "openness": -0.05,
+        "neuroticism": -0.15
+      }
     },
     "CLERGY_OR_CARETAKER": {
       "display_name": "Church Custodian",
@@ -401,13 +861,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 30.0,
-      "hourly_rate_range": [2.8, 3.3],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_30",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 21,
       "age_max": 70,
       "is_field_worker": false,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "agreeableness": 0.4,
+        "conscientiousness": 0.4,
+        "extraversion": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.2
+      }
     },
     "PRACTICE_STAFF": {
       "display_name": "Medical Receptionist",
@@ -415,13 +882,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 35.0,
-      "hourly_rate_range": [3.2, 3.7],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_35",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "agreeableness": 0.35,
+        "extraversion": 0.25,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COMMERCIAL_SERVICE": {
       "display_name": "Shop Worker",
@@ -429,13 +903,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.2, 3.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "agreeableness": 0.3,
+        "conscientiousness": 0.2,
+        "openness": 0.05,
+        "neuroticism": -0.1
+      }
     },
     "MANUAL_WORKS": {
       "display_name": "Site Laborer",
@@ -443,13 +924,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.8, 4.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "extraversion": 0.15,
+        "agreeableness": 0.1,
+        "openness": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "BUILDING_TRADESMAN": {
       "display_name": "Skilled Tradesman (Bricklayer / Joiner / Sparky)",
@@ -457,13 +945,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.2, 5.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 20,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "extraversion": 0.15,
+        "agreeableness": 0.1,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "DISPATCHER_OR_CONTROLLER": {
       "display_name": "Minicab Dispatcher",
@@ -471,13 +966,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [3.2, 3.7],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_38",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "extraversion": 0.3,
+        "agreeableness": 0.05,
+        "openness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "CAB_DRIVER": {
       "display_name": "Private Hire Cab Driver",
@@ -485,13 +987,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 44.0,
-      "hourly_rate_range": [2.9, 3.6],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_44",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 21,
       "age_max": 70,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.3,
+        "conscientiousness": 0.2,
+        "openness": 0.15,
+        "agreeableness": 0.1,
+        "neuroticism": -0.15
+      }
     },
     "OFFICE_MANAGER": {
       "display_name": "Office Supervisor",
@@ -499,13 +1008,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.8, 4.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.3,
+        "openness": 0.1,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "DEPOT_MANAGER": {
       "display_name": "Foreman",
@@ -513,13 +1029,20 @@
       "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.5, 5.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 28,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.35,
+        "openness": 0.05,
+        "agreeableness": -0.05,
+        "neuroticism": -0.3
+      }
     },
     "WORKS_CONVENOR": {
       "display_name": "Union Shop Steward",
@@ -527,13 +1050,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 10000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.5, 5.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 30,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.5,
+        "conscientiousness": 0.35,
+        "openness": 0.25,
+        "agreeableness": 0.15,
+        "neuroticism": -0.2
+      }
     },
     "VEHICLE_MECHANIC": {
       "display_name": "Commercial Fitter / Motor Mechanic",
@@ -541,13 +1071,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.1, 4.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "openness": 0.1,
+        "agreeableness": 0.1,
+        "extraversion": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COACH_OR_LORRY_DRIVER": {
       "display_name": "HGV / Long-Distance Coach Driver",
@@ -555,13 +1092,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 42.0,
-      "hourly_rate_range": [3.8, 4.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_42",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "openness": 0.1,
+        "extraversion": 0.0,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "POSTAL_CLERK": {
       "display_name": "Postal Clerk",
@@ -569,13 +1113,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.4, 4.1],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": 0.15,
+        "openness": 0.0,
+        "neuroticism": -0.15
+      }
     },
     "SPORTSMAN": {
       "display_name": "Sports Ground Staff / Athlete",
@@ -583,13 +1134,20 @@
       "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 25.0,
-      "hourly_rate_range": [3.0, 4.0],
-      "schedule_window": "WEEKEND",
+      "work_schedule": "WEEKEND_PART_TIME_25",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 18,
       "age_max": 35,
       "is_field_worker": true,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "conscientiousness": 0.35,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "APPRENTICE_BAKER": {
       "display_name": "Apprentice Baker",
@@ -597,13 +1155,20 @@
       "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [2.1, 2.6],
-      "schedule_window": "MORNING",
+      "work_schedule": "EARLY_MORNING_38",
+      "wage_bracket": "BRACKET_APPRENTICE",
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.3,
+        "agreeableness": 0.2,
+        "openness": 0.15,
+        "extraversion": 0.05,
+        "neuroticism": -0.1
+      }
     },
     "APPRENTICE_BUTCHER": {
       "display_name": "Apprentice Butcher",
@@ -611,13 +1176,20 @@
       "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [2.1, 2.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_APPRENTICE",
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.3,
+        "extraversion": 0.15,
+        "agreeableness": 0.15,
+        "openness": 0.05,
+        "neuroticism": -0.1
+      }
     },
     "APPRENTICE_HAIRDRESSER": {
       "display_name": "Apprentice Hairdresser",
@@ -625,13 +1197,20 @@
       "contract_type": "APPRENTICESHIP",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 36.0,
-      "hourly_rate_range": [1.9, 2.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_36",
+      "wage_bracket": "BRACKET_APPRENTICE",
       "age_min": 16,
       "age_max": 20,
       "is_field_worker": false,
-      "intel_clearance": 0.25
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "agreeableness": 0.3,
+        "openness": 0.25,
+        "conscientiousness": 0.2,
+        "neuroticism": -0.1
+      }
     },
     "BAKER": {
       "display_name": "Baker / Master Confectioner",
@@ -639,13 +1218,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "MORNING",
+      "work_schedule": "EARLY_MORNING_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.2,
+        "openness": 0.15,
+        "extraversion": 0.1,
+        "neuroticism": -0.15
+      }
     },
     "BANK_MANAGER": {
       "display_name": "Bank Branch Manager",
@@ -653,13 +1239,20 @@
       "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 15000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [6.2, 8.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 30,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "extraversion": 0.25,
+        "openness": 0.1,
+        "agreeableness": 0.0,
+        "neuroticism": -0.3
+      }
     },
     "BANK_TELLER": {
       "display_name": "Bank Cashier / Teller",
@@ -667,13 +1260,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.2, 3.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.55
+      "intel_clearance": 0.55,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": 0.15,
+        "openness": 0.0,
+        "neuroticism": -0.2
+      }
     },
     "BOOKMAKER": {
       "display_name": "Bookmaker",
@@ -681,13 +1281,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.8, 4.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "conscientiousness": 0.35,
+        "openness": 0.15,
+        "agreeableness": -0.1,
+        "neuroticism": -0.25
+      }
     },
     "BUSINESS_ADVISOR": {
       "display_name": "Commercial Business Advisor",
@@ -695,13 +1302,20 @@
       "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 10000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [4.8, 6.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 25,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.3,
+        "openness": 0.25,
+        "agreeableness": 0.1,
+        "neuroticism": -0.2
+      }
     },
     "BUTCHER": {
       "display_name": "Master Butcher",
@@ -709,13 +1323,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.7, 4.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "extraversion": 0.25,
+        "agreeableness": 0.2,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
     },
     "COURT_CLERK_LEGAL": {
       "display_name": "Clerk to the Justices",
@@ -723,13 +1344,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [5.5, 7.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.25,
+        "extraversion": 0.1,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
     },
     "ESTATE_AGENT": {
       "display_name": "Estate Agent",
@@ -737,13 +1365,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [4.2, 5.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": true,
-      "intel_clearance": 0.65
+      "intel_clearance": 0.65,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.5,
+        "conscientiousness": 0.3,
+        "openness": 0.15,
+        "agreeableness": 0.05,
+        "neuroticism": -0.2
+      }
     },
     "FIREFIGHTER": {
       "display_name": "Firefighter (Leading Fireman / Fireman)",
@@ -751,13 +1386,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
-      "weekly_hours": 42.0,
-      "hourly_rate_range": [3.9, 4.6],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_42",
+      "wage_bracket": "BRACKET_PROTECTIVE",
       "age_min": 19,
       "age_max": 55,
       "is_field_worker": true,
-      "intel_clearance": 0.5
+      "intel_clearance": 0.5,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.3,
+        "agreeableness": 0.25,
+        "openness": 0.05,
+        "neuroticism": -0.4
+      }
     },
     "FIRE_OFFICER": {
       "display_name": "Station Officer",
@@ -765,13 +1407,20 @@
       "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 12000,
-      "weekly_hours": 42.0,
-      "hourly_rate_range": [4.8, 5.8],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_42",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 26,
       "age_max": 55,
       "is_field_worker": true,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "extraversion": 0.35,
+        "agreeableness": 0.15,
+        "openness": 0.1,
+        "neuroticism": -0.4
+      }
     },
     "FORKLIFT_DRIVER": {
       "display_name": "Forklift Truck Driver",
@@ -779,13 +1428,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.6, 4.3],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "extraversion": 0.05,
+        "agreeableness": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.2
+      }
     },
     "HAIRDRESSER_OR_BARBER": {
       "display_name": "Stylist / Barber",
@@ -793,13 +1449,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [3.0, 3.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "agreeableness": 0.35,
+        "openness": 0.25,
+        "conscientiousness": 0.25,
+        "neuroticism": -0.1
+      }
     },
     "INVESTMENT_ADVISOR": {
       "display_name": "Investment / Securities Advisor",
@@ -807,13 +1470,20 @@
       "contract_type": "STANDARD",
       "education_required": "POLYTECHNIC_DIPLOMA",
       "max_commute": 15000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [5.0, 6.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.35,
+        "openness": 0.25,
+        "agreeableness": -0.05,
+        "neuroticism": -0.25
+      }
     },
     "KITCHEN_STAFF": {
       "display_name": "Cook / Kitchen Porter",
@@ -821,13 +1491,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 38.0,
-      "hourly_rate_range": [2.8, 3.4],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_38",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.3,
+        "extraversion": 0.15,
+        "openness": 0.1,
+        "agreeableness": 0.1,
+        "neuroticism": -0.1
+      }
     },
     "LAUNDRY_WORKER": {
       "display_name": "Launderette / Dry Cleaning Attendant",
@@ -835,13 +1512,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [2.7, 3.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.2,
+        "extraversion": 0.1,
+        "openness": -0.05,
+        "neuroticism": -0.05
+      }
     },
     "LEGAL_EXECUTIVE": {
       "display_name": "Legal Executive",
@@ -849,13 +1533,20 @@
       "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [4.5, 5.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 21,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "openness": 0.2,
+        "extraversion": 0.15,
+        "agreeableness": 0.05,
+        "neuroticism": -0.2
+      }
     },
     "LIBRARIAN": {
       "display_name": "Chartered Borough Librarian",
@@ -863,13 +1554,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 10000,
-      "weekly_hours": 37.0,
-      "hourly_rate_range": [4.6, 5.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.5,
+        "conscientiousness": 0.45,
+        "agreeableness": 0.25,
+        "extraversion": -0.1,
+        "neuroticism": -0.15
+      }
     },
     "LIBRARY_ASSISTANT": {
       "display_name": "Library Assistant",
@@ -877,13 +1575,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 35.0,
-      "hourly_rate_range": [3.1, 3.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_ACADEMIC_35",
+      "wage_bracket": "BRACKET_CLERICAL",
       "age_min": 17,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.4
+      "intel_clearance": 0.4,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "openness": 0.35,
+        "conscientiousness": 0.35,
+        "agreeableness": 0.25,
+        "extraversion": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "LOANS_OFFICER": {
       "display_name": "Bank Advances & Loans Officer",
@@ -891,13 +1596,20 @@
       "contract_type": "STANDARD",
       "education_required": "A_LEVELS",
       "max_commute": 10000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [4.6, 5.8],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
       "age_min": 24,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.8
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "extraversion": 0.2,
+        "openness": 0.1,
+        "agreeableness": 0.0,
+        "neuroticism": -0.25
+      }
     },
     "PETROL_PUMP_ATTENDANT": {
       "display_name": "Forecourt Petrol Pump Attendant",
@@ -905,13 +1617,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [2.8, 3.3],
-      "schedule_window": "SHIFTS_ROTATING",
+      "work_schedule": "ROTATING_SHIFTS_40",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.3
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.2,
+        "extraversion": 0.2,
+        "agreeableness": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.1
+      }
     },
     "PHARMACIST": {
       "display_name": "Dispensing Chemist / MPS Pharmacist",
@@ -919,13 +1638,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 15000,
-      "weekly_hours": 39.0,
-      "hourly_rate_range": [5.5, 7.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_39",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.75
+      "intel_clearance": 0.75,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "agreeableness": 0.3,
+        "openness": 0.25,
+        "extraversion": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "RESTAURANT_MANAGER": {
       "display_name": "Restaurant / Takeaway Manager",
@@ -933,13 +1659,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 44.0,
-      "hourly_rate_range": [3.8, 4.8],
-      "schedule_window": "EVENING",
+      "work_schedule": "EVENING_SUPERVISORY_44",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 23,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "conscientiousness": 0.4,
+        "agreeableness": 0.2,
+        "openness": 0.15,
+        "neuroticism": -0.25
+      }
     },
     "RETAIL_COUNTER_STAFF": {
       "display_name": "Counter Assistant / Shop Assistant",
@@ -947,13 +1680,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 37.5,
-      "hourly_rate_range": [2.8, 3.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "agreeableness": 0.35,
+        "conscientiousness": 0.2,
+        "openness": 0.05,
+        "neuroticism": -0.1
+      }
     },
     "SERVING_STAFF": {
       "display_name": "Waiter / Waitress / Table Service",
@@ -961,13 +1701,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 30.0,
-      "hourly_rate_range": [2.7, 3.3],
-      "schedule_window": "EVENING",
+      "work_schedule": "EVENING_LATE_30",
+      "wage_bracket": "BRACKET_UNSKILLED",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "agreeableness": 0.35,
+        "conscientiousness": 0.2,
+        "openness": 0.1,
+        "neuroticism": -0.15
+      }
     },
     "SHOP_MANAGER": {
       "display_name": "Retail Shop Manager",
@@ -975,13 +1722,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.8, 4.6],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 22,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.4,
+        "agreeableness": 0.2,
+        "openness": 0.1,
+        "neuroticism": -0.25
+      }
     },
     "SOLICITOR": {
       "display_name": "Practising Solicitor",
@@ -989,13 +1743,20 @@
       "contract_type": "STANDARD",
       "education_required": "DEGREE_OR_HIGHER",
       "max_commute": 20000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [6.5, 9.0],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
       "age_min": 24,
       "age_max": 68,
       "is_field_worker": false,
-      "intel_clearance": 1.0
+      "intel_clearance": 1.0,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.3,
+        "extraversion": 0.25,
+        "agreeableness": 0.0,
+        "neuroticism": -0.3
+      }
     },
     "TOOLMAKER_FITTER": {
       "display_name": "Precision Toolmaker / Fitter",
@@ -1003,13 +1764,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 10000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.4, 5.4],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 20,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.15,
+        "agreeableness": 0.1,
+        "extraversion": 0.0,
+        "neuroticism": -0.2
+      }
     },
     "WAREHOUSE_OPERATIVE": {
       "display_name": "Warehouseman / Picker & Packer",
@@ -1017,13 +1785,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 5000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [3.3, 3.9],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
       "age_min": 18,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.15,
+        "extraversion": 0.05,
+        "openness": -0.05,
+        "neuroticism": -0.1
+      }
     },
     "WELDER_FABRICATOR": {
       "display_name": "Plater / Welder / Fabricator",
@@ -1031,13 +1806,20 @@
       "contract_type": "STANDARD",
       "education_required": "O_LEVELS_CSE",
       "max_commute": 8000,
-      "weekly_hours": 40.0,
-      "hourly_rate_range": [4.3, 5.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
       "age_min": 19,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.35
+      "intel_clearance": 0.35,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "openness": 0.05,
+        "agreeableness": 0.1,
+        "extraversion": 0.05,
+        "neuroticism": -0.2
+      }
     },
     "HIGHER_ED_STUDENT": {
       "display_name": "Polytechnic / University Undergraduate",
@@ -1045,13 +1827,20 @@
       "contract_type": "PART_TIME",
       "education_required": "A_LEVELS",
       "max_commute": 5000,
-      "weekly_hours": 20.0,
-      "hourly_rate_range": [1.5, 2.5],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "ENCLAVE_DAYTIME_20",
+      "wage_bracket": "BRACKET_ENCLAVE_GRANT",
       "age_min": 18,
       "age_max": 24,
       "is_field_worker": false,
-      "intel_clearance": 0.2
+      "intel_clearance": 0.2,
+      "social_tier": "ENCLAVE",
+      "ocean_affinities": {
+        "openness": 0.45,
+        "conscientiousness": 0.25,
+        "extraversion": 0.25,
+        "agreeableness": 0.15,
+        "neuroticism": 0.05
+      }
     },
     "PRISON_INMATE": {
       "display_name": "Custodial Inmate",
@@ -1059,13 +1848,20 @@
       "contract_type": "STANDARD",
       "education_required": "NO_FORMAL",
       "max_commute": 500,
-      "weekly_hours": 30.0,
-      "hourly_rate_range": [0.5, 1.2],
-      "schedule_window": "DAYTIME",
+      "work_schedule": "DAYTIME_STANDARD_30",
+      "wage_bracket": "BRACKET_CUSTODIAL",
       "age_min": 17,
       "age_max": 65,
       "is_field_worker": false,
-      "intel_clearance": 0.1
+      "intel_clearance": 0.1,
+      "social_tier": "ENCLAVE",
+      "ocean_affinities": {
+        "conscientiousness": -0.2,
+        "agreeableness": -0.25,
+        "extraversion": 0.1,
+        "openness": 0.0,
+        "neuroticism": 0.2
+      }
     }
   }
 }

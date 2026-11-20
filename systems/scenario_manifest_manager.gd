@@ -49,7 +49,7 @@ static func has_module(module_key: String) -> bool:
 	var modules: Dictionary = manifest.get("modules", {})
 	return modules.has(module_key)
 
-## Resolves the file path for a named module declared in the manifest
+## Resolves the file or directory path for a named module declared in the manifest
 static func get_module_path(module_key: String) -> String:
 	var manifest: Dictionary = get_manifest()
 	var modules: Dictionary = manifest.get("modules", {})
@@ -57,7 +57,8 @@ static func get_module_path(module_key: String) -> String:
 	
 	var path: String = str(modules[module_key]).strip_edges()
 	assert(not path.is_empty(), "FATAL: Module path for '%s' is empty in manifest" % module_key)
-	assert(FileAccess.file_exists(path), "FATAL: Module file on disk not found for '%s': %s" % [module_key, path])
+	var exists_on_disk: bool = FileAccess.file_exists(path) or DirAccess.dir_exists_absolute(path)
+	assert(exists_on_disk, "FATAL: Module path on disk not found for '%s': %s" % [module_key, path])
 	
 	return path
 

@@ -16,6 +16,7 @@ static func harvest_all_taxonomies() -> Array[Dictionary]:
 	_harvest_civic_hierarchy(harvested, seen_keys)
 	_harvest_demographics(harvested, seen_keys)
 	_harvest_building_classes(harvested, seen_keys)
+	_harvest_job_definitions(harvested, seen_keys)
 
 	return harvested
 
@@ -106,45 +107,56 @@ static func _harvest_civic_hierarchy(out_list: Array[Dictionary], seen: Dictiona
 static func _harvest_demographics(out_list: Array[Dictionary], seen: Dictionary) -> void:
 	var demo_data: Dictionary = MANIFEST_MANAGER.load_module("demographics")
 	
-	# Education Tiers
+	# 1. Education Tiers (from default_code, ocean_tier_nudges, cohort_attainment_rates, and optional tiers list)
 	var edu_model: Dictionary = demo_data.get("education_attainment_model", {})
 	var def_edu: String = str(edu_model.get("default_code", "NO_FORMAL")).to_upper()
 	_add_token(out_list, seen, "EDUCATION_LEVEL", def_edu, def_edu.capitalize().replace("_", " "))
+
+	var ocean_nudges: Dictionary = edu_model.get("ocean_tier_nudges", {})
+	for edu_code in ocean_nudges.keys():
+		var c_str: String = str(edu_code).to_upper()
+		_add_token(out_list, seen, "EDUCATION_LEVEL", c_str, c_str.capitalize().replace("_", " "))
+
+	for cohort_rate in edu_model.get("cohort_attainment_rates", []):
+		if cohort_rate is Dictionary:
+			for prob_key in ["male_probabilities", "female_probabilities"]:
+				var probs: Dictionary = cohort_rate.get(prob_key, {})
+				for edu_code in probs.keys():
+					var c_str: String = str(edu_code).to_upper()
+					_add_token(out_list, seen, "EDUCATION_LEVEL", c_str, c_str.capitalize().replace("_", " "))
+
 	for tier in edu_model.get("tiers", []):
 		var t_code: String = str(tier.get("code", "")).to_upper()
 		if not t_code.is_empty():
 			_add_token(out_list, seen, "EDUCATION_LEVEL", t_code, t_code.capitalize().replace("_", " "))
 
-	# Deep Cohort Profile Roles (Fixed, Labor Market, and Probabilistic Branches)
+	# 2. Kinship & Household Relationship Types from fertility_and_family_model.kinship_weaving_rules.bonds
+	var family_model: Dictionary = demo_data.get("fertility_and_family_model", {})
+	var kinship_rules: Dictionary = family_model.get("kinship_weaving_rules", {})
+	var bonds: Dictionary = kinship_rules.get("bonds", {})
+	for bond_key in bonds.keys():
+		var bond_def = bonds[bond_key]
+		if bond_def is Dictionary:
+			for sub_key in bond_def.keys():
+				if sub_key == "affinity":
+					continue
+				var rel_code: String = str(bond_def[sub_key]).strip_edges().to_upper()
+				if not rel_code.is_empty():
+					_add_token(out_list, seen, "RELATIONSHIP_TYPE", rel_code, rel_code.capitalize().replace("_", " "))
+
+	# 3. Deep Cohort Profile Roles (Fixed, Labor Market, and Probabilistic Branches)
 	for c in demo_data.get("cohort_profiles", []):
 		for role_field in ["role", "unemployed_role", "commercial_role", "industrial_role"]:
 			if c.has(role_field):
 				var r_code: String = str(c[role_field]).to_upper()
 				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_code.capitalize().replace("_", " "))
 
-		for branch_key in ["if_true", "if_false"]:
+		for branch_key in ["if_true", "if_false", "unemployed_branch"]:
 			if c.has(branch_key) and c[branch_key] is Dictionary:
 				var branch: Dictionary = c[branch_key]
 				if branch.has("role"):
 					var b_code: String = str(branch["role"]).to_upper()
 					_add_token(out_list, seen, "ROLE_TITLE", b_code, b_code.capitalize().replace("_", " "))
-
-static func _add_token(out_list: Array[Dictionary], seen: Dictionary, domain: String, code: String, title: String) -> void:
-	var d_clean := domain.strip_edges().to_upper()
-	var c_clean := code.strip_edges().to_upper()
-	if c_clean.is_empty():
-		return
-
-	var signature := "%s:%s" % [d_clean, c_clean]
-	if seen.has(signature):
-		return
-
-	seen[signature] = true
-	out_list.append({
-		"domain": d_clean,
-		"code": c_clean,
-		"title": title
-	})
 
 static func _harvest_building_classes(out_list: Array[Dictionary], seen: Dictionary) -> void:
 	if not MANIFEST_MANAGER.has_module("building_classes"):
@@ -170,3 +182,31 @@ static func _harvest_building_classes(out_list: Array[Dictionary], seen: Diction
 					if roster_entry is Dictionary and roster_entry.has("job_id"):
 						var j_code: String = str(roster_entry["job_id"]).to_upper()
 						_add_token(out_list, seen, "ROLE_TITLE", j_code, j_code.capitalize().replace("_", " "))
+
+static func _harvest_job_definitions(out_list: Array[Dictionary], seen: Dictionary) -> void:
+	if not MANIFEST_MANAGER.has_module("job_definitions"):
+		return
+
+	var job_defs: Dictionary = MANIFEST_MANAGER.load_module("job_definitions")
+	var roles: Dictionary = job_defs.get("roles", {})
+	for role_code in roles.keys():
+		var r_data: Dictionary = roles[role_code]
+		var r_title: String = str(r_data.get("display_name", str(role_code).capitalize().replace("_", " ")))
+		_add_token(out_list, seen, "ROLE_TITLE", str(role_code), r_title)
+
+static func _add_token(out_list: Array[Dictionary], seen: Dictionary, domain: String, code: String, title: String) -> void:
+	var d_clean := domain.strip_edges().to_upper()
+	var c_clean := code.strip_edges().to_upper()
+	if c_clean.is_empty():
+		return
+
+	var signature := "%s:%s" % [d_clean, c_clean]
+	if seen.has(signature):
+		return
+
+	seen[signature] = true
+	out_list.append({
+		"domain": d_clean,
+		"code": c_clean,
+		"title": title
+	})

@@ -13,9 +13,13 @@
       "display_name": "White British",
       "religion_distribution": {
         "PROTESTANT_COFE": 0.58,
-        "PROTESTANT_OTHER": 0.12,
+        "PROTESTANT_OTHER": 0.10,
+        "PENTECOSTAL_PROTESTANT": 0.02,
         "CATHOLIC": 0.08,
-        "SECULAR_NONE": 0.22
+        "JEWISH_PROGRESSIVE": 0.01,
+        "BUDDIST": 0.01,
+        "MUSLIM": 0.01,
+        "SECULAR_NONE": 0.20
       },
       "surnames_pool": "surnames"
     },
@@ -45,14 +49,15 @@
         "MUSLIM": 0.53,
         "SIKH": 0.28,
         "HINDU": 0.17,
-        "PROTESTANT_OTHER": 0.02
+        "PROTESTANT_OTHER": 0.01,
+        "SECULAR_NONE": 0.11
       },
       "surnames_pool": "surnames_south_asian"
     },
     "CHINESE": {
       "display_name": "Chinese",
       "religion_distribution": {
-        "BUDDHIST_TAOIST": 0.45,
+        "BUDDHIST": 0.45,
         "PROTESTANT_OTHER": 0.15,
         "CATHOLIC": 0.05,
         "SECULAR_NONE": 0.35
@@ -62,8 +67,10 @@
     "EUROPEAN_POLISH_CZECH": {
       "display_name": "Polish / Central European",
       "religion_distribution": {
-        "CATHOLIC": 0.82,
-        "JEWISH": 0.05,
+        "CATHOLIC": 0.70,
+        "EASTERN_ORTHODOX": 0.12,
+        "JEWISH_PROGRESSIVE": 0.03,
+        "JEWISH_CONSERVATIVE": 0.02,
         "PROTESTANT_OTHER": 0.03,
         "SECULAR_NONE": 0.10
       },
@@ -72,8 +79,11 @@
     "EUROPEAN_UKRAINIAN_EASTERN": {
       "display_name": "Ukrainian / Eastern European",
       "religion_distribution": {
-        "EASTERN_ORTHODOX": 0.65,
+        "EASTERN_ORTHODOX": 0.60,
+        "PROTESTANT_OTHER": 0.05,
         "CATHOLIC": 0.25,
+        "JEWISH_PROGRESSIVE": 0.03,
+        "JEWISH_CONSERVATIVE": 0.02,
         "SECULAR_NONE": 0.10
       },
       "surnames_pool": "surnames_eastern_european"
@@ -81,8 +91,10 @@
     "EUROPEAN_ITALIAN_MEDITERRANEAN": {
       "display_name": "Italian / Mediterranean",
       "religion_distribution": {
-        "CATHOLIC": 0.65,
-        "EASTERN_ORTHODOX": 0.25,
+        "CATHOLIC": 0.60,
+        "PROTESTANT_OTHER": 0.05,
+        "EASTERN_ORTHODOX": 0.23,
+        "JEWISH_PROGRESSIVE": 0.02,
         "SECULAR_NONE": 0.10
       },
       "surnames_pool": "surnames_mediterranean"
@@ -90,7 +102,9 @@
     "EUROPEAN_JEWISH": {
       "display_name": "Ashkenazi Jewish",
       "religion_distribution": {
-        "JEWISH": 0.85,
+        "JEWISH_ORTHODOX": 0.05,
+        "JEWISH_CONSERVATIVE": 0.25,
+        "JEWISH_PROGRESSIVE": 0.55,
         "SECULAR_NONE": 0.15
       },
       "surnames_pool": "surnames_jewish"
@@ -98,9 +112,13 @@
     "EUROPEAN_WESTERN_OTHER": {
       "display_name": "Western European (French / German / Other)",
       "religion_distribution": {
-        "CATHOLIC": 0.35,
-        "PROTESTANT_OTHER": 0.35,
-        "SECULAR_NONE": 0.30
+        "CATHOLIC": 0.30,
+        "PROTESTANT_OTHER": 0.34,
+        "EASTERN_ORTHODOX": 0.04,
+        "BUDDIST": 0.01,
+        "MUSLIM": 0.02,
+        "JEWISH_PROGRESSIVE": 0.01,
+        "SECULAR_NONE": 0.28
       },
       "surnames_pool": "surnames_western_european"
     }

@@ -36,23 +36,25 @@
 	]
   },
   "modules": {
-	"startpoint": "res://data_modules/crime/startpoints/street_crew_1980.json",
+	"archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
+	"building_classes": "res://data_modules/core/spatial/society/building_classes.json",
+	"city_configuration": "res://resources/city/default_european_city.tres",
+	"civic_hierarchy": "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json",
+	"cultural_demographics": "res://data_modules/core/spatial/society/cultural_demographics_1980s_midlands.json",
+	"db_labels": "res://data_modules/core/localization/db_labels_en_gb.json",
+	"db_schema": "res://data_modules/core/schema/",
+	"extra_schema_dir": "res://data_modules/crime/schema/",
+	"demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
 	"fog_of_war": "res://data_modules/core/spatial/districts/fog_of_war_rules.json",
 	"impact_routing": "res://data_modules/core/impacts/routing_manifest.json",
 	"intel_exposure": "res://data_modules/core/spatial/districts/intel_exposure_rules.json",
-	"db_labels": "res://data_modules/core/localization/db_labels_en_gb.json",
-	"archetypes": "res://data_modules/core/spatial/districts/archetypes.json",
-	"demographics": "res://data_modules/core/spatial/society/demographics_1980s_uk.json",
-	"lexicon": "res://data_modules/core/spatial/society/names.json",
-	"spatial_lexicon": "res://data_modules/core/spatial/districts/names/en_gb.json",
-	"cultural_demographics": "res://data_modules/core/spatial/society/cultural_demographics_1980s_midlands.json",
-	"civic_hierarchy": "res://data_modules/core/spatial/society/civic_hierarchy_1980s_uk.json",
-	"obligation_types": "res://data_modules/core/economy/obligation_types.json",
-	"settlement_rails": "res://data_modules/core/economy/settlement_rails.json",
-	"building_classes": "res://data_modules/core/spatial/society/building_classes.json",
-	"city_configuration": "res://resources/city/default_european_city.tres",
 	"job_definitions": "res://data_modules/core/spatial/society/job_definitions.json",
+	"lexicon": "res://data_modules/core/spatial/society/names.json",
+	"obligation_types": "res://data_modules/core/economy/obligation_types.json",
+	"ocean_personality": "res://data_modules/core/spatial/society/ocean_personality_rules.json",
+	"settlement_rails": "res://data_modules/core/economy/settlement_rails.json",
+	"spatial_lexicon": "res://data_modules/core/spatial/districts/names/en_gb.json",
+	"startpoint": "res://data_modules/crime/startpoints/street_crew_1980.json",
 	"transport_modes": "res://data_modules/core/spatial/transport/transport_modes.json"
   }
 }
-

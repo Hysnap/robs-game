@@ -116,7 +116,14 @@
 	],
 	"consumer_desperation_index": 0.3,
 	"actual_police_heat": 0.45,
-	"corruption_tolerance": 0.35
+	"corruption_tolerance": 0.35,
+	"ocean_nudges": {
+		"openness": 0.04,
+		"conscientiousness": 0.02,
+		"extraversion": 0.05,
+		"agreeableness": 0.00,
+		"neuroticism": 0.01
+	}
   },
   "municipal_allotments": {
 	"display_name": "Municipal Allotments & Green",
@@ -335,7 +342,14 @@
 	],
 	"consumer_desperation_index": 0.6,
 	"actual_police_heat": 0.25,
-	"corruption_tolerance": 0.5
+	"corruption_tolerance": 0.5,
+	"ocean_nudges": {
+		"openness": -0.01,
+		"conscientiousness": 0.01,
+		"extraversion": 0.03,
+		"agreeableness": 0.02,
+		"neuroticism": 0.03
+	}
   },
   "high_density_high_rise": {
 	"display_name": "Municipal Housing Estate & High-Rise",
@@ -401,7 +415,14 @@
 	],
 	"consumer_desperation_index": 0.85,
 	"actual_police_heat": 0.15,
-	"corruption_tolerance": 0.65
+	"corruption_tolerance": 0.65,
+	"ocean_nudges": {
+		"openness": -0.02,
+		"conscientiousness": -0.02,
+		"extraversion": 0.02,
+		"agreeableness": -0.02,
+		"neuroticism": 0.05
+	}
   },
   "suburban_low_density": {
 	"display_name": "Suburban Commuter Belt",
@@ -467,7 +488,14 @@
 	],
 	"consumer_desperation_index": 0.15,
 	"actual_police_heat": 0.05,
-	"corruption_tolerance": 0.2
+	"corruption_tolerance": 0.2,
+	"ocean_nudges": {
+		"openness": 0.02,
+		"conscientiousness": 0.05,
+		"extraversion": -0.01,
+		"agreeableness": 0.02,
+		"neuroticism": -0.04
+	}
   },
   "victorian_low_density": {
 	"display_name": "Large Victorian Houses",
@@ -533,7 +561,14 @@
 	],
 	"consumer_desperation_index": 0.05,
 	"actual_police_heat": 0.05,
-	"corruption_tolerance": 0.4
+	"corruption_tolerance": 0.4,
+	"ocean_nudges": {
+		"openness": 0.04,
+		"conscientiousness": 0.05,
+		"extraversion": 0.00,
+		"agreeableness": 0.01,
+		"neuroticism": -0.05
+	}
   },
   "medium_density_residential": {
 	"display_name": "Interwar Semi-Detached & Maisonettes",
@@ -599,7 +634,14 @@
 	],
 	"consumer_desperation_index": 0.35,
 	"actual_police_heat": 0.15,
-	"corruption_tolerance": 0.35
+	"corruption_tolerance": 0.35,
+	"ocean_nudges": {
+		"openness": 0.00,
+		"conscientiousness": 0.03,
+		"extraversion": 0.00,
+		"agreeableness": 0.02,
+		"neuroticism": -0.01
+	}
   },
   "medium_density_victorian_residential": {
 	"display_name": "Victorian Semi-Detached",
@@ -665,7 +707,14 @@
 	],
 	"consumer_desperation_index": 0.35,
 	"actual_police_heat": 0.15,
-	"corruption_tolerance": 0.35
+	"corruption_tolerance": 0.35,
+	"ocean_nudges": {
+		"openness": 0.02,
+		"conscientiousness": 0.04,
+		"extraversion": 0.00,
+		"agreeableness": 0.02,
+		"neuroticism": -0.02
+	}
   },
   "industrial": {
 	"display_name": "Industrial Yards & Depots",
@@ -730,7 +779,14 @@
 	],
 	"consumer_desperation_index": 0.4,
 	"actual_police_heat": 0.1,
-	"corruption_tolerance": 0.4
+	"corruption_tolerance": 0.4,
+	"ocean_nudges": {
+		"openness": -0.02,
+		"conscientiousness": 0.02,
+		"extraversion": 0.01,
+		"agreeableness": -0.01,
+		"neuroticism": 0.02
+	}
   },
   "place_of_worship": {
 	"display_name": "Parish Church & Grounds",
@@ -1668,7 +1724,14 @@
 	],
 	"consumer_desperation_index": 0.25,
 	"actual_police_heat": 0.2,
-	"corruption_tolerance": 0.3
+	"corruption_tolerance": 0.3,
+	"ocean_nudges": {
+		"openness": 0.12,
+		"conscientiousness": 0.04,
+		"extraversion": 0.04,
+		"agreeableness": 0.02,
+		"neuroticism": 0.01
+	}
   },
   "sports_arena": {
 	"display_name": "Borough Football Ground",
@@ -1981,7 +2044,14 @@
 	],
 	"consumer_desperation_index": 0.5,
 	"actual_police_heat": 0.7,
-	"corruption_tolerance": 0.4
+	"corruption_tolerance": 0.4,
+	"ocean_nudges": {
+		"openness": -0.03,
+		"conscientiousness": -0.08,
+		"extraversion": 0.04,
+		"agreeableness": -0.10,
+		"neuroticism": 0.08
+	}
   },
   "police_headquarters": {
 	"display_name": "Police Headquarters",
@@ -2420,6 +2490,13 @@
 	],
 	"consumer_desperation_index": 0.25,
 	"actual_police_heat": 0.35,
-	"corruption_tolerance": 0.3
+	"corruption_tolerance": 0.3,
+	"ocean_nudges": {
+		"openness": 0.03,
+		"conscientiousness": 0.02,
+		"extraversion": 0.06,
+		"agreeableness": 0.01,
+		"neuroticism": 0.00
+	}
   }
 }

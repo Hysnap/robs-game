@@ -102,9 +102,7 @@
           "token": "UI_LBL_CIVIC_SUMMARY",
           "action_signal": "item_selected",
           "route_field": "detail_route",
-          "target_route": "ESTABLISHMENT_DOCKET",
-          "font_size": 8,
-          "color": "body",
+          "target_route": "OPEN_ESTABLISHMENT_DOCKET",
           "autowrap": true
         }
       ]

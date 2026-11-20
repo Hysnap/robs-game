@@ -27,11 +27,42 @@
       "default_access_permeability": 0.85,
       "weekly_decay": 2.0,
       "thresholds": [
-        { "min_score": 1.0,   "fields": ["district_id", "display_name", "district_type", "type_title", "grid_coords", "grid_size"] },
-        { "min_score": 20.0,  "fields": ["zone_health_bucket_token", "heat_bucket_token"] },
-        { "min_score": 40.0,  "fields": ["unemployment_bucket_token", "income_bucket_token", "establishments_summary"] },
-        { "min_score": 60.0,  "fields": ["active_population", "total_households"] },
-        { "min_score": 80.0,  "fields": ["actual_police_heat", "actual_zone_health", "unemployment_rate", "avg_disposable_income"] },
+        {
+          "min_score": 1.0,
+          "fields": [
+            "district_id",
+            "display_name",
+            "district_type",
+            "type_title",
+            "grid_coords",
+            "grid_size"
+          ]
+        },
+        {
+          "min_score": 20.0,
+          "fields": ["zone_health_bucket_token", "heat_bucket_token"]
+        },
+        {
+          "min_score": 40.0,
+          "fields": [
+            "unemployment_bucket_token",
+            "income_bucket_token",
+            "establishments_summary"
+          ]
+        },
+        {
+          "min_score": 60.0,
+          "fields": ["active_population", "total_households"]
+        },
+        {
+          "min_score": 80.0,
+          "fields": [
+            "actual_police_heat",
+            "actual_zone_health",
+            "unemployment_rate",
+            "avg_disposable_income"
+          ]
+        },
         { "min_score": 100.0, "fields": ["*"] }
       ]
     },
@@ -42,11 +73,35 @@
       "default_access_permeability": 0.5,
       "weekly_decay": 2.5,
       "thresholds": [
-        { "min_score": 1.0,   "fields": ["establishment_id", "name", "category_code", "category_title", "district_id", "street_address"] },
-        { "min_score": 20.0,  "fields": ["capacity", "worker_count_bucket"] },
-        { "min_score": 40.0,  "fields": ["employees.known_only", "residents.known_only"] },
-        { "min_score": 60.0,  "fields": ["employees.all", "residents.all", "schedule_window"] },
-        { "min_score": 80.0,  "fields": ["market_catchment", "total_catchment_population", "total_catchment_households", "avg_neighbor_disposable_income"] },
+        {
+          "min_score": 1.0,
+          "fields": [
+            "establishment_id",
+            "name",
+            "category_code",
+            "category_title",
+            "district_id",
+            "street_address"
+          ]
+        },
+        { "min_score": 20.0, "fields": ["capacity", "worker_count_bucket"] },
+        {
+          "min_score": 40.0,
+          "fields": ["employees.known_only", "residents.known_only"]
+        },
+        {
+          "min_score": 60.0,
+          "fields": ["employees.all", "residents.all", "schedule_window"]
+        },
+        {
+          "min_score": 80.0,
+          "fields": [
+            "market_catchment",
+            "total_catchment_population",
+            "total_catchment_households",
+            "avg_neighbor_disposable_income"
+          ]
+        },
         { "min_score": 100.0, "fields": ["*"] }
       ]
     },
@@ -57,11 +112,46 @@
       "default_access_permeability": 0.6,
       "weekly_decay": 1.5,
       "thresholds": [
-        { "min_score": 1.0,   "fields": ["resident_id", "full_name", "first_name", "current_surname", "gender"] },
-        { "min_score": 20.0,  "fields": ["age", "home_address", "home_establishment_id", "district_id"] },
-        { "min_score": 40.0,  "fields": ["role_title", "employer_entity_id", "employer_name", "relationship_type"] },
-        { "min_score": 60.0,  "fields": ["schedule_window", "education_level", "household_members.known_only"] },
-        { "min_score": 80.0,  "fields": ["hourly_wage", "affinity_score", "household_members.all"] },
+        {
+          "min_score": 1.0,
+          "fields": [
+            "resident_id",
+            "full_name",
+            "first_name",
+            "current_surname",
+            "gender"
+          ]
+        },
+        {
+          "min_score": 20.0,
+          "fields": [
+            "age",
+            "home_address",
+            "home_establishment_id",
+            "district_id"
+          ]
+        },
+        {
+          "min_score": 40.0,
+          "fields": [
+            "role_title",
+            "employer_entity_id",
+            "employer_name",
+            "relationship_type"
+          ]
+        },
+        {
+          "min_score": 60.0,
+          "fields": [
+            "schedule_window",
+            "education_level",
+            "household_members.known_only"
+          ]
+        },
+        {
+          "min_score": 80.0,
+          "fields": ["hourly_wage", "affinity_score", "household_members.all"]
+        },
         { "min_score": 100.0, "fields": ["*"] }
       ]
     },
@@ -72,13 +162,72 @@
       "default_access_permeability": 0.4,
       "weekly_decay": 4.0,
       "thresholds": [
-        { "min_score": 1.0,   "fields": ["event_id", "event_type", "district_id"] },
-        { "min_score": 20.0,  "fields": ["scheduled_day", "category_title"] },
-        { "min_score": 40.0,  "fields": ["establishment_id", "venue_name"] },
-        { "min_score": 60.0,  "fields": ["participants.known_only", "estimated_scale"] },
-        { "min_score": 80.0,  "fields": ["participants.all", "security_level"] },
+        {
+          "min_score": 1.0,
+          "fields": ["event_id", "event_type", "district_id"]
+        },
+        { "min_score": 20.0, "fields": ["scheduled_day", "category_title"] },
+        { "min_score": 40.0, "fields": ["establishment_id", "venue_name"] },
+        {
+          "min_score": 60.0,
+          "fields": ["participants.known_only", "estimated_scale"]
+        },
+        { "min_score": 80.0, "fields": ["participants.all", "security_level"] },
         { "min_score": 100.0, "fields": ["*"] }
       ]
+    }
+  },
+  "disclosure_tiers": {
+    "default_initial_crew_level": 0.8,
+    "tiers": [
+      {
+        "max_slider": 0.25,
+        "label_token": "UI_INTEL_SHARE_TOP_LEVEL",
+        "share_ratio": 0.45,
+        "max_score_cap": 25.0
+      },
+      {
+        "max_slider": 0.5,
+        "label_token": "UI_INTEL_SHARE_OPERATIONAL",
+        "share_ratio": 0.65,
+        "max_score_cap": 55.0
+      },
+      {
+        "max_slider": 0.85,
+        "label_token": "UI_INTEL_SHARE_STANDARD_CREW",
+        "share_ratio": 0.85,
+        "max_score_cap": 79.0
+      },
+      {
+        "max_slider": 1.0,
+        "label_token": "UI_INTEL_SHARE_SKELETONS_ALL",
+        "share_ratio": 1.0,
+        "max_score_cap": 100.0
+      }
+    ]
+  },
+  "share_expansions": {
+    "SELF": {
+      "alias_scope": "RESIDENT",
+      "use_actor_id": true
+    },
+    "RESIDENT": {
+      "query_method": "resolve_intel_share_targets"
+    },
+    "HOUSEHOLD": {
+      "query_method": "resolve_intel_share_targets"
+    },
+    "ESTABLISHMENT": {
+      "query_method": "resolve_intel_share_targets"
+    },
+    "ORG": {
+      "query_method": "resolve_intel_share_targets"
+    },
+    "DISTRICT": {
+      "query_method": "resolve_intel_share_targets"
+    },
+    "EVENT": {
+      "query_method": "resolve_intel_share_targets"
     }
   }
 }

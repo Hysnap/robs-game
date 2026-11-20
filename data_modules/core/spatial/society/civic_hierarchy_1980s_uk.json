@@ -2,8 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.2.0",
-    "description": "Municipal clustering scales, public/banking holiday calendar, institutional organizations, postal delivery rules, and settlement clearing rails."
+    "version": "1.3.0",
+    "description": "Municipal clustering scales, public/banking holiday calendar, institutional organizations, civic disbursement schedules, postal delivery rules, and settlement clearing rails."
   },
   "hierarchy_scales": {
     "blocks_per_borough": 90,
@@ -26,15 +26,71 @@
     "non_working_days_of_week": [7],
     "banking_non_working_days_of_week": [6, 7],
     "rules": [
-      { "id": "NEW_YEARS_DAY", "type": "FIXED", "month": 1, "day": 1, "observed": "NEXT_MONDAY", "valid_from_year": 1974 },
-      { "id": "GOOD_FRIDAY", "type": "EASTER_OFFSET", "offset_days": -2, "valid_from_year": 1752 },
-      { "id": "EASTER_MONDAY", "type": "EASTER_OFFSET", "offset_days": 1, "valid_from_year": 1871 },
-      { "id": "MAY_DAY", "type": "NTH_WEEKDAY", "month": 5, "weekday": 1, "nth": 1, "valid_from_year": 1978 },
-      { "id": "WHIT_MONDAY", "type": "EASTER_OFFSET", "offset_days": 50, "valid_from_year": 1871, "valid_to_year": 1970 },
-      { "id": "SPRING_BANK", "type": "LAST_WEEKDAY", "month": 5, "weekday": 1, "valid_from_year": 1971 },
-      { "id": "SUMMER_BANK", "type": "LAST_WEEKDAY", "month": 8, "weekday": 1, "valid_from_year": 1971 },
-      { "id": "CHRISTMAS_DAY", "type": "FIXED", "month": 12, "day": 25, "observed": "NEXT_WEEKDAY", "valid_from_year": 1752 },
-      { "id": "BOXING_DAY", "type": "FIXED", "month": 12, "day": 26, "observed": "NEXT_WEEKDAY", "valid_from_year": 1871 }
+      {
+        "id": "NEW_YEARS_DAY",
+        "type": "FIXED",
+        "month": 1,
+        "day": 1,
+        "observed": "NEXT_MONDAY",
+        "valid_from_year": 1974
+      },
+      {
+        "id": "GOOD_FRIDAY",
+        "type": "EASTER_OFFSET",
+        "offset_days": -2,
+        "valid_from_year": 1752
+      },
+      {
+        "id": "EASTER_MONDAY",
+        "type": "EASTER_OFFSET",
+        "offset_days": 1,
+        "valid_from_year": 1871
+      },
+      {
+        "id": "MAY_DAY",
+        "type": "NTH_WEEKDAY",
+        "month": 5,
+        "weekday": 1,
+        "nth": 1,
+        "valid_from_year": 1978
+      },
+      {
+        "id": "WHIT_MONDAY",
+        "type": "EASTER_OFFSET",
+        "offset_days": 50,
+        "valid_from_year": 1871,
+        "valid_to_year": 1970
+      },
+      {
+        "id": "SPRING_BANK",
+        "type": "LAST_WEEKDAY",
+        "month": 5,
+        "weekday": 1,
+        "valid_from_year": 1971
+      },
+      {
+        "id": "SUMMER_BANK",
+        "type": "LAST_WEEKDAY",
+        "month": 8,
+        "weekday": 1,
+        "valid_from_year": 1971
+      },
+      {
+        "id": "CHRISTMAS_DAY",
+        "type": "FIXED",
+        "month": 12,
+        "day": 25,
+        "observed": "NEXT_WEEKDAY",
+        "valid_from_year": 1752
+      },
+      {
+        "id": "BOXING_DAY",
+        "type": "FIXED",
+        "month": 12,
+        "day": 26,
+        "observed": "NEXT_WEEKDAY",
+        "valid_from_year": 1871
+      }
     ],
     "one_off_dates": [
       { "id": "SILVER_JUBILEE", "year": 1977, "month": 6, "day": 7 },
@@ -51,19 +107,23 @@
     "seeded_organizations": [
       {
         "org_id": "ORG:CIVIC",
-        "display_name": "Municipal & Civic Authority",
+        "display_name": "Municipal & Civic Government",
         "org_type": "CIVIC",
         "legal_status": "FORMAL",
-        "institution_rail_class": "STANDARD",
+        "institution_rail_class": "PUBLIC_DISBURSER",
         "owns_civic_anchors": true,
-        "owns_council_housing": true
+        "owns_council_housing": true,
+        "matched_categories": ["JOBCENTRE", "LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
-        "org_id": "ORG:DHSS",
-        "display_name": "Department of Health & Social Security",
+        "org_id": "ORG:NHS",
+        "display_name": "National Health Service Authority",
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
-        "institution_rail_class": "PUBLIC_DISBURSER"
+        "institution_rail_class": "STANDARD",
+        "matched_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:POST_OFFICE",
@@ -71,7 +131,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "POSTAL_AGENT",
-        "matched_categories": ["POST_OFFICE"]
+        "matched_categories": ["POST_OFFICE"],
+        "default_pay_cadence": "WEEKLY_FRIDAY"
       },
       {
         "org_id": "ORG:MIDLAND_BANK",
@@ -79,7 +140,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Midland Bank"]
+        "matched_titles": ["Midland Bank"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:BARCLAYS_BANK",
@@ -87,7 +149,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Barclays Bank"]
+        "matched_titles": ["Barclays Bank"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:LLOYDS_BANK",
@@ -95,7 +158,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Lloyds Bank", "Lloyds TSB"]
+        "matched_titles": ["Lloyds Bank", "Lloyds TSB"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:NATWEST",
@@ -103,7 +167,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["NatWest"]
+        "matched_titles": ["NatWest"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:TSB",
@@ -111,7 +176,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["TSB"]
+        "matched_titles": ["TSB"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:HALIFAX",
@@ -119,7 +185,8 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["Halifax"]
+        "matched_titles": ["Halifax"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
         "org_id": "ORG:ABBEY_NATIONAL",
@@ -127,9 +194,31 @@
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["Abbey National"]
+        "matched_titles": ["Abbey National"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       }
     ]
+  },
+  "civic_schedules": {
+    "authority_org_id": "ORG:CIVIC",
+    "unemployment_sign_on": {
+      "cohort_count": 5,
+      "cohort_weekdays": [1, 2, 3, 4, 5],
+      "recurrence_days": 14,
+      "giro_settlement_working_days": 3,
+      "sign_on_location_category": "JOBCENTRE",
+      "giro_encash_location_category": "POST_OFFICE"
+    },
+    "state_pension": {
+      "weekday": 1,
+      "recurrence_days": 7,
+      "encash_location_category": "POST_OFFICE"
+    },
+    "employer_default_paydays": {
+      "WEEKLY": { "weekday": 5, "recurrence_days": 7 },
+      "FORTNIGHTLY": { "weekday": 5, "recurrence_days": 14 },
+      "MONTHLY": { "rule": "LAST_WORKING_DAY", "recurrence_days": 28 }
+    }
   },
   "postal_rules": {
     "classes": {

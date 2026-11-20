@@ -36,8 +36,8 @@
   },
   "household_occupancy_mean": 2.6,
   "population_pyramid": [
-    { "min_age": 0,  "max_age": 4,  "male_pct": 3.1, "female_pct": 2.9 },
-    { "min_age": 5,  "max_age": 9,  "male_pct": 3.5, "female_pct": 3.3 },
+    { "min_age": 0, "max_age": 4, "male_pct": 3.1, "female_pct": 2.9 },
+    { "min_age": 5, "max_age": 9, "male_pct": 3.5, "female_pct": 3.3 },
     { "min_age": 10, "max_age": 14, "male_pct": 4.1, "female_pct": 3.9 },
     { "min_age": 15, "max_age": 19, "male_pct": 4.2, "female_pct": 4.1 },
     { "min_age": 20, "max_age": 24, "male_pct": 3.8, "female_pct": 3.6 },
@@ -63,8 +63,8 @@
         "weights": {
           "SINGLE_PERSON": 0.46,
           "FLATSHARE_SHARED": 0.16,
-          "COUPLE_WITHOUT_DEP": 0.20,
-          "COUPLE_WITH_DEP": 0.10,
+          "COUPLE_WITHOUT_DEP": 0.2,
+          "COUPLE_WITH_DEP": 0.1,
           "LONE_PARENT": 0.08
         }
       },
@@ -76,7 +76,7 @@
           "FLATSHARE_SHARED": 0.06,
           "COUPLE_WITHOUT_DEP": 0.22,
           "COUPLE_WITH_DEP": 0.44,
-          "LONE_PARENT": 0.10
+          "LONE_PARENT": 0.1
         }
       },
       {
@@ -87,7 +87,7 @@
           "FLATSHARE_SHARED": 0.02,
           "COUPLE_WITHOUT_DEP": 0.18,
           "COUPLE_WITH_DEP": 0.58,
-          "LONE_PARENT": 0.10
+          "LONE_PARENT": 0.1
         }
       },
       {
@@ -106,8 +106,8 @@
         "age_max": 95,
         "weights": {
           "SINGLE_PERSON": 0.58,
-          "FLATSHARE_SHARED": 0.00,
-          "COUPLE_WITHOUT_DEP": 0.40,
+          "FLATSHARE_SHARED": 0.0,
+          "COUPLE_WITHOUT_DEP": 0.4,
           "COUPLE_WITH_DEP": 0.01,
           "LONE_PARENT": 0.01
         }
@@ -124,7 +124,7 @@
         "married": 0.28,
         "never_married": 0.69,
         "divorced": 0.03,
-        "widowed": 0.00
+        "widowed": 0.0
       },
       {
         "age_min": 25,
@@ -132,14 +132,14 @@
         "married": 0.68,
         "never_married": 0.25,
         "divorced": 0.07,
-        "widowed": 0.00
+        "widowed": 0.0
       },
       {
         "age_min": 30,
         "age_max": 44,
         "married": 0.81,
         "never_married": 0.08,
-        "divorced": 0.10,
+        "divorced": 0.1,
         "widowed": 0.01
       },
       {
@@ -182,7 +182,7 @@
       "min_mother_age_at_birth": 16,
       "max_mother_age_at_birth": 44,
       "maternal_age_first_birth_distribution": [
-        { "min_age": 16, "max_age": 19, "weight": 0.10 },
+        { "min_age": 16, "max_age": 19, "weight": 0.1 },
         { "min_age": 20, "max_age": 24, "weight": 0.38 },
         { "min_age": 25, "max_age": 29, "weight": 0.34 },
         { "min_age": 30, "max_age": 34, "weight": 0.14 },
@@ -220,10 +220,89 @@
       "has_school_child_5_to_15_multiplier": 0.86,
       "education_boost": {
         "NO_FORMAL": 0.85,
-        "O_LEVELS_CSE": 1.00,
+        "O_LEVELS_CSE": 1.0,
         "A_LEVELS": 1.08,
         "POLYTECHNIC_DIPLOMA": 1.15,
         "UNIVERSITY_DEGREE": 1.25
+      }
+    },
+    "kinship_weaving_rules": {
+      "dispersed_sibling_max_age_diff": 10,
+      "dispersed_sibling_link_prob": 0.45,
+      "dispersed_parent_min_age_diff": 20,
+      "dispersed_parent_max_age_diff": 38,
+      "dispersed_parent_link_prob": 0.55,
+      "bonds": {
+        "MARRIED_SPOUSE": {
+          "MALE": "HUSBAND",
+          "FEMALE": "WIFE",
+          "affinity": 1.0
+        },
+        "UNMARRIED_COUPLE": {
+          "MALE": "PARTNER",
+          "FEMALE": "PARTNER",
+          "affinity": 1.0
+        },
+        "PARENT_TO_CHILD": {
+          "MALE": "FATHER",
+          "FEMALE": "MOTHER",
+          "affinity": 0.95
+        },
+        "CHILD_TO_PARENT": {
+          "MALE": "SON",
+          "FEMALE": "DAUGHTER",
+          "affinity": 0.95
+        },
+        "SIBLING": {
+          "MALE": "BROTHER",
+          "FEMALE": "SISTER",
+          "affinity": 0.85
+        },
+        "DISPERSED_SIBLING": {
+          "MALE": "BROTHER",
+          "FEMALE": "SISTER",
+          "affinity": 0.8
+        },
+        "DISPERSED_PARENT": {
+          "MALE": "FATHER",
+          "FEMALE": "MOTHER",
+          "affinity": 0.9
+        },
+        "DISPERSED_CHILD": {
+          "MALE": "SON",
+          "FEMALE": "DAUGHTER",
+          "affinity": 0.9
+        },
+        "GRANDPARENT": {
+          "MALE": "GRANDFATHER",
+          "FEMALE": "GRANDMOTHER",
+          "affinity": 0.8
+        },
+        "GRANDCHILD": {
+          "MALE": "GRANDSON",
+          "FEMALE": "GRANDDAUGHTER",
+          "affinity": 0.8
+        },
+        "AVUNCULAR": {
+          "MALE": "UNCLE",
+          "FEMALE": "AUNT",
+          "affinity": 0.7
+        },
+        "NIBLING": {
+          "MALE": "NEPHEW",
+          "FEMALE": "NIECE",
+          "affinity": 0.7
+        },
+        "COUSIN": {
+          "MALE": "COUSIN",
+          "FEMALE": "COUSIN",
+          "affinity": 0.65
+        },
+        "HOUSEHOLD_PEER": {
+          "MALE": "HOUSEHOLD_PEER",
+          "FEMALE": "HOUSEHOLD_PEER",
+          "affinity": 0.65
+        }
       }
     }
   },
@@ -255,7 +334,7 @@
         "anchor_category": "INDUSTRIAL",
         "contract_class": "FORMAL_LEGAL",
         "weekly_hours": 40.0,
-        "compensation_rate": 2.10
+        "compensation_rate": 2.1
       },
       "age_min": 16,
       "age_max": 17
@@ -313,6 +392,55 @@
   ],
   "education_attainment_model": {
     "default_code": "NO_FORMAL",
+    "tier_ranks": {
+      "NO_FORMAL": 0,
+      "BASIC_SECONDARY": 1,
+      "O_LEVELS_CSE": 2,
+      "ENHANCED_SECONDARY": 3,
+      "A_LEVELS": 4,
+      "PRE_UNI_SECONDARY": 4,
+      "POLYTECHNIC_DIPLOMA": 5,
+      "UNIVERSITY_DEGREE": 6,
+      "DEGREE_OR_HIGHER": 6
+    },
+    "ocean_tier_nudges": {
+      "NO_FORMAL": {
+        "openness": -0.04,
+        "conscientiousness": -0.02
+      },
+      "BASIC_SECONDARY": {
+        "openness": -0.02,
+        "conscientiousness": 0.0
+      },
+      "O_LEVELS_CSE": {
+        "openness": 0.0,
+        "conscientiousness": 0.02
+      },
+      "ENHANCED_SECONDARY": {
+        "openness": 0.03,
+        "conscientiousness": 0.03
+      },
+      "A_LEVELS": {
+        "openness": 0.04,
+        "conscientiousness": 0.04
+      },
+      "PRE_UNI_SECONDARY": {
+        "openness": 0.05,
+        "conscientiousness": 0.05
+      },
+      "POLYTECHNIC_DIPLOMA": {
+        "openness": 0.06,
+        "conscientiousness": 0.06
+      },
+      "UNIVERSITY_DEGREE": {
+        "openness": 0.1,
+        "conscientiousness": 0.08
+      },
+      "DEGREE_OR_HIGHER": {
+        "openness": 0.1,
+        "conscientiousness": 0.08
+      }
+    },
     "cohort_attainment_rates": [
       {
         "age_min": 16,
@@ -325,7 +453,7 @@
           "O_LEVELS_CSE": 0.72
         },
         "female_probabilities": {
-          "UNIVERSITY_DEGREE": 0.10,
+          "UNIVERSITY_DEGREE": 0.1,
           "POLYTECHNIC_DIPLOMA": 0.14,
           "A_LEVELS": 0.19,
           "O_LEVELS_CSE": 0.76
@@ -361,7 +489,7 @@
         "female_probabilities": {
           "UNIVERSITY_DEGREE": 0.04,
           "POLYTECHNIC_DIPLOMA": 0.09,
-          "A_LEVELS": 0.10,
+          "A_LEVELS": 0.1,
           "O_LEVELS_CSE": 0.42
         }
       },
@@ -371,7 +499,7 @@
         "high_density_penalty": 0.03,
         "male_probabilities": {
           "UNIVERSITY_DEGREE": 0.05,
-          "POLYTECHNIC_DIPLOMA": 0.10,
+          "POLYTECHNIC_DIPLOMA": 0.1,
           "A_LEVELS": 0.07,
           "O_LEVELS_CSE": 0.25
         },
@@ -379,7 +507,7 @@
           "UNIVERSITY_DEGREE": 0.02,
           "POLYTECHNIC_DIPLOMA": 0.05,
           "A_LEVELS": 0.04,
-          "O_LEVELS_CSE": 0.20
+          "O_LEVELS_CSE": 0.2
         }
       }
     ]
