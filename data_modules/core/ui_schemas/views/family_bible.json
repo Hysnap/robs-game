@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "target_class": "GenFamilyBible",
+    "extends": "VBoxContainer"
+  },
+  "sections": [
+    {
+      "id": "header_section",
+      "rows": [
+        {
+          "id": "bible_header",
+          "type": "HEADER_BLOCK",
+          "title_field": "document_title",
+          "subtitle_field": "enterprise_subtitle",
+          "default_title_token": "UI_HDR_FAMILY_BIBLE"
+        }
+      ]
+    },
+    {
+      "id": "lineage_section",
+      "rows": [
+        {
+          "id": "lbl_crew_lineages",
+          "type": "LABEL",
+          "token": "UI_SEC_FAMILY_LINEAGES"
+        },
+        {
+          "id": "crew_lineages",
+          "type": "LINKED_LIST",
+          "field": "crew_lineages",
+          "id_field": "resident_id",
+          "label_field": "name",
+          "sub_field": "summary_line",
+          "target_route": "OPERATIVE_DETAIL"
+        }
+      ]
+    },
+    {
+      "id": "vital_records_section",
+      "rows": [
+        {
+          "id": "lbl_vital_records",
+          "type": "LABEL",
+          "token": "UI_SEC_VITAL_RECORDS"
+        },
+        {
+          "id": "vital_records_list",
+          "type": "ITEM_LIST",
+          "field": "vital_records"
+        }
+      ]
+    },
+    {
+      "id": "inscriptions_section",
+      "rows": [
+        {
+          "id": "family_notes",
+          "type": "INSCRIPTIONS",
+          "token": "UI_SEC_FAMILY_NOTES"
+        }
+      ]
+    },
+    {
+      "id": "bible_signals",
+      "type": "SIGNALS",
+      "signals": [
+        "item_selected(target_route: String, filter_key: Variant)",
+        "action_clicked(action_code: String, payload: Dictionary)"
+      ]
+    }
+  ]
+}

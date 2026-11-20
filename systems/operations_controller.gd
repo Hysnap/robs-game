@@ -9,8 +9,15 @@ const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
 
 const UI_COMMANDS_DIR := "res://systems/ui_commands/"
 
+const _SUB_DOCKET_FALLBACKS: Dictionary = {
+	"ESTABLISHMENT_DOCKET": "DOSSIER",
+	"RESIDENTIAL_DOCKET": "ROSTER",
+	"OPERATIVE_DOSSIER": "ROSTER"
+}
+
 static var _command_scripts: Dictionary = {} # "open_roster" -> Script
 static var _commands_initialized: bool = false
+static var _domain_route_cache: Dictionary = {} # "ESTABLISHMENT_DOCKET" -> { "filter_key": 42, ... }
 
 ## Crawls res://systems/ui_commands/ for cmd_*.gd handlers and caches them in memory
 static func initialize_commands(force_reload: bool = false) -> void:
@@ -43,16 +50,31 @@ static func dispatch_ui_command(command: UIActionCommandScript, view_host: ViewH
 	var handler_script = _command_scripts[code]
 	handler_script.execute(command.payload, view_host, context_refs)
 
+	if view_host != null and not command.payload.is_empty():
+		var active_dom: String = view_host.get_active_domain().strip_edges().to_upper()
+		if not active_dom.is_empty():
+			_domain_route_cache[active_dom] = command.payload.duplicate(true)
+
 ## Refreshes a named domain view by invoking its canonical open_<domain> command script
 static func refresh_domain_view(domain_key: String, view_host: ViewHost, payload: Dictionary = {}) -> void:
 	if view_host == null or domain_key.is_empty():
 		return
 	initialize_commands()
-	var open_code: String = "open_" + domain_key.strip_edges().to_lower()
+
+	var norm_domain: String = domain_key.strip_edges().to_upper()
+	var effective_payload: Dictionary = payload.duplicate(true)
+	if not effective_payload.is_empty():
+		_domain_route_cache[norm_domain] = effective_payload.duplicate(true)
+	elif _domain_route_cache.has(norm_domain):
+		effective_payload = (_domain_route_cache[norm_domain] as Dictionary).duplicate(true)
+	elif _SUB_DOCKET_FALLBACKS.has(norm_domain):
+		norm_domain = _SUB_DOCKET_FALLBACKS[norm_domain]
+
+	var open_code: String = "open_" + norm_domain.to_lower()
 	if _command_scripts.has(open_code):
-		_command_scripts[open_code].execute(payload, view_host, {})
+		_command_scripts[open_code].execute(effective_payload, view_host, {})
 	else:
-		view_host.switch_to_domain(domain_key)
+		view_host.switch_to_domain(norm_domain)
 
 ## Executes staged directives through SimController, updates world state, and returns UI payloads
 static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = null) -> Dictionary:

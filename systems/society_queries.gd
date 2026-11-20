@@ -1099,3 +1099,182 @@ static func _resolve_district_anchor_meters(district_rec: Dictionary) -> Vector2
 	if raw_coords is Array and raw_coords.size() >= 2:
 		return Vector2(float(raw_coords[0]) * 200.0, float(raw_coords[1]) * 200.0)
 	return Vector2.ZERO
+
+# ==============================================================================
+# FAMILY BIBLE & GENEALOGY QUERIES
+# ==============================================================================
+
+## Returns presentation-ready crew family trees, marriages, births, and deaths gated by Fog of War
+static func get_crew_family_bible(player_context: Dictionary, current_sim_day: int = 29219) -> Dictionary:
+	var enterprise_title: String = "CREW_ENTERPRISE"
+	var ws_ref = player_context.get("world_state", null)
+	if ws_ref is Dictionary:
+		enterprise_title = str(ws_ref.get("operations", {}).get("enterprise_name", "CREW_ENTERPRISE"))
+
+	var crew_ids: Array[int] = []
+	var id_strings: Array[String] = []
+	for raw_id in player_context.get("crew_resident_ids", []):
+		var c_id: int = int(raw_id)
+		if c_id > 0 and not crew_ids.has(c_id):
+			crew_ids.append(c_id)
+			id_strings.append(str(c_id))
+
+	if id_strings.is_empty():
+		return {
+			"document_title": "UI_HDR_FAMILY_BIBLE",
+			"enterprise_subtitle": enterprise_title,
+			"crew_lineages": [],
+			"vital_records": []
+		}
+
+	var in_clause: String = ", ".join(id_strings)
+	var intel: Dictionary = _resolve_crew_intel_sets(player_context)
+	var known_res_lookup: Dictionary = intel["known_residents"]
+	var observers_ref = player_context.get("observers", null)
+
+	# 1. Crew anchor rows with formatted birthdates
+	var crew_rows: Array = DBManager.query_rows("""
+		SELECT
+			r.resident_id,
+			h.establishment_id,
+			r.first_name || ' ' || r.current_surname AS full_name,
+			r.birth_surname,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dob || ' days') AS birth_date,
+			CAST((%d - r.dob) / 365.25 AS INTEGER) AS age,
+			e.name AS home_address
+		FROM residents r
+		JOIN households h ON r.household_id = h.household_id
+		JOIN establishments e ON h.establishment_id = e.establishment_id
+		WHERE r.resident_id IN (%s)
+		ORDER BY r.dob ASC, r.resident_id ASC;
+	""" % [current_sim_day, in_clause])
+
+	# 2. Recorded kinship edges outbound from crew members
+	var kin_rows: Array = DBManager.query_rows("""
+		SELECT
+			sr.from_resident_id AS crew_id,
+			sr.to_resident_id AS relative_id,
+			h.establishment_id,
+			l_rel.code AS rel_code,
+			l_rel.title AS rel_title,
+			sr.valid_from AS union_day,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || sr.valid_from || ' days') AS union_date,
+			r.first_name || ' ' || r.current_surname AS full_name,
+			r.birth_surname,
+			r.dob,
+			r.dod,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dob || ' days') AS birth_date,
+			CASE WHEN r.dod IS NOT NULL
+				THEN date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dod || ' days')
+				ELSE ''
+			END AS death_date
+		FROM social_relationships sr
+		JOIN system_labels l_rel ON sr.relationship_type_id = l_rel.label_id
+		JOIN residents r ON sr.to_resident_id = r.resident_id
+		JOIN households h ON r.household_id = h.household_id
+		WHERE sr.from_resident_id IN (%s)
+		  AND sr.valid_to IS NULL
+		  AND l_rel.code NOT IN ('CIVIC_PEER', 'DRINKING_MATE', 'CONGREGATIONAL', 'HOUSEHOLD_PEER')
+		ORDER BY r.dob ASC, r.resident_id ASC;
+	""" % in_clause)
+
+
+	var crew_lineages: Array[Dictionary] = []
+	var seen_relatives: Dictionary = {}
+	var vital_events: Array[Dictionary] = []
+
+	for c_row in crew_rows:
+		var c_id: int = int(c_row["resident_id"])
+		var c_name: String = str(c_row.get("full_name", ""))
+		var c_bdate: String = str(c_row.get("birth_date", ""))
+		var c_addr: String = str(c_row.get("home_address", ""))
+
+		crew_lineages.append({
+			"resident_id": c_id,
+			"establishment_id": int(c_row.get("establishment_id", 0)),
+			"name": c_name,
+			"summary_line": "b. %s • %s" % [c_bdate, c_addr]
+		})
+
+		vital_events.append({
+			"sort_day": -999999,
+			"date_str": c_bdate,
+			"text": "%s — %s (%s)" % [c_bdate, c_name, TranslationServer.translate("UI_VITAL_BIRTH")]
+		})
+
+	for k_row in kin_rows:
+		var rel_id: int = int(k_row.get("relative_id", 0))
+		if rel_id <= 0:
+			continue
+
+		var is_known: bool = known_res_lookup.has(rel_id)
+		if not is_known and ws_ref is Dictionary and observers_ref is Array:
+			var res_score: float = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "RESIDENT", str(rel_id))
+			is_known = IntelManagerScript.is_entity_known(res_score, "RESIDENT")
+
+		if not is_known:
+			continue
+
+		var rel_code: String = str(k_row.get("rel_code", ""))
+		var rel_title: String = str(k_row.get("rel_title", rel_code))
+		var r_name: String = str(k_row.get("full_name", ""))
+		var b_date: String = str(k_row.get("birth_date", ""))
+		var d_date: String = str(k_row.get("death_date", ""))
+		var u_date: String = str(k_row.get("union_date", ""))
+		var is_deceased: bool = k_row.get("dod", null) != null
+
+		# Find anchor crew member's first name for context
+		var anchor_id: int = int(k_row.get("crew_id", 0))
+		var anchor_name: String = ""
+		for c_row in crew_rows:
+			if int(c_row["resident_id"]) == anchor_id:
+				anchor_name = str(c_row.get("full_name", "")).split(" ")[0]
+				break
+
+		var life_span: String = "b. %s – d. %s" % [b_date, d_date] if is_deceased else "b. %s" % b_date
+		if rel_code in ["HUSBAND", "WIFE", "PARTNER"] and not u_date.is_empty():
+			life_span += " • m. %s" % u_date
+
+		if not seen_relatives.has(rel_id):
+			seen_relatives[rel_id] = true
+			crew_lineages.append({
+				"resident_id": 0 if is_deceased else rel_id,
+				"establishment_id": 0 if is_deceased else int(k_row.get("establishment_id", 0)),
+				"name": "%s (%s — %s)" % [r_name, rel_title, anchor_name],
+				"summary_line": life_span
+			})
+
+			vital_events.append({
+				"sort_day": int(k_row.get("dob", 0)),
+				"date_str": b_date,
+				"text": "%s — %s (%s)" % [b_date, r_name, TranslationServer.translate("UI_VITAL_BIRTH")]
+			})
+
+			if rel_code in ["HUSBAND", "WIFE", "PARTNER"] and not u_date.is_empty():
+				vital_events.append({
+					"sort_day": int(k_row.get("union_day", 0)),
+					"date_str": u_date,
+					"text": "%s — %s & %s (%s)" % [u_date, anchor_name, r_name, TranslationServer.translate("UI_VITAL_MARRIAGE")]
+				})
+
+			if is_deceased and not d_date.is_empty():
+				vital_events.append({
+					"sort_day": int(k_row.get("dod", 0)),
+					"date_str": d_date,
+					"text": "%s — %s (%s)" % [d_date, r_name, TranslationServer.translate("UI_VITAL_DEATH")]
+				})
+
+	vital_events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["sort_day"]) < int(b["sort_day"])
+	)
+
+	var vital_records: Array[String] = []
+	for ev in vital_events:
+		vital_records.append(str(ev["text"]))
+
+	return {
+		"document_title": "UI_HDR_FAMILY_BIBLE",
+		"enterprise_subtitle": enterprise_title,
+		"crew_lineages": crew_lineages,
+		"vital_records": vital_records
+	}

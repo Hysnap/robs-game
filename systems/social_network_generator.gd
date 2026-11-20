@@ -17,8 +17,12 @@ static var _cultural: Dictionary = {}
 static var _civic_hierarchy: Dictionary = {}
 static var _archetypes: Dictionary = {}
 static var _building_classes: Dictionary = {}
-
 static var _job_definitions: Dictionary = {}
+
+static var _last_stage_durations_ms: Dictionary = {}
+
+static func get_last_stage_durations_ms() -> Dictionary:
+	return _last_stage_durations_ms.duplicate()
 
 static func _load_configs() -> void:
 	if not _demographics.is_empty() and not _lexicon.is_empty() and not _cultural.is_empty() and not _civic_hierarchy.is_empty() and not _archetypes.is_empty() and not _building_classes.is_empty() and not _job_definitions.is_empty():
@@ -42,8 +46,15 @@ static func generate_city_society(
 	world_state: Dictionary, 
 	seed_id: String, 
 	force_regenerate: bool = false, 
-	on_progress: Callable = Callable()
+	on_progress: Callable = Callable(),
+	stage_tagged_progress: bool = false
 ) -> void:
+	_last_stage_durations_ms = {
+		"SOCIETY_PREMISES": 1,
+		"SOCIETY_CITIZENS": 1,
+		"SOCIETY_DUNBAR": 1
+	}
+
 	if not force_regenerate and DB_MANAGER.is_society_populated(seed_id):
 		SystemLogger.log_info("[SocialNetwork] Society for seed '%s' already exists in SQLite. Skipping generation." % seed_id)
 		return
@@ -62,69 +73,70 @@ static func generate_city_society(
 	rng.seed = absi(seed_id.hash())
 
 	# -------------------------------------------------------------------------
-	# PASS 0.5: LAND PARCEL DENSITY & INITIAL VACANCY
+	# SUB-STAGE 1: SOCIETY_PREMISES (Passes 0.5, 1, 2, 2.5)
 	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(0.05, 1.0, "Pass 1: Generate Initial Land Parcels...")
-		await Engine.get_main_loop().process_frame
+	var t0_premises: int = Time.get_ticks_msec()
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.05, 5.0, "Pass 1: Generate Initial Land Parcels...")
+	await Engine.get_main_loop().process_frame
 	PARCEL_PLANNER.precalculate_district_metrics(world_state, _archetypes, rng)
 
-	# -------------------------------------------------------------------------
-	# PASS 1: CIVIC CADENCE REALIGNMENT (Universal Vacancy Absorption)
-	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(0.15, 1.0, "Pass 2: Realignment of dedicated civic parcels...")
-		await Engine.get_main_loop().process_frame
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.20, 15.0, "Pass 2: Realignment of dedicated civic parcels...")
+	await Engine.get_main_loop().process_frame
 	PARCEL_PLANNER.run_civic_cadence_pass(world_state, _archetypes, rng)
 
-	# -------------------------------------------------------------------------
-	# PASS 2: PHYSICAL PREMISES, ESTABLISHMENTS & WORKPLACES
-	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(20.0, 100.0, "Pass 3: Populating physical premises & tenancies...")
-		await Engine.get_main_loop().process_frame
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.30, 20.0, "Pass 3: Populating physical premises & tenancies...")
+	await Engine.get_main_loop().process_frame
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
 		world_state, _archetypes, _building_classes, _job_definitions, _cultural, _lexicon, rng, 
-		func(c, t, d): 
-			if on_progress.is_valid(): 
-				var normalized = 0.20 + (c / maxf(t, 1.0)) * 0.30
-				on_progress.call(normalized, 1.0, d)
+		func(c, t, d):
+			var frac: float = clampf(float(c) / maxf(float(t), 1.0), 0.0, 1.0)
+			if stage_tagged_progress:
+				_emit_sub_progress(on_progress, true, "SOCIETY_PREMISES", 0.30 + frac * 0.60, 0.0, str(d))
+			elif on_progress.is_valid():
+				on_progress.call(20.0 + frac * 25.0, 100.0, d)
 	)
 
-	# -------------------------------------------------------------------------
-	# PASS 2.5: MUNICIPAL BOROUGH CLUSTERING
-	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(25.0, 100.0, "Pass 4: Creating Boroughs...")
-		await Engine.get_main_loop().process_frame
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.92, 46.0, "Pass 4: Creating Boroughs...")
+	await Engine.get_main_loop().process_frame
 	BOROUGH_CLUSTERER.cluster_districts_into_boroughs(world_state, _civic_hierarchy, _lexicon, rng)
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 1.0, 49.0, "Physical premises & boroughs ready.")
+	_last_stage_durations_ms["SOCIETY_PREMISES"] = maxi(1, Time.get_ticks_msec() - t0_premises)
 
 	# -------------------------------------------------------------------------
-	# PASS 3: CITIZENS, CONTRACTS & QUALIFICATIONS (Distance-Decayed Commute)
+	# SUB-STAGE 2: SOCIETY_CITIZENS (Pass 3: Citizens, Contracts, Kinship)
 	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(50.0, 100.0, "Pass 5: Hydrating citizens into households...")
-		await Engine.get_main_loop().process_frame
+	var t0_citizens: int = Time.get_ticks_msec()
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_CITIZENS", 0.0, 50.0, "Pass 5: Hydrating citizens into households...")
+	await Engine.get_main_loop().process_frame
 	await CITIZEN_HYDRATOR.run(
-			physical_state,
-			_demographics,
-			_lexicon,
-			_job_definitions,
-			_cultural,
-			rng,
-			on_progress
-			)
+		physical_state,
+		_demographics,
+		_lexicon,
+		_job_definitions,
+		_cultural,
+		rng,
+		func(c, t, d):
+			var raw_frac: float = clampf((float(c) - 50.0) / 35.0, 0.0, 1.0)
+			if stage_tagged_progress:
+				_emit_sub_progress(on_progress, true, "SOCIETY_CITIZENS", raw_frac, 0.0, str(d))
+			elif on_progress.is_valid():
+				on_progress.call(c, t, d)
+	)
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_CITIZENS", 1.0, 85.0, "Citizen hydration complete.")
+	_last_stage_durations_ms["SOCIETY_CITIZENS"] = maxi(1, Time.get_ticks_msec() - t0_citizens)
 
 	# -------------------------------------------------------------------------
-	# PASS 4: DUNBAR NETWORK EDGES (Kinship, Workplace, Parish)
+	# SUB-STAGE 3: SOCIETY_DUNBAR (Pass 4: Venue & Workplace Social Ties)
 	# -------------------------------------------------------------------------
-	if on_progress.is_valid():
-		on_progress.call(90.0, 100.0, "Pass 6: Weaving social relationship graphs...")
-		await Engine.get_main_loop().process_frame
+	var t0_dunbar: int = Time.get_ticks_msec()
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_DUNBAR", 0.05, 86.0, "Pass 6: Weaving social relationship graphs...")
+	await Engine.get_main_loop().process_frame
 	DUNBAR_WEAVER.run(physical_state, rng)
+	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_DUNBAR", 1.0, 100.0, "Social relationship graphs complete.")
+	_last_stage_durations_ms["SOCIETY_DUNBAR"] = maxi(1, Time.get_ticks_msec() - t0_dunbar)
 
 	var elapsed: int = Time.get_ticks_msec() - start_ms
-	if on_progress.is_valid():
+	if not stage_tagged_progress and on_progress.is_valid():
 		on_progress.call(100.0, 100.0, "Living society complete in %d ms." % elapsed)
 		await Engine.get_main_loop().process_frame
 
@@ -146,3 +158,18 @@ static func generate_city_society(
 	else:
 		SystemLogger.log_warn("[SocialNetwork] CityAuditor did not write a report.")
 		push_warning("[SocialNetwork] CityAuditor did not write a report.")
+
+static func _emit_sub_progress(
+	on_progress: Callable,
+	stage_tagged: bool,
+	stage_id: String,
+	local_frac: float,
+	legacy_pct: float,
+	desc: String
+) -> void:
+	if not on_progress.is_valid():
+		return
+	if stage_tagged:
+		on_progress.call(stage_id, clampf(local_frac, 0.0, 1.0), desc)
+	else:
+		on_progress.call(legacy_pct, 100.0, desc)

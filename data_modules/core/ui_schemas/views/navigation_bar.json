@@ -29,6 +29,13 @@
           "emit_args": "\"open_roster\", {}"
         },
         {
+          "id": "family_bible",
+          "type": "BUTTON",
+          "token": "UI_TAB_MACRO_FAMILY_BIBLE",
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_family_bible\", {}"
+        },
+        {
           "id": "finance",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_FINANCE",

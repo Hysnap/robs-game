@@ -10,6 +10,7 @@ const HOUSEHOLD_COMPOSER = preload("res://systems/society/household_composition_
 const PERSONALITY_HYDRATOR = preload("res://systems/society/citizen_personality_hydrator.gd")
 const FAMILY_WEAVER = preload("res://systems/society/family_tree_weaver.gd")
 const ANCHOR_ALLOCATOR = preload("res://systems/society/unified_anchor_allocator.gd")
+const SPATIAL_RADIUS_INDEX = preload("res://systems/society/spatial_radius_index.gd")
 const GENERATION_AUDITOR = preload("res://systems/society/society_generation_auditor.gd")
 
 ## Pass 3: Orchestrates household composition, OCEAN personalities, kinship trees, labor, org governance, and calendar schedules
@@ -100,6 +101,16 @@ static func run(
 			var r_code: String = str(slot.get("role_code", ""))
 			var r_def: Dictionary = job_roles_cfg.get(r_code, {})
 			slot["min_education_code"] = str(slot.get("edu_req", r_def.get("education_required", "NO_FORMAL")))
+
+	# Build 2D spatial hash indexes for O(1) moving-circle commute and venue queries
+	var job_slot_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_job_slot_spatial_index(open_job_slots, estab_positions, 1500.0)
+	var church_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(church_estabs, estab_positions, 1500.0)
+	var pub_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(pub_estabs, estab_positions, 1500.0)
+	var school_spatial_indexes: Dictionary = {}
+	for s_cat in ["PRIMARY_SCHOOL", "SECONDARY_SCHOOL", "UNIVERSITY_OR_POLYTECHNIC"]:
+		var s_ids: Array = cat_estab_ids.get(s_cat, [])
+		if not s_ids.is_empty():
+			school_spatial_indexes[s_cat] = ANCHOR_ALLOCATOR.build_establishment_spatial_index(s_ids, estab_positions, 1500.0)
 
 	var resident_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
@@ -215,7 +226,7 @@ static func run(
 			# 2. Resolve Individual Church / Parish Anchor
 			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
 				role_in_home, hh_religion, home_pos, head_church_id, spouse_church_id,
-				church_estabs, estab_positions, ocean_rules, rng
+				church_estabs, estab_positions, ocean_rules, rng, church_spatial_index
 			)
 			if role_in_home == "HEAD":
 				head_church_id = church_id
@@ -251,12 +262,16 @@ static func run(
 			elif contract_class == "FORMAL_LEGAL":
 				var matched_idx: int = ANCHOR_ALLOCATOR.match_best_job_slot_for_resident(
 					candidate_ctx, open_job_slots, edu_rank_map, job_roles_cfg,
-					ocean_rules, estab_positions, enable_commute, rng
+					ocean_rules, estab_positions, enable_commute, rng, job_slot_index
 				)
 
 				if matched_idx >= 0:
 					var slot: Dictionary = open_job_slots[matched_idx]
-					open_job_slots[matched_idx] = open_job_slots.back()
+					slot["_claimed"] = true
+					slot["_index"] = -1
+					var back_slot: Dictionary = open_job_slots.back()
+					open_job_slots[matched_idx] = back_slot
+					back_slot["_index"] = matched_idx
 					open_job_slots.pop_back()
 
 					assert(slot.has("estab_id"), "FATAL: Slot missing mandatory 'estab_id'!")
@@ -354,7 +369,7 @@ static func run(
 				var pref_sib_school: int = int(hh_sibling_school_by_cat.get(anchor_cat, -1))
 				assigned_est_id = ANCHOR_ALLOCATOR.allocate_school_or_enclave_anchor(
 					home_pos, school_candidates, estab_positions, estab_capacities,
-					enrolled_counts, pref_sib_school, rng
+					enrolled_counts, pref_sib_school, rng, school_spatial_indexes.get(anchor_cat, null)
 				)
 				if assigned_est_id > 0 and role_in_home == "CHILD":
 					hh_sibling_school_by_cat[anchor_cat] = assigned_est_id
@@ -386,7 +401,8 @@ static func run(
 				"age_years": age_years,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"local_pub_id": - 1,
+				"church_id": church_id,
+				"local_pub_id": -1,
 				"employer_establishment_id": assigned_est_id,
 				"role_code": occ_title,
 				"ocean_traits": ocean_traits
@@ -396,7 +412,7 @@ static func run(
 			var local_pub_id: int = ANCHOR_ALLOCATOR.resolve_individual_pub_id(
 				res_record, pub_estabs, estab_positions, estab_capacities,
 				workplace_cohort_pubs, kin_graph, residents_by_id,
-				job_roles_cfg, ocean_rules, rng
+				job_roles_cfg, ocean_rules, rng, pub_spatial_index
 			)
 			res_record["local_pub_id"] = local_pub_id
 			residents_by_id[r_id] = res_record
@@ -545,7 +561,7 @@ static func run(
 
 			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
 				"HEAD", str(cult["religion"]), home_pos, -1, -1,
-				church_estabs, estab_positions, ocean_rules, rng
+				church_estabs, estab_positions, ocean_rules, rng, church_spatial_index
 			)
 
 			var res_record: Dictionary = {
@@ -558,7 +574,8 @@ static func run(
 				"age_years": migrant_age,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"local_pub_id": - 1,
+				"church_id": church_id,
+				"local_pub_id": -1,
 				"employer_establishment_id": influx_est_id,
 				"role_code": role_key,
 				"ocean_traits": ocean_traits
@@ -567,7 +584,7 @@ static func run(
 			var local_pub_id: int = ANCHOR_ALLOCATOR.resolve_individual_pub_id(
 				res_record, pub_estabs, estab_positions, estab_capacities,
 				workplace_cohort_pubs, kin_graph, residents_by_id,
-				job_roles_cfg, ocean_rules, rng
+				job_roles_cfg, ocean_rules, rng, pub_spatial_index
 			)
 			res_record["local_pub_id"] = local_pub_id
 			residents_by_id[r_id] = res_record
@@ -657,6 +674,12 @@ static func run(
 
 	open_job_slots.clear()
 	open_job_slots.append_array(remaining_unfilled_slots)
+
+	# Release Pass 3 spatial indexes once labor & venue allocation is finished
+	job_slot_index.clear()
+	church_spatial_index.clear()
+	pub_spatial_index.clear()
+	school_spatial_indexes.clear()
 
 	if not influx_hh_inserts.is_empty():
 		DB_MANAGER.execute_batch(influx_hh_inserts)
