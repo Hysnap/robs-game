@@ -225,6 +225,133 @@ static func transfer_intel(
 	transfer_ctx["max_cap"] = source_score * clampf(share_ratio, 0.0, 1.0)
 	return apply_effort_impulse(world_state, to_scope, to_id, target_scope, target_id, transferred_effort, transfer_ctx, rules_module, metric_id)
 
+## Resolves slider disclosure_level (0.0 - 1.0) into { "share_ratio": float, "max_score_cap": float, "label_token": String }
+static func resolve_disclosure_tier(disclosure_level: float, rules_module: String = DEFAULT_RULES_MODULE) -> Dictionary:
+	var rules: Dictionary = get_rules(rules_module)
+	var disc_cfg: Dictionary = rules.get("disclosure_tiers", {})
+	var tiers: Array = disc_cfg.get("tiers", [])
+	assert(not tiers.is_empty(), "FATAL: [IntelManager] '%s' module missing 'disclosure_tiers.tiers'." % rules_module)
+
+	var clamped_slider: float = clampf(disclosure_level, 0.0, 1.0)
+	for tier in tiers:
+		if tier is Dictionary and clamped_slider <= float(tier.get("max_slider", 1.0)):
+			return {
+				"share_ratio": clampf(float(tier.get("share_ratio", 1.0)), 0.0, 1.0),
+				"max_score_cap": clampf(float(tier.get("max_score_cap", 100.0)), 0.0, MAX_ASYMPTOTIC_CAP),
+				"label_token": str(tier.get("label_token", "UI_INTEL_SHARE_STANDARD_CREW"))
+			}
+
+	var last_tier: Dictionary = tiers[tiers.size() - 1]
+	return {
+		"share_ratio": clampf(float(last_tier.get("share_ratio", 1.0)), 0.0, 1.0),
+		"max_score_cap": clampf(float(last_tier.get("max_score_cap", 100.0)), 0.0, MAX_ASYMPTOTIC_CAP),
+		"label_token": str(last_tier.get("label_token", "UI_INTEL_SHARE_SKELETONS_ALL"))
+	}
+
+## Transfers an actor's personal knowledge about a subject scope (or "SELF" / "ALL") upward to an organization
+## gated by a 0.0-1.0 disclosure_level slider and declarative share_expansions in intel_exposure_rules.json.
+static func share_actor_intel_with_org(
+	world_state: Dictionary,
+	actor_id: String,
+	org_id: String,
+	share_scope: String,
+	subject_id: String = "",
+	disclosure_level: float = -1.0,
+	context: Dictionary = {},
+	rules_module: String = DEFAULT_RULES_MODULE,
+	metric_id: String = DEFAULT_METRIC_ID
+) -> Dictionary:
+	var clean_actor: String = actor_id.strip_edges()
+	var clean_org: String = org_id.strip_edges()
+	var norm_scope: String = share_scope.to_upper().strip_edges()
+	if clean_actor.is_empty() or clean_org.is_empty() or norm_scope.is_empty():
+		return {"targets_shared": 0}
+
+	var rules: Dictionary = get_rules(rules_module)
+	var effective_slider: float = disclosure_level
+	if effective_slider < 0.0:
+		effective_slider = float(rules.get("disclosure_tiers", {}).get("default_initial_crew_level", 0.8))
+
+	var tier_cfg: Dictionary = resolve_disclosure_tier(effective_slider, rules_module)
+	var share_ratio: float = float(tier_cfg["share_ratio"])
+	var tier_cap: float = float(tier_cfg["max_score_cap"])
+	var pool_container: String = str(context.get("pool_container", DEFAULT_POOL_CONTAINER))
+
+	var candidate_targets: Array[Dictionary] = []
+	var seen_keys: Dictionary = {}
+
+	if norm_scope == "ALL":
+		var actor_dossier = world_state.get(pool_container, {}).get("RESIDENT", {}).get(clean_actor, null)
+		if actor_dossier is Dictionary:
+			for raw_key in actor_dossier.keys():
+				var compound := str(raw_key)
+				var sep_idx := compound.find(":")
+				if sep_idx <= 0:
+					continue
+				var t_scope := compound.substr(0, sep_idx).to_upper()
+				var t_id := compound.substr(sep_idx + 1)
+				if not t_id.is_empty() and not seen_keys.has(compound):
+					seen_keys[compound] = true
+					candidate_targets.append({"target_scope": t_scope, "target_id": t_id})
+	else:
+		var expansions: Dictionary = rules.get("share_expansions", {})
+		var exp_cfg: Dictionary = expansions.get(norm_scope, {}) if expansions.get(norm_scope, null) is Dictionary else {}
+		var resolved_scope: String = str(exp_cfg.get("alias_scope", norm_scope)).to_upper().strip_edges()
+		var resolved_subject: String = clean_actor if bool(exp_cfg.get("use_actor_id", false)) else subject_id.strip_edges()
+
+		if not resolved_scope.is_empty() and not resolved_subject.is_empty():
+			var direct_key := "%s:%s" % [resolved_scope, resolved_subject]
+			seen_keys[direct_key] = true
+			candidate_targets.append({"target_scope": resolved_scope, "target_id": resolved_subject})
+
+			var sub_exp_cfg: Dictionary = expansions.get(resolved_scope, {}) if expansions.get(resolved_scope, null) is Dictionary else {}
+			var query_method: String = str(sub_exp_cfg.get("query_method", "")).strip_edges()
+			if not query_method.is_empty() and query_method in SocietyQueriesScript:
+				var resolver := Callable(SocietyQueriesScript, query_method)
+				if resolver.is_valid():
+					var child_targets: Array = resolver.call(resolved_scope, resolved_subject)
+					for item in child_targets:
+						if item is Dictionary:
+							var c_scope := str(item.get("target_scope", "")).to_upper().strip_edges()
+							var c_id := str(item.get("target_id", "")).strip_edges()
+							var c_key := "%s:%s" % [c_scope, c_id]
+							if not c_scope.is_empty() and not c_id.is_empty() and not seen_keys.has(c_key):
+								seen_keys[c_key] = true
+								candidate_targets.append({"target_scope": c_scope, "target_id": c_id})
+
+	var shared_count: int = 0
+	for tgt in candidate_targets:
+		var t_scope: String = tgt["target_scope"]
+		var t_id: String = tgt["target_id"]
+		var actor_score: float = get_direct_score(world_state, "RESIDENT", clean_actor, t_scope, t_id, pool_container)
+		if not is_entity_known(actor_score, t_scope, rules_module):
+			continue
+
+		var target_max_cap: float = minf(tier_cap, actor_score * share_ratio)
+		if target_max_cap <= 0.0:
+			continue
+
+		var transfer_ctx := context.duplicate(true)
+		transfer_ctx["max_cap"] = target_max_cap
+		var current_org_score: float = get_direct_score(world_state, "ORG", clean_org, t_scope, t_id, pool_container)
+		if current_org_score >= target_max_cap:
+			continue
+
+		transfer_intel(
+			world_state, "RESIDENT", clean_actor, "ORG", clean_org, t_scope, t_id, share_ratio,
+			transfer_ctx, rules_module, metric_id
+		)
+		shared_count += 1
+
+	return {
+		"actor_id": clean_actor,
+		"org_id": clean_org,
+		"share_scope": norm_scope,
+		"disclosure_level": effective_slider,
+		"label_token": tier_cfg["label_token"],
+		"targets_shared": shared_count
+	}
+
 ## Generic declarative saturating impact executor (completely measure- & scope-agnostic)
 static func process_verb_impact(world_state: Dictionary, impact_params: Dictionary, cfg: Dictionary) -> Dictionary:
 	var obs_scope: String = str(cfg.get("observer_scope", impact_params.get("observer_scope", "RESIDENT"))).to_upper().strip_edges()
@@ -394,22 +521,61 @@ static func build_player_intel_context(ws: Dictionary) -> Dictionary:
 	var crew_ids: Array[int] = []
 	var observers: Array = []
 	var residents_dict: Dictionary = ws.get("residents", {})
+	var ops_cfg: Dictionary = ws.get("operations", {})
+	var crew_org_id: String = str(ops_cfg.get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
+	var hq_estab_id: int = int(ops_cfg.get("hq_establishment_id", 0))
 
 	for key in residents_dict.keys():
 		var rec = residents_dict[key]
 		if rec is Dictionary and bool(rec.get("is_crew", true)):
 			var r_id: int = int(rec.get("resident_id", 0))
+			var affiliations: Array = []
+
+			if not crew_org_id.is_empty():
+				var crew_clearance: float = 1.0 if bool(rec.get("is_leader", false)) else float(rec.get("crew_clearance", 0.85))
+				affiliations.append({
+					"org_scope": "ORG",
+					"org_id": crew_org_id,
+					"clearance": crew_clearance
+				})
+
+			if hq_estab_id > 0:
+				affiliations.append({
+					"org_scope": "ESTABLISHMENT",
+					"org_id": str(hq_estab_id),
+					"clearance": 1.0
+				})
+
+			var primary_role_code: String = str(rec.get("primary_role_code", rec.get("role_title", rec.get("role", "")))).strip_edges()
+			var work_est_id: int = int(rec.get("primary_employer_establishment_id", 0))
+			if work_est_id > 0:
+				affiliations.append({
+					"org_scope": "ESTABLISHMENT",
+					"org_id": str(work_est_id),
+					"role_code": primary_role_code
+				})
+
+			var work_org_id: String = str(rec.get("primary_employer_org_id", "")).strip_edges()
+			if not work_org_id.is_empty() and work_org_id != crew_org_id:
+				affiliations.append({
+					"org_scope": "ORG",
+					"org_id": work_org_id,
+					"role_code": primary_role_code
+				})
+
 			if r_id > 0 and not crew_ids.has(r_id):
 				crew_ids.append(r_id)
 				observers.append({
 					"observer_scope": "RESIDENT",
-					"observer_id": str(r_id)
+					"observer_id": str(r_id),
+					"affiliations": affiliations
 				})
 			var slot_str := str(key)
 			if not slot_str.is_empty() and slot_str != str(r_id):
 				observers.append({
 					"observer_scope": "RESIDENT",
-					"observer_id": slot_str
+					"observer_id": slot_str,
+					"affiliations": affiliations
 				})
 
 	return {

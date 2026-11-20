@@ -33,7 +33,11 @@
 
 	{ "domain": "RELATIONSHIP_TYPE", "code": "FAMILY", "title": "Immediate Family", "description": "Cohabiting nuclear family or domestic partnership." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "SPOUSE", "title": "Spouse / Legal Partner", "description": "Marital domestic partnership." },
+	{ "domain": "RELATIONSHIP_TYPE", "code": "HUSBAND", "title": "Husband", "description": "Male spouse or marital partner." },
+	{ "domain": "RELATIONSHIP_TYPE", "code": "WIFE", "title": "Wife", "description": "Female spouse or marital partner." },
+	{ "domain": "RELATIONSHIP_TYPE", "code": "PARTNER", "title": "Unmarried Partner", "description": "Unmarried cohabiting romantic partner." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "EXTENDED_FAMILY", "title": "Extended Kinship", "description": "Non-cohabiting relatives, cousins, aunts, uncles." },
+	{ "domain": "RELATIONSHIP_TYPE", "code": "HOUSEHOLD_PEER", "title": "Household Peer", "description": "Non-family member sharing the same household." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "DRINKING_MATE", "title": "Drinking Companion", "description": "Regular patron association at the same local establishment." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "WORK_MATE", "title": "Workplace Friend", "description": "Close Co-workers or peers met via work." },
 	{ "domain": "RELATIONSHIP_TYPE", "code": "CONGREGATIONAL", "title": "Congregational Parishioner", "description": "Shared church, temple, or faith community affiliation." },
@@ -286,6 +290,12 @@
 		"title": "Buddist",
 		"description": "Buddist congregation."
 	},
+	{
+		"domain": "RELIGION",
+		"code": "BUDDHIST",
+		"title": "Buddhist",
+		"description": "Buddhist congregation."
+	},
 
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "UNIVERSITY_OR_POLYTECHNIC", "title": "Higher Education Campus", "description": "Polytechnic or university campus for advanced degrees." },
 	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOSPITAL", "title": "District General Hospital", "description": "Regional medical infirmary and emergency health facility." },
@@ -499,6 +509,9 @@
     { "domain": "SCHEDULE_WINDOW", "code": "SPLIT_SHIFT", "title": "Split Shift", "description": "Broken hours common in bus transit, catering, and cleaning." },
     { "domain": "SCHEDULE_WINDOW", "code": "WEEKEND", "title": "Weekend Only", "description": "Weekend market stalls, casual security, and extra service cover." },
 	{ "domain": "SCHEDULE_WINDOW", "code": "SHIFTS_ROTATING", "title": "Rotating Shifts", "description": "Rotating shift covering 24hr period" },
+    { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE", "title": "Flexible Schedule", "description": "Fallback schedule for irregular or independently arranged work." },
+    { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE_DAYTIME", "title": "Flexible Daytime", "description": "Variable daytime schedule for education and other daytime activities." },
+    { "domain": "SCHEDULE_WINDOW", "code": "REGULATED_FULL_TIME", "title": "Regulated Full-Time", "description": "Full-time schedule governed by institutional or civic operating rules." },
     { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE_ON_CALL", "title": "Flexible / On-Call", "description": "Irregular on-demand hours (minicab driving, syndicate runners, emergency repair)." }
 
 ]

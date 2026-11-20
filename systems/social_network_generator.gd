@@ -33,7 +33,7 @@ static func _load_configs() -> void:
 			_lexicon[k] = spatial_lexicon[k]
 	_cultural = MANIFEST_MGR.load_module("cultural_demographics")
 	_civic_hierarchy = MANIFEST_MGR.load_module("civic_hierarchy")
-	_job_definitions = MANIFEST_MGR.load_module("job_definitions").get("roles", {})
+	_job_definitions = MANIFEST_MGR.load_module("job_definitions")
 	_archetypes = MANIFEST_MGR.load_module("archetypes")
 	_building_classes = MANIFEST_MGR.load_module("building_classes")
 

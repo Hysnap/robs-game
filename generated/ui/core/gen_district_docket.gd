@@ -336,9 +336,9 @@ func bind_data(data: Dictionary) -> void:
 					btn.add_theme_font_override("font", mono_f)
 					btn.add_theme_font_size_override("font_size", 11)
 					btn.add_theme_color_override("font_color", clr_b)
-					var dest_route: String = str(item.get("detail_route", "ESTABLISHMENT_DOCKET"))
+					var dest_route: String = str(item.get("detail_route", "OPEN_ESTABLISHMENT_DOCKET"))
 					if dest_route.is_empty():
-						dest_route = "ESTABLISHMENT_DOCKET"
+						dest_route = "OPEN_ESTABLISHMENT_DOCKET"
 					btn.pressed.connect(func(): item_selected.emit(dest_route, key_val))
 					ctrl.add_child(btn)
 	if _value_labels.has("zhi"):

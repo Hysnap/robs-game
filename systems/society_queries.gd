@@ -859,3 +859,243 @@ static func get_crew_standalone_obligations_in_window(crew_ids: Array[String], s
 		  AND ((debtor_scope = 'RESIDENT' AND debtor_id IN (%s)) OR (creditor_scope = 'RESIDENT' AND creditor_id IN (%s)))
 		ORDER BY due_day ASC, obligation_id ASC;
 	""" % [start_day, end_day, crew_in, crew_in])
+
+# ==============================================================================
+# MULTILAYER INFO LOOP & CREW SCOUTING QUERIES
+# ==============================================================================
+
+## Resolves child { "target_scope": String, "target_id": String } targets for declarative org intel sharing
+static func resolve_intel_share_targets(share_scope: String, subject_id: String) -> Array[Dictionary]:
+	var targets: Array[Dictionary] = []
+	var norm_scope := share_scope.to_upper().strip_edges()
+	var clean_id := subject_id.strip_edges()
+	if norm_scope.is_empty() or clean_id.is_empty():
+		return targets
+
+	var escaped_id := clean_id.replace("'", "''")
+
+	if norm_scope == "RESIDENT" and clean_id.is_valid_int():
+		var r_id := int(clean_id)
+		var home_rows: Array = DBManager.query_rows("""
+			SELECT h.establishment_id, e.district_id
+			FROM residents r
+			JOIN households h ON r.household_id = h.household_id
+			JOIN establishments e ON h.establishment_id = e.establishment_id
+			WHERE r.resident_id = %d;
+		""" % r_id)
+		for row in home_rows:
+			var est_id := int(row.get("establishment_id", 0))
+			if est_id > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(est_id)})
+			var dist_id := str(row.get("district_id", ""))
+			if not dist_id.is_empty():
+				targets.append({"target_scope": "DISTRICT", "target_id": dist_id})
+
+		var work_rows: Array = DBManager.query_rows("""
+			SELECT DISTINCT employer_establishment_id
+			FROM livelihood_contracts
+			WHERE resident_id = %d AND valid_to IS NULL AND employer_establishment_id IS NOT NULL;
+		""" % r_id)
+		for row in work_rows:
+			var w_est := int(row.get("employer_establishment_id", 0))
+			if w_est > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(w_est)})
+
+	elif norm_scope == "HOUSEHOLD" and clean_id.is_valid_int():
+		var hh_id := int(clean_id)
+		var hh_rows: Array = DBManager.query_rows("""
+			SELECT establishment_id FROM households WHERE household_id = %d;
+		""" % hh_id)
+		for row in hh_rows:
+			var est_id := int(row.get("establishment_id", 0))
+			if est_id > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(est_id)})
+
+		var mem_rows: Array = DBManager.query_rows("""
+			SELECT resident_id FROM residents WHERE household_id = %d AND dod IS NULL;
+		""" % hh_id)
+		for row in mem_rows:
+			var m_id := int(row.get("resident_id", 0))
+			if m_id > 0:
+				targets.append({"target_scope": "RESIDENT", "target_id": str(m_id)})
+
+	elif norm_scope == "ESTABLISHMENT" and clean_id.is_valid_int():
+		var est_id := int(clean_id)
+		var res_rows: Array = DBManager.query_rows("""
+			SELECT r.resident_id
+			FROM residents r
+			JOIN households h ON r.household_id = h.household_id
+			WHERE h.establishment_id = %d AND r.dod IS NULL;
+		""" % est_id)
+		for row in res_rows:
+			var r_id := int(row.get("resident_id", 0))
+			if r_id > 0:
+				targets.append({"target_scope": "RESIDENT", "target_id": str(r_id)})
+
+		var emp_rows: Array = DBManager.query_rows("""
+			SELECT DISTINCT resident_id
+			FROM livelihood_contracts
+			WHERE employer_establishment_id = %d AND valid_to IS NULL;
+		""" % est_id)
+		for row in emp_rows:
+			var e_id := int(row.get("resident_id", 0))
+			if e_id > 0:
+				targets.append({"target_scope": "RESIDENT", "target_id": str(e_id)})
+
+	elif norm_scope == "ORG":
+		var hq_rows: Array = DBManager.query_rows("""
+			SELECT hq_establishment_id FROM organizations
+			WHERE org_id = '%s' AND hq_establishment_id IS NOT NULL;
+		""" % escaped_id)
+		for row in hq_rows:
+			var hq_id := int(row.get("hq_establishment_id", 0))
+			if hq_id > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(hq_id)})
+
+		var owned_rows: Array = DBManager.query_rows("""
+			SELECT establishment_id FROM establishments
+			WHERE owner_org_id = '%s' AND is_vacant = 0;
+		""" % escaped_id)
+		for row in owned_rows:
+			var o_est := int(row.get("establishment_id", 0))
+			if o_est > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(o_est)})
+
+		var staff_rows: Array = DBManager.query_rows("""
+			SELECT resident_id FROM organization_members
+			WHERE org_id = '%s' AND valid_to IS NULL;
+		""" % escaped_id)
+		for row in staff_rows:
+			var s_id := int(row.get("resident_id", 0))
+			if s_id > 0:
+				targets.append({"target_scope": "RESIDENT", "target_id": str(s_id)})
+
+	elif norm_scope == "DISTRICT":
+		var est_rows: Array = DBManager.query_rows("""
+			SELECT establishment_id FROM establishments
+			WHERE district_id = '%s' AND is_vacant = 0;
+		""" % escaped_id)
+		for row in est_rows:
+			var d_est := int(row.get("establishment_id", 0))
+			if d_est > 0:
+				targets.append({"target_scope": "ESTABLISHMENT", "target_id": str(d_est)})
+
+	elif norm_scope == "EVENT" and clean_id.is_valid_int():
+		var ev_id := int(clean_id)
+		var ev_rows: Array = DBManager.query_rows("""
+			SELECT location_scope, location_id FROM calendar_events WHERE event_id = %d;
+		""" % ev_id)
+		for row in ev_rows:
+			var loc_scope := str(row.get("location_scope", "")).to_upper()
+			var loc_id := str(row.get("location_id", "")).strip_edges()
+			if not loc_scope.is_empty() and not loc_id.is_empty():
+				targets.append({"target_scope": loc_scope, "target_id": loc_id})
+
+	return targets
+
+## Returns active establishment IDs in a district (optionally including residential street addresses)
+static func get_district_establishment_ids(district_id: String, include_residential: bool = true) -> Array[int]:
+	var ids: Array[int] = []
+	if district_id.is_empty():
+		return ids
+	var escaped_dist := district_id.replace("'", "''")
+	var filter_sql := "" if include_residential else "AND l.code != 'RESIDENTIAL_UNIT'"
+	var rows: Array = DBManager.query_rows("""
+		SELECT e.establishment_id
+		FROM establishments e
+		JOIN system_labels l ON e.category_id = l.label_id
+		WHERE e.district_id = '%s'
+		  AND e.is_vacant = 0
+		  %s;
+	""" % [escaped_dist, filter_sql])
+	for row in rows:
+		var eid := int(row.get("establishment_id", 0))
+		if eid > 0:
+			ids.append(eid)
+	return ids
+
+## Returns active 1st-degree contacts (family & friends) for a resident along with their home and workplace establishment IDs
+static func get_resident_direct_contacts_and_anchors(resident_id: int) -> Array[Dictionary]:
+	if resident_id <= 0:
+		return []
+	return DBManager.query_rows("""
+		SELECT DISTINCT
+			r.resident_id AS contact_id,
+			l.code AS relationship_code,
+			sr.affinity_score,
+			h.establishment_id AS home_establishment_id,
+			c.employer_establishment_id AS work_establishment_id
+		FROM social_relationships sr
+		JOIN residents r ON sr.to_resident_id = r.resident_id
+		JOIN households h ON r.household_id = h.household_id
+		JOIN system_labels l ON sr.relationship_type_id = l.label_id
+		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id AND c.valid_to IS NULL
+		WHERE sr.from_resident_id = %d
+		  AND sr.valid_to IS NULL
+		  AND r.dod IS NULL;
+	""" % resident_id)
+
+## Returns active commercial/non-residential establishments in all districts within radius_m of center_district_id
+static func get_commercial_establishments_within_radius(
+	world_state: Dictionary,
+	center_district_id: String,
+	radius_m: float = 1500.0
+) -> Array[Dictionary]:
+	var results: Array[Dictionary] = []
+	if center_district_id.is_empty() or radius_m < 0.0:
+		return results
+
+	var districts_map: Dictionary = world_state.get("districts", {})
+	if not districts_map.has(center_district_id):
+		return results
+
+	var center_pos: Vector2 = _resolve_district_anchor_meters(districts_map[center_district_id])
+	var escaped_districts: Array[String] = []
+
+	for d_id_raw in districts_map.keys():
+		var d_id := str(d_id_raw)
+		var d_rec = districts_map[d_id_raw]
+		if not (d_rec is Dictionary):
+			continue
+		var d_pos: Vector2 = _resolve_district_anchor_meters(d_rec)
+		if center_pos.distance_to(d_pos) <= radius_m:
+			escaped_districts.append("'%s'" % d_id.replace("'", "''"))
+
+	if escaped_districts.is_empty():
+		return results
+
+	var rows: Array = DBManager.query_rows("""
+		SELECT e.establishment_id, e.district_id
+		FROM establishments e
+		JOIN system_labels l ON e.category_id = l.label_id
+		WHERE e.district_id IN (%s)
+		  AND e.is_vacant = 0
+		  AND l.code != 'RESIDENTIAL_UNIT';
+	""" % ", ".join(escaped_districts))
+
+	for row in rows:
+		var eid := int(row.get("establishment_id", 0))
+		var did := str(row.get("district_id", ""))
+		if eid > 0 and not did.is_empty():
+			results.append({
+				"establishment_id": eid,
+				"district_id": did
+			})
+	return results
+
+static func _resolve_district_anchor_meters(district_rec: Dictionary) -> Vector2:
+	var raw_anchor = district_rec.get("spatial_anchor", null)
+	if raw_anchor is Vector2:
+		return raw_anchor
+	if raw_anchor is Array and raw_anchor.size() >= 2:
+		return Vector2(float(raw_anchor[0]), float(raw_anchor[1]))
+	if raw_anchor is Dictionary and raw_anchor.has("x") and raw_anchor.has("y"):
+		return Vector2(float(raw_anchor["x"]), float(raw_anchor["y"]))
+	var raw_coords = district_rec.get("grid_coords", null)
+	if raw_coords is Vector2i:
+		return Vector2(float(raw_coords.x) * 200.0, float(raw_coords.y) * 200.0)
+	if raw_coords is Vector2:
+		return Vector2(raw_coords.x * 200.0, raw_coords.y * 200.0)
+	if raw_coords is Array and raw_coords.size() >= 2:
+		return Vector2(float(raw_coords[0]) * 200.0, float(raw_coords[1]) * 200.0)
+	return Vector2.ZERO

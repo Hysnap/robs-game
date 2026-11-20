@@ -386,7 +386,7 @@ static func run(
 				"age_years": age_years,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"local_pub_id": -1,
+				"local_pub_id": - 1,
 				"employer_establishment_id": assigned_est_id,
 				"role_code": occ_title,
 				"ocean_traits": ocean_traits
@@ -447,7 +447,7 @@ static func run(
 		if hh_member_records.size() > 1:
 			FAMILY_WEAVER.weave_intra_household_edges(
 				edge_inserts, hh_member_records, is_married_couple,
-				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph, rng
+				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph
 			)
 
 		# Flush batches every 250 households for low peak RAM and smooth progress bar updates
@@ -558,7 +558,7 @@ static func run(
 				"age_years": migrant_age,
 				"dob": dob_day,
 				"home_pos": home_pos,
-				"local_pub_id": -1,
+				"local_pub_id": - 1,
 				"employer_establishment_id": influx_est_id,
 				"role_code": role_key,
 				"ocean_traits": ocean_traits
@@ -672,6 +672,13 @@ static func run(
 	# --------------------------------------------------------------------------
 	# STAGE 3: Cross-Household Extended Kinship Tree Weaving (76% -> 85%)
 	# --------------------------------------------------------------------------
+	# Prune fields not needed by FamilyTreeWeaver to keep Stage 3 working memory flat
+	for res_key in residents_by_id.keys():
+		var r_entry: Dictionary = residents_by_id[res_key]
+		r_entry.erase("ocean_traits")
+		r_entry.erase("local_pub_id")
+		r_entry.erase("employer_establishment_id")
+		r_entry.erase("role_code")
 	var extended_kin_edges: Array[String] = []
 	var extended_kin_count: int = await FAMILY_WEAVER.weave_extended_family_trees(
 		extended_kin_edges, residents_by_id, kinship_rules,
@@ -773,7 +780,7 @@ static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_da
 		var first_sign_day: int = _next_day_for_weekday(sim_start_day, target_dow)
 		var first_giro_day: int = CALENDAR_HELPER.add_working_days(first_sign_day, giro_offset_wd, "POSTAL")
 
-		var sign_impacts := JSON.stringify([{"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "SIGN_ON"}])
+		var sign_impacts := JSON.stringify([ {"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "SIGN_ON"}])
 		events_sql.append("""
 			INSERT INTO calendar_events (
 				event_type, title_token, organizer_scope, organizer_id,
@@ -786,7 +793,7 @@ static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_da
 			);
 		""" % [cohort_num, authority_org, sign_on_cat, first_sign_day, first_sign_day, sign_on_rec, sign_impacts, sim_start_day])
 
-		var giro_impacts := JSON.stringify([{"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "GIRO_ENCASH"}])
+		var giro_impacts := JSON.stringify([ {"cohort": "CLAIMANT_COHORT_%d" % cohort_num, "action": "GIRO_ENCASH"}])
 		events_sql.append("""
 			INSERT INTO calendar_events (
 				event_type, title_token, organizer_scope, organizer_id,
@@ -805,7 +812,7 @@ static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_da
 	var pension_rec: int = int(pension_cfg.get("recurrence_days", 7))
 	var pension_cat: String = str(pension_cfg.get("encash_location_category", "POST_OFFICE"))
 	var first_pension_day: int = _next_day_for_weekday(sim_start_day, pension_dow)
-	var pension_impacts := JSON.stringify([{"cohort": "PENSIONERS", "action": "STATE_PENSION_DISBURSEMENT"}])
+	var pension_impacts := JSON.stringify([ {"cohort": "PENSIONERS", "action": "STATE_PENSION_DISBURSEMENT"}])
 	events_sql.append("""
 		INSERT INTO calendar_events (
 			event_type, title_token, organizer_scope, organizer_id,
@@ -864,7 +871,7 @@ static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_da
 		var ev_type: String = "WEEKLY_PAYDAY" if is_weekly else "MONTHLY_PAYDAY"
 		var start_d: int = first_weekly_pay if is_weekly else (sim_start_day + monthly_rec)
 		var rec_d: int = weekly_rec if is_weekly else monthly_rec
-		var org_impacts := JSON.stringify([{"org_id": oid, "pay_cadence": "WEEKLY" if is_weekly else "MONTHLY"}])
+		var org_impacts := JSON.stringify([ {"org_id": oid, "pay_cadence": "WEEKLY" if is_weekly else "MONTHLY"}])
 		events_sql.append("""
 			INSERT INTO calendar_events (
 				event_type, title_token, organizer_scope, organizer_id,
@@ -887,7 +894,7 @@ static func _seed_layer_a_calendar_schedules(civic_cfg: Dictionary, sim_start_da
 			if h_day < sim_start_day:
 				continue
 			var h_id: String = str(postal_map[h_day_raw])
-			var hol_impacts := JSON.stringify([{"holiday_id": h_id, "uplift": "BANK_HOLIDAY"}])
+			var hol_impacts := JSON.stringify([ {"holiday_id": h_id, "uplift": "BANK_HOLIDAY"}])
 			events_sql.append("""
 				INSERT INTO calendar_events (
 					event_type, title_token, organizer_scope, organizer_id,

@@ -6,10 +6,11 @@ const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const SCENARIO_MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
+const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 ## Scouts related young adults in the home district using the configured strategy pipeline,
 ## binds secondary grey-economy contracts & org memberships in SQLite, projects Layer B crew/kin milestones,
-## and stamps operative profiles into world_state["residents"].
+## seeds baseline crew knowledge_pools, and stamps operative profiles into world_state["residents"].
 static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_id: String) -> bool:
 	assert(not home_district_id.is_empty(), "FATAL: [CrewScoutBootstrapper] home_district_id cannot be empty.")
 	assert(SCENARIO_MANIFEST_MANAGER.has_module("startpoint"), "FATAL: [CrewScoutBootstrapper] Missing 'startpoint' module.")
@@ -48,12 +49,14 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 			unique_candidates[r_id] = row
 		if not relatives_by_resident.has(r_id):
 			relatives_by_resident[r_id] = []
-		var rel_id: int = int(row.get("relative_id", 0))
+		var raw_rel_id = row.get("relative_id", null)
+		var rel_id: int = int(raw_rel_id) if raw_rel_id != null else 0
 		if rel_id > 0:
+			var raw_aff = row.get("affinity_score", null)
 			relatives_by_resident[r_id].append({
 				"relative_id": rel_id,
 				"relationship_code": str(row.get("relationship_code", "")),
-				"affinity_score": float(row.get("affinity_score", 0.0))
+				"affinity_score": float(raw_aff) if raw_aff != null else 0.0
 			})
 
 		if not by_household.has(h_id):
@@ -186,16 +189,26 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 		resident_entry["agreeableness"] = float(profile.get("agreeableness", 0.5))
 		resident_entry["neuroticism"] = float(profile.get("neuroticism", 0.5))
 		resident_entry["primary_employer_org_id"] = profile.get("employer_org_id", "")
-		resident_entry["primary_employer_establishment_id"] = int(profile.get("employer_establishment_id", 0))
+		var raw_emp_est = profile.get("employer_establishment_id", null)
+		resident_entry["primary_employer_establishment_id"] = int(raw_emp_est) if raw_emp_est != null else 0
 		resident_entry["primary_role_id"] = profile.get("role_title_id", 0)
 		resident_entry["primary_contract_class_id"] = profile.get("contract_class_id", 0)
 
 		world_state["residents"][r_id] = resident_entry
 
-	# 10. Project Layer B Personal & Kinship Milestones (Birthdays & Wedding Anniversaries) into calendar_events
+	if not world_state.has("operations") or not (world_state["operations"] is Dictionary):
+		world_state["operations"] = {}
+	world_state["operations"]["crew_org_id"] = employer_org_id
+	if leader_home_estab_id > 0:
+		world_state["operations"]["hq_establishment_id"] = leader_home_estab_id
+
+	# Seed baseline 0-100 familiarity via flood-down (ORG) and trickle-up (RESIDENT -> ORG)
+	_seed_starting_crew_knowledge(world_state, selected_resident_ids, home_district_id, employer_org_id)
+
+	# 11. Project Layer B Personal & Kinship Milestones (Birthdays & Wedding Anniversaries) into calendar_events
 	project_personal_milestones_for_agents(selected_resident_ids, current_sim_day)
 
-	# 11. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
+	# 12. Anchor starting_inventory from startpoint config to the leader's physical home establishment & link HQ
 	if leader_home_estab_id > 0:
 		DB_MANAGER.execute_batch([
 			"UPDATE organizations SET hq_establishment_id = %d WHERE org_id = '%s';" % [
@@ -271,7 +284,7 @@ static func project_personal_milestones_for_agents(agent_ids: Array[int], curren
 			var next_d := mini(ymd[2], CALENDAR_HELPER._days_in_gregorian_month(next_yr, b_month))
 			next_bday = CALENDAR_HELPER._ymd_to_day_offset(next_yr, b_month, next_d)
 
-		var b_impacts := JSON.stringify([ {"resident_id": r_id, "milestone": "BIRTHDAY"}])
+		var b_impacts := JSON.stringify([{"resident_id": r_id, "milestone": "BIRTHDAY"}])
 		events_sql.append("""
 			INSERT INTO calendar_events (
 				event_type, title_token, organizer_scope, organizer_id,
@@ -314,7 +327,7 @@ static func project_personal_milestones_for_agents(agent_ids: Array[int], curren
 			var next_d := mini(m_ymd[2], CALENDAR_HELPER._days_in_gregorian_month(next_yr, m_month))
 			next_anniv = CALENDAR_HELPER._ymd_to_day_offset(next_yr, m_month, next_d)
 
-		var a_impacts := JSON.stringify([ {"spouse_a": sp_a, "spouse_b": sp_b, "milestone": "WEDDING_ANNIVERSARY"}])
+		var a_impacts := JSON.stringify([{"spouse_a": sp_a, "spouse_b": sp_b, "milestone": "WEDDING_ANNIVERSARY"}])
 		events_sql.append("""
 			INSERT INTO calendar_events (
 				event_type, title_token, organizer_scope, organizer_id,
@@ -329,6 +342,171 @@ static func project_personal_milestones_for_agents(agent_ids: Array[int], curren
 
 	if not events_sql.is_empty():
 		DB_MANAGER.execute_batch(events_sql)
+
+## Seeds starting 0-100 familiarity into world_state["knowledge_pools"] using SocietyQueries
+## and shares personal/street/kin/workplace knowledge upward via IntelManager.share_actor_intel_with_org().
+static func _seed_starting_crew_knowledge(
+	world_state: Dictionary,
+	crew_ids: Array[int],
+	home_district_id: String,
+	crew_org_id: String
+) -> void:
+	if crew_ids.is_empty():
+		return
+
+	var residents_map: Dictionary = world_state.get("residents", {})
+
+	# A. All active street addresses in the home district (residential & commercial)
+	var home_all_estab_ids: Array[int] = SOCIETY_QUERIES.get_district_establishment_ids(home_district_id, true)
+	# B. Everyday non-residential venues in the home district (shops, pubs, post office, jobcentre)
+	var home_commercial_ids: Array[int] = SOCIETY_QUERIES.get_district_establishment_ids(home_district_id, false)
+
+	# C. City-wide public civic landmarks & city-centre commercial venues
+	var public_estab_rows: Array = DB_MANAGER.query_rows("""
+		SELECT e.establishment_id, d.district_id, d.district_type
+		FROM establishments e
+		JOIN districts d ON e.district_id = d.district_id
+		JOIN system_labels l ON e.category_id = l.label_id
+		WHERE e.is_vacant = 0
+		  AND l.code != 'RESIDENTIAL_UNIT'
+		  AND (
+			e.owner_org_id IN ('ORG:CIVIC', 'ORG:NHS', 'ORG:POST_OFFICE')
+			OR l.code IN (
+				'JOBCENTRE', 'POST_OFFICE', 'HOSPITAL', 'POLICE_STATION', 'FIRE_STATION',
+				'TOWN_HALL', 'LOCAL_GOVERNMENT', 'MAGISTRATES_COURT', 'CROWN_COURT',
+				'CENTRAL_LIBRARY', 'RAILWAY_STATION', 'BUS_STATION', 'BANK_BRANCH'
+			)
+			OR d.district_type IN ('city_centre', 'city_center', 'commercial_core', 'central_business_district')
+		  );
+	""")
+
+	# 1. Seed each operative's personal knowledge pool
+	for r_id in crew_ids:
+		var obs_id := str(r_id)
+		var rec: Dictionary = residents_map.get(r_id, {})
+
+		# Home District baseline familiarity (~74.0)
+		INTEL_MANAGER.apply_effort_impulse(
+			world_state, "RESIDENT", obs_id, "DISTRICT", home_district_id, 85.0,
+			{"distance": 0.0, "access_permeability": 1.0, "max_cap": 75.0}
+		)
+
+		# Personal Establishment Anchors (Home, Workplace/Jobcentre, Local Pub, Church)
+		var home_est: int = int(rec.get("home_establishment_id", 0))
+		if home_est > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(home_est), 9999.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 99.95}
+			)
+
+		var work_est: int = int(rec.get("primary_employer_establishment_id", 0))
+		if work_est > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(work_est), 120.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 75.0}
+			)
+
+		var pub_val = rec.get("local_pub_id", null)
+		if pub_val != null and int(pub_val) > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(int(pub_val)), 80.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 65.0}
+			)
+
+		var church_val = rec.get("church_id", null)
+		if church_val != null and int(church_val) > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(int(church_val)), 60.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 55.0}
+			)
+
+		# 1st-Degree Direct Family & Friends: person, home address, and workplace (strictly 1 hop)
+		var direct_contacts: Array[Dictionary] = SOCIETY_QUERIES.get_resident_direct_contacts_and_anchors(r_id)
+		for contact in direct_contacts:
+			var c_id: int = int(contact.get("contact_id", 0))
+			if c_id > 0:
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state, "RESIDENT", obs_id, "RESIDENT", str(c_id), 65.0,
+					{"distance": 0.0, "access_permeability": 1.0, "max_cap": 65.0}
+				)
+			var c_home_est: int = int(contact.get("home_establishment_id", 0))
+			if c_home_est > 0:
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(c_home_est), 65.0,
+					{"distance": 0.0, "access_permeability": 1.0, "max_cap": 60.0}
+				)
+			var raw_c_work = contact.get("work_establishment_id", null)
+			var c_work_est: int = int(raw_c_work) if raw_c_work != null else 0
+			if c_work_est > 0:
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(c_work_est), 55.0,
+					{"distance": 0.0, "access_permeability": 1.0, "max_cap": 55.0}
+				)
+
+		# Home District residential street addresses (~10.7 — street & door known, occupants masked)
+		for he_id in home_all_estab_ids:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(he_id), 6.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 15.0}
+			)
+
+		# Home District local shops, pubs, and services (~40.0 — venue & known staff visible)
+		for hc_id in home_commercial_ids:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "RESIDENT", obs_id, "ESTABLISHMENT", str(hc_id), 30.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 40.0}
+			)
+
+		# 2. Share all non-personal operative knowledge upward into ORG:CREW_ENTERPRISE via IntelManager
+		INTEL_MANAGER.share_actor_intel_with_org(world_state, obs_id, crew_org_id, "ALL")
+
+	# 2b. HQ Proximity Orbit: Commercial establishments within configured radius (e.g. 1.5km) of HQ
+	var rules_cfg := ConfigFile.new()
+	var cfg_err := rules_cfg.load("res://data_modules/core/business_rules.cfg")
+	assert(cfg_err == OK, "FATAL: [CrewScoutBootstrapper] Failed to load res://data_modules/core/business_rules.cfg.")
+	assert(
+		rules_cfg.has_section_key("spatial_influence", "org_hq_commercial_radius_m"),
+		"FATAL: [CrewScoutBootstrapper] Missing [spatial_influence] org_hq_commercial_radius_m in business_rules.cfg."
+	)
+	var hq_commercial_radius_m: float = float(rules_cfg.get_value("spatial_influence", "org_hq_commercial_radius_m"))
+
+	var nearby_commercials: Array[Dictionary] = SOCIETY_QUERIES.get_commercial_establishments_within_radius(
+		world_state, home_district_id, hq_commercial_radius_m
+	)
+	var seeded_orbit_districts: Dictionary = {home_district_id: true}
+	for nc in nearby_commercials:
+		var nc_est_id: int = int(nc.get("establishment_id", 0))
+		var nc_dist_id: String = str(nc.get("district_id", ""))
+		if nc_est_id > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "ORG", crew_org_id, "ESTABLISHMENT", str(nc_est_id), 15.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 25.0}
+			)
+		if not nc_dist_id.is_empty() and not seeded_orbit_districts.has(nc_dist_id):
+			seeded_orbit_districts[nc_dist_id] = true
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "ORG", crew_org_id, "DISTRICT", nc_dist_id, 15.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 25.0}
+			)
+
+	# 3. Flood-Down: Seed city-wide public directory & city-centre commercials directly into ORG:CREW_ENTERPRISE
+	var seeded_public_districts: Dictionary = {}
+	for pe in public_estab_rows:
+		var pe_id: int = int(pe.get("establishment_id", 0))
+		var pe_dist: String = str(pe.get("district_id", ""))
+		var pe_dtype: String = str(pe.get("district_type", ""))
+		if pe_id > 0:
+			INTEL_MANAGER.apply_effort_impulse(
+				world_state, "ORG", crew_org_id, "ESTABLISHMENT", str(pe_id), 15.0,
+				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 25.0}
+			)
+		if not pe_dist.is_empty() and pe_dist != home_district_id and not seeded_public_districts.has(pe_dist):
+			if pe_dtype in ["city_centre", "city_center", "commercial_core", "central_business_district"]:
+				seeded_public_districts[pe_dist] = true
+				INTEL_MANAGER.apply_effort_impulse(
+					world_state, "ORG", crew_org_id, "DISTRICT", pe_dist, 15.0,
+					{"distance": 0.0, "access_permeability": 1.0, "max_cap": 25.0}
+				)
 
 ## Iterates through the strategy pipeline, instantiating each strategy file dynamically
 static func _execute_pipeline(pipeline: Array, base_context: Dictionary) -> Array[int]:
