@@ -75,3 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_slots_vacancy ON workplace_job_slots (is_filled, 
 CREATE INDEX IF NOT EXISTS idx_slots_estab ON workplace_job_slots (establishment_id);
 
 CREATE INDEX IF NOT EXISTS idx_slots_cat ON workplace_job_slots (sector_category_id);
+
+CREATE INDEX IF NOT EXISTS idx_standing_orders_resident ON standing_orders(assigned_resident_id, is_active, valid_to);
+
+CREATE INDEX IF NOT EXISTS idx_standing_orders_org ON standing_orders(org_id, is_active, valid_to);
