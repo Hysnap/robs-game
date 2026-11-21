@@ -5,6 +5,7 @@ extends RefCounted
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const SOCIAL_NETWORK_GENERATOR = preload("res://systems/social_network_generator.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
+const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootstrapper.gd")
 
 ## Generates a schema-compliant mock city and living society in SQLite for headless tests.
 ## Returns a standard world_state dictionary ready for simulation execution.
@@ -90,3 +91,88 @@ static func _find_best_residential_district(mock_world: Dictionary, start_sim_da
 		return str(hh_districts[0].get("district_id", ""))
 
 	return mock_world["districts"].keys()[0]
+
+## Generates a full test society, scouts starting crew, hydrates SQLite cognitive/OCEAN traits into world_state,
+## and ensures canonical organization records exist for mandate and hierarchy testing.
+static func create_test_world_with_crew(
+	grid_w: int = 2,
+	grid_h: int = 2,
+	seed_id: String = "test-factory-crew-seed",
+	time_horizon: String = "day"
+) -> Dictionary:
+	var ws: Dictionary = create_test_world(grid_w, grid_h, seed_id)
+	ws["metadata"]["time_horizon"] = time_horizon
+	var home_district: String = str(ws.get("operations", {}).get("home_district_id", ""))
+	if not home_district.is_empty():
+		CREW_SCOUT_BOOTSTRAPPER.scout_and_bind_starting_crew(ws, home_district)
+
+	# Hydrate SQLite cognitive & OCEAN columns onto in-memory crew dictionaries
+	var residents: Dictionary = ws.get("residents", {})
+	for r_key in residents.keys():
+		var rec = residents[r_key]
+		if not (rec is Dictionary):
+			continue
+		var r_id: int = int(rec.get("resident_id", r_key))
+		if r_id <= 0:
+			continue
+		var rows: Array = DB_MANAGER.query_rows("""
+			SELECT iq_score, mental_agility, openness, conscientiousness,
+			       extraversion, agreeableness, neuroticism
+			FROM residents WHERE resident_id = %d LIMIT 1;
+		""" % r_id)
+		if not rows.is_empty():
+			var row: Dictionary = rows[0]
+			rec["iq_score"] = float(row.get("iq_score", 100.0))
+			rec["mental_agility"] = float(row.get("mental_agility", 0.50))
+			rec["ocean"] = {
+				"openness": float(row.get("openness", 0.50)),
+				"conscientiousness": float(row.get("conscientiousness", 0.50)),
+				"extraversion": float(row.get("extraversion", 0.50)),
+				"agreeableness": float(row.get("agreeableness", 0.50)),
+				"neuroticism": float(row.get("neuroticism", 0.50))
+			}
+
+	ws["organizations"] = {}
+	ensure_test_organization(ws, "ORG:CREW_ENTERPRISE", "Crew Enterprise", "", "DIRECT", 1.0)
+	return ws
+
+## Persists a canonical organization row in SQLite and syncs it into world_state["organizations"]
+static func ensure_test_organization(
+	world_state: Dictionary,
+	org_id: String,
+	display_name: String,
+	parent_org_id: String = "",
+	autonomy_mode: String = "DIRECT",
+	loyalty: float = 1.0,
+	police_heat: float = 0.0
+) -> void:
+	if not world_state.has("organizations") or not (world_state["organizations"] is Dictionary):
+		world_state["organizations"] = {}
+	world_state["organizations"][org_id] = {
+		"org_id": org_id,
+		"parent_org_id": parent_org_id,
+		"display_name": display_name,
+		"autonomy_mode": autonomy_mode,
+		"loyalty": loyalty,
+		"police_heat": police_heat
+	}
+	if DB_MANAGER.is_database_open():
+		var start_day: int = int(world_state.get("metadata", {}).get("current_sim_day", CalendarHelperScript.get_simulation_start_day()))
+		var reason_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+		var parent_sql: String = "'%s'" % parent_org_id.replace("'", "''") if not parent_org_id.is_empty() else "NULL"
+		DB_MANAGER.query_rows("""
+			INSERT OR REPLACE INTO organizations (
+				org_id, parent_org_id, autonomy_mode, display_name, org_type,
+				legal_status, institution_rail_class, valid_from, valid_to, change_reason_id
+			) VALUES (
+				'%s', %s, '%s', '%s', 'SYNDICATE',
+				'INFORMAL', 'STANDARD', %d, NULL, %d
+			);
+		""" % [
+			org_id.replace("'", "''"),
+			parent_sql,
+			autonomy_mode.replace("'", "''"),
+			display_name.replace("'", "''"),
+			start_day,
+			reason_id
+		])

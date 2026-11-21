@@ -38,6 +38,21 @@ static func resolve(target_cat: Dictionary, world_state: Dictionary, _verb_code:
 	)
 
 	var results: Array[Dictionary] = []
+	var any_tok: String = "UI_OBL_ANY_ACTIVE"
+	var any_disp: String = str(TranslationServer.translate(any_tok))
+	if any_disp.is_empty() or any_disp == any_tok:
+		any_disp = "Any Active Obligation"
+	results.append({
+		"id": "ANY_ACTIVE_OBLIGATION",
+		"label_token": any_tok,
+		"display": any_disp,
+		"unit_cost": 0.0,
+		"balance": 0.0,
+		"category": "OBLIGATION",
+		"sub_category": "ANY",
+		"taxonomy_path": []
+	})
+
 	for row in matched_rows:
 		var obl_id_str: String = str(row.get("obligation_id", ""))
 		var obl_type: String = str(row.get("obligation_type", "OBLIGATION")).strip_edges().to_upper()
@@ -52,5 +67,9 @@ static func resolve(target_cat: Dictionary, world_state: Dictionary, _verb_code:
 			"sub_category": obl_type,
 			"taxonomy_path": []
 		})
+
+	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display", "")).nocasecmp_to(str(b.get("display", ""))) < 0
+	)
 
 	return results

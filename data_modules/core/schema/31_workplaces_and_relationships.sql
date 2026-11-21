@@ -113,3 +113,32 @@ CREATE TABLE IF NOT EXISTS standing_orders (
 	FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE SET NULL,
 	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 );
+
+CREATE TABLE IF NOT EXISTS org_mandates (
+	mandate_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	org_id TEXT NOT NULL,
+	issuer_org_id TEXT DEFAULT NULL,
+	target_org_id TEXT DEFAULT NULL,
+	manager_resident_id INTEGER DEFAULT NULL,
+	reports_to_resident_id INTEGER DEFAULT NULL,
+	title TEXT NOT NULL,
+	mandate_mode TEXT NOT NULL DEFAULT 'CASHFLOW',
+	scope_filter_json TEXT NOT NULL DEFAULT '{}',
+	planning_horizon TEXT NOT NULL DEFAULT 'WEEK',
+	commitment_lock_until_day INTEGER NOT NULL DEFAULT 0,
+	heat_ceiling REAL NOT NULL DEFAULT 0.65,
+	target_metric_json TEXT NOT NULL DEFAULT '{}',
+	float_obligation_id INTEGER DEFAULT NULL,
+	remittance_obligation_id INTEGER DEFAULT NULL,
+	assistance_request_expires_day INTEGER NOT NULL DEFAULT -1,
+	is_active INTEGER NOT NULL DEFAULT 1,
+	valid_from INTEGER NOT NULL,
+	valid_to INTEGER DEFAULT NULL,
+	change_reason_id INTEGER NOT NULL,
+	FOREIGN KEY (org_id) REFERENCES organizations(org_id) ON DELETE CASCADE,
+	FOREIGN KEY (issuer_org_id) REFERENCES organizations(org_id) ON DELETE SET NULL,
+	FOREIGN KEY (target_org_id) REFERENCES organizations(org_id) ON DELETE CASCADE,
+	FOREIGN KEY (manager_resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
+	FOREIGN KEY (reports_to_resident_id) REFERENCES residents(resident_id) ON DELETE SET NULL,
+	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+);

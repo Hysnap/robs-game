@@ -22,7 +22,7 @@
       "rows": [
         {
           "id": "lbl_crew_lineages",
-          "type": "LABEL",
+          "type": "TEXT_METRIC",
           "token": "UI_SEC_FAMILY_LINEAGES",
           "autowrap": true
         },
@@ -42,7 +42,7 @@
       "rows": [
         {
           "id": "lbl_vital_records",
-          "type": "LABEL",
+          "type": "TEXT_METRIC",
           "token": "UI_SEC_VITAL_RECORDS",
           "autowrap": true
         },
@@ -58,7 +58,7 @@
       "rows": [
         {
           "id": "family_notes",
-          "type": "INSCRIPTIONS",
+          "type": "TEXT_METRIC",
           "token": "UI_SEC_FAMILY_NOTES"
         }
       ]

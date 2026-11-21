@@ -105,6 +105,26 @@ func build_ui() -> void:
 	_value_labels["btn_open_order_pad"] = btn_btn_open_order_pad
 	add_child(btn_btn_open_order_pad)
 
+	var btn_btn_save_standing_order := Button.new()
+	btn_btn_save_standing_order.name = "btn_save_standing_order"
+	btn_btn_save_standing_order.text = tr("UI_BTN_SAVE_STANDING_ORDER")
+	btn_btn_save_standing_order.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_save_standing_order.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_save_standing_order.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_save_standing_order.pressed.connect(func(): self.action_clicked.emit("save_standing_order"))
+	_value_labels["btn_save_standing_order"] = btn_btn_save_standing_order
+	add_child(btn_btn_save_standing_order)
+
+	var btn_btn_pause_standing_orders := Button.new()
+	btn_btn_pause_standing_orders.name = "btn_pause_standing_orders"
+	btn_btn_pause_standing_orders.text = tr("UI_BTN_PAUSE_STANDING_ORDERS")
+	btn_btn_pause_standing_orders.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_btn_pause_standing_orders.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_btn_pause_standing_orders.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_btn_pause_standing_orders.pressed.connect(func(): self.action_clicked.emit("pause_standing_orders"))
+	_value_labels["btn_pause_standing_orders"] = btn_btn_pause_standing_orders
+	add_child(btn_btn_pause_standing_orders)
+
 	# --- Section: staging_ledger ---
 	var sec_staging_ledger := VBoxContainer.new()
 	sec_staging_ledger.size_flags_horizontal = Control.SIZE_EXPAND_FILL

@@ -8,6 +8,8 @@ const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const _FileSystemCrawler = preload("res://systems/file_system_crawler.gd")
 const _StandingOrderProcessor = preload("res://systems/standing_order_processor.gd")
+const _OrgMandateManager = preload("res://systems/economy/org_mandate_manager.gd")
+const _ManagerAIResolver = preload("res://systems/economy/manager_ai_resolver.gd")
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
@@ -16,6 +18,7 @@ const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
 	var verb_token: String = str(action_directive.get("verb", action_directive.get("type", ""))).to_upper().strip_edges()
 	SystemLogger.log_debug("[SimController] Executing directive: %s" % verb_token)
+	_apply_mandate_intervention_guard(world_state, action_directive, verb_token)
 	var result: Dictionary = _VerbRouter.dispatch(world_state, action_directive)
 
 	if result.get("success", false):
@@ -271,8 +274,11 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		})
 		diary_memos.append(ret_res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")))
 
-	# 2. Resolve Adaptive Horizon Span & Partition Active vs. Background Districts
-	var days_to_advance: int = _resolve_horizon_days(horizon)
+	# 2. Resolve Adaptive Horizon Span (with 4-week staggered checkpoints for 'month') & Partition Districts
+	var horizon_step: Dictionary = _resolve_horizon_step(meta, horizon)
+	var days_to_advance: int = int(horizon_step["days"])
+	var is_month_close: bool = bool(horizon_step["is_month_close"])
+	var month_checkpoint: int = int(horizon_step["month_checkpoint"])
 	var district_partition: Dictionary = _partition_districts_by_horizon(world_state, staged_directives)
 	meta["active_districts_in_horizon"] = district_partition["active_districts"]
 	meta["background_district_count"] = district_partition["background_count"]
@@ -314,6 +320,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	if crossed_boundary:
 		_ImpactRouter.dispatch_ambient_tick(world_state)
+		_evaluate_active_mandates_and_collisions(world_state, current_day, horizon, is_month_close, executed_events, diary_memos)
 
 	_append_ledger_rollover_events(obligation_rollover, current_day, executed_events, diary_memos)
 
@@ -322,6 +329,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["current_week_tick"] = _CalendarHelper.day_to_week(current_day)
 	meta["current_day_tick"] = dow
 	meta["current_day_of_week"] = dow
+	meta["month_checkpoint"] = month_checkpoint
 	world_state["metadata"] = meta
 
 	_DBManager.execute_batch([
@@ -452,19 +460,175 @@ static func _execute_standing_orders_for_rollover_day(
 		})
 		diary_memos.append(msg)
 
-## Maps planning time_horizon ('day', 'shift', 'week', 'month', 'quarter') to day step count
-static func _resolve_horizon_days(horizon: String) -> int:
+## Resolves step length and staggered 4-week checkpoint state for 'month' horizons
+static func _resolve_horizon_step(meta: Dictionary, horizon: String) -> Dictionary:
+	var week_days: int = _CalendarHelper.get_days_per_tick()
 	match horizon:
 		"day", "shift":
-			return 1
+			return { "days": 1, "is_month_close": false, "month_checkpoint": 0 }
 		"week":
-			return _CalendarHelper.get_days_per_tick()
+			return { "days": week_days, "is_month_close": false, "month_checkpoint": 0 }
 		"month":
-			return _CalendarHelper.get_days_per_tick() * 4
+			var prev_cp: int = int(meta.get("month_checkpoint", 0))
+			var next_cp: int = prev_cp + 1
+			var closes: bool = next_cp >= 4
+			return {
+				"days": week_days,
+				"is_month_close": closes,
+				"month_checkpoint": 0 if closes else next_cp
+			}
 		"quarter":
-			return _CalendarHelper.get_days_per_tick() * 12
+			return { "days": week_days * 12, "is_month_close": true, "month_checkpoint": 0 }
 		_:
-			return 1
+			return { "days": 1, "is_month_close": false, "month_checkpoint": 0 }
+
+## Checks whether a direct player order intrudes on a locked manager mandate or ARMS_LENGTH subsidiary
+static func _apply_mandate_intervention_guard(world_state: Dictionary, directive: Dictionary, verb_token: String) -> void:
+	if bool(directive.get("is_standing_order", false)) or bool(directive.get("auto_generated_return", false)):
+		return
+	var mandates: Dictionary = world_state.get("org_mandates", {})
+	if mandates.is_empty():
+		return
+
+	var current_day: int = _CalendarHelper.get_current_sim_day(world_state)
+	var actor_id: int = int(directive.get("assigned_to", directive.get("initiator_id", 0)))
+	var target_node: String = str(directive.get("target_node_id", "")).strip_edges()
+	var ctx: Dictionary = {
+		"district_id": target_node,
+		"establishment_id": int(directive.get("target_entity_id", 0)),
+		"item_id": str(directive.get("target_item", "")),
+		"verb": verb_token
+	}
+
+	var residents: Dictionary = world_state.get("residents", {})
+	var orgs: Dictionary = world_state.get("organizations", {})
+
+	for m_id in mandates.keys():
+		var m = mandates[m_id]
+		if not (m is Dictionary) or not bool(m.get("is_active", true)):
+			continue
+		var mgr_id: int = int(m.get("manager_resident_id", 0))
+		var target_org: String = str(m.get("target_org_id", "")).strip_edges()
+		var is_arms_length: bool = not target_org.is_empty() and str(orgs.get(target_org, {}).get("autonomy_mode", "DIRECT")).to_upper() == "ARMS_LENGTH"
+
+		var covers_actor: bool = actor_id > 0 and mgr_id > 0 and actor_id != mgr_id and int(residents.get(str(actor_id), {}).get("reports_to_resident_id", 0)) == mgr_id
+		var covers_scope: bool = _OrgMandateManager.matches_scope(m.get("scope_filter", {}), ctx)
+		if not covers_actor and not covers_scope:
+			continue
+
+		var auth: Dictionary = _OrgMandateManager.evaluate_intervention_authorization(m, current_day, is_arms_length)
+		if not bool(auth.get("authorized", true)):
+			var delta: float = float(auth.get("loyalty_delta", -0.10))
+			if mgr_id > 0 and residents.has(str(mgr_id)):
+				residents[str(mgr_id)]["loyalty"] = clampf(float(residents[str(mgr_id)].get("loyalty", 0.75)) + delta, 0.0, 1.0)
+			if is_arms_length and orgs.has(target_org):
+				orgs[target_org]["loyalty"] = clampf(float(orgs[target_org].get("loyalty", 0.75)) + delta, 0.0, 1.0)
+			m["accountability_excuse"] = true
+
+## Evaluates active mandates, dyadic scope collisions, and ARMS_LENGTH subsidiary macro cycles on boundary rollover
+static func _evaluate_active_mandates_and_collisions(
+	world_state: Dictionary,
+	current_day: int,
+	horizon: String,
+	is_month_close: bool,
+	executed_events: Array,
+	diary_memos: Array[String]
+) -> void:
+	var mandates_dict: Dictionary = world_state.get("org_mandates", {})
+	if mandates_dict.is_empty():
+		return
+
+	var active_list: Array[Dictionary] = []
+	for m_id in mandates_dict.keys():
+		var m = mandates_dict[m_id]
+		if m is Dictionary and bool(m.get("is_active", true)):
+			active_list.append(m)
+	if active_list.is_empty():
+		return
+
+	var residents: Dictionary = world_state.get("residents", {})
+	var orgs: Dictionary = world_state.get("organizations", {})
+	var week_num: int = _CalendarHelper.day_to_week(current_day)
+	var cal_date: String = _CalendarHelper.day_to_calendar_date(current_day)
+	var dow: int = _CalendarHelper.day_of_week(current_day)
+
+	# 1. Pairwise dyadic scope collisions
+	for i in range(active_list.size()):
+		for j in range(i + 1, active_list.size()):
+			var ma: Dictionary = active_list[i]
+			var mb: Dictionary = active_list[j]
+			if str(ma.get("org_id", "")) != str(mb.get("org_id", "")):
+				continue
+			var res_a: Dictionary = residents.get(str(ma.get("manager_resident_id", 0)), {})
+			var res_b: Dictionary = residents.get(str(mb.get("manager_resident_id", 0)), {})
+			var col: Dictionary = _ManagerAIResolver.resolve_dyadic_mandate_collision(res_a, ma, res_b, mb)
+			if bool(col.get("has_collision", false)):
+				var msg := "%s (%s)" % [
+					TranslationServer.translate("UI_MEMO_MANDATE_COLLISION"),
+					str(col.get("outcome", "FRICTIONAL_OVERLAP"))
+				]
+				executed_events.append({
+					"trigger_type": "MANDATE_COLLISION",
+					"day_offset": current_day,
+					"calendar_date": cal_date,
+					"week": week_num,
+					"day_of_week": dow,
+					"verb": "MANDATE_COLLISION",
+					"target_item": str(col.get("outcome", "")),
+					"success": str(col.get("outcome", "")) == "PEER_COOPERATION",
+					"message": msg,
+					"author": TranslationServer.translate("UI_ORG_OPS_DESK")
+				})
+				diary_memos.append(msg)
+
+	# 2. Individual manager reports & ARMS_LENGTH subsidiary macro resolution
+	for m in active_list:
+		var target_org: String = str(m.get("target_org_id", "")).strip_edges()
+		var org_rec: Dictionary = orgs.get(target_org, {})
+		if not target_org.is_empty() and str(org_rec.get("autonomy_mode", "DIRECT")).to_upper() == "ARMS_LENGTH":
+			var m_horizon: String = str(m.get("planning_horizon", "MONTH")).to_upper()
+			var due_macro: bool = (m_horizon == "WEEK") or (m_horizon == "MONTH" and is_month_close) or (m_horizon == "QUARTER" and horizon == "quarter")
+			if due_macro:
+				var macro_res: Dictionary = _OrgMandateManager.resolve_arms_length_macro_cycle(world_state, m, current_day)
+				if bool(macro_res.get("requires_exception_alert", false)):
+					var exc_msg := "%s (%s)" % [TranslationServer.translate("UI_MEMO_ARMS_LENGTH_EXCEPTION"), target_org]
+					executed_events.append({
+						"trigger_type": "ARMS_LENGTH_EXCEPTION",
+						"day_offset": current_day,
+						"calendar_date": cal_date,
+						"week": week_num,
+						"day_of_week": dow,
+						"verb": "ARMS_LENGTH_EXCEPTION",
+						"target_item": target_org,
+						"success": false,
+						"message": exc_msg,
+						"author": str(org_rec.get("display_name", target_org))
+					})
+					diary_memos.append(exc_msg)
+			continue
+
+		var mgr_id: String = str(m.get("manager_resident_id", 0))
+		var mgr_res: Dictionary = residents.get(mgr_id, {})
+		var rep: Dictionary = _ManagerAIResolver.evaluate_reporting_and_escalation(world_state, mgr_res, m, {
+			"current_heat": float(m.get("last_observed_heat", 0.0)),
+			"target_attainment": float(m.get("last_target_attainment", 1.0)),
+			"subordinate_escalations": int(m.get("subordinate_escalations", 0))
+		})
+		if bool(rep.get("should_emit_report", false)):
+			var rep_msg := TranslationServer.translate(str(rep.get("report_token", "UI_MEMO_MGR_ROUTINE_DIGEST")))
+			executed_events.append({
+				"trigger_type": "MANAGER_REPORT",
+				"day_offset": current_day,
+				"calendar_date": cal_date,
+				"week": week_num,
+				"day_of_week": dow,
+				"verb": "MANAGER_REPORT",
+				"target_item": str(m.get("title", "")),
+				"success": not bool(rep.get("crisis_detected", false)),
+				"message": rep_msg,
+				"author": str(mgr_res.get("name", mgr_id))
+			})
+			diary_memos.append(rep_msg)
 
 ## Partitions districts into fine-resolution active/impacted districts vs. coarse cohort background districts
 static func _partition_districts_by_horizon(world_state: Dictionary, staged_directives: Array) -> Dictionary:

@@ -1,0 +1,131 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "MANAGER_ADAPTATION_RULES",
+    "description": "Data-driven cognitive, OCEAN, reporting, span-of-control, and dyadic mandate collision rules."
+  },
+  "profile_defaults": {
+    "iq_score": 100.0,
+    "mental_agility": 0.5,
+    "openness": 0.5,
+    "conscientiousness": 0.5,
+    "extraversion": 0.5,
+    "agreeableness": 0.5,
+    "neuroticism": 0.5
+  },
+  "standardization_model": {
+    "conscientiousness_weight": 0.65,
+    "closedness_weight": 0.35,
+    "mode_rigidity_deltas": {
+      "SUPPLY": 0.1,
+      "CONSOLIDATE": 0.1,
+      "EXPAND": -0.1,
+      "CASHFLOW": 0.0,
+      "INSTITUTIONAL_SERVICE": 0.05
+    },
+    "autonomy_weights": {
+      "openness": 0.5,
+      "agreeableness": 0.35,
+      "rigidity_penalty": 0.35
+    },
+    "thresholds": {
+      "rigid_sop_min_rigidity": 0.65,
+      "autonomous_min_allowance": 0.55,
+      "suppress_billy_min_rigidity": 0.7,
+      "auto_generate_sop_min_rigidity": 0.55
+    }
+  },
+  "span_of_control_model": {
+    "base_span": 3.0,
+    "iq_baseline": 100.0,
+    "iq_slope": 0.08,
+    "agility_multiplier": 4.0,
+    "min_span": 2,
+    "max_span": 12,
+    "efficiency_penalty_per_overload_ratio": 0.3,
+    "min_efficiency_mult": 0.55,
+    "tinker_weights": {
+      "neuroticism": 0.55,
+      "disagreeableness": 0.25,
+      "bottleneck_ratio": 0.35,
+      "agility_relief": 0.2
+    },
+    "churn_threshold": 0.68
+  },
+  "reporting_and_escalation_model": {
+    "kpi_attainment_floor": 0.75,
+    "assistance_window_days": 7,
+    "verbose_digest_rules": [
+      { "metric": "neuroticism", "op": ">=", "value": 0.68 },
+      {
+        "logic": "AND",
+        "conditions": [
+          { "metric": "conscientiousness", "op": ">=", "value": 0.75 },
+          { "metric": "openness", "op": "<=", "value": 0.4 }
+        ]
+      }
+    ],
+    "coping_base": 0.55,
+    "coping_agility_bonus": 0.25,
+    "coping_neuroticism_penalty": 0.25,
+    "coping_bounds": [0.35, 0.85],
+    "high_agreeableness_escalation_min": 0.7,
+    "memo_tokens": {
+      "assistance_requested": "UI_MEMO_MGR_ASSISTANCE_REQ",
+      "crisis_alert": "UI_MEMO_MGR_CRISIS_ALERT",
+      "routine_digest": "UI_MEMO_MGR_ROUTINE_DIGEST"
+    }
+  },
+  "dyadic_collision_rules": [
+    {
+      "outcome": "TURF_RIVALRY",
+      "logic": "AND",
+      "conditions": [
+        { "metric": "a.agreeableness", "op": "<", "value": 0.45 },
+        { "metric": "b.agreeableness", "op": "<", "value": 0.45 }
+      ],
+      "effects": {
+        "efficiency_delta": -0.15,
+        "heat_delta": 0.08,
+        "trust_delta": -0.15
+      }
+    },
+    {
+      "outcome": "SPLINTER_ALLIANCE",
+      "logic": "AND",
+      "conditions": [
+        { "metric": "extraversion_gap", "op": ">=", "value": 0.3 },
+        { "metric": "avg_agreeableness", "op": "<", "value": 0.55 },
+        { "metric": "avg_neuroticism", "op": ">=", "value": 0.5 }
+      ],
+      "effects": {
+        "efficiency_delta": -0.05,
+        "heat_delta": 0.03,
+        "trust_delta": -0.1
+      }
+    },
+    {
+      "outcome": "PEER_COOPERATION",
+      "logic": "AND",
+      "conditions": [
+        { "metric": "avg_agreeableness", "op": ">=", "value": 0.55 },
+        { "metric": "avg_conscientiousness", "op": ">=", "value": 0.5 }
+      ],
+      "effects": {
+        "efficiency_delta": 0.1,
+        "heat_delta": -0.02,
+        "trust_delta": 0.08
+      }
+    },
+    {
+      "outcome": "FRICTIONAL_OVERLAP",
+      "logic": "ALWAYS",
+      "conditions": [],
+      "effects": {
+        "efficiency_delta": -0.04,
+        "heat_delta": 0.01,
+        "trust_delta": -0.03
+      }
+    }
+  ]
+}

@@ -39,27 +39,36 @@ static func resolve_targets_for_verb(verb_token: String, world_state: Dictionary
 		return []
 	return TargetDomainRegistryScript.resolve_targets(verb_token, world_state)
 
-## Extracts unique category tokens from a list of targets
+## Extracts unique category tokens (expanding hierarchical '/' paths) sorted alphabetically
 static func extract_target_categories(targets: Array[Dictionary]) -> Array[String]:
 	var categories: Array[String] = []
 	for item in targets:
 		var cat: String = str(item.get("category", "")).strip_edges().to_upper()
 		assert(!cat.is_empty(), "FATAL: [DirectiveComposerController] Target item '%s' has no category classification!" % str(item.get("id", "UNKNOWN")))
-		if not categories.has(cat):
-			categories.append(cat)
+		var parts: PackedStringArray = cat.split("/", false)
+		var accum: PackedStringArray = []
+		for p in parts:
+			var seg: String = p.strip_edges()
+			if seg.is_empty():
+				continue
+			accum.append(seg)
+			var prefix: String = " / ".join(accum)
+			if not categories.has(prefix):
+				categories.append(prefix)
 	categories.sort()
 	return categories
 
-## Filters targets by selected category ('ALL' returns all targets)
+## Filters targets by selected category or hierarchical prefix ('ALL' returns all targets)
 static func filter_targets_by_category(targets: Array[Dictionary], selected_category: String) -> Array[Dictionary]:
 	var cat_upper := selected_category.strip_edges().to_upper()
 	if cat_upper == "ALL" or cat_upper.is_empty():
 		return targets
 
+	var prefix_slash := cat_upper + " / "
 	var filtered: Array[Dictionary] = []
 	for item in targets:
 		var item_cat: String = str(item.get("category", "")).strip_edges().to_upper()
-		if item_cat == cat_upper:
+		if item_cat == cat_upper or item_cat.begins_with(prefix_slash):
 			filtered.append(item)
 	return filtered
 
@@ -82,18 +91,39 @@ static func get_form_layout(verb_token: String) -> Dictionary:
 
 	return layout
 
-## Filters player-known locations from IntelManager by the active verb's allowed_scopes
+## Returns true if the verb's composer form should display financial cost telemetry
+static func should_show_telemetry(verb_token: String) -> bool:
+	var clean_verb := verb_token.strip_edges().to_upper()
+	if clean_verb.is_empty():
+		return false
+	var layout := get_form_layout(clean_verb)
+	var tel_cfg: Dictionary = layout.get("telemetry_section", {})
+	if tel_cfg.has("visible"):
+		return bool(tel_cfg["visible"])
+	const PHYSICAL_TRANSFER_VERBS: Array[String] = [
+		"COLLECT_FROM", "DELIVER_TO", "DUMP", "PICK_UP",
+		"STORE_ITEMS", "WITHDRAW_ITEMS", "SECRETE_ITEMS", "CONSUME", "ATTEND_EVENT"
+	]
+	if PHYSICAL_TRANSFER_VERBS.has(clean_verb):
+		return false
+	return bool(layout.get("target_section", {}).get("visible", true))
+
+## Filters player-known locations from IntelManager by allowed_scopes and sorts alphabetically by display name
 static func build_locations_cache(verb_token: String, active_district_id: String, world_state: Dictionary) -> Array[Dictionary]:
 	var allowed_scopes := get_allowed_scopes(verb_token)
 	var known_locations: Array[Dictionary] = IntelManagerScript.get_known_locations(active_district_id, world_state)
-	if allowed_scopes.is_empty():
-		return known_locations
-
 	var filtered: Array[Dictionary] = []
-	for loc in known_locations:
-		var loc_type: String = str(loc.get("type", ""))
-		if allowed_scopes.has(loc_type):
-			filtered.append(loc)
+	if allowed_scopes.is_empty():
+		filtered = known_locations.duplicate()
+	else:
+		for loc in known_locations:
+			var loc_type: String = str(loc.get("type", ""))
+			if allowed_scopes.has(loc_type):
+				filtered.append(loc)
+
+	filtered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display", "")).nocasecmp_to(str(b.get("display", ""))) < 0
+	)
 	return filtered
 
 ## Delegates establishment contact resolution through IntelManager's Fog-of-War filter
@@ -165,8 +195,8 @@ static func _has_active_standing_orders_for_actor(world_state: Dictionary, assig
 		return false
 
 	var ops: Dictionary = world_state.get("operations", {})
-	var pause_map: Dictionary = ops.get("ignore_standing_orders_next_run", {})
-	if pause_map is Dictionary and bool(pause_map.get(actor_str, false)):
+	var paused_day_map: Dictionary = ops.get("paused_standing_orders_day", {})
+	if paused_day_map is Dictionary and paused_day_map.has(actor_str) and int(paused_day_map[actor_str]) == sim_day:
 		return false
 
 	# Check world_state["standing_orders"] actor/delegation flags
