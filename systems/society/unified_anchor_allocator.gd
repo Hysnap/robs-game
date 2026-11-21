@@ -148,7 +148,6 @@ static func match_best_job_slot_for_resident(
 	var exact_edu_bonus: float = float(match_weights["exact_education_tier_bonus"])
 	var one_over_mult: float = float(match_weights["one_tier_overqualified_multiplier"])
 	var two_over_mult: float = float(match_weights["two_plus_tiers_overqualified_multiplier"])
-	var ocean_scale: float = float(match_weights["ocean_affinity_scale"])
 
 	var cand_age: int = int(candidate["age_years"])
 	var cand_edu_code: String = str(candidate["education_code"])
@@ -178,7 +177,7 @@ static func match_best_job_slot_for_resident(
 				var score: float = _score_job_slot(
 					slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
 					edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
-					exact_edu_bonus, one_over_mult, two_over_mult, ocean_scale, rng
+					exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
 				)
 				if score > best_score:
 					best_score = score
@@ -196,7 +195,7 @@ static func match_best_job_slot_for_resident(
 		var score: float = _score_job_slot(
 			slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
 			edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
-			exact_edu_bonus, one_over_mult, two_over_mult, ocean_scale, rng
+			exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
 		)
 		if score > best_score:
 			best_score = score
@@ -217,7 +216,7 @@ static func _score_job_slot(
 	exact_edu_bonus: float,
 	one_over_mult: float,
 	two_over_mult: float,
-	ocean_scale: float,
+	ocean_rules: Dictionary,
 	rng: RandomNumberGenerator
 ) -> float:
 	var role_code: String = str(slot["role_code"])
@@ -250,7 +249,7 @@ static func _score_job_slot(
 		edu_mult = two_over_mult
 
 	var role_affinities: Dictionary = role_def.get("ocean_affinities", {})
-	var ocean_mult: float = PERSONALITY_HYDRATOR.calculate_role_ocean_multiplier(cand_traits, role_affinities, ocean_scale)
+	var ocean_mult: float = PERSONALITY_HYDRATOR.calculate_role_ocean_multiplier(cand_traits, role_affinities, ocean_rules)
 
 	var jitter: float = rng.randf_range(0.85, 1.15)
 	return edu_mult * ocean_mult * commute_factor * jitter

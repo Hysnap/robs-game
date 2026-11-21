@@ -42,7 +42,7 @@ static func get_monospace_font() -> Font:
 	return font
 
 ## Scans res://data_modules/core/theme_profiles/*.json on startup
-static func load_all_catalog_profiles(target_shell: String = "filofax")-> void:
+static func load_all_catalog_profiles(target_shell: String = "filofax") -> void:
 	active_shell_type = target_shell
 	catalog_profiles.clear()
 
@@ -57,7 +57,6 @@ static func load_all_catalog_profiles(target_shell: String = "filofax")-> void:
 				if file:
 					var data = JSON.parse_string(file.get_as_text())
 					if data is Dictionary and data.has("id"):
-						# If profile specifies a shell, preserve it; otherwise default to "filofax"
 						var profile_shell: String = str(data.get("shell", "filofax")).to_lower()
 						data["shell"] = profile_shell
 						catalog_profiles[data["id"]] = data
@@ -73,7 +72,7 @@ static func load_all_catalog_profiles(target_shell: String = "filofax")-> void:
 	elif not catalog_profiles.is_empty():
 		apply_profile(catalog_profiles.keys()[0])
 
-## Returns only catalog presets configured for a specific shell archetype ("filofax", "apple2")
+## Returns only catalog presets configured for a specific shell archetype ("filofax", "pocketbooks", "apple2")
 static func get_profiles_for_shell(shell_type: String) -> Array[Dictionary]:
 	var matching: Array[Dictionary] = []
 	for p_id in catalog_profiles.keys():
@@ -139,7 +138,7 @@ static func save_user_profile(profile_name: String, target_shell: String = "filo
 	if profile_name.is_empty():
 		return
 	var cfg := ConfigFile.new()
-	cfg.load(USER_PROFILES_PATH) # preserve existing entries
+	cfg.load(USER_PROFILES_PATH)
 	cfg.set_value(profile_name, "shell", target_shell)
 	cfg.set_value(profile_name, "binder_cover", color_binder_cover.to_html())
 	cfg.set_value(profile_name, "binder_trim", color_binder_trim.to_html())
@@ -183,6 +182,8 @@ static func get_ink_color(token: String) -> Color:
 			c = color_ink_muted
 		"body", "black", "color_ink_body", "color_ink_black", "text":
 			c = color_ink_body
+		"warning", "red", "color_ink_warning":
+			c = color_ink_warning
 		_:
 			assert(false, "[RetroTheme FATAL] Unknown ink color token requested: " + token)
 			return Color.MAGENTA
@@ -190,18 +191,22 @@ static func get_ink_color(token: String) -> Color:
 	assert(c is Color, "[RetroTheme FATAL] Color token '%s' is not configured as a valid Color." % token)
 	return c
 
-## Builds a complete Godot Theme resource from the active palette for menus and standard controls
+## Builds a complete Godot Theme resource from the active palette across all UI widgets
 static func create_godot_theme() -> Theme:
 	var t := Theme.new()
 	var mono := get_monospace_font()
 	t.default_font = mono
 	t.default_font_size = 14
 
+	# PanelContainer (OuterShell frame & unstyled sub-panels)
+	var shell_panel := create_cover_style()
+	t.set_stylebox("panel", "PanelContainer", shell_panel)
+
 	# Label
 	t.set_color("font_color", "Label", color_ink_body)
 	t.set_color("font_shadow_color", "Label", Color(0, 0, 0, 0))
 
-	# Button (dark trim fill with light paper text, or bordered paper button with dark ink)
+	# Button
 	var btn_normal := StyleBoxFlat.new()
 	btn_normal.bg_color = color_page_bg.darkened(0.06)
 	btn_normal.border_color = color_binder_trim
@@ -220,29 +225,56 @@ static func create_godot_theme() -> Theme:
 	btn_disabled.bg_color = color_page_bg.darkened(0.12)
 	btn_disabled.border_color = color_ruled_line
 
-	t.set_stylebox("normal", "Button", btn_normal)
-	t.set_stylebox("hover", "Button", btn_hover)
-	t.set_stylebox("pressed", "Button", btn_pressed)
-	t.set_stylebox("disabled", "Button", btn_disabled)
-	t.set_stylebox("focus", "Button", btn_hover)
-	t.set_color("font_color", "Button", color_ink_body)
-	t.set_color("font_hover_color", "Button", color_page_bg)
-	t.set_color("font_pressed_color", "Button", color_page_bg)
-	t.set_color("font_focus_color", "Button", color_page_bg)
-	t.set_color("font_disabled_color", "Button", color_ink_muted)
+	for btn_type in ["Button", "OptionButton", "CheckBox"]:
+		t.set_stylebox("normal", btn_type, btn_normal)
+		t.set_stylebox("hover", btn_type, btn_hover)
+		t.set_stylebox("pressed", btn_type, btn_pressed)
+		t.set_stylebox("disabled", btn_type, btn_disabled)
+		t.set_stylebox("focus", btn_type, btn_hover)
+		t.set_color("font_color", btn_type, color_ink_body)
+		t.set_color("font_hover_color", btn_type, color_page_bg)
+		t.set_color("font_pressed_color", btn_type, color_page_bg)
+		t.set_color("font_focus_color", btn_type, color_page_bg)
+		t.set_color("font_disabled_color", btn_type, color_ink_muted)
 
-	# LineEdit
+	# PopupMenu (OptionButton dropdowns)
+	var popup_panel := StyleBoxFlat.new()
+	popup_panel.bg_color = color_page_bg
+	popup_panel.border_color = color_binder_trim
+	popup_panel.set_border_width_all(2)
+	popup_panel.set_corner_radius_all(3)
+	popup_panel.set_content_margin_all(6)
+
+	var popup_hover := StyleBoxFlat.new()
+	popup_hover.bg_color = color_ink_accent
+	popup_hover.set_corner_radius_all(2)
+	popup_hover.set_content_margin_all(4)
+
+	t.set_stylebox("panel", "PopupMenu", popup_panel)
+	t.set_stylebox("hover", "PopupMenu", popup_hover)
+	t.set_color("font_color", "PopupMenu", color_ink_body)
+	t.set_color("font_hover_color", "PopupMenu", color_page_bg)
+	t.set_color("font_separator_color", "PopupMenu", color_ruled_line)
+
+	# LineEdit & TextEdit
 	var input_sb := StyleBoxFlat.new()
-	input_sb.bg_color = Color.WHITE
+	input_sb.bg_color = color_page_bg.lightened(0.03)
 	input_sb.border_color = color_binder_trim
 	input_sb.set_border_width_all(1)
 	input_sb.set_corner_radius_all(2)
 	input_sb.set_content_margin_all(6)
-	t.set_stylebox("normal", "LineEdit", input_sb)
-	t.set_stylebox("focus", "LineEdit", input_sb)
-	t.set_color("font_color", "LineEdit", color_ink_body)
-	t.set_color("font_placeholder_color", "LineEdit", color_ink_muted)
-	t.set_color("caret_color", "LineEdit", color_ink_accent)
+
+	var input_focus := input_sb.duplicate() as StyleBoxFlat
+	input_focus.border_color = color_ink_accent
+	input_focus.set_border_width_all(2)
+
+	for edit_type in ["LineEdit", "TextEdit"]:
+		t.set_stylebox("normal", edit_type, input_sb)
+		t.set_stylebox("focus", edit_type, input_focus)
+		t.set_color("font_color", edit_type, color_ink_body)
+		t.set_color("font_placeholder_color", edit_type, color_ink_muted)
+		t.set_color("caret_color", edit_type, color_ink_accent)
+		t.set_color("selection_color", edit_type, color_ink_accent)
 
 	# ItemList
 	var list_sb := StyleBoxFlat.new()
@@ -265,5 +297,24 @@ static func create_godot_theme() -> Theme:
 	t.set_color("font_hovered_color", "ItemList", color_ink_accent)
 	t.set_color("font_selected_color", "ItemList", color_page_bg)
 	t.set_color("guide_color", "ItemList", color_ruled_line)
+
+	# ScrollBars (ledger & pocketbook page scroll gutters)
+	var scroll_bg := StyleBoxFlat.new()
+	scroll_bg.bg_color = color_page_bg.darkened(0.08)
+	scroll_bg.set_content_margin_all(3)
+
+	var grabber_sb := StyleBoxFlat.new()
+	grabber_sb.bg_color = color_binder_trim
+	grabber_sb.set_corner_radius_all(3)
+
+	var grabber_hi := StyleBoxFlat.new()
+	grabber_hi.bg_color = color_ink_accent
+	grabber_hi.set_corner_radius_all(3)
+
+	for sb_type in ["VScrollBar", "HScrollBar"]:
+		t.set_stylebox("scroll", sb_type, scroll_bg)
+		t.set_stylebox("grabber", sb_type, grabber_sb)
+		t.set_stylebox("grabber_highlight", sb_type, grabber_hi)
+		t.set_stylebox("grabber_pressed", sb_type, grabber_hi)
 
 	return t

@@ -13,7 +13,7 @@ const ANCHOR_ALLOCATOR = preload("res://systems/society/unified_anchor_allocator
 const SPATIAL_RADIUS_INDEX = preload("res://systems/society/spatial_radius_index.gd")
 const GENERATION_AUDITOR = preload("res://systems/society/society_generation_auditor.gd")
 
-## Pass 3: Orchestrates household composition, OCEAN personalities, kinship trees, labor, org governance, and calendar schedules
+## Pass 3: Orchestrates household composition, OCEAN/cognitive/clinical profiles, kinship trees, labor, org governance, and calendar schedules
 static func run(
 	physical_state: Dictionary,
 	demographics: Dictionary,
@@ -49,6 +49,12 @@ static func run(
 	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
 	var rel_civic_peer_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
 	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
+
+	# Pre-resolve behavioral tag label IDs once for O(1) lookup during citizen hydration
+	var behavioral_tag_label_ids: Dictionary = {}
+	var profiles_cfg: Dictionary = ocean_rules.get("neurodivergence_and_clinical_profiles", {})
+	for tag_code in profiles_cfg.keys():
+		behavioral_tag_label_ids[str(tag_code)] = DB_MANAGER.get_label_id("BEHAVIORAL_TAG", str(tag_code))
 
 	var proprietor_hints: Dictionary = physical_state.get("proprietor_hints", {})
 
@@ -113,6 +119,7 @@ static func run(
 			school_spatial_indexes[s_cat] = ANCHOR_ALLOCATOR.build_establishment_spatial_index(s_ids, estab_positions, 1500.0)
 
 	var resident_inserts: Array[String] = []
+	var behavioral_tag_inserts: Array[String] = []
 	var contract_inserts: Array[String] = []
 	var org_member_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
@@ -137,7 +144,7 @@ static func run(
 	var local_tied_relocated_count := 0
 	var external_tied_influx_count := 0
 
-	SystemLogger.log_info("  [Pass 3] Hydrating %d households with OCEAN traits, kinship trees, and individual anchors..." % total_hh)
+	SystemLogger.log_info("  [Pass 3] Hydrating %d households with OCEAN, cognitive, clinical profiles, kinship trees, and anchors..." % total_hh)
 
 	# --------------------------------------------------------------------------
 	# STAGE 1: Standard Household Hydration & Local Tied Youth Relocation (50% -> 75%)
@@ -149,6 +156,7 @@ static func run(
 		var district_type: String = str(hh["district_type"])
 		var is_high_dense: bool = district_type.begins_with("high_density")
 		var unemp_rate: float = float(hh.get("unemp_rate", 0.10))
+		var deprivation_ratio: float = clampf(unemp_rate * 2.5, 0.0, 1.0)
 		var home_estab_id: int = int(hh["establishment_id"])
 		var hh_id: int = int(hh["household_id"])
 		var hh_dist_id: String = str(hh["district_id"])
@@ -210,7 +218,7 @@ static func run(
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_code)
 			var edu_nudges: Dictionary = PERSONALITY_HYDRATOR.get_education_nudges(demographics, edu_code)
 
-			# 1. Roll OCEAN Personality Traits
+			# 1. Roll OCEAN Personality, Cognitive (IQ/Agility), Dark Triad, & Sparse Clinical Tags
 			var ocean_traits: Dictionary = {}
 			if role_in_home == "HEAD":
 				ocean_traits = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, arch_nudges, edu_nudges, rng)
@@ -222,6 +230,10 @@ static func run(
 				ocean_traits = PERSONALITY_HYDRATOR.roll_child_traits(head_traits, spouse_traits, ocean_rules, arch_nudges, edu_nudges, rng)
 			else:
 				ocean_traits = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, arch_nudges, edu_nudges, rng)
+
+			PERSONALITY_HYDRATOR.populate_cognitive_and_clinical_profile(
+				ocean_traits, ocean_rules, float(age_years), edu_code, deprivation_ratio, rng
+			)
 
 			# 2. Resolve Individual Church / Parish Anchor
 			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
@@ -427,10 +439,12 @@ static func run(
 					dob, dod, death_reason_id, gender_id, education_level_id,
 					ethnicity_id, religion_id, church_id, local_pub_id,
 					openness, conscientiousness, extraversion, agreeableness, neuroticism,
+					iq_score, mental_agility, machiavellianism, empathy_affective, power_entitlement,
 					is_active_agent, valid_from, valid_to, change_reason_id
 				) VALUES (
 					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, %s, %s,
 					%.3f, %.3f, %.3f, %.3f, %.3f,
+					%.1f, %.3f, %.3f, %.3f, %.3f,
 					0, %d, NULL, %d
 				);
 			""" % [
@@ -440,8 +454,20 @@ static func run(
 				float(ocean_traits["openness"]), float(ocean_traits["conscientiousness"]),
 				float(ocean_traits["extraversion"]), float(ocean_traits["agreeableness"]),
 				float(ocean_traits["neuroticism"]),
+				float(ocean_traits["iq_score"]), float(ocean_traits["mental_agility"]),
+				float(ocean_traits["machiavellianism"]), float(ocean_traits["empathy_affective"]),
+				float(ocean_traits["power_entitlement"]),
 				sim_start_day, reason_world_gen_id
 			])
+
+			for tag_entry in ocean_traits.get("behavioral_tags", []):
+				var t_code: String = str(tag_entry["code"])
+				var t_label_id: int = int(behavioral_tag_label_ids[t_code])
+				behavioral_tag_inserts.append("""
+					INSERT INTO resident_behavioral_tags (
+						resident_id, tag_label_id, severity, is_diagnosed, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %.2f, 0, %d, NULL, %d);
+				""" % [r_id, t_label_id, float(tag_entry["severity"]), sim_start_day, reason_world_gen_id])
 
 			var class_id: int = active_contract_class_id if active_contract_class_id > 0 else DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
 			var role_id: int = active_role_title_id if active_role_title_id > 0 else DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
@@ -471,7 +497,7 @@ static func run(
 			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
 			var db_t0: int = Time.get_ticks_msec()
 			_flush_stage1_batches(
-				resident_inserts, contract_inserts, org_member_inserts, edge_inserts,
+				resident_inserts, behavioral_tag_inserts, contract_inserts, org_member_inserts, edge_inserts,
 				slot_updates, tied_household_inserts, resident_updates
 			)
 			var db_time: int = Time.get_ticks_msec() - db_t0
@@ -492,7 +518,7 @@ static func run(
 			chunk_start_ms = Time.get_ticks_msec()
 
 	_flush_stage1_batches(
-		resident_inserts, contract_inserts, org_member_inserts, edge_inserts,
+		resident_inserts, behavioral_tag_inserts, contract_inserts, org_member_inserts, edge_inserts,
 		slot_updates, tied_household_inserts, resident_updates
 	)
 
@@ -507,6 +533,7 @@ static func run(
 				await (main_loop as SceneTree).process_frame
 
 	var influx_resident_inserts: Array[String] = []
+	var influx_tag_inserts: Array[String] = []
 	var influx_contract_inserts: Array[String] = []
 	var influx_org_member_inserts: Array[String] = []
 	var influx_hh_inserts: Array[String] = []
@@ -549,6 +576,9 @@ static func run(
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
 			var edu_nudges: Dictionary = PERSONALITY_HYDRATOR.get_education_nudges(demographics, edu_req)
 			var ocean_traits: Dictionary = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, {}, edu_nudges, rng)
+			PERSONALITY_HYDRATOR.populate_cognitive_and_clinical_profile(
+				ocean_traits, ocean_rules, float(migrant_age), edu_req, 0.25, rng
+			)
 
 			var tied_h_id: int = next_household_id
 			next_household_id += 1
@@ -609,10 +639,12 @@ static func run(
 					dob, dod, death_reason_id, gender_id, education_level_id,
 					ethnicity_id, religion_id, church_id, local_pub_id,
 					openness, conscientiousness, extraversion, agreeableness, neuroticism,
+					iq_score, mental_agility, machiavellianism, empathy_affective, power_entitlement,
 					is_active_agent, valid_from, valid_to, change_reason_id
 				) VALUES (
 					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, %s, %s,
 					%.3f, %.3f, %.3f, %.3f, %.3f,
+					%.1f, %.3f, %.3f, %.3f, %.3f,
 					0, %d, NULL, %d
 				);
 			""" % [
@@ -622,8 +654,20 @@ static func run(
 				float(ocean_traits["openness"]), float(ocean_traits["conscientiousness"]),
 				float(ocean_traits["extraversion"]), float(ocean_traits["agreeableness"]),
 				float(ocean_traits["neuroticism"]),
+				float(ocean_traits["iq_score"]), float(ocean_traits["mental_agility"]),
+				float(ocean_traits["machiavellianism"]), float(ocean_traits["empathy_affective"]),
+				float(ocean_traits["power_entitlement"]),
 				sim_start_day, reason_world_gen_id
 			])
+
+			for tag_entry in ocean_traits.get("behavioral_tags", []):
+				var t_code: String = str(tag_entry["code"])
+				var t_label_id: int = int(behavioral_tag_label_ids[t_code])
+				influx_tag_inserts.append("""
+					INSERT INTO resident_behavioral_tags (
+						resident_id, tag_label_id, severity, is_diagnosed, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %.2f, 0, %d, NULL, %d);
+				""" % [r_id, t_label_id, float(tag_entry["severity"]), sim_start_day, reason_world_gen_id])
 
 			var class_id: int = int(slot["contract_class_id"])
 			var role_id: int = int(slot["role_title_id"])
@@ -684,6 +728,8 @@ static func run(
 	if not influx_hh_inserts.is_empty():
 		DB_MANAGER.execute_batch(influx_hh_inserts)
 		DB_MANAGER.execute_batch(influx_resident_inserts)
+		if not influx_tag_inserts.is_empty():
+			DB_MANAGER.execute_batch(influx_tag_inserts)
 		DB_MANAGER.execute_batch(influx_contract_inserts)
 		if not influx_org_member_inserts.is_empty():
 			DB_MANAGER.execute_batch(influx_org_member_inserts)
@@ -941,6 +987,7 @@ static func _next_day_for_weekday(base_day: int, target_dow: int) -> int:
 
 static func _flush_stage1_batches(
 	resident_inserts: Array[String],
+	behavioral_tag_inserts: Array[String],
 	contract_inserts: Array[String],
 	org_member_inserts: Array[String],
 	edge_inserts: Array[String],
@@ -951,6 +998,9 @@ static func _flush_stage1_batches(
 	if not resident_inserts.is_empty():
 		DB_MANAGER.execute_batch(resident_inserts)
 		resident_inserts.clear()
+	if not behavioral_tag_inserts.is_empty():
+		DB_MANAGER.execute_batch(behavioral_tag_inserts)
+		behavioral_tag_inserts.clear()
 	if not contract_inserts.is_empty():
 		DB_MANAGER.execute_batch(contract_inserts)
 		contract_inserts.clear()

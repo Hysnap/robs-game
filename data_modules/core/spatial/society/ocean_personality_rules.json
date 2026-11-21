@@ -1,63 +1,295 @@
 {
-    "_meta": {
-        "module": "ocean_personality_rules",
-        "era": "1980s",
-        "description": "Core Big Five (OCEAN) personality distribution, parental heritability, and social cohort venue selection rules."
+  "_meta": {
+    "module": "ocean_personality_rules",
+    "era": "1980s",
+    "description": "Core Big Five (OCEAN) personality distribution, parental heritability, cognitive/IQ/agility models, dark-trait axes, sparse neurodivergent/clinical profile rules, and social cohort venue selection rules."
+  },
+  "active_population_mode": "REALISTIC",
+  "population_presets": {
+    "REALISTIC": {
+      "ocean_std_dev_multiplier": 1.0,
+      "extremity_polarity_exponent": 1.0,
+      "iq_tail_weight_multiplier": 1.0,
+      "dark_trait_spread_multiplier": 1.0,
+      "profile_prevalence_multiplier": 1.0,
+      "profile_trigger_boost_multiplier": 1.0
     },
-    "traits": [
-        "openness",
-        "conscientiousness",
-        "extraversion",
-        "agreeableness",
-        "neuroticism"
-    ],
-    "baseline_distribution": {
-        "mean": 0.50,
-        "std_dev": 0.16,
-        "min_bound": 0.05,
-        "max_bound": 0.95
-    },
-    "heritability": {
-        "parental_midpoint_weight": 0.50,
-        "individual_variance_weight": 0.50,
-        "spousal_assortative_mating_blend": 0.25
-    },
-    "job_matching_weights": {
-        "exact_education_tier_bonus": 3.0,
-        "one_tier_overqualified_multiplier": 0.35,
-        "two_plus_tiers_overqualified_multiplier": 0.04,
-        "ocean_affinity_scale": 1.5
-    },
-    "venue_cohort_selection": {
-        "child_inherits_parent_church_probability": 0.90,
-        "spouse_shares_head_church_probability": 0.88,
-        "secular_attends_church_probability": 0.08,
-        "practicing_attends_church_probability": 0.78,
-        "sibling_local_pub_pull_probability": 0.65,
-        "pub_cohort_base_weights": {
-            "WORKPLACE_COHORT": 0.42,
-            "SIBLING_COHORT": 0.22,
-            "CHURCH_COHORT": 0.18,
-            "NEIGHBOURHOOD_COHORT": 0.18
-        },
-        "pub_cohort_trait_modifiers": {
-            "WORKPLACE_COHORT": {
-                "extraversion": 0.25,
-                "conscientiousness": 0.10
-            },
-            "SIBLING_COHORT": {
-                "agreeableness": 0.25,
-                "extraversion": 0.15
-            },
-            "CHURCH_COHORT": {
-                "conscientiousness": 0.25,
-                "agreeableness": 0.30,
-                "openness": -0.10
-            },
-            "NEIGHBOURHOOD_COHORT": {
-                "openness": 0.10,
-                "neuroticism": 0.15
-            }
-        }
+    "CINEMATIC": {
+      "ocean_std_dev_multiplier": 1.45,
+      "extremity_polarity_exponent": 0.72,
+      "iq_tail_weight_multiplier": 2.75,
+      "dark_trait_spread_multiplier": 1.35,
+      "profile_prevalence_multiplier": 2.25,
+      "profile_trigger_boost_multiplier": 1.4
     }
+  },
+  "traits": [
+    "openness",
+    "conscientiousness",
+    "extraversion",
+    "agreeableness",
+    "neuroticism"
+  ],
+  "baseline_distribution": {
+    "mean": 0.5,
+    "neutral_trait_baseline": 0.5,
+    "std_dev": 0.16,
+    "min_bound": 0.05,
+    "max_bound": 0.95
+  },
+  "heritability": {
+    "parental_midpoint_weight": 0.5,
+    "individual_variance_weight": 0.5,
+    "spousal_assortative_mating_blend": 0.25,
+    "assortative_traits": ["openness", "conscientiousness", "agreeableness"]
+  },
+  "cognitive_model": {
+    "iq_reference_mean": 100.0,
+    "iq_reference_sd": 15.0,
+    "iq_z_clamp": 3.0,
+    "iq_min_bound": 40.0,
+    "iq_max_bound": 165.0,
+    "iq_gmm_components": [
+      {
+        "id": "MAIN_POPULATION",
+        "weight": 0.975,
+        "mean": 100.0,
+        "std_dev": 15.0
+      },
+      {
+        "id": "PATHOLOGICAL_LEFT_TAIL",
+        "weight": 0.0175,
+        "mean": 55.0,
+        "std_dev": 12.0
+      },
+      {
+        "id": "HIGH_END_KURTOSIS_TAIL",
+        "weight": 0.0075,
+        "mean": 115.0,
+        "std_dev": 22.0
+      }
+    ],
+    "iq_covariates": {
+      "openness_correlation": 0.25,
+      "education_tier_iq_bonus": {
+        "NONE": -2.0,
+        "PRIMARY": -1.0,
+        "SECONDARY_CSE": 0.0,
+        "SECONDARY_O_LEVEL": 2.5,
+        "VOCATIONAL_APPRENTICE": 1.5,
+        "A_LEVEL": 5.0,
+        "POLYTECHNIC_DIPLOMA": 6.5,
+        "UNIVERSITY_DEGREE": 9.0,
+        "POSTGRADUATE": 12.0
+      },
+      "deprivation_scarr_rowe_max_penalty": 6.0
+    },
+    "mental_agility": {
+      "min_bound": 0.05,
+      "max_bound": 0.98,
+      "baseline_mean": 0.5,
+      "baseline_std_dev": 0.16,
+      "iq_copula_correlation": 0.4,
+      "right_skew_exponent": 1.15,
+      "age_curve": {
+        "peak_age": 25.0,
+        "childhood_floor_multiplier": 0.62,
+        "annual_decay_post_peak": 0.0045,
+        "elder_floor_multiplier": 0.55
+      },
+      "trait_modifiers": {
+        "openness_weight": 0.14,
+        "neuroticism_penalty_weight": 0.16,
+        "extreme_conscientiousness_threshold": 0.88,
+        "extreme_conscientiousness_rigidity_penalty": 0.08
+      }
+    }
+  },
+  "dark_and_empathy_axes": {
+    "min_bound": 0.02,
+    "max_bound": 0.98,
+    "machiavellianism": {
+      "mean": 0.36,
+      "std_dev": 0.16,
+      "inverse_agreeableness_weight": 0.38,
+      "conscientiousness_weight": 0.1,
+      "iq_strategic_weight": 0.08
+    },
+    "empathy_affective": {
+      "mean": 0.54,
+      "std_dev": 0.15,
+      "agreeableness_weight": 0.55,
+      "inverse_machiavellianism_weight": 0.22
+    },
+    "power_entitlement": {
+      "mean": 0.38,
+      "std_dev": 0.17,
+      "inverse_agreeableness_weight": 0.32,
+      "extraversion_weight": 0.2,
+      "affluence_district_bonus": 0.08
+    }
+  },
+  "tag_roll_parameters": {
+    "max_tag_probability": 0.85,
+    "severity_mean": 0.55,
+    "severity_std_dev": 0.18,
+    "severity_min": 0.15,
+    "severity_max": 0.98
+  },
+  "neurodivergence_and_clinical_profiles": {
+    "ND_ADHD": {
+      "category": "NEURODIVERGENCE",
+      "min_age": 5,
+      "max_age": 99,
+      "base_prevalence": 0.045,
+      "trigger_multiplier": 2.4,
+      "triggers": [
+        { "trait": "conscientiousness", "op": "<", "value": 0.38 },
+        { "trait": "openness", "op": ">", "value": 0.62 },
+        { "trait": "extraversion", "op": ">", "value": 0.6 }
+      ],
+      "effects": {
+        "iq_agility_decouple_factor": 0.65,
+        "agility_variance_multiplier": 1.45
+      }
+    },
+    "ND_AUTISM_SPECTRUM": {
+      "category": "NEURODIVERGENCE",
+      "min_age": 3,
+      "max_age": 99,
+      "base_prevalence": 0.018,
+      "trigger_multiplier": 2.8,
+      "triggers": [
+        { "trait": "extraversion", "op": "<", "value": 0.32 },
+        { "trait": "conscientiousness", "op": ">", "value": 0.65 },
+        { "trait": "neuroticism", "op": ">", "value": 0.6 }
+      ],
+      "effects": {
+        "routine_fidelity_bonus": 0.25,
+        "disruption_stress_multiplier": 1.65
+      }
+    },
+    "ND_DYSLEXIA": {
+      "category": "NEURODIVERGENCE",
+      "min_age": 6,
+      "max_age": 99,
+      "base_prevalence": 0.065,
+      "trigger_multiplier": 1.0,
+      "triggers": [],
+      "effects": {
+        "clerical_friction_penalty": 0.2
+      }
+    },
+    "CLINICAL_ASPD": {
+      "category": "CLUSTER_B_PERSONALITY",
+      "min_age": 18,
+      "max_age": 99,
+      "base_prevalence": 0.022,
+      "trigger_multiplier": 4.5,
+      "triggers": [
+        { "trait": "agreeableness", "op": "<", "value": 0.24 },
+        { "trait": "empathy_affective", "op": "<", "value": 0.25 },
+        { "trait": "machiavellianism", "op": ">", "value": 0.62 }
+      ]
+    },
+    "CLINICAL_NPD": {
+      "category": "CLUSTER_B_PERSONALITY",
+      "min_age": 18,
+      "max_age": 99,
+      "base_prevalence": 0.018,
+      "trigger_multiplier": 4.0,
+      "triggers": [
+        { "trait": "power_entitlement", "op": ">", "value": 0.72 },
+        { "trait": "agreeableness", "op": "<", "value": 0.34 },
+        { "trait": "extraversion", "op": ">", "value": 0.6 }
+      ]
+    },
+    "CLINICAL_BPD": {
+      "category": "CLUSTER_B_PERSONALITY",
+      "min_age": 16,
+      "max_age": 99,
+      "base_prevalence": 0.016,
+      "trigger_multiplier": 4.2,
+      "triggers": [
+        { "trait": "neuroticism", "op": ">", "value": 0.78 },
+        { "trait": "conscientiousness", "op": "<", "value": 0.35 }
+      ]
+    },
+    "CLINICAL_HISTRIONIC": {
+      "category": "CLUSTER_B_PERSONALITY",
+      "min_age": 18,
+      "max_age": 99,
+      "base_prevalence": 0.014,
+      "trigger_multiplier": 3.8,
+      "triggers": [
+        { "trait": "extraversion", "op": ">", "value": 0.78 },
+        { "trait": "neuroticism", "op": ">", "value": 0.65 },
+        { "trait": "conscientiousness", "op": "<", "value": 0.4 }
+      ]
+    },
+    "DARK_SADISM": {
+      "category": "DARK_TETRAD",
+      "min_age": 16,
+      "max_age": 99,
+      "base_prevalence": 0.015,
+      "trigger_multiplier": 4.5,
+      "triggers": [
+        { "trait": "empathy_affective", "op": "<", "value": 0.22 },
+        { "trait": "agreeableness", "op": "<", "value": 0.26 },
+        { "trait": "power_entitlement", "op": ">", "value": 0.65 }
+      ]
+    },
+    "YOUTH_CONDUCT_ODD": {
+      "category": "YOUTH_BEHAVIORAL",
+      "min_age": 8,
+      "max_age": 17,
+      "base_prevalence": 0.035,
+      "trigger_multiplier": 3.5,
+      "triggers": [
+        { "trait": "agreeableness", "op": "<", "value": 0.3 },
+        { "trait": "conscientiousness", "op": "<", "value": 0.32 }
+      ]
+    }
+  },
+  "job_matching_weights": {
+    "exact_education_tier_bonus": 3.0,
+    "one_tier_overqualified_multiplier": 0.35,
+    "two_plus_tiers_overqualified_multiplier": 0.04,
+    "ocean_affinity_scale": 1.5,
+    "min_affinity_multiplier": 0.25,
+    "max_affinity_multiplier": 2.5
+  },
+
+  "venue_cohort_selection": {
+    "child_inherits_parent_church_probability": 0.9,
+    "spouse_shares_head_church_probability": 0.88,
+    "secular_attends_church_probability": 0.08,
+    "practicing_attends_church_probability": 0.78,
+    "sibling_local_pub_pull_probability": 0.65,
+    "pub_cohort_base_weights": {
+      "WORKPLACE_COHORT": 0.42,
+      "SIBLING_COHORT": 0.22,
+      "CHURCH_COHORT": 0.18,
+      "NEIGHBOURHOOD_COHORT": 0.18
+    },
+    "pub_cohort_trait_modifiers": {
+      "WORKPLACE_COHORT": {
+        "extraversion": 0.25,
+        "conscientiousness": 0.1
+      },
+      "SIBLING_COHORT": {
+        "agreeableness": 0.25,
+        "extraversion": 0.15
+      },
+      "CHURCH_COHORT": {
+        "conscientiousness": 0.25,
+        "agreeableness": 0.3,
+        "openness": -0.1
+      },
+      "NEIGHBOURHOOD_COHORT": {
+        "openness": 0.1,
+        "neuroticism": 0.15
+      }
+    }
+  }
 }

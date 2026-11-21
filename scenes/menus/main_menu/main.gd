@@ -7,6 +7,7 @@ const SHELL_REGISTRY = preload("res://scenes/ui/shell_host/shell_registry.gd")
 @onready var title_label: Label = $Backdrop/CenterMargin/CardPanel/VBoxContainer/TitleLabel
 @onready var new_city_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/OpenMapMenu
 @onready var continue_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/OpenGeneratedCity
+@onready var dev_workbench_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/OpenDevWorkbench
 @onready var exit_button: Button = $Backdrop/CenterMargin/CardPanel/VBoxContainer/Exit
 
 func _ready() -> void:
@@ -25,6 +26,7 @@ func _ready() -> void:
 	_apply_localized_labels()
 	new_city_button.pressed.connect(_on_open_map_menu_pressed)
 	continue_button.pressed.connect(_on_continue_game_pressed)
+	dev_workbench_button.pressed.connect(_on_open_dev_workbench_pressed)
 	exit_button.pressed.connect(_on_exit_pressed)
 
 	SystemLogger.log_info("[MainMenu] Main menu ready.")
@@ -34,6 +36,7 @@ func _apply_localized_labels() -> void:
 	title_label.text = tr("MENU_GAME_TITLE")
 	new_city_button.text = tr("MENU_NEW_CITY")
 	continue_button.text = tr("MENU_CONTINUE_GAME")
+	dev_workbench_button.text = tr("MENU_DEV_WORKBENCH")
 	exit_button.text = tr("MENU_EXIT")
 
 ## Updates the Continue button state depending on whether at least one valid save slot exists
@@ -56,6 +59,12 @@ func _on_continue_game_pressed() -> void:
 	if error != OK:
 		SystemLogger.log_error("[MainMenu] Could not open load_game_menu.tscn: %s" % error)
 		push_error("[MainMenu] Could not open load_game_menu.tscn: %s" % error)
+
+func _on_open_dev_workbench_pressed() -> void:
+	var error := get_tree().change_scene_to_file("res://scenes/ui/dev_workbench/dev_workbench.tscn")
+	if error != OK:
+		SystemLogger.log_error("[MainMenu] Could not open dev_workbench.tscn: %s" % error)
+		push_error("[MainMenu] Could not open dev_workbench.tscn: %s" % error)
 
 func _on_exit_pressed() -> void:
 	if OS.has_feature("editor"):
