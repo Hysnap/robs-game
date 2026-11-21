@@ -4,6 +4,7 @@ extends RefCounted
 
 const CONDITION_EVALUATOR = preload("res://systems/condition_evaluator.gd")
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 var metric_id: String = ""
 var target_scope: String = "DISTRICT"
@@ -214,7 +215,7 @@ func _mutate_path(world_state: Dictionary, template: String, tokens: Dictionary,
 
 	cur_node[leaf_key] = final_val
 	if not stamp_field.is_empty():
-		cur_node[stamp_field] = int(world_state.get("metadata", {}).get("current_sim_day", 0))
+		cur_node[stamp_field] = CalendarHelperScript.get_current_sim_day(world_state)
 	return true
 
 func _walk_ambient(node: Variant, segments: Array[String], depth: int, root_state: Dictionary) -> void:

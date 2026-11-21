@@ -11,7 +11,7 @@ static func resolve(config: Dictionary, world_state: Dictionary, category_filter
 	var results: Array[Dictionary] = []
 	var allowed_types: Array = config.get("event_types", [])
 	var cat_upper := category_filter.strip_edges().to_upper()
-	var current_day: int = int(world_state.get("metadata", {}).get("current_sim_day", CALENDAR_HELPER.get_simulation_start_day()))
+	var current_day: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 
 	var crew_ids: Array[String] = []
 	var residents: Dictionary = world_state.get("residents", {})

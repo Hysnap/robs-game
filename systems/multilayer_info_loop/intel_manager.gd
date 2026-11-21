@@ -16,6 +16,7 @@ const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_m
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 const DEFAULT_RULES_MODULE: String = "intel_exposure"
 const DEFAULT_METRIC_ID: String = "INTEL_SCORE"
@@ -513,7 +514,7 @@ static func _write_score_fallback(
 	else:
 		pools[obs_scope][obs_id][target_key] = {
 			"score": score,
-			"last_updated_day": int(world_state.get("metadata", {}).get("current_sim_day", 0))
+			"last_updated_day": CalendarHelperScript.get_current_sim_day(world_state)
 		}
 
 ## Builds the player's canonical 1st-degree intel and observer context from residents & continuous knowledge_pools
@@ -693,7 +694,7 @@ static func resolve_known_contacts_for_location(location_meta: Dictionary, ws: D
 	if estab_id <= 0:
 		return contacts
 
-	var sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 0))
+	var sim_day: int = CalendarHelperScript.get_current_sim_day(ws)
 	var intel_ctx: Dictionary = build_player_intel_context(ws)
 	var docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, sim_day, intel_ctx)
 

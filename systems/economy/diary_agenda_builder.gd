@@ -74,11 +74,13 @@ static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Di
 			"has_items": marked_days.has(sim_d)
 		})
 
+	var resolved_current_day: int = _CalendarHelper.get_current_sim_day({"metadata": {"current_sim_day": current_day}}) if current_day > 0 else _CalendarHelper.get_current_sim_day()
+
 	return {
 		"month_offset": month_offset,
 		"month_title": str(grid_meta["month_title"]),
 		"leading_blank_days": int(grid_meta["leading_blank_days"]),
-		"current_sim_day": current_day,
+		"current_sim_day": resolved_current_day,
 		"selected_sim_day": selected_day,
 		"selected_date_label": _CalendarHelper.format_day_localized(selected_day),
 		"days": days_list,

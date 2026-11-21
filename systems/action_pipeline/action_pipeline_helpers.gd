@@ -5,6 +5,7 @@ extends RefCounted
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Normalizes an entity ID Variant so integer IDs resolve as int keys while string slugs remain String
 static func normalize_entity_key(raw_id: Variant) -> Variant:
@@ -46,7 +47,7 @@ static func _try_hydrate_sqlite_entity(world_state: Dictionary, entity_id: int) 
 	if entity_id <= 0 or SocietyQueriesScript == null:
 		return false
 
-	var sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 0))
+	var sim_day: int = CalendarHelperScript.get_current_sim_day(world_state)
 	var res_profile: Dictionary = SocietyQueriesScript.get_resident_profile(entity_id, sim_day)
 	if not res_profile.is_empty():
 		if not world_state.has("residents") or not (world_state["residents"] is Dictionary):

@@ -3,6 +3,7 @@ extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Switches to the Roster view and binds active crew members plus 1st-degree known contacts
 static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
@@ -14,7 +15,7 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 		return
 
 	var ws: Dictionary = gs.world_state
-	var current_sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 29219))
+	var current_sim_day: int = CalendarHelperScript.get_current_sim_day(ws)
 	var home_id: String = str(ws.get("operations", {}).get("home_district_id", ""))
 	var home_dist_name: String = str(ws.get("districts", {}).get(home_id, {}).get("display_name", home_id))
 	var enterprise_title: String = str(ws.get("operations", {}).get("enterprise_name", "CREW_ENTERPRISE"))

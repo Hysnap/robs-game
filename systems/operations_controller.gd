@@ -3,6 +3,7 @@ class_name OperationsController
 extends RefCounted
 
 const SimControllerScript = preload("res://systems/sim_controller.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
 const UIActionCommandScript = preload("res://scenes/ui/shell_host/ui_action_command.gd")
 const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
@@ -117,7 +118,7 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 
 	# 4. Notify world of timeline step
 	if gs.has_signal("turn_advanced"):
-		var current_day_tick: int = int(report.get("current_sim_day", report.get("day_offset", gs.world_state.get("metadata", {}).get("current_day_tick", 1))))
+		var current_day_tick: int = int(report["current_sim_day"]) if (report.has("current_sim_day") and report["current_sim_day"] != null) else CalendarHelperScript.get_current_sim_day(gs.world_state)
 		gs.turn_advanced.emit(current_day_tick)
 
 	SystemLogger.log_info("[OperationsController] Operational cycle produced %d feedback cards." % cards.size())

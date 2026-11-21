@@ -4,6 +4,7 @@ extends RefCounted
 
 const SAVES_BASE_DIR := "user://saves"
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const CORE_COMMODITIES_DIR := "res://data_modules/core/commodities/"
 const CORE_RECIPES_DIR := "res://data_modules/core/recipes/"
 
@@ -70,7 +71,7 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 
 	# 2. Save metadata header for load menus
 	var meta_in: Dictionary = state_to_save.get("metadata", {})
-	var current_day: int = int(meta_in.get("current_sim_day", 29219))
+	var current_day: int = CALENDAR_HELPER.get_current_sim_day(state_to_save)
 	var population_count: int = int(meta_in.get("total_population", state_to_save.get("residents", {}).size()))
 	var meta := {
 		"slot_id": slot_id,
@@ -149,7 +150,7 @@ static func load_game(slot_id: String) -> bool:
 		return false
 
 	# 4. Synchronize temporal clock in SQLite metadata
-	var loaded_day: int = int(parsed.get("metadata", {}).get("current_sim_day", 29219))
+	var loaded_day: int = CALENDAR_HELPER.get_current_sim_day(parsed)
 	DBManager.execute_batch([
 		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % loaded_day
 	])
@@ -347,11 +348,12 @@ static func list_save_slots() -> Array[Dictionary]:
 static func _read_slot_summary(slot_id: String, slot_dir: String, state_path: String) -> Dictionary:
 	var mod_time: int = int(FileAccess.get_modified_time(state_path))
 	var meta_path := "%s/meta.json" % slot_dir
+	var default_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var info: Dictionary = {
 		"slot_id": slot_id,
 		"city_name": slot_id,
 		"seed_id": "default",
-		"current_sim_day": 0,
+		"current_sim_day": default_start_day,
 		"current_week_tick": 1,
 		"population": 0,
 		"district_count": 0,
@@ -378,7 +380,7 @@ static func _read_slot_summary(slot_id: String, slot_dir: String, state_path: St
 				var m: Dictionary = parsed_state.get("metadata", {})
 				if str(info.get("city_name", "")) == slot_id and m.has("city_name"):
 					info["city_name"] = str(m["city_name"])
-				if int(info.get("current_sim_day", 0)) == 0 and m.has("current_sim_day"):
+				if int(info.get("current_sim_day", default_start_day)) == default_start_day and m.has("current_sim_day"):
 					info["current_sim_day"] = int(m["current_sim_day"])
 				if int(info.get("population", 0)) <= 0:
 					info["population"] = int(m.get("total_population", parsed_state.get("residents", {}).size()))

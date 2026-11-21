@@ -71,14 +71,11 @@ static func generate_report(custom_db_path: String = "") -> Dictionary:
 		"religion": religion_series
 	}
 
-## Resolves the exact simulation day epoch stored in the inspected database
+## Resolves the exact simulation day epoch stored in the inspected database via CalendarHelper
 static func _resolve_reference_sim_day() -> int:
-	var cur_str: String = DB_MANAGER.get_metadata("current_sim_day", "")
-	if cur_str.is_valid_int() and int(cur_str) > 0:
-		return int(cur_str)
-	var start_str: String = DB_MANAGER.get_metadata("sim_start_day", "")
-	if start_str.is_valid_int() and int(start_str) > 0:
-		return int(start_str)
+	var helper_day: int = CALENDAR_HELPER.get_current_sim_day()
+	if helper_day > 0:
+		return helper_day
 	var vf_rows: Array = DB_MANAGER.query_rows("SELECT MAX(valid_from) AS max_vf FROM residents;")
 	if not vf_rows.is_empty() and vf_rows[0]["max_vf"] != null:
 		return int(vf_rows[0]["max_vf"])

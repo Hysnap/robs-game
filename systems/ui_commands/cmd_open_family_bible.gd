@@ -3,6 +3,7 @@ extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Switches to the Family Bible view and binds Fog-of-War filtered crew lineages and vital records
 static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
@@ -14,7 +15,7 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 		return
 
 	var ws: Dictionary = gs.world_state
-	var current_sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 29219))
+	var current_sim_day: int = CalendarHelperScript.get_current_sim_day(ws)
 	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(ws)
 	var bible_data: Dictionary = SocietyQueriesScript.get_crew_family_bible(intel_ctx, current_sim_day)
 

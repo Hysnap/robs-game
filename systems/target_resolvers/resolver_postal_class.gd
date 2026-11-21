@@ -29,9 +29,9 @@ static func resolve(target_cat: Dictionary, world_state: Dictionary, _verb_code:
 	var classes: Dictionary = postal_rules.get("classes", {})
 	var schedules: Array = postal_rules.get("era_schedules", [])
 
-	var current_day: int = int(world_state.get("metadata", {}).get("current_sim_day", CalendarHelperScript.get_simulation_start_day()))
+	var current_day: int = CalendarHelperScript.get_current_sim_day(world_state)
 	var sim_year: int = CalendarHelperScript.day_to_year(current_day)
-
+	
 	var active_transit: Dictionary = {}
 	for sched in schedules:
 		if sched is Dictionary:
