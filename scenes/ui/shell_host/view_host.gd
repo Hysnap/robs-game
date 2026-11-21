@@ -3,6 +3,7 @@ class_name ViewHost
 extends Node
 
 ## Unified signal emitting structured UIActionCommand objects
+const TACTILE_SFX = preload("res://systems/audio/tactile_sfx.gd")
 signal ui_command_dispatched(command: UIActionCommand)
 signal slip_filed(slip_data: Dictionary, destination: String)
 
@@ -42,6 +43,7 @@ func _connect_shell_signals() -> void:
 			shell_node.connect("end_turn_requested", end_cb)
 
 func _on_shell_switch_requested(shell_id: String) -> void:
+	TACTILE_SFX.play("binder_snap")
 	ui_command_dispatched.emit(UIActionCommand.new("switch_shell", {"shell_id": shell_id}))
 
 func _on_save_game_requested() -> void:
@@ -93,6 +95,8 @@ func get_order_composer_node() -> Control:
 func set_navigation_component(nav_bar: Control) -> void:
 	if shell_node:
 		shell_node.mount_view("NAV", nav_bar)
+		if shell_node._active_spread != null and shell_node._active_spread.has_method("apply_visual_skin"):
+			shell_node._active_spread.apply_visual_skin()
 
 	if nav_bar != null and nav_bar.has_signal("action_clicked"):
 		var callback := Callable(self, "_on_navigation_action_clicked")
@@ -104,6 +108,7 @@ func _on_navigation_action_clicked(action_code: String, payload: Dictionary = {}
 	if clean_code.is_empty():
 		push_warning("[ViewHost] Navigation action did not provide an action_code.")
 		return
+	TACTILE_SFX.play("page_flip")
 	ui_command_dispatched.emit(UIActionCommand.new(clean_code, payload))
 
 ## Registers any compiled UI view to an arbitrary string key from configuration
@@ -181,6 +186,7 @@ func set_desk_inbox(inbox_control: Control) -> void:
 				_desk_inbox.top_card_action.connect(_on_desk_top_card_action)
 
 func _on_desk_slip_filed(slip_data: Dictionary, destination: String) -> void:
+	TACTILE_SFX.play("paper_slip")
 	inscribe_entry_to_domain(destination, slip_data)
 	slip_filed.emit(slip_data, destination)
 	ui_command_dispatched.emit(UIActionCommand.new("file_slip", {
@@ -237,7 +243,9 @@ func cleanup() -> void:
 	_desk_inbox = null
 
 func _on_view_item_selected(target_route: String, filter_key: Variant) -> void:
+	TACTILE_SFX.play("typewriter_click")
 	ui_command_dispatched.emit(UIActionCommand.new(target_route, {"filter_key": filter_key}))
 
 func _on_view_action_clicked(action_code: String, payload: Dictionary = {}) -> void:
+	TACTILE_SFX.play("typewriter_click")
 	ui_command_dispatched.emit(UIActionCommand.new(action_code, payload))

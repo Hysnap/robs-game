@@ -55,3 +55,32 @@ static func _generate_clean_memo(staff_name: String, _voice: String) -> String:
 		"Done and dusted. No trouble on the rounds."
 	]
 	return "%s: \"%s\"" % [staff_name.to_upper(), clean_phrases.pick_random()]
+
+static func generate_billy_issue_memo(
+	staff_name: String,
+	standing_title: String,
+	adhoc_verb: String,
+	loyalty: float
+) -> String:
+	var clean_name: String = staff_name.strip_edges().to_upper() if not staff_name.strip_edges().is_empty() else "BILLY"
+	var sign_off: String = "Thought that was what you wanted first, boss." if loyalty >= 0.5 else "Left the usual run sitting till tomorrow."
+	return "%s: \"Jumped straight onto %s soon as you asked and didn't get around to '%s'. %s\"" % [
+		clean_name,
+		adhoc_verb,
+		standing_title,
+		sign_off
+	]
+
+static func generate_standing_order_escalation_memo(
+	staff_name: String,
+	standing_title: String,
+	adhoc_verb: String,
+	hours_over: float
+) -> String:
+	var clean_name: String = staff_name.strip_edges().to_upper() if not staff_name.strip_edges().is_empty() else "OPERATIVE"
+	return "%s: \"Flagging a clash before I start—'%s' plus %s runs %.1fh past shift limit. Tell me which one we're dropping or pausing.\"" % [
+		clean_name,
+		standing_title,
+		adhoc_verb,
+		maxf(0.1, hours_over)
+	]

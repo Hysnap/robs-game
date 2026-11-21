@@ -53,6 +53,16 @@ func build_ui() -> void:
 	_value_labels["roster"] = btn_roster
 	add_child(btn_roster)
 
+	var btn_family_bible := Button.new()
+	btn_family_bible.name = "family_bible"
+	btn_family_bible.text = tr("UI_TAB_MACRO_FAMILY_BIBLE")
+	btn_family_bible.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_family_bible.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_family_bible.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_family_bible.pressed.connect(func(): self.action_clicked.emit("open_family_bible", {}))
+	_value_labels["family_bible"] = btn_family_bible
+	add_child(btn_family_bible)
+
 	var btn_finance := Button.new()
 	btn_finance.name = "finance"
 	btn_finance.text = tr("UI_TAB_MACRO_FINANCE")

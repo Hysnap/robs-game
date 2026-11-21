@@ -5,6 +5,7 @@ extends RefCounted
 const ValidatorScript = preload("res://systems/dev_authoring/dev_authoring_validator.gd")
 const WriterScript = preload("res://systems/dev_authoring/dev_authoring_writer.gd")
 const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
+const ReportModelScript = preload("res://systems/dev_authoring/city_demographics_report_model.gd")
 
 const DATA_MODULES_ROOT := "res://data_modules/"
 
@@ -38,6 +39,10 @@ static func get_registered_recipes() -> Array[String]:
 			recipes.append(rid)
 	recipes.sort()
 	return recipes
+
+## Runs the Expected (JSON) vs. Actual (SQLite) City Demographics & Psychology Validation Report
+static func build_city_demographics_report(custom_db_path: String = "") -> Dictionary:
+	return ReportModelScript.generate_report(custom_db_path)
 
 # =====================================================================
 # 2. LOAD EXISTING DEFINITIONS & WIP DRAFTS FOR RESUMING WORK

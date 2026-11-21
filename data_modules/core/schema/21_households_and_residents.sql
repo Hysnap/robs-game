@@ -1,5 +1,5 @@
 -- res://data_modules/core/schema/tables/21_households_and_residents.sql
--- Tier 21: Domestic Households and Individual Residents (with Personal Anchors & OCEAN Traits)
+-- Tier 21: Domestic Households and Individual Residents (with Personal Anchors, OCEAN, Cognitive, & Dark-Trait Vectors)
 
 CREATE TABLE IF NOT EXISTS households (
 	household_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS residents (
 	extraversion REAL NOT NULL DEFAULT 0.5,
 	agreeableness REAL NOT NULL DEFAULT 0.5,
 	neuroticism REAL NOT NULL DEFAULT 0.5,
+	iq_score REAL NOT NULL DEFAULT 100.0,
+	mental_agility REAL NOT NULL DEFAULT 0.5,
+	machiavellianism REAL NOT NULL DEFAULT 0.35,
+	empathy_affective REAL NOT NULL DEFAULT 0.5,
+	power_entitlement REAL NOT NULL DEFAULT 0.35,
 	is_active_agent INTEGER DEFAULT 0,
 	valid_from INTEGER NOT NULL,
 	valid_to INTEGER,
@@ -52,5 +57,19 @@ CREATE TABLE IF NOT EXISTS residents (
 	FOREIGN KEY (religion_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 	FOREIGN KEY (church_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
 	FOREIGN KEY (local_pub_id) REFERENCES establishments(establishment_id) ON DELETE SET NULL,
+	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+);
+
+CREATE TABLE IF NOT EXISTS resident_behavioral_tags (
+	tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	resident_id INTEGER NOT NULL,
+	tag_label_id INTEGER NOT NULL,
+	severity REAL NOT NULL DEFAULT 0.5,
+	is_diagnosed INTEGER NOT NULL DEFAULT 0,
+	valid_from INTEGER NOT NULL,
+	valid_to INTEGER,
+	change_reason_id INTEGER,
+	FOREIGN KEY (resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
+	FOREIGN KEY (tag_label_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 );

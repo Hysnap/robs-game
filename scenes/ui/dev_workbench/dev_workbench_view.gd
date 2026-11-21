@@ -3,6 +3,7 @@ class_name DevWorkbenchView
 extends Control
 
 const ControllerScript = preload("res://systems/dev_authoring/dev_authoring_controller.gd")
+const ChartControlScript = preload("res://scenes/ui/dev_workbench/comparison_chart_control.gd")
 
 var _catalog: Dictionary = {}
 
@@ -47,6 +48,11 @@ var _verb_token_edit: LineEdit
 var _verb_visible_chk: CheckBox
 var _verb_steps_box: VBoxContainer
 var _verb_impacts_box: VBoxContainer
+
+# City Demographics Audit Tab Nodes
+var _audit_db_path_edit: LineEdit
+var _audit_summary_lbl: RichTextLabel
+var _audit_charts_box: VBoxContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -122,7 +128,7 @@ func _build_ui_hierarchy() -> void:
 	header_panel.add_child(header_hbox)
 
 	var title_lbl := Label.new()
-	title_lbl.text = "  DEVELOPER AUTHORING WORKBENCH (MVC / WHITELISTED IMPACTS / LOGIC TREES)"
+	title_lbl.text = "  DEVELOPER AUTHORING WORKBENCH (MVC / WHITELISTED IMPACTS / LOGIC TREES / CITY AUDIT)"
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_hbox.add_child(title_lbl)
 
@@ -139,10 +145,11 @@ func _build_ui_hierarchy() -> void:
 	_build_commodity_tab()
 	_build_recipe_tab()
 	_build_verb_tab()
+	_build_demographics_audit_tab()
 
 	# Bottom Validation & Status Feedback Console
 	var console_panel := PanelContainer.new()
-	console_panel.custom_minimum_size = Vector2(0, 130)
+	console_panel.custom_minimum_size = Vector2(0, 120)
 	main_vbox.add_child(console_panel)
 
 	_status_label = RichTextLabel.new()
@@ -427,7 +434,143 @@ func _build_verb_tab() -> void:
 	))
 
 # =====================================================================
-# 5. DYNAMIC BINDING & STEP CARD RENDERERS
+# 5. TAB 4: CITY DEMOGRAPHICS & TRAITS VISUAL AUDIT
+# =====================================================================
+
+func _build_demographics_audit_tab() -> void:
+	var scroll := ScrollContainer.new()
+	scroll.name = "4. City Demographics Audit"
+	_tabs.add_child(scroll)
+
+	var vbox := VBoxContainer.new()
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 12)
+	scroll.add_child(vbox)
+
+	# Control Bar
+	var ctrl_hbox := HBoxContainer.new()
+	ctrl_hbox.add_theme_constant_override("separation", 10)
+	vbox.add_child(ctrl_hbox)
+
+	ctrl_hbox.add_child(_make_label("Target City SQLite DB (blank = active default):", 290))
+	_audit_db_path_edit = LineEdit.new()
+	_audit_db_path_edit.placeholder_text = "Leave empty for active game_society.db or enter user://...db"
+	_audit_db_path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ctrl_hbox.add_child(_audit_db_path_edit)
+
+	var run_btn := Button.new()
+	run_btn.text = "Run City Demographics & Traits Audit"
+	run_btn.pressed.connect(_on_run_demographics_audit_pressed)
+	ctrl_hbox.add_child(run_btn)
+
+	# Summary KPI Banner
+	var kpi_panel := PanelContainer.new()
+	vbox.add_child(kpi_panel)
+	_audit_summary_lbl = RichTextLabel.new()
+	_audit_summary_lbl.bbcode_enabled = true
+	_audit_summary_lbl.fit_content = true
+	_audit_summary_lbl.text = "[color=gray]Click 'Run City Demographics & Traits Audit' to compare generated SQLite citizens against JSON rules.[/color]"
+	kpi_panel.add_child(_audit_summary_lbl)
+
+	# Visual Charts Container
+	_audit_charts_box = VBoxContainer.new()
+	_audit_charts_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_theme_constant_override("separation", 14)
+	vbox.add_child(_audit_charts_box)
+
+func _on_run_demographics_audit_pressed() -> void:
+	var custom_path: String = _audit_db_path_edit.text.strip_edges()
+	var report: Dictionary = ControllerScript.build_city_demographics_report(custom_path)
+	_clear_children(_audit_charts_box)
+
+	if not bool(report.get("success", false)):
+		var err_msg: String = str(report.get("error", "Unknown error running city audit."))
+		_audit_summary_lbl.text = "[color=red][b]AUDIT FAILED:[/b] %s[/color]" % err_msg
+		_log_status("[color=red][CITY AUDIT ERROR][/color] %s" % err_msg)
+		return
+
+	var total_pop: int = int(report.get("total_population", 0))
+	var total_hh: int = int(report.get("total_households", 0))
+	var act_hh_sz: float = float(report.get("mean_household_size", 0.0))
+	var exp_hh_sz: float = float(report.get("expected_household_size", 2.6))
+	var mode_str: String = str(report.get("population_mode", "REALISTIC"))
+	var seed_str: String = str(report.get("active_seed", "UNKNOWN"))
+
+	_audit_summary_lbl.text = (
+		"[b][color=cyan]CITY DEMOGRAPHICS & PSYCHOLOGY AUDIT[/color][/b]  |  " +
+		"DB: [color=white]%s[/color]  |  Seed: [color=yellow]%s[/color]  |  Mode: [color=lime]%s[/color]\n" +
+		"Living Population: [b]%d[/b]  |  Active Households: [b]%d[/b]  |  " +
+		"Mean Household Size: [b]%.2f[/b] (JSON Target: %.2f)"
+	) % [str(report.get("db_path", "")), seed_str, mode_str, total_pop, total_hh, act_hh_sz, exp_hh_sz]
+
+	# 1. Age & Sex Population Pyramid
+	var pyramid_chart := ChartControlScript.new()
+	pyramid_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(pyramid_chart)
+	pyramid_chart.configure_pyramid(
+		"1. Actuarial Population Pyramid (Age & Sex Cohorts)",
+		"Mirrored Male (Left) vs. Female (Right) % of total population against demographics_1980s_uk.json target markers.",
+		report.get("pyramid", [])
+	)
+
+	# 2. OCEAN, IQ (GMM), Mental Agility & Dark-Trait Means
+	var traits_chart := ChartControlScript.new()
+	traits_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(traits_chart)
+	traits_chart.configure_paired_bars(
+		"2. OCEAN Personality, IQ (GMM), Mental Agility & Dark-Trait Distributions",
+		"Actual city SQLite mean (with [min..max] range) vs. ocean_personality_rules.json expected baseline (%s mode)." % mode_str,
+		report.get("continuous_traits", []),
+		true
+	)
+
+	# 3. Neurodivergence & Clinical Behavioral Profiles
+	var tags_chart := ChartControlScript.new()
+	tags_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(tags_chart)
+	tags_chart.configure_paired_bars(
+		"3. Sparse Neurodivergence & Clinical Behavioral Profiles (resident_behavioral_tags)",
+		"Actual % of age-eligible citizens carrying each tag (plus mean severity) vs. base prevalence in ocean_personality_rules.json.",
+		report.get("behavioral_tags", []),
+		false
+	)
+
+	# 4. Educational Attainment
+	var edu_chart := ChartControlScript.new()
+	edu_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(edu_chart)
+	edu_chart.configure_paired_bars(
+		"4. Adult Educational Attainment (Age 16+)",
+		"Actual qualification distribution vs. cohort-averaged probabilities in education_attainment_model.",
+		report.get("education", []),
+		false
+	)
+
+	# 5. Cultural & Religious Composition
+	var eth_chart := ChartControlScript.new()
+	eth_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(eth_chart)
+	eth_chart.configure_paired_bars(
+		"5. Ethnic Composition",
+		"Actual city ethnicity share vs. unweighted archetype mean in cultural_demographics.",
+		report.get("ethnicity", []),
+		false
+	)
+
+	var rel_chart := ChartControlScript.new()
+	rel_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_audit_charts_box.add_child(rel_chart)
+	rel_chart.configure_paired_bars(
+		"6. Religious Affiliation Breakdown",
+		"Actual city religious affiliation share vs. unweighted archetype mean in cultural_demographics.",
+		report.get("religion", []),
+		false
+	)
+
+	_log_status("[color=green][CITY AUDIT COMPLETE][/color] Audited %d living residents across %d households (%s mode)." % [total_pop, total_hh, mode_str])
+
+# =====================================================================
+# 6. DYNAMIC BINDING & STEP CARD RENDERERS
 # =====================================================================
 
 func _populate_header_loaders() -> void:
@@ -655,7 +798,7 @@ func _build_require_decision_ui(parent_vbox: VBoxContainer, params: Dictionary) 
 		c_row.add_child(rm_c_btn)
 
 # =====================================================================
-# 6. WHITELISTED IMPACT ROW BUILDER (SHARED ACROSS TABS)
+# 7. WHITELISTED IMPACT ROW BUILDER (SHARED ACROSS TABS)
 # =====================================================================
 
 func _rebuild_impact_rows(container: VBoxContainer, impacts_list: Array, include_verb_ctx: bool) -> void:
@@ -709,7 +852,7 @@ func _rebuild_impact_rows(container: VBoxContainer, impacts_list: Array, include
 		row.add_child(rm_btn)
 
 # =====================================================================
-# 7. EVENT HANDLERS & CONTROLLER DISPATCH
+# 8. EVENT HANDLERS & CONTROLLER DISPATCH
 # =====================================================================
 
 func _on_add_commodity_impact() -> void:
@@ -871,7 +1014,7 @@ func _render_validation_report(domain: String, val: Dictionary) -> void:
 	_log_status("\n".join(lines))
 
 # =====================================================================
-# 8. SMALL WIDGET FACTORY HELPERS
+# 9. SMALL WIDGET FACTORY HELPERS
 # =====================================================================
 
 func _build_action_bar(on_validate: Callable, on_save_draft: Callable, on_make_live: Callable) -> HBoxContainer:

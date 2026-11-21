@@ -4,515 +4,2098 @@
 	"description": "Core engine taxonomy baseline for system-level constants, change reasons, contracts, and relationship edge types not defined in scenario modules."
   },
   "labels": [
-	{ "domain": "CHANGE_REASON", "code": "WORLD_GENERATION", "title": "Initial World Generation", "description": "Seeded during baseline procedural society generation." },
-	{ "domain": "CHANGE_REASON", "code": "EVICTION", "title": "Tenancy Eviction", "description": "Displaced from residence due to redevelopment or arrears." },
-	{ "domain": "CHANGE_REASON", "code": "MIGRATION", "title": "Inter-District Relocation", "description": "Household moved to another ward or borough." },
-	{ "domain": "CHANGE_REASON", "code": "DEATH", "title": "Deceased", "description": "Life cycle conclusion." },
+    {
+      "domain": "CHANGE_REASON",
+      "code": "WORLD_GENERATION",
+      "title": "Initial World Generation",
+      "description": "Seeded during baseline procedural society generation."
+    },
+    {
+      "domain": "CHANGE_REASON",
+      "code": "EVICTION",
+      "title": "Tenancy Eviction",
+      "description": "Displaced from residence due to redevelopment or arrears."
+    },
+    {
+      "domain": "CHANGE_REASON",
+      "code": "MIGRATION",
+      "title": "Inter-District Relocation",
+      "description": "Household moved to another ward or borough."
+    },
+    {
+      "domain": "CHANGE_REASON",
+      "code": "DEATH",
+      "title": "Deceased",
+      "description": "Life cycle conclusion."
+    },
 
-	{ "domain": "DEATH_REASON", "code": "NATURAL_CAUSES", "title": "Natural Causes / Old Age", "description": "Deceased from natural age-related complications." },
-	{ "domain": "DEATH_REASON", "code": "WORKPLACE_ACCIDENT", "title": "Industrial Accident", "description": "Fatal trauma incurred during manufacturing or manual labor." },
-	{ "domain": "DEATH_REASON", "code": "STREET_VIOLENCE", "title": "Criminal Violence", "description": "Fatal trauma resulting from street or gang conflict." },
-	{ "domain": "DEATH_REASON", "code": "CHRONIC_ILLNESS", "title": "Chronic Illness", "description": "Morbidity caused by respiratory, cardiac, or environmental conditions." },
+    {
+      "domain": "DEATH_REASON",
+      "code": "NATURAL_CAUSES",
+      "title": "Natural Causes / Old Age",
+      "description": "Deceased from natural age-related complications."
+    },
+    {
+      "domain": "DEATH_REASON",
+      "code": "WORKPLACE_ACCIDENT",
+      "title": "Industrial Accident",
+      "description": "Fatal trauma incurred during manufacturing or manual labor."
+    },
+    {
+      "domain": "DEATH_REASON",
+      "code": "STREET_VIOLENCE",
+      "title": "Criminal Violence",
+      "description": "Fatal trauma resulting from street or gang conflict."
+    },
+    {
+      "domain": "DEATH_REASON",
+      "code": "CHRONIC_ILLNESS",
+      "title": "Chronic Illness",
+      "description": "Morbidity caused by respiratory, cardiac, or environmental conditions."
+    },
 
-	{ "domain": "GENDER", "code": "M", "title": "Male", "description": "Male citizen." },
-	{ "domain": "GENDER", "code": "F", "title": "Female", "description": "Female citizen." },
+    {
+      "domain": "GENDER",
+      "code": "M",
+      "title": "Male",
+      "description": "Male citizen."
+    },
+    {
+      "domain": "GENDER",
+      "code": "F",
+      "title": "Female",
+      "description": "Female citizen."
+    },
 
-	{ "domain": "CONTRACT_TYPE", "code": "STANDARD", "title": "Standard Full-Time Agreement", "description": "Standard ongoing contracted term." },
-	{ "domain": "CONTRACT_TYPE", "code": "PART_TIME", "title": "Part-Time Agreement", "description": "Regular hourly employment under statutory full-time hours." },
-	{ "domain": "CONTRACT_TYPE", "code": "CASUAL_ON_CALL", "title": "Casual / Day Labor", "description": "Variable on-call labor engagement with no guaranteed hours." },
-	{ "domain": "CONTRACT_TYPE", "code": "APPRENTICESHIP", "title": "Indenture / Apprenticeship", "description": "Fixed-term training contract with reduced training allowance." },
-	{ "domain": "CONTRACT_TYPE", "code": "RETAINER", "title": "Professional Retainer", "description": "Ongoing retainer for exclusive availability or services." },
-	{ "domain": "CONTRACT_TYPE", "code": "SECONDARY", "title": "Secondary Role", "description": "A not so formal secondary career and contract, may not be legal." },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "STANDARD",
+      "title": "Standard Full-Time Agreement",
+      "description": "Standard ongoing contracted term."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "PART_TIME",
+      "title": "Part-Time Agreement",
+      "description": "Regular hourly employment under statutory full-time hours."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "CASUAL_ON_CALL",
+      "title": "Casual / Day Labor",
+      "description": "Variable on-call labor engagement with no guaranteed hours."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "APPRENTICESHIP",
+      "title": "Indenture / Apprenticeship",
+      "description": "Fixed-term training contract with reduced training allowance."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "RETAINER",
+      "title": "Professional Retainer",
+      "description": "Ongoing retainer for exclusive availability or services."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
+      "code": "SECONDARY",
+      "title": "Secondary Role",
+      "description": "A not so formal secondary career and contract, may not be legal."
+    },
 
-	{ "domain": "CONTRACT_CLASS", "code": "FORMAL_LEGAL", "title": "Formal Taxed Employment", "description": "Standard PAYE employment subject to National Insurance." },
-	{ "domain": "CONTRACT_CLASS", "code": "INFORMAL_GREY", "title": "Informal / Off-the-Books", "description": "Unregistered cash-in-hand enterprise." },
-	{ "domain": "CONTRACT_CLASS", "code": "ILLICIT_SYNDICATE", "title": "Syndicate Retainer", "description": "Operational criminal enterprise payroll." },
-	{ "domain": "CONTRACT_CLASS", "code": "CUSTODIAL_INMATE", "title": "HM Prison Custodial Work", "description": "Mandatory internal prison labor and workshop assignment." },
-	{ "domain": "CONTRACT_CLASS", "code": "ENCLAVE_STUDENT", "title": "Enclave Education / Grant", "description": "Student grant or pupil school enrollment." },
-	{ "domain": "CONTRACT_CLASS", "code": "COVERT_INFORMANT", "title": "Special Branch / CID Retainer", "description": "Registered law enforcement or intelligence source." },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "FORMAL_LEGAL",
+      "title": "Formal Taxed Employment",
+      "description": "Standard PAYE employment subject to National Insurance."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "INFORMAL_GREY",
+      "title": "Informal / Off-the-Books",
+      "description": "Unregistered cash-in-hand enterprise."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "ILLICIT_SYNDICATE",
+      "title": "Syndicate Retainer",
+      "description": "Operational criminal enterprise payroll."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "CUSTODIAL_INMATE",
+      "title": "HM Prison Custodial Work",
+      "description": "Mandatory internal prison labor and workshop assignment."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "ENCLAVE_STUDENT",
+      "title": "Enclave Education / Grant",
+      "description": "Student grant or pupil school enrollment."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "COVERT_INFORMANT",
+      "title": "Special Branch / CID Retainer",
+      "description": "Registered law enforcement or intelligence source."
+    },
 
-	{ "domain": "RELATIONSHIP_TYPE", "code": "FAMILY", "title": "Immediate Family", "description": "Cohabiting nuclear family or domestic partnership." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "SPOUSE", "title": "Spouse / Legal Partner", "description": "Marital domestic partnership." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "HUSBAND", "title": "Husband", "description": "Male spouse or marital partner." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "WIFE", "title": "Wife", "description": "Female spouse or marital partner." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "PARTNER", "title": "Unmarried Partner", "description": "Unmarried cohabiting romantic partner." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "EXTENDED_FAMILY", "title": "Extended Kinship", "description": "Non-cohabiting relatives, cousins, aunts, uncles." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "HOUSEHOLD_PEER", "title": "Household Peer", "description": "Non-family member sharing the same household." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "DRINKING_MATE", "title": "Drinking Companion", "description": "Regular patron association at the same local establishment." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "WORK_MATE", "title": "Workplace Friend", "description": "Close Co-workers or peers met via work." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "CONGREGATIONAL", "title": "Congregational Parishioner", "description": "Shared church, temple, or faith community affiliation." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "CIVIC_PEER", "title": "Workplace Colleague", "description": "Co-workers or peers at the same establishment." },
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "COLLEAGUE",
-		"title": "Professioanl Colleague",
-		"description": "Professional co-workers or peers at the same establishment."
-	},
-	{ "domain": "RELATIONSHIP_TYPE", "code": "LINE_MANAGER", "title": "Workplace Line Manager", "description": "Direct Superior at the same establishment." },
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "SENIOR_MANAGER",
-		"title": "Workplace Senior Manager",
-		"description": "Workplace Superior at the same establishment."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "OWNER_MANAGER",
-		"title": "Workplace Owner Manager",
-		"description": "Workplace Owner for the workplace establishment."
-	},
-	{ "domain": "RELATIONSHIP_TYPE", "code": "CUSTOMER", "title": "Workplace Customer", "description": "Customers met whilst at work." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "NEIGHBOUR", "title": "Street Neighbour", "description": "Close residential proximity association." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "CELLMATE", "title": "Inmate Associate", "description": "Shared custodial incarceration wing or workshop." },
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "RESIDENCE_SHARE",
-		"title": "Residetial Associate",
-		"description": "Shared a residence."
-	},
-	{ "domain": "RELATIONSHIP_TYPE", "code": "CRIMINAL_ACCOMPLICE", "title": "Criminal Accomplice", "description": "Shared active association in illicit enterprises." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "SCHOOL", "title": "School Class Mate", "description": "Attended a school or college at the same time." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "FRIEND", "title": "Friend", "description": "Friend, Amigo, chum for what ever reason they get on." },
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "FATHER",
-		"title": "Father",
-		"description": "Male parent of child."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "MOTHER",
-		"title": "Mother",
-		"description": "Female parent of child."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "SON",
-		"title": "Son",
-		"description": "Male child of parent."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "DAUGHTER",
-		"title": "Daughter",
-		"description": "Female child of parent."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "BROTHER",
-		"title": "Brother",
-		"description": "Male sibling sharing one or both parents."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "SISTER",
-		"title": "Sister",
-		"description": "Female sibling sharing one or both parents."
-	},
-	{ "domain": "RELATIONSHIP_TYPE", "code": "UNCLE", "title": "Uncle", "description": "Brother of Mother or Father, or Husband of Aunt." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "AUNT", "title": "Aunt", "description": "Sister of Mother or Father, or Wife of Uncle." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "GRANDFATHER", "title": "Grand Father", "description": "Father of Mother or Father" },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "GRANDMOTHER", "title": "Grand Mother", "description": "Mother of Mother or Father" },
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "GRANDSON",
-		"title": "Grandson",
-		"description": "Male grandchild of grandparent."
-	},
-	{
-		"domain": "RELATIONSHIP_TYPE",
-		"code": "GRANDDAUGHTER",
-		"title": "Granddaughter",
-		"description": "Female grandchild of grandparent."
-	},
-	{ "domain": "RELATIONSHIP_TYPE", "code": "COUSIN", "title": "Cousin", "description": "Child of Uncle or Aunt." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "NIECE", "title": "Niece", "description": "Female Child of Sibling." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "NEPHEW", "title": "Nephew", "description": "Male Child of Sibling." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "STEPCHILD", "title": "Step Child", "description": "Non Genetic Child gained by marriage." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "STEPPARENT", "title": "Step Mother/Father", "description": "Non Genetic Parent gained by marriage." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "STEPSIBLING", "title": "Step Brother/Sister", "description": "Non Genetic Sibling gained by marriage." },
-	{ "domain": "RELATIONSHIP_TYPE", "code": "IN_LAW", "title": "Spouses Relatives", "description": "Relatives of Spouse." },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "FAMILY",
+      "title": "Immediate Family",
+      "description": "Cohabiting nuclear family or domestic partnership."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "SPOUSE",
+      "title": "Spouse / Legal Partner",
+      "description": "Marital domestic partnership."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "HUSBAND",
+      "title": "Husband",
+      "description": "Male spouse or marital partner."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "WIFE",
+      "title": "Wife",
+      "description": "Female spouse or marital partner."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "PARTNER",
+      "title": "Unmarried Partner",
+      "description": "Unmarried cohabiting romantic partner."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "EXTENDED_FAMILY",
+      "title": "Extended Kinship",
+      "description": "Non-cohabiting relatives, cousins, aunts, uncles."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "HOUSEHOLD_PEER",
+      "title": "Household Peer",
+      "description": "Non-family member sharing the same household."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "DRINKING_MATE",
+      "title": "Drinking Companion",
+      "description": "Regular patron association at the same local establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "WORK_MATE",
+      "title": "Workplace Friend",
+      "description": "Close Co-workers or peers met via work."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "CONGREGATIONAL",
+      "title": "Congregational Parishioner",
+      "description": "Shared church, temple, or faith community affiliation."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "CIVIC_PEER",
+      "title": "Workplace Colleague",
+      "description": "Co-workers or peers at the same establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "COLLEAGUE",
+      "title": "Professioanl Colleague",
+      "description": "Professional co-workers or peers at the same establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "LINE_MANAGER",
+      "title": "Workplace Line Manager",
+      "description": "Direct Superior at the same establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "SENIOR_MANAGER",
+      "title": "Workplace Senior Manager",
+      "description": "Workplace Superior at the same establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "OWNER_MANAGER",
+      "title": "Workplace Owner Manager",
+      "description": "Workplace Owner for the workplace establishment."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "CUSTOMER",
+      "title": "Workplace Customer",
+      "description": "Customers met whilst at work."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "NEIGHBOUR",
+      "title": "Street Neighbour",
+      "description": "Close residential proximity association."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "CELLMATE",
+      "title": "Inmate Associate",
+      "description": "Shared custodial incarceration wing or workshop."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "RESIDENCE_SHARE",
+      "title": "Residetial Associate",
+      "description": "Shared a residence."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "CRIMINAL_ACCOMPLICE",
+      "title": "Criminal Accomplice",
+      "description": "Shared active association in illicit enterprises."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "SCHOOL",
+      "title": "School Class Mate",
+      "description": "Attended a school or college at the same time."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "FRIEND",
+      "title": "Friend",
+      "description": "Friend, Amigo, chum for what ever reason they get on."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "FATHER",
+      "title": "Father",
+      "description": "Male parent of child."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "MOTHER",
+      "title": "Mother",
+      "description": "Female parent of child."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "SON",
+      "title": "Son",
+      "description": "Male child of parent."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "DAUGHTER",
+      "title": "Daughter",
+      "description": "Female child of parent."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "BROTHER",
+      "title": "Brother",
+      "description": "Male sibling sharing one or both parents."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "SISTER",
+      "title": "Sister",
+      "description": "Female sibling sharing one or both parents."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "UNCLE",
+      "title": "Uncle",
+      "description": "Brother of Mother or Father, or Husband of Aunt."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "AUNT",
+      "title": "Aunt",
+      "description": "Sister of Mother or Father, or Wife of Uncle."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "GRANDFATHER",
+      "title": "Grand Father",
+      "description": "Father of Mother or Father"
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "GRANDMOTHER",
+      "title": "Grand Mother",
+      "description": "Mother of Mother or Father"
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "GRANDSON",
+      "title": "Grandson",
+      "description": "Male grandchild of grandparent."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "GRANDDAUGHTER",
+      "title": "Granddaughter",
+      "description": "Female grandchild of grandparent."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "COUSIN",
+      "title": "Cousin",
+      "description": "Child of Uncle or Aunt."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "NIECE",
+      "title": "Niece",
+      "description": "Female Child of Sibling."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "NEPHEW",
+      "title": "Nephew",
+      "description": "Male Child of Sibling."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "STEPCHILD",
+      "title": "Step Child",
+      "description": "Non Genetic Child gained by marriage."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "STEPPARENT",
+      "title": "Step Mother/Father",
+      "description": "Non Genetic Parent gained by marriage."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "STEPSIBLING",
+      "title": "Step Brother/Sister",
+      "description": "Non Genetic Sibling gained by marriage."
+    },
+    {
+      "domain": "RELATIONSHIP_TYPE",
+      "code": "IN_LAW",
+      "title": "Spouses Relatives",
+      "description": "Relatives of Spouse."
+    },
 
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "NONE",
+      "title": "Non-Residential / Pure Civic",
+      "description": "Public or municipal facility with no permanent residential tenancies."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "FLAT_ABOVE_SHOP",
+      "title": "Residential Over Shop",
+      "description": "Residential accommodation only accessible via commercial premises."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "TERRACE",
+      "title": "Victorian Terraces",
+      "description": "Georgian and Victorian back to back 2 up 2 down terrace rows."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "COUNCIL_FLAT",
+      "title": "Post War Council Flat",
+      "description": "Post 1945 flats in council owned buildings."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "SEMI_DETACHED",
+      "title": "Semi-Detached House",
+      "description": "Semi detached houses for residential occupancy."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "DETACHED",
+      "title": "Detached House",
+      "description": "Detached houses for residential occupancy."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "CARETAKERS_LOFT",
+      "title": "Caretakers Flat",
+      "description": "Residential accommodation incorporated into industrial unit."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "RECTORY",
+      "title": "Rectory",
+      "description": "Residential accommodation associated with place of worship."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "CARETAKER_LODGE",
+      "title": "Caretaker Lodge",
+      "description": "Residential accommodation associated with place of work."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "STAFF_QUARTERS",
+      "title": "Staff Quarters",
+      "description": "Staff accommodation associated with place of work."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "STUDENT_HALLS",
+      "title": "Halls of Residence",
+      "description": "Student Halls of Residence associated with place of study."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "CUSTODIAL",
+      "title": "Prison Cell",
+      "description": "Prison cell of place of custody."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "MAISONETTE",
+      "title": "Maisonette",
+      "description": "A self-contained apartment—typically spread across two floors—that features its own private, independent entrance."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "LARGE_DETACHED",
+      "title": "Large Detached",
+      "description": "Large multi-floor Victorian house with servant quarters."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "CHURCH_CARETAKER_LODGE",
+      "title": "Lodge - Place of Worship",
+      "description": "Lodge attached to place of worship."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "NURSES_QUARTERS",
+      "title": "Nurses Quarters",
+      "description": "On site quarters for trainee and unmarried nurses."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "DOCTORS_QUARTERS",
+      "title": "Doctors Quarters",
+      "description": "On site quarters for trainee and unmarried Doctors."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "CELL_BLOCK",
+      "title": "Cell Block",
+      "description": "Cell Block in a prison or police station."
+    },
+    {
+      "domain": "RESIDENCE_TYPE",
+      "code": "STATION_HOUSE",
+      "title": "Station House",
+      "description": "On site quarters for trainee and unmarried Police Officers."
+    },
 
-	{ "domain": "RESIDENCE_TYPE", "code": "NONE", "title": "Non-Residential / Pure Civic", "description": "Public or municipal facility with no permanent residential tenancies." },
-	{ "domain": "RESIDENCE_TYPE", "code": "FLAT_ABOVE_SHOP", "title": "Residential Over Shop", "description": "Residential accommodation only accessible via commercial premises." },
-	{ "domain": "RESIDENCE_TYPE", "code": "TERRACE", "title": "Victorian Terraces", "description": "Georgian and Victorian back to back 2 up 2 down terrace rows." },
-	{ "domain": "RESIDENCE_TYPE", "code": "COUNCIL_FLAT", "title": "Post War Council Flat", "description": "Post 1945 flats in council owned buildings." },
-	{ "domain": "RESIDENCE_TYPE", "code": "SEMI_DETACHED", "title": "Semi-Detached House", "description": "Semi detached houses for residential occupancy." },
-	{ "domain": "RESIDENCE_TYPE", "code": "DETACHED", "title": "Detached House", "description": "Detached houses for residential occupancy." },
-	{ "domain": "RESIDENCE_TYPE", "code": "CARETAKERS_LOFT", "title": "Caretakers Flat", "description": "Residential accommodation incorporated into industrial unit." },
-	{ "domain": "RESIDENCE_TYPE", "code": "RECTORY", "title": "Rectory", "description": "Residential accommodation associated with place of worship." },
-	{ "domain": "RESIDENCE_TYPE", "code": "CARETAKER_LODGE", "title": "Caretaker Lodge", "description": "Residential accommodation associated with place of work." },
-	{ "domain": "RESIDENCE_TYPE", "code": "STAFF_QUARTERS", "title": "Staff Quarters", "description": "Staff accommodation associated with place of work." },
-	{ "domain": "RESIDENCE_TYPE", "code": "STUDENT_HALLS", "title": "Halls of Residence", "description": "Student Halls of Residence associated with place of study." },
-	{ "domain": "RESIDENCE_TYPE", "code": "CUSTODIAL", "title": "Prison Cell", "description": "Prison cell of place of custody." },
-	{ "domain": "RESIDENCE_TYPE", "code": "MAISONETTE", "title": "Maisonette", "description": "A self-contained apartment—typically spread across two floors—that features its own private, independent entrance." },
-	{ "domain": "RESIDENCE_TYPE", "code": "LARGE_DETACHED", "title": "Large Detached", "description": "Large multi-floor Victorian house with servant quarters." },
-	{ "domain": "RESIDENCE_TYPE", "code": "CHURCH_CARETAKER_LODGE", "title": "Lodge - Place of Worship", "description": "Lodge attached to place of worship." },
-	{ "domain": "RESIDENCE_TYPE", "code": "NURSES_QUARTERS", "title": "Nurses Quarters", "description": "On site quarters for trainee and unmarried nurses." },
-	{ "domain": "RESIDENCE_TYPE", "code": "DOCTORS_QUARTERS", "title": "Doctors Quarters", "description": "On site quarters for trainee and unmarried Doctors." },
-	{ "domain": "RESIDENCE_TYPE", "code": "CELL_BLOCK", "title": "Cell Block", "description": "Cell Block in a prison or police station." },
-	{ "domain": "RESIDENCE_TYPE", "code": "STATION_HOUSE", "title": "Station House", "description": "On site quarters for trainee and unmarried Police Officers." },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "NO_FORMAL",
+      "title": "No Formal Qualifications",
+      "description": "Left school at statutory minimum without formal certificates."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "BASIC_SECONDARY",
+      "title": "Basic Secondary Qualifications",
+      "description": "Left school with basic formal certificates."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "O_LEVELS_CSE",
+      "title": "O Levels and CSE Qualifications",
+      "description": "Left school with either O-levels or CSEs."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "ENHANCED_SECONDARY",
+      "title": "Higher Secondary Qualifications",
+      "description": "Left school with higher formal certificates."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "A_LEVELS",
+      "title": "A-Levels Qualifications",
+      "description": "Higher secondary matriculation and sixth form qualifications."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "POLYTECHNIC_DIPLOMA",
+      "title": "Higher National Diploma / Poly",
+      "description": "Technical or vocational higher education degree."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "PRE_UNI_SECONDARY",
+      "title": "Pre-University Secondary Qualifications",
+      "description": "Left school with sufficient formal certificates to attend University."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "UNIVERSITY_DEGREE",
+      "title": "University Honours Degree",
+      "description": "Undergraduate bachelor degree or equivalent university degree."
+    },
+    {
+      "domain": "EDUCATION_LEVEL",
+      "code": "DEGREE_OR_HIGHER",
+      "title": "Degree Level Qualifications",
+      "description": "Finished University or Professional Qualifications."
+    },
 
-	{ "domain": "EDUCATION_LEVEL", "code": "NO_FORMAL", "title": "No Formal Qualifications", "description": "Left school at statutory minimum without formal certificates." },
-	{ "domain": "EDUCATION_LEVEL", "code": "BASIC_SECONDARY", "title": "Basic Secondary Qualifications", "description": "Left school with basic formal certificates." },
-	{ "domain": "EDUCATION_LEVEL", "code": "O_LEVELS_CSE", "title": "O Levels and CSE Qualifications", "description": "Left school with either O-levels or CSEs." },
-	{ "domain": "EDUCATION_LEVEL", "code": "ENHANCED_SECONDARY", "title": "Higher Secondary Qualifications", "description": "Left school with higher formal certificates." },
-	{ "domain": "EDUCATION_LEVEL", "code": "A_LEVELS", "title": "A-Levels Qualifications", "description": "Higher secondary matriculation and sixth form qualifications." },
-	{ "domain": "EDUCATION_LEVEL", "code": "POLYTECHNIC_DIPLOMA", "title": "Higher National Diploma / Poly", "description": "Technical or vocational higher education degree." },
-	{ "domain": "EDUCATION_LEVEL", "code": "PRE_UNI_SECONDARY", "title": "Pre-University Secondary Qualifications", "description": "Left school with sufficient formal certificates to attend University." },
-	{ "domain": "EDUCATION_LEVEL", "code": "UNIVERSITY_DEGREE", "title": "University Honours Degree", "description": "Undergraduate bachelor degree or equivalent university degree." },
-	{ "domain": "EDUCATION_LEVEL", "code": "DEGREE_OR_HIGHER", "title": "Degree Level Qualifications", "description": "Finished University or Professional Qualifications." },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "PRIVATE_COMMERCIAL_LEASE",
+      "title": "Commercial Lease Contract",
+      "description": "Commercial property occupied through a lease agreement."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "MIXED_RENT_AND_RIGHT_TO_BUY",
+      "title": "Rented and ex rented",
+      "description": "Residential rented and right to buy properties."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "COUNCIL_TENANT",
+      "title": "Rented From Council",
+      "description": "Local Authority property rented direct to occupant."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "OWNER_OCCUPIER_MORTGAGE",
+      "title": "Owner Occupied",
+      "description": "Owner occupied property possibly with a mortgage owing."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "PRIVATE_LANDLORD",
+      "title": "Private Rented",
+      "description": "Rented from owner either direct or via agent."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "PRIVATE_RENT",
+      "title": "Private Tenancy",
+      "description": "Private residential tenancy agreement."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "EMPLOYMENT_TIED",
+      "title": "Tied To Employment",
+      "description": "Right to reside tied directly to employed role."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "STUDENT",
+      "title": "Tied To Study",
+      "description": "Right to reside tied directly to studies."
+    },
+    {
+      "domain": "TENURE_TYPE",
+      "code": "CUSTODIAL",
+      "title": "Tied To Sentence",
+      "description": "Residency tied to legal punishment."
+    },
 
-	{ "domain": "TENURE_TYPE", "code": "PRIVATE_COMMERCIAL_LEASE", "title": "Commercial Lease Contract", "description": "Commercial property occupied through a lease agreement." },
-	{ "domain": "TENURE_TYPE", "code": "MIXED_RENT_AND_RIGHT_TO_BUY", "title": "Rented and ex rented", "description": "Residential rented and right to buy properties." },
-	{ "domain": "TENURE_TYPE", "code": "COUNCIL_TENANT", "title": "Rented From Council", "description": "Local Authority property rented direct to occupant." },
-	{ "domain": "TENURE_TYPE", "code": "OWNER_OCCUPIER_MORTGAGE", "title": "Owner Occupied", "description": "Owner occupied property possibly with a mortgage owing." },
-	{ "domain": "TENURE_TYPE", "code": "PRIVATE_LANDLORD", "title": "Private Rented", "description": "Rented from owner either direct or via agent." },
-	{ "domain": "TENURE_TYPE", "code": "PRIVATE_RENT", "title": "Private Tenancy", "description": "Private residential tenancy agreement." },
-	{ "domain": "TENURE_TYPE", "code": "EMPLOYMENT_TIED", "title": "Tied To Employment", "description": "Right to reside tied directly to employed role." },
-	{ "domain": "TENURE_TYPE", "code": "STUDENT", "title": "Tied To Study", "description": "Right to reside tied directly to studies." },
-	{ "domain": "TENURE_TYPE", "code": "CUSTODIAL", "title": "Tied To Sentence", "description": "Residency tied to legal punishment." },
+    {
+      "domain": "WEALTH_BRACKET",
+      "code": "DESTITUTE",
+      "title": "Subsistence / Indigent",
+      "description": "Bracket 1: Long-term unemployed or relying exclusively on state supplementary benefit."
+    },
+    {
+      "domain": "WEALTH_BRACKET",
+      "code": "WORKING_CLASS",
+      "title": "Working Class",
+      "description": "Bracket 2: Wage laborer or tenant household with tight disposable margins."
+    },
+    {
+      "domain": "WEALTH_BRACKET",
+      "code": "COMFORTABLE",
+      "title": "Comfortable Lower-Middle",
+      "description": "Bracket 3: Skilled craftsman, shopkeeper, or senior clerical worker."
+    },
+    {
+      "domain": "WEALTH_BRACKET",
+      "code": "PROSPEROUS",
+      "title": "Prosperous Middle Class",
+      "description": "Bracket 4: Professional, managerial, or mortgaged suburban homeowner."
+    },
+    {
+      "domain": "WEALTH_BRACKET",
+      "code": "AFFLUENT",
+      "title": "Affluent / Upper Tier",
+      "description": "Bracket 5: Substantial commercial capital, high disposable income, and property assets."
+    },
 
-	{ "domain": "WEALTH_BRACKET", "code": "DESTITUTE", "title": "Subsistence / Indigent", "description": "Bracket 1: Long-term unemployed or relying exclusively on state supplementary benefit." },
-	{ "domain": "WEALTH_BRACKET", "code": "WORKING_CLASS", "title": "Working Class", "description": "Bracket 2: Wage laborer or tenant household with tight disposable margins." },
-	{ "domain": "WEALTH_BRACKET", "code": "COMFORTABLE", "title": "Comfortable Lower-Middle", "description": "Bracket 3: Skilled craftsman, shopkeeper, or senior clerical worker." },
-	{ "domain": "WEALTH_BRACKET", "code": "PROSPEROUS", "title": "Prosperous Middle Class", "description": "Bracket 4: Professional, managerial, or mortgaged suburban homeowner." },
-	{ "domain": "WEALTH_BRACKET", "code": "AFFLUENT", "title": "Affluent / Upper Tier", "description": "Bracket 5: Substantial commercial capital, high disposable income, and property assets." },
+    {
+      "domain": "ETHNICITY",
+      "code": "WHITE_BRITISH",
+      "title": "White British",
+      "description": "British heritage and descent."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "WHITE_IRISH",
+      "title": "White Irish",
+      "description": "Irish heritage and descent."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "AFRO_CARIBBEAN",
+      "title": "Afro-Caribbean",
+      "description": "Commonwealth West Indian and Caribbean diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "SOUTH_ASIAN",
+      "title": "South Asian",
+      "description": "Indian, Pakistani, and Bangladeshi diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "CHINESE",
+      "title": "Far Eastern",
+      "description": "Thai, Koren, Vietnamese, Chinese, Japanese and Far East diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "EUROPEAN_POLISH_CZECH",
+      "title": "Polish/Czech/Central European",
+      "description": "Polish, Czech and Central European diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "EUROPEAN_UKRAINIAN_EASTERN",
+      "title": "Ukrainian/Eastern European",
+      "description": "Ukranian, Russian, Estonian, Romanian and Eastern European diaspora"
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "EUROPEAN_ITALIAN_MEDITERRANEAN",
+      "title": "Italian/Greek/Spanish/Mediterranean",
+      "description": "Italian, Greek, Spanish, YugoSlavia and Mediterranean diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "EUROPEAN_JEWISH",
+      "title": "European Jewish",
+      "description": "Eastern, Central and Western European Jewish diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "EUROPEAN_WESTERN_OTHER",
+      "title": "Western Other",
+      "description": "French, Dutch, German, Scandinavian and Western European diaspora."
+    },
+    {
+      "domain": "ETHNICITY",
+      "code": "OTHER",
+      "title": "Other",
+      "description": "Other diaspora."
+    },
 
-	{ "domain": "ETHNICITY", "code": "WHITE_BRITISH", "title": "White British", "description": "British heritage and descent." },
-	{ "domain": "ETHNICITY", "code": "WHITE_IRISH", "title": "White Irish", "description": "Irish heritage and descent." },
-	{ "domain": "ETHNICITY", "code": "AFRO_CARIBBEAN", "title": "Afro-Caribbean", "description": "Commonwealth West Indian and Caribbean diaspora." },
-	{ "domain": "ETHNICITY", "code": "SOUTH_ASIAN", "title": "South Asian", "description": "Indian, Pakistani, and Bangladeshi diaspora." },
-	{
-		"domain": "ETHNICITY",
-		"code": "CHINESE",
-		"title": "Far Eastern",
-		"description": "Thai, Koren, Vietnamese, Chinese, Japanese and Far East diaspora."
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "EUROPEAN_POLISH_CZECH",
-		"title": "Polish/Czech/Central European",
-		"description": "Polish, Czech and Central European diaspora."
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "EUROPEAN_UKRAINIAN_EASTERN",
-		"title": "Ukrainian/Eastern European",
-		"description": "Ukranian, Russian, Estonian, Romanian and Eastern European diaspora"
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "EUROPEAN_ITALIAN_MEDITERRANEAN",
-		"title": "Italian/Greek/Spanish/Mediterranean",
-		"description": "Italian, Greek, Spanish, YugoSlavia and Mediterranean diaspora."
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "EUROPEAN_JEWISH",
-		"title": "European Jewish",
-		"description": "Eastern, Central and Western European Jewish diaspora."
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "EUROPEAN_WESTERN_OTHER",
-		"title": "Western Other",
-		"description": "French, Dutch, German, Scandinavian and Western European diaspora."
-	},
-	{
-		"domain": "ETHNICITY",
-		"code": "OTHER",
-		"title": "Other",
-		"description": "Other diaspora."
-	},
+    {
+      "domain": "RELIGION",
+      "code": "PROTESTANT_COFE",
+      "title": "Church of England (Anglican)",
+      "description": "Protestant Anglican communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "CATHOLIC",
+      "title": "Roman Catholic",
+      "description": "Roman Catholic communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "EASTERN_ORTHODOX",
+      "title": "Eastern Orthodox",
+      "description": "Eastern Orthodox communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "JEWISH_ORTHODOX",
+      "title": "Jewish Orthodox",
+      "description": "Jewish Orthodox communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "JEWISH_PROGRESSIVE",
+      "title": "Jewish Progressive",
+      "description": "Progressive Jewish communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "JEWISH_CONSERVATIVE",
+      "title": "Jewish Conservative",
+      "description": "Masorti/Conservative Jewish communion."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "PROTESTANT_OTHER",
+      "title": "Other Protestant / Nonconformist",
+      "description": "Methodist, Baptist, or other non-Anglican Protestant faith."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "PENTECOSTAL_PROTESTANT",
+      "title": "Pentecostal Protestant",
+      "description": "Evangelical and Pentecostal assembly."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "RASTAFARI",
+      "title": "Rastafari",
+      "description": "Rastafari movement and faith."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "MUSLIM",
+      "title": "Muslim / Islam",
+      "description": "Islamic congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "MUSLIM_SUNNI",
+      "title": "Muslim / Sunni Islam",
+      "description": "Sunni Islamic congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "MUSLIM_SHIA",
+      "title": "Muslim / Shia Islam",
+      "description": "Shia Islamic congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "MUSLIM_IBADI",
+      "title": "Muslim / Ibadi Islam",
+      "description": "Ibadi Islamic congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "MUSLIM_SALAFISM",
+      "title": "Muslim / Salafism / Wahhabism Islam",
+      "description": "Salafist Islamic congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "SIKH",
+      "title": "Sikh",
+      "description": "Sikh Gurdwara congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "HINDU",
+      "title": "Hindu",
+      "description": "Hindu Mandir congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "SECULAR_NONE",
+      "title": "Secular / None",
+      "description": "Secular, unaffiliated, or non-practicing."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "BUDDIST",
+      "title": "Buddist",
+      "description": "Buddist congregation."
+    },
+    {
+      "domain": "RELIGION",
+      "code": "BUDDHIST",
+      "title": "Buddhist",
+      "description": "Buddhist congregation."
+    },
 
-	{ "domain": "RELIGION", "code": "PROTESTANT_COFE", "title": "Church of England (Anglican)", "description": "Protestant Anglican communion." },
-	{ "domain": "RELIGION", "code": "CATHOLIC", "title": "Roman Catholic", "description": "Roman Catholic communion." },
-	{
-		"domain": "RELIGION",
-		"code": "EASTERN_ORTHODOX",
-		"title": "Eastern Orthodox",
-		"description": "Eastern Orthodox communion."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "JEWISH_ORTHODOX",
-		"title": "Jewish Orthodox",
-		"description": "Jewish Orthodox communion."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "JEWISH_PROGRESSIVE",
-		"title": "Jewish Progressive",
-		"description": "Progressive Jewish communion."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "JEWISH_CONSERVATIVE",
-		"title": "Jewish Conservative",
-		"description": "Masorti/Conservative Jewish communion."
-	},
-	{ "domain": "RELIGION", "code": "PROTESTANT_OTHER", "title": "Other Protestant / Nonconformist", "description": "Methodist, Baptist, or other non-Anglican Protestant faith." },
-	{ "domain": "RELIGION", "code": "PENTECOSTAL_PROTESTANT", "title": "Pentecostal Protestant", "description": "Evangelical and Pentecostal assembly." },
-	{ "domain": "RELIGION", "code": "RASTAFARI", "title": "Rastafari", "description": "Rastafari movement and faith." },
-	{ "domain": "RELIGION", "code": "MUSLIM", "title": "Muslim / Islam", "description": "Islamic congregation." },
-	{
-		"domain": "RELIGION",
-		"code": "MUSLIM_SUNNI",
-		"title": "Muslim / Sunni Islam",
-		"description": "Sunni Islamic congregation."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "MUSLIM_SHIA",
-		"title": "Muslim / Shia Islam",
-		"description": "Shia Islamic congregation."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "MUSLIM_IBADI",
-		"title": "Muslim / Ibadi Islam",
-		"description": "Ibadi Islamic congregation."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "MUSLIM_SALAFISM",
-		"title": "Muslim / Salafism / Wahhabism Islam",
-		"description": "Salafist Islamic congregation."
-	},
-	{ "domain": "RELIGION", "code": "SIKH", "title": "Sikh", "description": "Sikh Gurdwara congregation." },
-	{ "domain": "RELIGION", "code": "HINDU", "title": "Hindu", "description": "Hindu Mandir congregation." },
-	{ "domain": "RELIGION", "code": "SECULAR_NONE", "title": "Secular / None", "description": "Secular, unaffiliated, or non-practicing." },
-	{
-		"domain": "RELIGION",
-		"code": "BUDDIST",
-		"title": "Buddist",
-		"description": "Buddist congregation."
-	},
-	{
-		"domain": "RELIGION",
-		"code": "BUDDHIST",
-		"title": "Buddhist",
-		"description": "Buddhist congregation."
-	},
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "UNIVERSITY_OR_POLYTECHNIC",
+      "title": "Higher Education Campus",
+      "description": "Polytechnic or university campus for advanced degrees."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HOSPITAL",
+      "title": "District General Hospital",
+      "description": "Regional medical infirmary and emergency health facility."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "GP_PRACTICE",
+      "title": "Health Centre & Surgery",
+      "description": "Local general practitioner surgery and health clinic."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "JOBCENTRE",
+      "title": "Borough Jobcentre & Dole Office",
+      "description": "State unemployment benefit and labour exchange."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "POST_OFFICE",
+      "title": "Sub-Post Office",
+      "description": "Crown or sub-post office branch and pension distribution counter."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HM_PRISON",
+      "title": "HM Prison & Remand Gaol",
+      "description": "Her Majesty's custodial prison facility."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "RESIDENTIAL_UNIT",
+      "title": "Residential Tenancy / Living Unit",
+      "description": "Domestic flat, maisonette, house, or living quarters."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "POLICE_HEADQUARTERS",
+      "title": "Regional Police HQ",
+      "description": "Police HeadQuarters, the Police Chief Constable is here."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "POLICE_STATION",
+      "title": "Police Station",
+      "description": "Large police station home of specialist squads."
+    },
 
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "UNIVERSITY_OR_POLYTECHNIC", "title": "Higher Education Campus", "description": "Polytechnic or university campus for advanced degrees." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOSPITAL", "title": "District General Hospital", "description": "Regional medical infirmary and emergency health facility." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "GP_PRACTICE", "title": "Health Centre & Surgery", "description": "Local general practitioner surgery and health clinic." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "JOBCENTRE", "title": "Borough Jobcentre & Dole Office", "description": "State unemployment benefit and labour exchange." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "POST_OFFICE", "title": "Sub-Post Office", "description": "Crown or sub-post office branch and pension distribution counter." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HM_PRISON", "title": "HM Prison & Remand Gaol", "description": "Her Majesty's custodial prison facility." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "RESIDENTIAL_UNIT", "title": "Residential Tenancy / Living Unit", "description": "Domestic flat, maisonette, house, or living quarters." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "POLICE_HEADQUARTERS", "title": "Regional Police HQ", "description": "Police HeadQuarters, the Police Chief Constable is here." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "POLICE_STATION", "title": "Police Station", "description": "Large police station home of specialist squads." },
-	
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CORNER_SHOP", "title": "Corner Shop & Newsagent", "description": "Local convenience newsagent and general retail." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "OFF_LICENCE", "title": "Off-Licence & Wine Merchant", "description": "Retail shop selling alcoholic drinks and sundries." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "LOCAL_PUB", "title": "Public House & Taproom", "description": "Licensed neighbourhood public house." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BETTING_SHOP", "title": "Turf Accountant & Bookmakers", "description": "Licensed gambling and wagering office." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HARDWARE_STORE", "title": "Ironmonger & DIY Supplies", "description": "Retailer of tools, building materials, and hardware." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BAKERY_OR_BUTCHER", "title": "Family Butcher & Bakery", "description": "Specialist food craft retail shop." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "GROCERS", "title": "Family Green Grocers", "description": "Fresh produce, fruit, and greengrocery." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "GP_SURGERY", "title": "Medical Practice & Surgery", "description": "Local medical clinic and general practice surgery." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BARBERS_OR_HAIRDRESSERS", "title": "Hairdressers & Barbers", "description": "Personal grooming and hair cutting salon." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CAFE", "title": "Greasy Spoon Cafe", "description": "Local workers cafe serving hot meals and tea." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "RESTAURANT", "title": "Family Restaurant", "description": "Licensed family restaurant establishment." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "TOY_SHOP", "title": "Toy Shop", "description": "Retailer of toys, games, and hobbies." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "PET_SHOP", "title": "Pet Shop", "description": "Retail pet supplies and domestic animal care." },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CORNER_SHOP",
+      "title": "Corner Shop & Newsagent",
+      "description": "Local convenience newsagent and general retail."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "OFF_LICENCE",
+      "title": "Off-Licence & Wine Merchant",
+      "description": "Retail shop selling alcoholic drinks and sundries."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LOCAL_PUB",
+      "title": "Public House & Taproom",
+      "description": "Licensed neighbourhood public house."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BETTING_SHOP",
+      "title": "Turf Accountant & Bookmakers",
+      "description": "Licensed gambling and wagering office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HARDWARE_STORE",
+      "title": "Ironmonger & DIY Supplies",
+      "description": "Retailer of tools, building materials, and hardware."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BAKERY_OR_BUTCHER",
+      "title": "Family Butcher & Bakery",
+      "description": "Specialist food craft retail shop."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "GROCERS",
+      "title": "Family Green Grocers",
+      "description": "Fresh produce, fruit, and greengrocery."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "GP_SURGERY",
+      "title": "Medical Practice & Surgery",
+      "description": "Local medical clinic and general practice surgery."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BARBERS_OR_HAIRDRESSERS",
+      "title": "Hairdressers & Barbers",
+      "description": "Personal grooming and hair cutting salon."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CAFE",
+      "title": "Greasy Spoon Cafe",
+      "description": "Local workers cafe serving hot meals and tea."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "RESTAURANT",
+      "title": "Family Restaurant",
+      "description": "Licensed family restaurant establishment."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TOY_SHOP",
+      "title": "Toy Shop",
+      "description": "Retailer of toys, games, and hobbies."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PET_SHOP",
+      "title": "Pet Shop",
+      "description": "Retail pet supplies and domestic animal care."
+    },
 
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MINICAB_FIRM", "title": "Private Hire & Minicab Office", "description": "Commercial passenger dispatch and taxi firm." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CLEANING_CONTRACTOR", "title": "Contract Cleaning Services", "description": "Commercial premises cleaning and facility maintenance." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "COACH_AND_HAULAGE_DEPOT", "title": "Coach Haulage & Freight Depot", "description": "Depot for charter coaches, lorries, and road transport." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BUILDING_CONTRACTORS", "title": "Builders Merchants & Contracting Yard", "description": "Civil construction contractor and trade yard." },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MINICAB_FIRM",
+      "title": "Private Hire & Minicab Office",
+      "description": "Commercial passenger dispatch and taxi firm."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CLEANING_CONTRACTOR",
+      "title": "Contract Cleaning Services",
+      "description": "Commercial premises cleaning and facility maintenance."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COACH_AND_HAULAGE_DEPOT",
+      "title": "Coach Haulage & Freight Depot",
+      "description": "Depot for charter coaches, lorries, and road transport."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BUILDING_CONTRACTORS",
+      "title": "Builders Merchants & Contracting Yard",
+      "description": "Civil construction contractor and trade yard."
+    },
 
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FOUNDRY_CASTINGS", "title": "Metal Foundry & Heavy Engineering", "description": "Heavy metallurgical casting and metalworks." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "AUTO_REPAIR_DEPOT", "title": "Motor Repair Works & Body Shop", "description": "Automotive repair garage and commercial transport service." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SCRAP_MERCHANT", "title": "Scrap & Metal Reclamation", "description": "Scrap yard sorting and ferrous metal reclamation." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "TEXTILE_OR_JOINERY", "title": "Joinery Works & Timber Yard", "description": "Timber mill, joinery workshop, and textile assembly." },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FOUNDRY_CASTINGS",
+      "title": "Metal Foundry & Heavy Engineering",
+      "description": "Heavy metallurgical casting and metalworks."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "AUTO_REPAIR_DEPOT",
+      "title": "Motor Repair Works & Body Shop",
+      "description": "Automotive repair garage and commercial transport service."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SCRAP_MERCHANT",
+      "title": "Scrap & Metal Reclamation",
+      "description": "Scrap yard sorting and ferrous metal reclamation."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TEXTILE_OR_JOINERY",
+      "title": "Joinery Works & Timber Yard",
+      "description": "Timber mill, joinery workshop, and textile assembly."
+    },
 
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "COMMERCIAL", "title": "Commercial Core & Retail Precinct", "description": "District archetype centred on retail and commercial activity." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HIGH_DENSITY_LOW_RISE", "title": "Victorian Residential Terraces", "description": "High-density, low-rise district of Victorian residential terraces." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HIGH_DENSITY_HIGH_RISE", "title": "Municipal Housing Estate & High-Rise", "description": "High-density district of municipal housing estates and high-rise blocks." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SUBURBAN_LOW_DENSITY", "title": "Suburban Commuter Belt", "description": "Low-density suburban residential district." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "VICTORIAN_LOW_DENSITY", "title": "Large Victorian Houses", "description": "Low-density district of large Victorian houses." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MEDIUM_DENSITY_RESIDENTIAL", "title": "Interwar Semi-Detached & Maisonettes", "description": "Medium-density residential district of interwar homes and maisonettes." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MEDIUM_DENSITY_VICTORIAN_RESIDENTIAL", "title": "Victorian Semi-Detached", "description": "Medium-density district of Victorian semi-detached homes." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "INDUSTRIAL", "title": "Industrial Canal Yard & Rail Depots", "description": "Industrial district of canal yards, rail depots, and works." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "PLACE_OF_WORSHIP", "title": "Parish Church & Grounds", "description": "District centred on a parish church and its grounds." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "PRIMARY_SCHOOL", "title": "Junior & Infant School", "description": "District centred on a primary junior and infant school." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SECONDARY_SCHOOL", "title": "Comprehensive School", "description": "District centred on a comprehensive secondary school." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "JOBCENTRE_BLOCK", "title": "Borough Jobcentre & DHSS Office", "description": "District centred on a borough jobcentre and DHSS office." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "LOCAL_GOVERNMENT", "title": "Municipal Administrative Hub & Town Hall", "description": "District centred on municipal administration and a town hall." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOSPITAL_SITE", "title": "Regional Infirmary & Medical Center", "description": "District centred on a regional hospital and medical services." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "UNIVERSITY_CAMPUS", "title": "Polytechnic & Higher Education Campus", "description": "District centred on a polytechnic or higher education campus." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SPORTS_ARENA", "title": "Borough Football Ground", "description": "District centred on a borough football ground and sports facilities." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MUNICIPAL_PARK", "title": "Victorian Public Park & Rec Ground", "description": "District centred on a Victorian public park and recreation ground." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CIVIC_PENAL_BLOCK", "title": "HM Prison & Remand Gaol", "description": "District centred on an HM prison and remand facility." },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COMMERCIAL",
+      "title": "Commercial Core & Retail Precinct",
+      "description": "District archetype centred on retail and commercial activity."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HIGH_DENSITY_LOW_RISE",
+      "title": "Victorian Residential Terraces",
+      "description": "High-density, low-rise district of Victorian residential terraces."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HIGH_DENSITY_HIGH_RISE",
+      "title": "Municipal Housing Estate & High-Rise",
+      "description": "High-density district of municipal housing estates and high-rise blocks."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SUBURBAN_LOW_DENSITY",
+      "title": "Suburban Commuter Belt",
+      "description": "Low-density suburban residential district."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "VICTORIAN_LOW_DENSITY",
+      "title": "Large Victorian Houses",
+      "description": "Low-density district of large Victorian houses."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MEDIUM_DENSITY_RESIDENTIAL",
+      "title": "Interwar Semi-Detached & Maisonettes",
+      "description": "Medium-density residential district of interwar homes and maisonettes."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MEDIUM_DENSITY_VICTORIAN_RESIDENTIAL",
+      "title": "Victorian Semi-Detached",
+      "description": "Medium-density district of Victorian semi-detached homes."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INDUSTRIAL",
+      "title": "Industrial Canal Yard & Rail Depots",
+      "description": "Industrial district of canal yards, rail depots, and works."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PLACE_OF_WORSHIP",
+      "title": "Parish Church & Grounds",
+      "description": "District centred on a parish church and its grounds."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PRIMARY_SCHOOL",
+      "title": "Junior & Infant School",
+      "description": "District centred on a primary junior and infant school."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SECONDARY_SCHOOL",
+      "title": "Comprehensive School",
+      "description": "District centred on a comprehensive secondary school."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "JOBCENTRE_BLOCK",
+      "title": "Borough Jobcentre & DHSS Office",
+      "description": "District centred on a borough jobcentre and DHSS office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LOCAL_GOVERNMENT",
+      "title": "Municipal Administrative Hub & Town Hall",
+      "description": "District centred on municipal administration and a town hall."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HOSPITAL_SITE",
+      "title": "Regional Infirmary & Medical Center",
+      "description": "District centred on a regional hospital and medical services."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "UNIVERSITY_CAMPUS",
+      "title": "Polytechnic & Higher Education Campus",
+      "description": "District centred on a polytechnic or higher education campus."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SPORTS_ARENA",
+      "title": "Borough Football Ground",
+      "description": "District centred on a borough football ground and sports facilities."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MUNICIPAL_PARK",
+      "title": "Victorian Public Park & Rec Ground",
+      "description": "District centred on a Victorian public park and recreation ground."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CIVIC_PENAL_BLOCK",
+      "title": "HM Prison & Remand Gaol",
+      "description": "District centred on an HM prison and remand facility."
+    },
 
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FISH_AND_CHIP_SHOP", "title": "Fish and Chip Shop", "description": "Commercial establishment class serving fish and chips." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CHINESE_TAKEAWAY", "title": "Chinese Take Away", "description": "Commercial establishment class for a Chinese takeaway." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "INDIAN_TAKEAWAY", "title": "Indian Take Away", "description": "Commercial establishment class for an Indian takeaway." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "INDIAN_RESTAURANT", "title": "Indian Restaurant", "description": "Commercial establishment class for an Indian restaurant." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BUTCHER", "title": "Family Butcher", "description": "Commercial establishment class for a butcher." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BAKERY", "title": "Family Bakery", "description": "Commercial establishment class for a bakery." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "TOY SHOP", "title": "Toy Shop", "description": "Commercial establishment class for a toy shop." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "JOINERY", "title": "Joinery Works & Timber Yard", "description": "Industrial establishment class for joinery and timber works." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "TEXTILES", "title": "Textiles and Cloth", "description": "Industrial establishment class for textile and cloth production." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CLOTHS_MANUFACTURER", "title": "Clothes Manufacturers", "description": "Industrial establishment class for clothes manufacturing." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "INDURSTRIAL_PRINTERS", "title": "Printers", "description": "Industrial establishment class for printing works." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MAILHOUSE", "title": "Mail house", "description": "Industrial establishment class for mail handling and distribution." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FURNITURE_MANUFACTURER", "title": "Furniture Manufacturer", "description": "Industrial establishment class for furniture manufacturing." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "BREWERY", "title": "Brewery", "description": "Industrial establishment class for a brewery." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "DENTAL_PRACTICE", "title": "Dental Surgery", "description": "Civic service establishment class for a dental practice." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CHIROPODIST", "title": "Chiropodist Surgery", "description": "Civic service establishment class for a chiropodist." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SUB_POST_OFFICE", "title": "Sub-Post Office & Newsagent", "description": "Civic service establishment class for a sub-post office and newsagent." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "INDUSTRIAL_AUTOMOTIVE_WORKS", "title": "industrial automotive works", "description": "Large idustrial automotive based site." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "LOCAL_POLICE_POST", "title": "Section Police Station", "description": "Civic service establishment class for a local police post." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "GROCER", "title": "Green Grocers", "description": "Retailer of fresh produce, fruit, and vegetables." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "RETAIL_BANK", "title": "High Street Bank Branch", "description": "Local retail bank branch providing accounts, cash, and customer services." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "CHEMIST_PHARMACY", "title": "Dispensing Chemist & Pharmacy", "description": "Community pharmacy dispensing medicines and health products." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "LAUNDERETTE_DRY_CLEANERS", "title": "Coin-Op Launderette & Dry Cleaners", "description": "Commercial laundry and dry-cleaning service." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HAIRDRESSER_BARBER", "title": "Hairdressing Salon & Barbers", "description": "Commercial hairdressing and barbering salon." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "ESTATE_AGENT_AND_VALUER", "title": "Estate Agents & Surveyors Office", "description": "Property sales, lettings, and valuation office." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SOLICITORS_PRACTICE", "title": "Solicitors & Legal Practice", "description": "Local legal practice providing solicitor services." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FILLING_STATION_GARAGE", "title": "Petrol Filling Station & Forecourt", "description": "Petrol station, forecourt shop, and vehicle service garage." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "WHOLESALE_CASH_AND_CARRY", "title": "Wholesale Cash & Carry Warehouse", "description": "Wholesale warehouse supplying retailers and trade customers." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "COMMERCIAL_BAKERY_PLANT", "title": "Wholesale Plant Bakery", "description": "Industrial bakery producing bread and confectionery for wholesale distribution." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "SHEET_METAL_FABRICATION", "title": "Sheet Metal Works & Light Engineering", "description": "Industrial works fabricating sheet metal and light engineering products." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "PLASTICS_AND_MOULDING_WORKS", "title": "Plastics Injection & Moulding Works", "description": "Industrial plastics injection and moulding works." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "WAREHOUSING_AND_STORAGE_DEPOT", "title": "Freight Warehousing & Distribution Depot", "description": "Industrial warehouse and freight distribution depot." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FIRE_STATION", "title": "Borough Fire Station", "description": "Municipal fire and rescue station." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "PUBLIC_LIBRARY", "title": "Borough Public Library", "description": "Municipal public library and reading room." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "COUNCIL_CLEANSING_DEPOT", "title": "Council Direct Labour & Cleansing Depot", "description": "Municipal depot for refuse collection, street cleansing, and direct labour." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "MAGISTRATES_COURT", "title": "Magistrates' Court & Petty Sessions", "description": "Local magistrates' court and petty sessions venue." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "FIRE_STATION_DEPOT", "title": "Fire Station", "description": "Fire and rescue station." },
-	{ "domain": "ESTABLISHMENT_CATEGORY", "code": "HOME_MAKER", "title": "Home Maker", "description": "Cleaner, carer, general dogs body, unpaid skivvy." },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FISH_AND_CHIP_SHOP",
+      "title": "Fish and Chip Shop",
+      "description": "Commercial establishment class serving fish and chips."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CHINESE_TAKEAWAY",
+      "title": "Chinese Take Away",
+      "description": "Commercial establishment class for a Chinese takeaway."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INDIAN_TAKEAWAY",
+      "title": "Indian Take Away",
+      "description": "Commercial establishment class for an Indian takeaway."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INDIAN_RESTAURANT",
+      "title": "Indian Restaurant",
+      "description": "Commercial establishment class for an Indian restaurant."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BUTCHER",
+      "title": "Family Butcher",
+      "description": "Commercial establishment class for a butcher."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BAKERY",
+      "title": "Family Bakery",
+      "description": "Commercial establishment class for a bakery."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TOY SHOP",
+      "title": "Toy Shop",
+      "description": "Commercial establishment class for a toy shop."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "JOINERY",
+      "title": "Joinery Works & Timber Yard",
+      "description": "Industrial establishment class for joinery and timber works."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TEXTILES",
+      "title": "Textiles and Cloth",
+      "description": "Industrial establishment class for textile and cloth production."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CLOTHS_MANUFACTURER",
+      "title": "Clothes Manufacturers",
+      "description": "Industrial establishment class for clothes manufacturing."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INDURSTRIAL_PRINTERS",
+      "title": "Printers",
+      "description": "Industrial establishment class for printing works."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MAILHOUSE",
+      "title": "Mail house",
+      "description": "Industrial establishment class for mail handling and distribution."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FURNITURE_MANUFACTURER",
+      "title": "Furniture Manufacturer",
+      "description": "Industrial establishment class for furniture manufacturing."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BREWERY",
+      "title": "Brewery",
+      "description": "Industrial establishment class for a brewery."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "DENTAL_PRACTICE",
+      "title": "Dental Surgery",
+      "description": "Civic service establishment class for a dental practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CHIROPODIST",
+      "title": "Chiropodist Surgery",
+      "description": "Civic service establishment class for a chiropodist."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SUB_POST_OFFICE",
+      "title": "Sub-Post Office & Newsagent",
+      "description": "Civic service establishment class for a sub-post office and newsagent."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INDUSTRIAL_AUTOMOTIVE_WORKS",
+      "title": "industrial automotive works",
+      "description": "Large idustrial automotive based site."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LOCAL_POLICE_POST",
+      "title": "Section Police Station",
+      "description": "Civic service establishment class for a local police post."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "GROCER",
+      "title": "Green Grocers",
+      "description": "Retailer of fresh produce, fruit, and vegetables."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "RETAIL_BANK",
+      "title": "High Street Bank Branch",
+      "description": "Local retail bank branch providing accounts, cash, and customer services."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CHEMIST_PHARMACY",
+      "title": "Dispensing Chemist & Pharmacy",
+      "description": "Community pharmacy dispensing medicines and health products."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LAUNDERETTE_DRY_CLEANERS",
+      "title": "Coin-Op Launderette & Dry Cleaners",
+      "description": "Commercial laundry and dry-cleaning service."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HAIRDRESSER_BARBER",
+      "title": "Hairdressing Salon & Barbers",
+      "description": "Commercial hairdressing and barbering salon."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "ESTATE_AGENT_AND_VALUER",
+      "title": "Estate Agents & Surveyors Office",
+      "description": "Property sales, lettings, and valuation office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SOLICITORS_PRACTICE",
+      "title": "Solicitors & Legal Practice",
+      "description": "Local legal practice providing solicitor services."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FILLING_STATION_GARAGE",
+      "title": "Petrol Filling Station & Forecourt",
+      "description": "Petrol station, forecourt shop, and vehicle service garage."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "WHOLESALE_CASH_AND_CARRY",
+      "title": "Wholesale Cash & Carry Warehouse",
+      "description": "Wholesale warehouse supplying retailers and trade customers."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COMMERCIAL_BAKERY_PLANT",
+      "title": "Wholesale Plant Bakery",
+      "description": "Industrial bakery producing bread and confectionery for wholesale distribution."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SHEET_METAL_FABRICATION",
+      "title": "Sheet Metal Works & Light Engineering",
+      "description": "Industrial works fabricating sheet metal and light engineering products."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PLASTICS_AND_MOULDING_WORKS",
+      "title": "Plastics Injection & Moulding Works",
+      "description": "Industrial plastics injection and moulding works."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "WAREHOUSING_AND_STORAGE_DEPOT",
+      "title": "Freight Warehousing & Distribution Depot",
+      "description": "Industrial warehouse and freight distribution depot."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FIRE_STATION",
+      "title": "Borough Fire Station",
+      "description": "Municipal fire and rescue station."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PUBLIC_LIBRARY",
+      "title": "Borough Public Library",
+      "description": "Municipal public library and reading room."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COUNCIL_CLEANSING_DEPOT",
+      "title": "Council Direct Labour & Cleansing Depot",
+      "description": "Municipal depot for refuse collection, street cleansing, and direct labour."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MAGISTRATES_COURT",
+      "title": "Magistrates' Court & Petty Sessions",
+      "description": "Local magistrates' court and petty sessions venue."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FIRE_STATION_DEPOT",
+      "title": "Fire Station",
+      "description": "Fire and rescue station."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "HOME_MAKER",
+      "title": "Home Maker",
+      "description": "Cleaner, carer, general dogs body, unpaid skivvy."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "CHILD", "title": "Child / Dependent", "description": "Pre-school or primary age dependent." },
-	{ "domain": "ROLE_TITLE", "code": "PUPIL", "title": "Primary School Pupil", "description": "Enrolled infant and junior school pupil." },
-	{ "domain": "ROLE_TITLE", "code": "STUDENT", "title": "Secondary School Student", "description": "Enrolled comprehensive or grammar school pupil." },
-	{ "domain": "ROLE_TITLE", "code": "HIGHER_ED_STUDENT", "title": "Higher Education Student", "description": "Enrolled university undergraduate or polytechnic scholar." },
-	{ "domain": "ROLE_TITLE", "code": "APPRENTICE", "title": "Trade Apprentice", "description": "Trainee tradesman or industrial apprentice." },
-	{ "domain": "ROLE_TITLE", "code": "UNEMPLOYED", "title": "Registered Jobseeker / Claimant", "description": "Unemployed citizen registered with the Jobcentre / DHSS." },
-	{ "domain": "ROLE_TITLE", "code": "COMMERCIAL_SERVICE", "title": "Commercial Service Worker", "description": "Clerk, retail assistant, bar staff, or office worker." },
-	{ "domain": "ROLE_TITLE", "code": "MANUAL_WORKS", "title": "Manual Laborer / Tradesman", "description": "Factory operative, craftsman, or construction worker." },
-	{ "domain": "ROLE_TITLE", "code": "PENSIONER", "title": "State Pensioner", "description": "Retired senior citizen receiving state pension." },
-	{ "domain": "ROLE_TITLE", "code": "HOME_MAKER", "title": "Home Maker", "description": "Cleaner, carer, general dogs body, unpaid skivvy." },
-	{ "domain": "ROLE_TITLE", "code": "POLICE_CONSTABLE", "title": "Police Constable", "description": "Police Constable and Trainees." },
-	{ "domain": "ROLE_TITLE", "code": "CLERGY", "title": "Clergy", "description": "Religious Priest or Minister." },
-	{ "domain": "ROLE_TITLE", "code": "CARETAKER", "title": "Caretaker", "description": "Caretaker." },
-	{ "domain": "ROLE_TITLE", "code": "CONSULTANT", "title": "Hospital Consultant", "description": "Senior Hospital Medical Staff." },
-	{ "domain": "ROLE_TITLE", "code": "HOSPITAL_RESIDENT_DOCTOR", "title": "Hospital Resident", "description": "Trainee and Junior Medical Staff." },
-	{ "domain": "ROLE_TITLE", "code": "STUDENT_NURSE", "title": "Student Nurse", "description": "Nursing staff in training." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CHILD",
+      "title": "Child / Dependent",
+      "description": "Pre-school or primary age dependent."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PUPIL",
+      "title": "Primary School Pupil",
+      "description": "Enrolled infant and junior school pupil."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "STUDENT",
+      "title": "Secondary School Student",
+      "description": "Enrolled comprehensive or grammar school pupil."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HIGHER_ED_STUDENT",
+      "title": "Higher Education Student",
+      "description": "Enrolled university undergraduate or polytechnic scholar."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "APPRENTICE",
+      "title": "Trade Apprentice",
+      "description": "Trainee tradesman or industrial apprentice."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "UNEMPLOYED",
+      "title": "Registered Jobseeker / Claimant",
+      "description": "Unemployed citizen registered with the Jobcentre / DHSS."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COMMERCIAL_SERVICE",
+      "title": "Commercial Service Worker",
+      "description": "Clerk, retail assistant, bar staff, or office worker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "MANUAL_WORKS",
+      "title": "Manual Laborer / Tradesman",
+      "description": "Factory operative, craftsman, or construction worker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PENSIONER",
+      "title": "State Pensioner",
+      "description": "Retired senior citizen receiving state pension."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOME_MAKER",
+      "title": "Home Maker",
+      "description": "Cleaner, carer, general dogs body, unpaid skivvy."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "POLICE_CONSTABLE",
+      "title": "Police Constable",
+      "description": "Police Constable and Trainees."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CLERGY",
+      "title": "Clergy",
+      "description": "Religious Priest or Minister."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CARETAKER",
+      "title": "Caretaker",
+      "description": "Caretaker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CONSULTANT",
+      "title": "Hospital Consultant",
+      "description": "Senior Hospital Medical Staff."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOSPITAL_RESIDENT_DOCTOR",
+      "title": "Hospital Resident",
+      "description": "Trainee and Junior Medical Staff."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "STUDENT_NURSE",
+      "title": "Student Nurse",
+      "description": "Nursing staff in training."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "PRIMARY_TEACHER", "title": "Primary School Teacher", "description": "Teacher at junior and infant school." },
-	{ "domain": "ROLE_TITLE", "code": "TEACHER_OR_STAFF", "title": "Comprehensive Teacher / Staff", "description": "Secondary school educator or academic staff." },
-	{ "domain": "ROLE_TITLE", "code": "SCHOOL_CARETAKER", "title": "School Caretaker & Facilities", "description": "Live-in custodian and groundskeeper at school." },
-	{ "domain": "ROLE_TITLE", "code": "SCHOOL_MEALS_STAFF", "title": "School Meals Staff / Dinner Lady", "description": "School canteen and lunchtime kitchen assistant." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PRIMARY_TEACHER",
+      "title": "Primary School Teacher",
+      "description": "Teacher at junior and infant school."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TEACHER_OR_STAFF",
+      "title": "Comprehensive Teacher / Staff",
+      "description": "Secondary school educator or academic staff."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SCHOOL_CARETAKER",
+      "title": "School Caretaker & Facilities",
+      "description": "Live-in custodian and groundskeeper at school."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SCHOOL_MEALS_STAFF",
+      "title": "School Meals Staff / Dinner Lady",
+      "description": "School canteen and lunchtime kitchen assistant."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "LECTURER_OR_ADMIN", "title": "Higher Education Lecturer / Admin", "description": "Academic lecturer or campus administrator." },
-	{ "domain": "ROLE_TITLE", "code": "CLERGY_OR_CARETAKER", "title": "Clergy / Church Caretaker", "description": "Minister, vicar, priest, or parish custodian." },
-	{ "domain": "ROLE_TITLE", "code": "COMMUNITY_PARISH", "title": "Parish Community Member", "description": "Resident or worshipper served by a local parish community." },
-	{ "domain": "ROLE_TITLE", "code": "POSTAL_CLERK", "title": "Postal Clerk", "description": "Counter clerk at sub-post office branch." },
-	{ "domain": "ROLE_TITLE", "code": "PRACTICE_STAFF", "title": "Practice Staff / Nurse", "description": "Medical assistant, receptionist, or clinic nurse." },
-	
-	{ "domain": "ROLE_TITLE", "code": "HOSPITAL_DOCTOR", "title": "Hospital Medical Doctor", "description": "Resident infirmary physician or registrar." },
-	{ "domain": "ROLE_TITLE", "code": "HOSPITAL_NURSE", "title": "State Registered Nurse", "description": "Qualified ward nursing sister or staff nurse." },
-	{ "domain": "ROLE_TITLE", "code": "HOSPITAL_SUPPORT_STAFF", "title": "Hospital Porter / Orderly / Cleaner", "description": "Hospital domestic services, portering, and laundry staff." },
-	{ "domain": "ROLE_TITLE", "code": "AMBULANCE_CREW", "title": "Ambulance Driver / Attendant", "description": "Emergency municipal ambulance driver and attendant." },
-	{ "domain": "ROLE_TITLE", "code": "HOSPITAL_MEDICAL_OR_NURSE", "title": "Hospital Medical Staff / Nurse", "description": "Infirmary physician, registered nurse, or orderlies." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LECTURER_OR_ADMIN",
+      "title": "Higher Education Lecturer / Admin",
+      "description": "Academic lecturer or campus administrator."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CLERGY_OR_CARETAKER",
+      "title": "Clergy / Church Caretaker",
+      "description": "Minister, vicar, priest, or parish custodian."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COMMUNITY_PARISH",
+      "title": "Parish Community Member",
+      "description": "Resident or worshipper served by a local parish community."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "POSTAL_CLERK",
+      "title": "Postal Clerk",
+      "description": "Counter clerk at sub-post office branch."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PRACTICE_STAFF",
+      "title": "Practice Staff / Nurse",
+      "description": "Medical assistant, receptionist, or clinic nurse."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "DHSS_OFFICER", "title": "Jobcentre / DHSS Officer", "description": "Civil servant administering benefits and employment registry." },
-	{ "domain": "ROLE_TITLE", "code": "GROUNDSMAN_OR_STEWARD", "title": "Groundsman / Match Steward", "description": "Stadium groundskeeper or event safety steward." },
-	{ "domain": "ROLE_TITLE", "code": "PARK_KEEPER", "title": "Municipal Park Keeper", "description": "Grounds gardener and park custodian." },
-	{ "domain": "ROLE_TITLE", "code": "PRISON_OFFICER", "title": "HM Prison Officer", "description": "Custodial prison guard and discipline officer." },
-	{ "domain": "ROLE_TITLE", "code": "PRISON_INMATE", "title": "Custodial Inmate", "description": "Incarcerated remand prisoner or convict." },
-	
-	{ "domain": "ROLE_TITLE", "code": "CIVIC_OFFICIAL", "title": "Senior Civic Official", "description": "Senior municipal department head or local administrator." },
-	{ "domain": "ROLE_TITLE", "code": "CIVIC_CLERK_OR_OFFICIAL", "title": "Civic Clerk / Municipal Official", "description": "Town hall administrator or court clerk." },
-	{ "domain": "ROLE_TITLE", "code": "COUNCIL_MANUAL_LABOUR", "title": "Council Direct Labour Worker", "description": "Refuse collector, road repair gang, street sweeper, or municipal repairs." },
-	{ "domain": "ROLE_TITLE", "code": "MUNICIPAL_BUS_DRIVER", "title": "Municipal Bus Driver", "description": "Corporation passenger transport bus driver." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOSPITAL_DOCTOR",
+      "title": "Hospital Medical Doctor",
+      "description": "Resident infirmary physician or registrar."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOSPITAL_NURSE",
+      "title": "State Registered Nurse",
+      "description": "Qualified ward nursing sister or staff nurse."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOSPITAL_SUPPORT_STAFF",
+      "title": "Hospital Porter / Orderly / Cleaner",
+      "description": "Hospital domestic services, portering, and laundry staff."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "AMBULANCE_CREW",
+      "title": "Ambulance Driver / Attendant",
+      "description": "Emergency municipal ambulance driver and attendant."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HOSPITAL_MEDICAL_OR_NURSE",
+      "title": "Hospital Medical Staff / Nurse",
+      "description": "Infirmary physician, registered nurse, or orderlies."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "DISPATCHER_OR_CONTROLLER", "title": "Minicab Radio Controller", "description": "Office telephone operator and radio dispatcher." },
-	{ "domain": "ROLE_TITLE", "code": "CAB_DRIVER", "title": "Private Hire Cab Driver", "description": "Licensed private hire car driver." },
-	{ "domain": "ROLE_TITLE", "code": "OFFICE_MANAGER", "title": "Office / Operations Manager", "description": "Contracting firm administrator and supervisor." },
-	{ "domain": "ROLE_TITLE", "code": "COMMERCIAL_CLEANER", "title": "Commercial Cleaner", "description": "Night office, shop, and industrial unit cleaning operative." },
-	{ "domain": "ROLE_TITLE", "code": "DEPOT_MANAGER", "title": "Transport Depot Manager", "description": "Haulage or coach depot operations superintendent." },
-	{ "domain": "ROLE_TITLE", "code": "VEHICLE_MECHANIC", "title": "Commercial Vehicle Mechanic", "description": "Heavy commercial lorry and coach fitter." },
-	{ "domain": "ROLE_TITLE", "code": "COACH_OR_LORRY_DRIVER", "title": "Coach / HGV Lorry Driver", "description": "Long-distance coach and heavy freight driver." },
-	{ "domain": "ROLE_TITLE", "code": "BUILDING_TRADESMAN", "title": "Building Contractor / Brickie / Joiner", "description": "Skilled building trade operative." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "DHSS_OFFICER",
+      "title": "Jobcentre / DHSS Officer",
+      "description": "Civil servant administering benefits and employment registry."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "GROUNDSMAN_OR_STEWARD",
+      "title": "Groundsman / Match Steward",
+      "description": "Stadium groundskeeper or event safety steward."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PARK_KEEPER",
+      "title": "Municipal Park Keeper",
+      "description": "Grounds gardener and park custodian."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PRISON_OFFICER",
+      "title": "HM Prison Officer",
+      "description": "Custodial prison guard and discipline officer."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PRISON_INMATE",
+      "title": "Custodial Inmate",
+      "description": "Incarcerated remand prisoner or convict."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "CIVIC_HEALTH", "title": "Civic Health Role", "description": "Community health and outpatient service user role." },
-	{ "domain": "ROLE_TITLE", "code": "EMERGENCY_HEALTH", "title": "Emergency Health Patient Role", "description": "Inpatient and acute emergency hospital recipient role." },
-	{ "domain": "ROLE_TITLE", "code": "COMMUNITY_RECREATION", "title": "Civic Recreationalist", "description": "Patron of municipal recreation ground or stadium." },
-	{ "domain": "ROLE_TITLE", "code": "COMMUNITY_SAFETY", "title": "Community Safety Participant", "description": "Resident, visitor, or worker represented in local public-safety services." },
-	{ "domain": "ROLE_TITLE", "code": "CLERK", "title": "Clerical Officer", "description": "Administrative or clerical worker." },
-	{ "domain": "ROLE_TITLE", "code": "DETECTIVE", "title": "Detective Officer", "description": "Plain-clothes police investigator." },
-	{ "domain": "ROLE_TITLE", "code": "LECTURER", "title": "Higher Education Lecturer", "description": "Academic lecturer at a university or polytechnic." },
-	{ "domain": "ROLE_TITLE", "code": "POLICE_OFFICER", "title": "Uniformed Police Officer", "description": "Uniformed officer providing local policing and public safety." },
-	{ "domain": "ROLE_TITLE", "code": "SPORTSMAN", "title": "Sports Ground Staff / Athlete", "description": "Sports personnel and supporting ground staff." },
-	{ "domain": "ROLE_TITLE", "code": "WORKS_CONVENOR", "title": "Works Convenor", "description": "Senior trade union official who acts as the primary representative for workers at a specific factory, office, or large company site." },
-	{ "domain": "ROLE_TITLE", "code": "APPRENTICE_BAKER", "title": "Apprentice Baker", "description": "Trainee baker learning commercial bread and confectionery production." },
-	{ "domain": "ROLE_TITLE", "code": "APPRENTICE_BUTCHER", "title": "Apprentice Butcher", "description": "Trainee butcher learning meat preparation and retail service." },
-	{ "domain": "ROLE_TITLE", "code": "APPRENTICE_HAIRDRESSER", "title": "Apprentice Hairdresser", "description": "Trainee hairdresser learning salon and barbering work." },
-	{ "domain": "ROLE_TITLE", "code": "BAKER", "title": "Baker / Master Confectioner", "description": "Skilled baker or confectioner producing commercial food." },
-	{ "domain": "ROLE_TITLE", "code": "BANK_MANAGER", "title": "Bank Branch Manager", "description": "Manager responsible for a retail bank branch." },
-	{ "domain": "ROLE_TITLE", "code": "BANK_TELLER", "title": "Bank Cashier / Teller", "description": "Bank counter cashier handling customer transactions." },
-	{ "domain": "ROLE_TITLE", "code": "BOOKMAKER", "title": "Bookmaker / Turf Accountant Manager", "description": "Manager of a licensed betting office." },
-	{ "domain": "ROLE_TITLE", "code": "BUSINESS_ADVISOR", "title": "Commercial Business Advisor", "description": "Advisor providing commercial and business services." },
-	{ "domain": "ROLE_TITLE", "code": "BUTCHER", "title": "Master Butcher", "description": "Skilled butcher preparing and selling meat." },
-	{ "domain": "ROLE_TITLE", "code": "COURT_CLERK_LEGAL", "title": "Clerk to the Justices / Legal Advisor", "description": "Court clerk and legal advisor supporting magistrates' proceedings." },
-	{ "domain": "ROLE_TITLE", "code": "ESTATE_AGENT", "title": "Estate Agent / Property Valuer", "description": "Property sales, lettings, and valuation professional." },
-	{ "domain": "ROLE_TITLE", "code": "FIREFIGHTER", "title": "Firefighter (Leading Fireman / Fireman)", "description": "Operational municipal fire and rescue worker." },
-	{ "domain": "ROLE_TITLE", "code": "FIRE_OFFICER", "title": "Station Officer / Sub-Officer", "description": "Supervising officer at a fire and rescue station." },
-	{ "domain": "ROLE_TITLE", "code": "FORKLIFT_DRIVER", "title": "Forklift Truck Driver / Yard Operator", "description": "Warehouse and industrial yard vehicle operator." },
-	{ "domain": "ROLE_TITLE", "code": "HAIRDRESSER_OR_BARBER", "title": "Stylist / Barber", "description": "Hairdresser or barber providing salon services." },
-	{ "domain": "ROLE_TITLE", "code": "INVESTMENT_ADVISOR", "title": "Investment / Securities Advisor", "description": "Advisor providing investment and securities services." },
-	{ "domain": "ROLE_TITLE", "code": "KITCHEN_STAFF", "title": "Cook / Kitchen Porter", "description": "Kitchen worker preparing food and supporting catering operations." },
-	{ "domain": "ROLE_TITLE", "code": "LAUNDRY_WORKER", "title": "Launderette / Dry Cleaning Attendant", "description": "Worker operating commercial laundry and dry-cleaning services." },
-	{ "domain": "ROLE_TITLE", "code": "LEGAL_EXECUTIVE", "title": "Managing Clerk / Legal Executive", "description": "Legal practice administrator and executive." },
-	{ "domain": "ROLE_TITLE", "code": "LIBRARIAN", "title": "Chartered Borough Librarian", "description": "Qualified librarian managing a public library service." },
-	{ "domain": "ROLE_TITLE", "code": "LIBRARY_ASSISTANT", "title": "Library Assistant", "description": "Public library assistant supporting patrons and collections." },
-	{ "domain": "ROLE_TITLE", "code": "LOANS_OFFICER", "title": "Bank Advances & Loans Officer", "description": "Bank officer handling lending and loan applications." },
-	{ "domain": "ROLE_TITLE", "code": "PETROL_PUMP_ATTENDANT", "title": "Forecourt Petrol Pump Attendant", "description": "Petrol station attendant serving customers and maintaining the forecourt." },
-	{ "domain": "ROLE_TITLE", "code": "PHARMACIST", "title": "Dispensing Chemist / MPS Pharmacist", "description": "Qualified pharmacist dispensing medicines." },
-	{ "domain": "ROLE_TITLE", "code": "RESTAURANT_MANAGER", "title": "Restaurant / Takeaway Manager", "description": "Manager responsible for restaurant or takeaway operations." },
-	{ "domain": "ROLE_TITLE", "code": "RETAIL_COUNTER_STAFF", "title": "Counter Assistant / Shop Assistant", "description": "Retail worker serving customers at a counter or shop." },
-	{ "domain": "ROLE_TITLE", "code": "SERVING_STAFF", "title": "Waiter / Waitress / Table Service", "description": "Restaurant and cafe table service worker." },
-	{ "domain": "ROLE_TITLE", "code": "SHOP_MANAGER", "title": "Retail Shop Manager", "description": "Manager responsible for day-to-day retail shop operations." },
-	{ "domain": "ROLE_TITLE", "code": "SOLICITOR", "title": "Practising Solicitor", "description": "Qualified solicitor providing legal services." },
-	{ "domain": "ROLE_TITLE", "code": "TOOLMAKER_FITTER", "title": "Precision Toolmaker / Fitter", "description": "Skilled toolmaker and precision engineering fitter." },
-	{ "domain": "ROLE_TITLE", "code": "WAREHOUSE_OPERATIVE", "title": "Warehouseman / Picker & Packer", "description": "Warehouse worker handling stock, picking, and packing." },
-	{ "domain": "ROLE_TITLE", "code": "WELDER_FABRICATOR", "title": "Plater / Welder / Fabricator", "description": "Skilled industrial metal fabricator and welder." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CIVIC_OFFICIAL",
+      "title": "Senior Civic Official",
+      "description": "Senior municipal department head or local administrator."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CIVIC_CLERK_OR_OFFICIAL",
+      "title": "Civic Clerk / Municipal Official",
+      "description": "Town hall administrator or court clerk."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COUNCIL_MANUAL_LABOUR",
+      "title": "Council Direct Labour Worker",
+      "description": "Refuse collector, road repair gang, street sweeper, or municipal repairs."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "MUNICIPAL_BUS_DRIVER",
+      "title": "Municipal Bus Driver",
+      "description": "Corporation passenger transport bus driver."
+    },
 
-	{ "domain": "ROLE_TITLE", "code": "HANDLER", "title": "Handler", "description": "Criminal class handler" },
-	{ "domain": "ROLE_TITLE", "code": "RUNNER", "title": "Runner", "description": "Criminal class runner" },
-	{ "domain": "ROLE_TITLE", "code": "LEADER", "title": "Leader", "description": "Criminal master mind" },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "DISPATCHER_OR_CONTROLLER",
+      "title": "Minicab Radio Controller",
+      "description": "Office telephone operator and radio dispatcher."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CAB_DRIVER",
+      "title": "Private Hire Cab Driver",
+      "description": "Licensed private hire car driver."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "OFFICE_MANAGER",
+      "title": "Office / Operations Manager",
+      "description": "Contracting firm administrator and supervisor."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COMMERCIAL_CLEANER",
+      "title": "Commercial Cleaner",
+      "description": "Night office, shop, and industrial unit cleaning operative."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "DEPOT_MANAGER",
+      "title": "Transport Depot Manager",
+      "description": "Haulage or coach depot operations superintendent."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "VEHICLE_MECHANIC",
+      "title": "Commercial Vehicle Mechanic",
+      "description": "Heavy commercial lorry and coach fitter."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COACH_OR_LORRY_DRIVER",
+      "title": "Coach / HGV Lorry Driver",
+      "description": "Long-distance coach and heavy freight driver."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BUILDING_TRADESMAN",
+      "title": "Building Contractor / Brickie / Joiner",
+      "description": "Skilled building trade operative."
+    },
 
-	{ "domain": "SECTOR_CATEGORY", "code": "COMMERCIAL", "title": "Commercial Sector", "description": "Commercial Sector Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "INDUSTRIAL", "title": "Industrial Sector", "description": "Industrial Sector Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "CIVIC", "title": "Civic Sector", "description": "Civic Sector Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "CIVIC_SERVICE", "title": "Civic Service", "description": "Civic Service Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "CIVIL_SERVICE", "title": "Civil Service", "description": "Civil Service Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "SERVICE", "title": "Service Sector", "description": "Service Sector Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "INFORMAL", "title": "Informal Sector", "description": "Informal Sector Jobs and other associated elements." },
-	{ "domain": "SECTOR_CATEGORY", "code": "CRIMINAL", "title": "CRIMINAL Sector", "description": "Criminal Sector Jobs and other associated elements." },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CIVIC_HEALTH",
+      "title": "Civic Health Role",
+      "description": "Community health and outpatient service user role."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "EMERGENCY_HEALTH",
+      "title": "Emergency Health Patient Role",
+      "description": "Inpatient and acute emergency hospital recipient role."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COMMUNITY_RECREATION",
+      "title": "Civic Recreationalist",
+      "description": "Patron of municipal recreation ground or stadium."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COMMUNITY_SAFETY",
+      "title": "Community Safety Participant",
+      "description": "Resident, visitor, or worker represented in local public-safety services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CLERK",
+      "title": "Clerical Officer",
+      "description": "Administrative or clerical worker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "DETECTIVE",
+      "title": "Detective Officer",
+      "description": "Plain-clothes police investigator."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LECTURER",
+      "title": "Higher Education Lecturer",
+      "description": "Academic lecturer at a university or polytechnic."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "POLICE_OFFICER",
+      "title": "Uniformed Police Officer",
+      "description": "Uniformed officer providing local policing and public safety."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SPORTSMAN",
+      "title": "Sports Ground Staff / Athlete",
+      "description": "Sports personnel and supporting ground staff."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "WORKS_CONVENOR",
+      "title": "Works Convenor",
+      "description": "Senior trade union official who acts as the primary representative for workers at a specific factory, office, or large company site."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "APPRENTICE_BAKER",
+      "title": "Apprentice Baker",
+      "description": "Trainee baker learning commercial bread and confectionery production."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "APPRENTICE_BUTCHER",
+      "title": "Apprentice Butcher",
+      "description": "Trainee butcher learning meat preparation and retail service."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "APPRENTICE_HAIRDRESSER",
+      "title": "Apprentice Hairdresser",
+      "description": "Trainee hairdresser learning salon and barbering work."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BAKER",
+      "title": "Baker / Master Confectioner",
+      "description": "Skilled baker or confectioner producing commercial food."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BANK_MANAGER",
+      "title": "Bank Branch Manager",
+      "description": "Manager responsible for a retail bank branch."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BANK_TELLER",
+      "title": "Bank Cashier / Teller",
+      "description": "Bank counter cashier handling customer transactions."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BOOKMAKER",
+      "title": "Bookmaker / Turf Accountant Manager",
+      "description": "Manager of a licensed betting office."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BUSINESS_ADVISOR",
+      "title": "Commercial Business Advisor",
+      "description": "Advisor providing commercial and business services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BUTCHER",
+      "title": "Master Butcher",
+      "description": "Skilled butcher preparing and selling meat."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "COURT_CLERK_LEGAL",
+      "title": "Clerk to the Justices / Legal Advisor",
+      "description": "Court clerk and legal advisor supporting magistrates' proceedings."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ESTATE_AGENT",
+      "title": "Estate Agent / Property Valuer",
+      "description": "Property sales, lettings, and valuation professional."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "FIREFIGHTER",
+      "title": "Firefighter (Leading Fireman / Fireman)",
+      "description": "Operational municipal fire and rescue worker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "FIRE_OFFICER",
+      "title": "Station Officer / Sub-Officer",
+      "description": "Supervising officer at a fire and rescue station."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "FORKLIFT_DRIVER",
+      "title": "Forklift Truck Driver / Yard Operator",
+      "description": "Warehouse and industrial yard vehicle operator."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HAIRDRESSER_OR_BARBER",
+      "title": "Stylist / Barber",
+      "description": "Hairdresser or barber providing salon services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "INVESTMENT_ADVISOR",
+      "title": "Investment / Securities Advisor",
+      "description": "Advisor providing investment and securities services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "KITCHEN_STAFF",
+      "title": "Cook / Kitchen Porter",
+      "description": "Kitchen worker preparing food and supporting catering operations."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LAUNDRY_WORKER",
+      "title": "Launderette / Dry Cleaning Attendant",
+      "description": "Worker operating commercial laundry and dry-cleaning services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LEGAL_EXECUTIVE",
+      "title": "Managing Clerk / Legal Executive",
+      "description": "Legal practice administrator and executive."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LIBRARIAN",
+      "title": "Chartered Borough Librarian",
+      "description": "Qualified librarian managing a public library service."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LIBRARY_ASSISTANT",
+      "title": "Library Assistant",
+      "description": "Public library assistant supporting patrons and collections."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LOANS_OFFICER",
+      "title": "Bank Advances & Loans Officer",
+      "description": "Bank officer handling lending and loan applications."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PETROL_PUMP_ATTENDANT",
+      "title": "Forecourt Petrol Pump Attendant",
+      "description": "Petrol station attendant serving customers and maintaining the forecourt."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "PHARMACIST",
+      "title": "Dispensing Chemist / MPS Pharmacist",
+      "description": "Qualified pharmacist dispensing medicines."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "RESTAURANT_MANAGER",
+      "title": "Restaurant / Takeaway Manager",
+      "description": "Manager responsible for restaurant or takeaway operations."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "RETAIL_COUNTER_STAFF",
+      "title": "Counter Assistant / Shop Assistant",
+      "description": "Retail worker serving customers at a counter or shop."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SERVING_STAFF",
+      "title": "Waiter / Waitress / Table Service",
+      "description": "Restaurant and cafe table service worker."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SHOP_MANAGER",
+      "title": "Retail Shop Manager",
+      "description": "Manager responsible for day-to-day retail shop operations."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "SOLICITOR",
+      "title": "Practising Solicitor",
+      "description": "Qualified solicitor providing legal services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TOOLMAKER_FITTER",
+      "title": "Precision Toolmaker / Fitter",
+      "description": "Skilled toolmaker and precision engineering fitter."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "WAREHOUSE_OPERATIVE",
+      "title": "Warehouseman / Picker & Packer",
+      "description": "Warehouse worker handling stock, picking, and packing."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "WELDER_FABRICATOR",
+      "title": "Plater / Welder / Fabricator",
+      "description": "Skilled industrial metal fabricator and welder."
+    },
 
-	{ "domain": "SCHEDULE_WINDOW", "code": "DAYTIME", "title": "Daytime Standard (08:00 – 17:00)", "description": "Standard business and operational hours." },
-	{ "domain": "SCHEDULE_WINDOW", "code": "DAYTIME_OFFICE", "title": "Daytime Office Standard (09:00 – 17:00)", "description": "Standard office business and operational hours." },
-	{ "domain": "SCHEDULE_WINDOW", "code": "DAYTIME_SCHOOL", "title": "Daytime School Standard (09:00 – 15:30)", "description": "Standard office business and operational hours." },
-    { "domain": "SCHEDULE_WINDOW", "code": "MORNING", "title": "Morning Shift (06:00 – 14:00)", "description": "Early morning trade, cleaning, postal sorting, and markets." },
-    { "domain": "SCHEDULE_WINDOW", "code": "AFTERNOON", "title": "Afternoon Shift (14:00 – 22:00)", "description": "Afternoon to evening operations, retail, and factory shifts." },
-    { "domain": "SCHEDULE_WINDOW", "code": "EVENING", "title": "Evening Shift (17:00 – 23:30)", "description": "Evening hospitality, pub trade, catering, and security." },
-    { "domain": "SCHEDULE_WINDOW", "code": "NIGHT", "title": "Night Shift (22:00 – 06:00)", "description": "Overnight baking, haulage, continuous industrial foundry, or gaol guard duty." },
-    { "domain": "SCHEDULE_WINDOW", "code": "SPLIT_SHIFT", "title": "Split Shift", "description": "Broken hours common in bus transit, catering, and cleaning." },
-    { "domain": "SCHEDULE_WINDOW", "code": "WEEKEND", "title": "Weekend Only", "description": "Weekend market stalls, casual security, and extra service cover." },
-	{ "domain": "SCHEDULE_WINDOW", "code": "SHIFTS_ROTATING", "title": "Rotating Shifts", "description": "Rotating shift covering 24hr period" },
-    { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE", "title": "Flexible Schedule", "description": "Fallback schedule for irregular or independently arranged work." },
-    { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE_DAYTIME", "title": "Flexible Daytime", "description": "Variable daytime schedule for education and other daytime activities." },
-    { "domain": "SCHEDULE_WINDOW", "code": "REGULATED_FULL_TIME", "title": "Regulated Full-Time", "description": "Full-time schedule governed by institutional or civic operating rules." },
-    { "domain": "SCHEDULE_WINDOW", "code": "FLEXIBLE_ON_CALL", "title": "Flexible / On-Call", "description": "Irregular on-demand hours (minicab driving, syndicate runners, emergency repair)." }
+    {
+      "domain": "ROLE_TITLE",
+      "code": "HANDLER",
+      "title": "Handler",
+      "description": "Criminal class handler"
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "RUNNER",
+      "title": "Runner",
+      "description": "Criminal class runner"
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LEADER",
+      "title": "Leader",
+      "description": "Criminal master mind"
+    },
 
-]
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "COMMERCIAL",
+      "title": "Commercial Sector",
+      "description": "Commercial Sector Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "INDUSTRIAL",
+      "title": "Industrial Sector",
+      "description": "Industrial Sector Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "CIVIC",
+      "title": "Civic Sector",
+      "description": "Civic Sector Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "CIVIC_SERVICE",
+      "title": "Civic Service",
+      "description": "Civic Service Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "CIVIL_SERVICE",
+      "title": "Civil Service",
+      "description": "Civil Service Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "SERVICE",
+      "title": "Service Sector",
+      "description": "Service Sector Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "INFORMAL",
+      "title": "Informal Sector",
+      "description": "Informal Sector Jobs and other associated elements."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "CRIMINAL",
+      "title": "CRIMINAL Sector",
+      "description": "Criminal Sector Jobs and other associated elements."
+    },
+
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "DAYTIME",
+      "title": "Daytime Standard (08:00 – 17:00)",
+      "description": "Standard business and operational hours."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "DAYTIME_OFFICE",
+      "title": "Daytime Office Standard (09:00 – 17:00)",
+      "description": "Standard office business and operational hours."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "DAYTIME_SCHOOL",
+      "title": "Daytime School Standard (09:00 – 15:30)",
+      "description": "Standard office business and operational hours."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "MORNING",
+      "title": "Morning Shift (06:00 – 14:00)",
+      "description": "Early morning trade, cleaning, postal sorting, and markets."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "AFTERNOON",
+      "title": "Afternoon Shift (14:00 – 22:00)",
+      "description": "Afternoon to evening operations, retail, and factory shifts."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "EVENING",
+      "title": "Evening Shift (17:00 – 23:30)",
+      "description": "Evening hospitality, pub trade, catering, and security."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "NIGHT",
+      "title": "Night Shift (22:00 – 06:00)",
+      "description": "Overnight baking, haulage, continuous industrial foundry, or gaol guard duty."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "SPLIT_SHIFT",
+      "title": "Split Shift",
+      "description": "Broken hours common in bus transit, catering, and cleaning."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "WEEKEND",
+      "title": "Weekend Only",
+      "description": "Weekend market stalls, casual security, and extra service cover."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "SHIFTS_ROTATING",
+      "title": "Rotating Shifts",
+      "description": "Rotating shift covering 24hr period"
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "FLEXIBLE",
+      "title": "Flexible Schedule",
+      "description": "Fallback schedule for irregular or independently arranged work."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "FLEXIBLE_DAYTIME",
+      "title": "Flexible Daytime",
+      "description": "Variable daytime schedule for education and other daytime activities."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "REGULATED_FULL_TIME",
+      "title": "Regulated Full-Time",
+      "description": "Full-time schedule governed by institutional or civic operating rules."
+    },
+    {
+      "domain": "SCHEDULE_WINDOW",
+      "code": "FLEXIBLE_ON_CALL",
+      "title": "Flexible / On-Call",
+      "description": "Irregular on-demand hours (minicab driving, syndicate runners, emergency repair)."
+    },
+
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ND_ADHD",
+      "title": "Attention-Deficit / Hyperactivity Trait Profile",
+      "description": "High novelty drive, rapid context-switching, and variable executive consistency."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ND_AUTISM_SPECTRUM",
+      "title": "Autism Spectrum Trait Profile",
+      "description": "Deep systemizing focus and high routine fidelity paired with sensitivity to sudden disruption."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ND_DYSLEXIA",
+      "title": "Dyslexic Cognitive Processing Profile",
+      "description": "Specific difficulty with dense text and clerical ledger work independent of general intelligence."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CLINICAL_ASPD",
+      "title": "Antisocial Personality Profile",
+      "description": "Pervasive disregard for rules and others' rights, ranging from impulsive rule-breaking to cold manipulation."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CLINICAL_NPD",
+      "title": "Narcissistic Personality Profile",
+      "description": "Grandiosity, high status entitlement, and acute sensitivity to perceived disrespect or micromanagement."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CLINICAL_BPD",
+      "title": "Borderline Personality Profile",
+      "description": "Intense emotional volatility, fear of abandonment, and rapid swings between loyalty and hostility."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CLINICAL_HISTRIONIC",
+      "title": "Histrionic Personality Profile",
+      "description": "Theatrical attention-seeking and impulsivity prone to indiscreet leaks."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "DARK_SADISM",
+      "title": "Everyday Sadism Trait Profile",
+      "description": "Derives satisfaction from intimidation, humiliation, and inflicting distress."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "YOUTH_CONDUCT_ODD",
+      "title": "Youth Conduct / Oppositional Profile",
+      "description": "Adolescent pattern of authority defiance and rule violation."
+    }
+  ]
 }

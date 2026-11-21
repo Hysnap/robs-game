@@ -53,6 +53,10 @@ text = "MENU_NEW_CITY"
 layout_mode = 2
 text = "MENU_CONTINUE_GAME"
 
+[node name="OpenDevWorkbench" type="Button" parent="Backdrop/CenterMargin/CardPanel/VBoxContainer"]
+layout_mode = 2
+text = "MENU_DEV_WORKBENCH"
+
 [node name="Exit" type="Button" parent="Backdrop/CenterMargin/CardPanel/VBoxContainer"]
 layout_mode = 2
 text = "MENU_EXIT"
