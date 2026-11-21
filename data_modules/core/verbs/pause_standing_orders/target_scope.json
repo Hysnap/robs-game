@@ -1,0 +1,31 @@
+{
+  "_meta": {
+    "entity_type": "VERB_TARGET_SCOPE",
+    "verb": "PAUSE_STANDING_ORDERS",
+    "description": "Composer form layout for suspending an operative's recurring standing orders for the current simulation day."
+  },
+  "visible_in_composer": true,
+  "allowed_scopes": [],
+  "target_categories": [],
+  "form_layout": {
+    "target_section": {
+      "visible": false,
+      "mapped_field": null
+    },
+    "amount_section": {
+      "visible": false,
+      "default_value": 1.0,
+      "mapped_field": null
+    },
+    "location_section": {
+      "visible": false,
+      "required": false,
+      "mapped_field": null
+    },
+    "contact_section": {
+      "visible": false,
+      "required": false,
+      "mapped_field": null
+    }
+  }
+}

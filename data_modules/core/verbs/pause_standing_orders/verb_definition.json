@@ -1,0 +1,26 @@
+{
+  "_meta": {
+    "verb_token": "PAUSE_STANDING_ORDERS",
+    "version": 2,
+    "user_creatable": true,
+    "description": "Suspend recurring standing orders for the assigned operative for the current turn cycle only."
+  },
+  "parameters": {},
+  "steps": [
+    {
+      "step_id": "gate_actor_validity",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "!=",
+        "value": ""
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": null
+    }
+  ]
+}

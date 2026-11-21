@@ -103,7 +103,7 @@ static func _dispatch_verb_impacts(
 		elif parsed.has("delta"):
 			var delta_val: float = float(parsed["delta"])
 			var scope: String = _ImpactRouter.get_metric_scope(metric_id)
-			var recipient_id: String = actor_id if scope == "ACTOR" else target_node_id
+			var recipient_id: String = actor_id if (scope == "ACTOR" or (scope == "OPERATIONS_STAMP" and target_node_id.is_empty())) else target_node_id
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
 			applied[metric_id] = delta_val
 	return applied

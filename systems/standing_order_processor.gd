@@ -4,8 +4,9 @@ extends RefCounted
 
 const MEMO_GEN = preload("res://systems/memo_generator.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
+const DB_MANAGER = preload("res://systems/db_manager.gd")
 
-## Returns true if the operative's recurring orders are explicitly paused for sim_day
+## Returns true if the operative's recurring orders are paused for exact sim_day
 static func is_paused_for_day(world_state: Dictionary, resident_id: Variant, sim_day: int) -> bool:
 	var ops: Dictionary = world_state.get("operations", {})
 	var paused_map: Dictionary = ops.get("paused_standing_orders_day", {})
@@ -16,7 +17,7 @@ static func is_paused_for_day(world_state: Dictionary, resident_id: Variant, sim
 		return true
 	return false
 
-## Sets or clears a single-day pause on recurring standing orders for an operative
+## Stamps or clears sim_day as a single-day pause on recurring standing orders for an operative
 static func set_paused_for_day(world_state: Dictionary, resident_id: Variant, sim_day: int, paused: bool) -> void:
 	if not world_state.has("operations") or not (world_state["operations"] is Dictionary):
 		world_state["operations"] = {}
@@ -29,6 +30,31 @@ static func set_paused_for_day(world_state: Dictionary, resident_id: Variant, si
 		paused_map[key_str] = sim_day
 	else:
 		paused_map.erase(key_str)
+
+## Checks whether world_state["standing_orders"] flags a resident as having issued/delegated standing orders
+static func has_standing_order_flag(world_state: Dictionary, resident_id: Variant) -> bool:
+	var ws_standing: Variant = world_state.get("standing_orders", null)
+	if not (ws_standing is Dictionary):
+		return false
+	var key_str: String = str(resident_id).strip_edges()
+	if key_str.is_empty():
+		return false
+	if ws_standing.has(key_str):
+		var v: Variant = ws_standing[key_str]
+		if v is bool:
+			return v
+		if v is Dictionary:
+			return bool(v.get("has_standing_orders", false)) or bool(v.get("delegated", false)) or bool(v.get("active", false))
+	if ws_standing.has(resident_id):
+		var v2: Variant = ws_standing[resident_id]
+		if v2 is bool:
+			return v2
+		if v2 is Dictionary:
+			return bool(v2.get("has_standing_orders", false)) or bool(v2.get("delegated", false)) or bool(v2.get("active", false))
+	for d_id in ws_standing.get("delegated_resident_ids", []):
+		if str(d_id).strip_edges() == key_str:
+			return true
+	return false
 
 ## Evaluates whether a single standing order rule triggers on sim_day
 static func is_order_due_on_day(world_state: Dictionary, order: Dictionary, sim_day: int) -> bool:
@@ -79,13 +105,58 @@ static func _resolve_monitored_stock_qty(world_state: Dictionary, params: Dictio
 			return float(caches[cache_id].get("inventory", {}).get(item_id, 0.0))
 	if params.has("establishment_id"):
 		var est_id: Variant = params["establishment_id"]
-		var est_key: Variant = int(str(est_id)) if str(est_id).is_valid_int() else est_id
+		var est_key: Variant = int(est_id) if (est_id is int or est_id is float) else (int(str(est_id)) if str(est_id).is_valid_int() else est_id)
 		var estabs: Dictionary = world_state.get("establishments", {})
 		if estabs.has(est_key) and estabs[est_key] is Dictionary:
 			return float(estabs[est_key].get("inventory", {}).get(item_id, 0.0))
 	return 0.0
 
-## Hydrates due standing order tasks for a given day (respecting single-period pauses)
+## Fetches active standing orders from SQLite via DBManager (with optional in-memory Array fallback)
+static func _load_active_standing_orders(world_state: Dictionary, sim_day: int, resident_filter: Variant = null) -> Array:
+	var orders: Array = []
+	var filter_active: bool = (resident_filter != null and str(resident_filter).strip_edges() != "")
+	var filter_str: String = str(resident_filter).strip_edges()
+
+	if DB_MANAGER.is_database_open():
+		var tbl_rows: Array = DB_MANAGER.query_rows(
+			"SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='standing_orders';"
+		)
+		if not tbl_rows.is_empty() and int(tbl_rows[0].get("cnt", 0)) > 0:
+			var where_clauses: PackedStringArray = [
+				"is_active = 1",
+				"valid_from <= %d" % sim_day,
+				"(valid_to IS NULL OR valid_to >= %d)" % sim_day
+			]
+			if filter_active and filter_str.is_valid_int():
+				where_clauses.append("assigned_resident_id = %d" % int(filter_str))
+
+			var rows: Array = DB_MANAGER.query_rows("""
+				SELECT standing_order_id, assigned_resident_id, issuer_resident_id, org_id,
+				       title, cadence_rule, cadence_params_json, steps_json,
+				       estimated_hours, priority, is_active
+				FROM standing_orders
+				WHERE %s
+				ORDER BY priority DESC, standing_order_id ASC;
+			""" % " AND ".join(where_clauses))
+
+			for r in rows:
+				if r is Dictionary:
+					var row_copy: Dictionary = r.duplicate(true)
+					row_copy["is_active"] = int(r.get("is_active", 1)) == 1
+					orders.append(row_copy)
+			return orders
+
+	var ws_standing: Variant = world_state.get("standing_orders", [])
+	if ws_standing is Array:
+		for item in ws_standing:
+			if item is Dictionary:
+				if filter_active and str(item.get("assigned_resident_id", "")) != filter_str:
+					continue
+				orders.append(item)
+
+	return orders
+
+## Hydrates due standing order tasks for a given day (respecting day-stamped pauses)
 static func hydrate_for_day(
 	world_state: Dictionary,
 	sim_day: int,
@@ -93,12 +164,12 @@ static func hydrate_for_day(
 	resident_filter: Variant = null
 ) -> Array[Dictionary]:
 	var hydrated: Array[Dictionary] = []
-	var orders: Array = world_state.get("standing_orders", [])
+	var orders: Array = _load_active_standing_orders(world_state, sim_day, resident_filter)
 	if orders.is_empty():
 		return hydrated
 
-	var filter_active: bool = (resident_filter != null and str(resident_filter) != "")
-	var filter_str: String = str(resident_filter)
+	var filter_active: bool = (resident_filter != null and str(resident_filter).strip_edges() != "")
+	var filter_str: String = str(resident_filter).strip_edges()
 
 	for order in orders:
 		if not (order is Dictionary):
