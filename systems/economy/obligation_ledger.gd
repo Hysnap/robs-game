@@ -638,7 +638,7 @@ static func _dispatch_monthly_bank_statements(current_sim_day: int, statement_pe
 ## Declarative verb-impact entry point invoked by SimController when a directive's impacts/*.json targets OBLIGATION
 static func process_verb_impact(world_state: Dictionary, directive: Dictionary, impact_cfg: Dictionary) -> Dictionary:
 	var model: String = str(impact_cfg.get("model", "")).to_upper().strip_edges()
-	var current_day: int = int(world_state.get("metadata", {}).get("current_sim_day", CALENDAR_HELPER.get_simulation_start_day()))
+	var current_day: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 
 	match model:
 		"CREATE_OBLIGATION":

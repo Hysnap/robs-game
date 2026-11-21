@@ -6,6 +6,7 @@ const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootst
 const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 func _init() -> void:
 	print("=== RUNNING FAMILY BIBLE & GENEALOGY VIEW TEST SUITE ===")
@@ -18,7 +19,7 @@ func _init() -> void:
 	var scouted: bool = CREW_SCOUT_BOOTSTRAPPER.scout_and_bind_starting_crew(world_state, home_district)
 	assert(scouted, "FAIL: CrewScoutBootstrapper failed to bind starting crew.")
 
-	var current_sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 29219))
+	var current_sim_day: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 	var intel_ctx: Dictionary = INTEL_MANAGER.build_player_intel_context(world_state)
 
 	# 2. Query Family Bible payload

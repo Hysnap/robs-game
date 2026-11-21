@@ -3,6 +3,7 @@ extends Control
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const SHELL_REGISTRY = preload("res://scenes/ui/shell_host/shell_registry.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 @onready var lbl_title: Label = $Backdrop/CenterMargin/CardPanel/CardVBox/LblTitle
 @onready var lbl_nominated_hdr: Label = $Backdrop/CenterMargin/CardPanel/CardVBox/NominatedBox/LblNominatedHdr
@@ -72,12 +73,17 @@ func _refresh_slots() -> void:
 	save_list.select(0)
 	_update_selection_buttons()
 
+static func _resolve_entry_sim_day(entry: Dictionary) -> int:
+	if entry.has("current_sim_day") and entry["current_sim_day"] != null:
+		return CALENDAR_HELPER.get_current_sim_day({"metadata": {"current_sim_day": entry["current_sim_day"]}})
+	return CALENDAR_HELPER.get_current_sim_day()
+
 func _format_summary(entry: Dictionary) -> String:
 	return tr("FMT_SAVE_SUMMARY") \
 		.replace("{city}", str(entry.get("city_name", entry.get("slot_id", "")))) \
 		.replace("{seed}", str(entry.get("seed_id", ""))) \
 		.replace("{pop}", str(int(entry.get("population", 0)))) \
-		.replace("{day}", str(int(entry.get("current_sim_day", 0)))) \
+		.replace("{day}", str(_resolve_entry_sim_day(entry))) \
 		.replace("{date}", str(entry.get("timestamp", "")))
 
 func _format_row(entry: Dictionary) -> String:
@@ -86,7 +92,7 @@ func _format_row(entry: Dictionary) -> String:
 		.replace("{city}", str(entry.get("city_name", entry.get("slot_id", "")))) \
 		.replace("{seed}", str(entry.get("seed_id", ""))) \
 		.replace("{pop}", str(int(entry.get("population", 0)))) \
-		.replace("{day}", str(int(entry.get("current_sim_day", 0)))) \
+		.replace("{day}", str(_resolve_entry_sim_day(entry))) \
 		.replace("{date}", str(entry.get("timestamp", "")))
 
 func _get_selected_slot_id() -> String:

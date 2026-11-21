@@ -5,6 +5,7 @@ extends VBoxContainer
 signal action_clicked(action_code: String, payload: Dictionary)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 const WEEKDAY_TOKENS: Array[String] = [
 	"UI_CAL_WD_MON",
@@ -99,7 +100,7 @@ func bind_calendar(payload: Dictionary) -> void:
 	var clr_muted: Color = RETRO_THEME.get_ink_color("muted")
 
 	_month_offset = int(payload.get("month_offset", _month_offset))
-	var current_sim_day: int = int(payload.get("current_sim_day", 0))
+	var current_sim_day: int = int(payload["current_sim_day"]) if (payload.has("current_sim_day") and payload["current_sim_day"] != null) else CALENDAR_HELPER.get_current_sim_day()
 	var selected_sim_day: int = int(payload.get("selected_sim_day", current_sim_day))
 	_month_label.text = str(payload.get("month_title", "")).to_upper()
 

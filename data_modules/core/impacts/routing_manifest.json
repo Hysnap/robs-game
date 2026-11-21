@@ -31,6 +31,11 @@
       "stamp_field": "last_updated_day",
       "create_missing": true,
       "erase_at_min": true
+    },
+    "OPERATIONS_STAMP": {
+      "path": "operations.{state_field}.{target_id}",
+      "stamp_field": "{target_id}",
+      "create_missing": true
     }
   }
 }

@@ -7,6 +7,7 @@ const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const _FileSystemCrawler = preload("res://systems/file_system_crawler.gd")
+const _StandingOrderProcessor = preload("res://systems/standing_order_processor.gd")
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
@@ -16,23 +17,22 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 	var verb_token: String = str(action_directive.get("verb", action_directive.get("type", ""))).to_upper().strip_edges()
 	SystemLogger.log_debug("[SimController] Executing directive: %s" % verb_token)
 	var result: Dictionary = _VerbRouter.dispatch(world_state, action_directive)
-	
+
 	if result.get("success", false):
 		var initiator_id: String = str(action_directive.get("assigned_to", action_directive.get("assigned_agent", action_directive.get("initiator_id", "PLAYER"))))
 		var target_node_id: String = str(result.get("target_node_id", action_directive.get("target_node_id", "")))
 		var deltas: Dictionary = result.get("impact_deltas", {})
-		
+
 		for metric_key in deltas.keys():
 			var delta_val: float = float(deltas[metric_key])
 			var scope: String = _ImpactRouter.get_metric_scope(metric_key)
 			var recipient_id: String = initiator_id if scope == "ACTOR" else target_node_id
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_key, delta_val)
 
-		# Dispatch declarative verb impacts from core or flavour verb impacts/ folders
 		var verb_impacts_meta: Dictionary = _dispatch_verb_impacts(world_state, action_directive, verb_token, initiator_id, target_node_id)
 		if not verb_impacts_meta.is_empty():
 			result["verb_impacts"] = verb_impacts_meta
-		
+
 	SystemLogger.log_info("[SimController] Directive completed: success=%s" % result.get("success", false))
 	return result
 
@@ -103,7 +103,7 @@ static func _dispatch_verb_impacts(
 		elif parsed.has("delta"):
 			var delta_val: float = float(parsed["delta"])
 			var scope: String = _ImpactRouter.get_metric_scope(metric_id)
-			var recipient_id: String = actor_id if scope == "ACTOR" else target_node_id
+			var recipient_id: String = actor_id if (scope == "ACTOR" or (scope == "OPERATIONS_STAMP" and target_node_id.is_empty())) else target_node_id
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
 			applied[metric_id] = delta_val
 	return applied
@@ -134,25 +134,25 @@ static func _apply_calendar_event_impacts(
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
 	var meta: Dictionary = world_state.get("metadata", {})
-	var start_day: int = int(meta.get("current_sim_day", _CalendarHelper.get_simulation_start_day()))
+	var start_day: int = _CalendarHelper.get_current_sim_day(world_state)
 	var current_day: int = start_day
 	var current_week: int = _CalendarHelper.day_to_week(current_day)
 	var horizon: String = str(meta.get("time_horizon", "day")).to_lower().strip_edges()
 	var executed_events: Array = []
 	var diary_memos: Array[String] = []
 
-	# 1. Execute Staged Directives strictly in Array order (Top to Bottom)
 	var strict_halt := false
 	if FileAccess.file_exists(BUSINESS_RULES_PATH):
 		var cfg := ConfigFile.new()
 		if cfg.load(BUSINESS_RULES_PATH) == OK:
 			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
 
+	var day_queue: Array[Dictionary] = _build_day_execution_queue(world_state, staged_directives, start_day, diary_memos)
 	var halted_agents: Dictionary = {}
 
-	if not staged_directives.is_empty():
-		for i in range(staged_directives.size()):
-			var directive: Dictionary = staged_directives[i]
+	if not day_queue.is_empty():
+		for i in range(day_queue.size()):
+			var directive: Dictionary = day_queue[i]
 			var author_str: String = _resolve_directive_author(world_state, directive)
 			var agent_key: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", "PLAYER"))))
 
@@ -291,6 +291,8 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	for step in range(1, days_to_advance + 1):
 		var day_tick: int = start_day + step
+		if step > 1:
+			_execute_standing_orders_for_rollover_day(world_state, day_tick, executed_events, diary_memos)
 		var daily_res: Dictionary = _ObligationLedger.process_daily_tick(day_tick)
 		obligation_rollover["delivered_mail"].append_array(daily_res.get("delivered_mail", []))
 		obligation_rollover["cleared_settlements"].append_array(daily_res.get("cleared_settlements", []))
@@ -322,12 +324,10 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["current_day_of_week"] = dow
 	world_state["metadata"] = meta
 
-	# 3. Synchronize Sim Day into SQLite Database in Lockstep
 	_DBManager.execute_batch([
 		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % current_day
 	])
 
-	# 4. Auto-Save Non-Ironman Granular Turn Snapshot
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
 	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (horizon=%s, active_districts=%d, background_districts=%d, week_rollover=%s)." % [
@@ -347,6 +347,110 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"executed_events": executed_events,
 		"diary_memos": diary_memos
 	}
+
+## Merges staged ad-hoc directives with due standing orders using planning fat and OCEAN/cognitive resolution
+static func _build_day_execution_queue(
+	world_state: Dictionary,
+	staged_directives: Array,
+	sim_day: int,
+	diary_memos: Array[String]
+) -> Array[Dictionary]:
+	var adhoc_by_agent: Dictionary = {}
+	var unassigned_adhoc: Array[Dictionary] = []
+
+	for d in staged_directives:
+		if not (d is Dictionary):
+			continue
+		var agent_raw: Variant = d.get("assigned_to", d.get("assigned_agent", d.get("initiator_id", "")))
+		var agent_key: String = str(agent_raw).strip_edges()
+		if agent_key.is_empty() or agent_key == "PLAYER":
+			unassigned_adhoc.append(d)
+		else:
+			if not adhoc_by_agent.has(agent_key):
+				adhoc_by_agent[agent_key] = []
+			adhoc_by_agent[agent_key].append(d)
+
+	var hydrated_standing: Array[Dictionary] = _StandingOrderProcessor.hydrate_for_day(
+		world_state,
+		sim_day,
+		func(t): return t.duplicate(true)
+	)
+
+	var standing_by_agent: Dictionary = {}
+	for st in hydrated_standing:
+		var s_key: String = str(st.get("assigned_to", "")).strip_edges()
+		if not s_key.is_empty():
+			if not standing_by_agent.has(s_key):
+				standing_by_agent[s_key] = []
+			standing_by_agent[s_key].append(st)
+
+	var all_agent_keys: Dictionary = {}
+	for k in adhoc_by_agent.keys():
+		all_agent_keys[k] = true
+	for k in standing_by_agent.keys():
+		all_agent_keys[k] = true
+
+	var final_queue: Array[Dictionary] = []
+	for u_task in unassigned_adhoc:
+		final_queue.append(u_task)
+
+	for agent_key in all_agent_keys.keys():
+		var a_list: Array = adhoc_by_agent.get(agent_key, [])
+		var s_list: Array = standing_by_agent.get(agent_key, [])
+		var plan: Dictionary = _StandingOrderProcessor.resolve_operative_shift_plan(world_state, agent_key, a_list, s_list)
+		for q_item in plan.get("queue", []):
+			if q_item is Dictionary:
+				final_queue.append(q_item)
+		for m_txt in plan.get("memos", []):
+			var memo_str: String = str(m_txt)
+			diary_memos.append(memo_str)
+			if not world_state.has("memo_backlog") or not (world_state["memo_backlog"] is Array):
+				world_state["memo_backlog"] = []
+			world_state["memo_backlog"].append({
+				"tick": sim_day,
+				"text": memo_str
+			})
+
+	return final_queue
+
+## Executes standing orders automatically on subsequent days during multi-day horizons (week/month/quarter)
+static func _execute_standing_orders_for_rollover_day(
+	world_state: Dictionary,
+	day_tick: int,
+	executed_events: Array,
+	diary_memos: Array[String]
+) -> void:
+	var due_tasks: Array[Dictionary] = _StandingOrderProcessor.hydrate_for_day(
+		world_state,
+		day_tick,
+		func(t): return t.duplicate(true)
+	)
+	if due_tasks.is_empty():
+		return
+
+	var w_num: int = _CalendarHelper.day_to_week(day_tick)
+	var cal_d: String = _CalendarHelper.day_to_calendar_date(day_tick)
+	var d_of_w: int = _CalendarHelper.day_of_week(day_tick)
+
+	for task in due_tasks:
+		var res: Dictionary = execute_directive(world_state, task)
+		var ok: bool = bool(res.get("success", false))
+		var msg: String = str(res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")))
+		executed_events.append({
+			"trigger_type": "STANDING_ORDER_EXECUTION",
+			"day_offset": day_tick,
+			"calendar_date": cal_d,
+			"week": w_num,
+			"day_of_week": d_of_w,
+			"verb": str(task.get("verb", "STANDING_ORDER")),
+			"target_item": str(task.get("target_item", "")),
+			"success": ok,
+			"message": msg,
+			"author": _resolve_directive_author(world_state, task),
+			"target_node_id": str(task.get("target_node_id", "")),
+			"directive_snapshot": task.duplicate(true)
+		})
+		diary_memos.append(msg)
 
 ## Maps planning time_horizon ('day', 'shift', 'week', 'month', 'quarter') to day step count
 static func _resolve_horizon_days(horizon: String) -> int:

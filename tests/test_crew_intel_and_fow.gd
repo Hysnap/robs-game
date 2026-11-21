@@ -8,6 +8,7 @@ const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const OPS_CTRL = preload("res://systems/operations_controller.gd")
 const GEN_ROSTER_SCRIPT = preload("res://generated/ui/core/gen_roster_docket.gd")
 const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 func _init() -> void:
 	call_deferred("_run_suite")
@@ -44,7 +45,7 @@ func _build_test_world_state() -> Dictionary:
 	return {
 		"metadata": {
 			"calendar_year": 1980,
-			"current_sim_day": 29219,
+			"current_sim_day": CALENDAR_HELPER.get_simulation_start_day(),
 			"current_day_tick": 1
 		},
 		"operations": {

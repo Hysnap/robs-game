@@ -3,6 +3,7 @@ extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const CmdOpenResidentialDocketScript = preload("res://systems/ui_commands/cmd_open_residential_docket.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Opens the operational dossier for a crew operative, or the home residential docket for a street contact
 static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
@@ -14,7 +15,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 		return
 
 	var ws: Dictionary = gs.world_state
-	var current_sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 29219))
+	var current_sim_day: int = CalendarHelperScript.get_current_sim_day(ws)
 	var filter_key: Variant = payload.get("filter_key", payload.get("resident_id", 0))
 
 	var residents_dict: Dictionary = ws.get("residents", {})

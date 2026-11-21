@@ -5,6 +5,8 @@ extends RefCounted
 const TargetDomainRegistryScript = preload("res://systems/target_domain_registry.gd")
 const VerbRouterScript = preload("res://systems/verb_router.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const DBManagerScript = preload("res://systems/db_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:
@@ -139,6 +141,66 @@ static func _normalize_entity_id(raw_val: Variant) -> Variant:
 		return int(s_val)
 	return s_val
 
+## Resolves active world_state dictionary if available
+static func _resolve_active_world_state() -> Dictionary:
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs != null and "world_state" in gs and gs.world_state is Dictionary:
+		return gs.world_state
+	return {}
+
+## Delegates current simulation day resolution to CalendarHelper (live state -> SQLite metadata -> headless fallback)
+static func _resolve_current_sim_day(world_state: Dictionary) -> int:
+	return CalendarHelperScript.get_current_sim_day(world_state)
+
+## Checks if an operative has active standing orders or delegated standing-order flags (and isn't paused for next run)
+static func _has_active_standing_orders_for_actor(world_state: Dictionary, assigned_val: Variant, sim_day: int) -> bool:
+	var actor_str: String = str(assigned_val).strip_edges()
+	if actor_str.is_empty() or actor_str == "PLAYER":
+		return false
+
+	# Check single-run pause flag on operative record or operations map if already set
+	var residents: Dictionary = world_state.get("residents", {})
+	var res_rec: Dictionary = residents.get(assigned_val, residents.get(actor_str, {}))
+	if res_rec is Dictionary and bool(res_rec.get("ignore_standing_orders_next_run", false)):
+		return false
+
+	var ops: Dictionary = world_state.get("operations", {})
+	var pause_map: Dictionary = ops.get("ignore_standing_orders_next_run", {})
+	if pause_map is Dictionary and bool(pause_map.get(actor_str, false)):
+		return false
+
+	# Check world_state["standing_orders"] actor/delegation flags
+	var ws_standing: Variant = world_state.get("standing_orders", {})
+	if ws_standing is Dictionary:
+		var actor_flag: Variant = ws_standing.get(actor_str, ws_standing.get(assigned_val, null))
+		if actor_flag is bool and actor_flag:
+			return true
+		if actor_flag is Dictionary and (bool(actor_flag.get("has_standing_orders", false)) or bool(actor_flag.get("delegated", false))):
+			return true
+		var delegated_list: Array = ws_standing.get("delegated_resident_ids", [])
+		for d_id in delegated_list:
+			if str(d_id).strip_edges() == actor_str:
+				return true
+
+	# Query authoritative SQLite standing_orders table when open and resident ID is numeric
+	if actor_str.is_valid_int() and DBManagerScript.is_database_open():
+		var tbl_rows: Array = DBManagerScript.query_rows(
+			"SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='standing_orders';"
+		)
+		if not tbl_rows.is_empty() and int(tbl_rows[0].get("cnt", 0)) > 0:
+			var count_rows: Array = DBManagerScript.query_rows("""
+				SELECT COUNT(*) AS cnt
+				FROM standing_orders
+				WHERE assigned_resident_id = %d
+				  AND is_active = 1
+				  AND valid_from <= %d
+				  AND (valid_to IS NULL OR valid_to >= %d);
+			""" % [int(actor_str), sim_day, sim_day])
+			if not count_rows.is_empty() and int(count_rows[0].get("cnt", 0)) > 0:
+				return true
+
+	return false
+
 ## Validates and constructs normalized directive packet based on verb's configured form_layout
 static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var verb: String = str(form_data.get("verb", "")).strip_edges().to_upper()
@@ -246,8 +308,14 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	elif not contact_empty and not directive.has("supplier_id"):
 		directive["supplier_id"] = contact_id
 
+	# Non-blocking warning when staging for an operative with active/delegated standing orders
+	var active_ws: Dictionary = _resolve_active_world_state()
+	var sim_day: int = _resolve_current_sim_day(active_ws)
+	if _has_active_standing_orders_for_actor(active_ws, assigned_val, sim_day):
+		directive["standing_order_warning"] = "UI_WARN_STANDING_ORDER_CONFLICT"
+
 	return directive
-	
+
 ## Filters cached locations by sector/type
 static func filter_locations(cached_locations: Array[Dictionary], filter_type: String) -> Array[Dictionary]:
 	var f_upper := filter_type.strip_edges().to_upper()

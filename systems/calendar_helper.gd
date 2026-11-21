@@ -48,13 +48,90 @@ static func _load_jurisdiction_calendar_rules() -> void:
 	assert(civic_data.has("holiday_calendar") and civic_data["holiday_calendar"] is Dictionary, "FATAL: [CalendarHelper] 'civic_hierarchy' module missing mandatory 'holiday_calendar' dictionary.")
 	_jurisdiction_cfg = civic_data["holiday_calendar"]
 
+## Attempts to populate epoch/start temporal anchors in headless mode without requiring full initialize()
+static func _ensure_temporal_anchors_loaded() -> bool:
+	if _initialized:
+		return true
+
+	var ep_str: String = ""
+	var start_str: String = ""
+	var tick_days: int = _days_per_tick
+
+	if DB_MGR.is_database_open():
+		ep_str = DB_MGR.get_metadata("epoch_date", "").strip_edges()
+		start_str = DB_MGR.get_metadata("simulation_start_date", "").strip_edges()
+		var tick_str: String = DB_MGR.get_metadata("days_per_tick", "").strip_edges()
+		if tick_str.is_valid_int() and int(tick_str) > 0:
+			tick_days = int(tick_str)
+
+	if (ep_str.is_empty() or start_str.is_empty()) and MANIFEST_MGR.has_module("demographics"):
+		var demo_cfg: Dictionary = MANIFEST_MGR.load_module("demographics")
+		var anchor: Variant = demo_cfg.get("temporal_anchor", {})
+		if anchor is Dictionary:
+			if ep_str.is_empty():
+				ep_str = str(anchor.get("epoch_date", "")).strip_edges()
+			if start_str.is_empty():
+				start_str = str(anchor.get("simulation_start_date", "")).strip_edges()
+			if anchor.has("days_per_tick") and int(anchor["days_per_tick"]) > 0:
+				tick_days = int(anchor["days_per_tick"])
+
+	if ep_str.is_empty() or start_str.is_empty():
+		return false
+
+	var ep_parts := _parse_iso_ymd(ep_str)
+	var start_parts := _parse_iso_ymd(start_str)
+	_epoch_date = ep_str
+	_sim_start_date = start_str
+	_days_per_tick = tick_days
+	_epoch_jdn = _gregorian_to_jdn(ep_parts[0], ep_parts[1], ep_parts[2])
+	var start_jdn := _gregorian_to_jdn(start_parts[0], start_parts[1], start_parts[2])
+	_start_day_offset = start_jdn - _epoch_jdn
+	return true
+
 static func get_epoch_date() -> String:
-	assert(_initialized, "FATAL: CalendarHelper used before initialization")
-	return _epoch_date
+	if _initialized:
+		return _epoch_date
+	if _ensure_temporal_anchors_loaded():
+		return _epoch_date
+	return ""
 
 static func get_simulation_start_day() -> int:
-	assert(_initialized, "FATAL: CalendarHelper used before initialization")
-	return _start_day_offset
+	if _initialized:
+		return _start_day_offset
+	if _ensure_temporal_anchors_loaded():
+		return _start_day_offset
+	return 0
+
+## Resolves active simulation day from explicit world_state, active GameState.world_state, or SQLite world_metadata
+static func get_current_sim_day(world_state: Dictionary = {}) -> int:
+	var candidate_ws: Dictionary = world_state
+	if candidate_ws.is_empty():
+		var gs: Node = MANIFEST_MGR.get_game_state()
+		if gs != null and "world_state" in gs and gs.world_state is Dictionary:
+			candidate_ws = gs.world_state
+
+	var has_ws_day: bool = false
+	var ws_day: int = 0
+	if not candidate_ws.is_empty():
+		var meta: Dictionary = candidate_ws.get("metadata", {})
+		if meta.has("current_sim_day") and meta["current_sim_day"] != null:
+			has_ws_day = true
+			ws_day = int(meta["current_sim_day"])
+			if ws_day > 0:
+				return ws_day
+
+	if DB_MGR.is_database_open():
+		var db_day_str: String = DB_MGR.get_metadata("current_sim_day", "").strip_edges()
+		if db_day_str.is_valid_int() and int(db_day_str) > 0:
+			return int(db_day_str)
+		var start_date_str: String = DB_MGR.get_metadata("simulation_start_date", "").strip_edges()
+		if not start_date_str.is_empty():
+			return get_simulation_start_day()
+
+	if has_ws_day:
+		return ws_day
+
+	return get_simulation_start_day()
 
 static func get_days_per_tick() -> int:
 	assert(_initialized, "FATAL: CalendarHelper used before initialization")
@@ -156,6 +233,32 @@ static func format_day_localized(day_offset: int) -> String:
 		pattern = "{day} {month} {year}"
 		
 	return pattern.replace("{day}", "%02d" % ymd[2]).replace("{month}", month_name).replace("{year}", "%04d" % ymd[0])
+
+## Returns month grid metadata (start_day, end_day, days_in_month, leading_blank_days, month_title) for a month_offset relative to base_day_offset
+static func get_month_grid_meta(base_day_offset: int, month_offset: int = 0) -> Dictionary:
+	assert(_initialized, "FATAL: CalendarHelper used before initialization")
+	var ymd := _day_offset_to_ymd(base_day_offset)
+	var total_months := (ymd[0] * 12) + (ymd[1] - 1) + month_offset
+	var target_year := floori(float(total_months) / 12.0)
+	var target_month := posmod(total_months, 12) + 1
+	var days_in_month := _days_in_gregorian_month(target_year, target_month)
+	var start_day := _ymd_to_day_offset(target_year, target_month, 1)
+	var end_day := start_day + days_in_month - 1
+	var leading_blanks := day_of_week(start_day) - 1
+	var month_token := "UI_CAL_MONTH_%02d" % target_month
+	var month_label := str(TranslationServer.translate(month_token))
+	if month_label == month_token:
+		var fallback_months := ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+		month_label = fallback_months[target_month] if target_month < fallback_months.size() else "%02d" % target_month
+	return {
+		"year": target_year,
+		"month": target_month,
+		"start_day": start_day,
+		"end_day": end_day,
+		"days_in_month": days_in_month,
+		"leading_blank_days": leading_blanks,
+		"month_title": "%s %04d" % [month_label, target_year]
+	}
 
 # ==============================================================================
 # LOCALE- & ERA-INDEPENDENT HOLIDAY RESOLUTION ENGINE
@@ -369,29 +472,3 @@ static func _days_in_gregorian_month(year: int, month: int) -> int:
 			return 29 if is_leap else 28
 		_:
 			return 30
-
-## Returns month grid metadata (start_day, end_day, days_in_month, leading_blank_days, month_title) for a month_offset relative to base_day_offset
-static func get_month_grid_meta(base_day_offset: int, month_offset: int = 0) -> Dictionary:
-	assert(_initialized, "FATAL: CalendarHelper used before initialization")
-	var ymd := _day_offset_to_ymd(base_day_offset)
-	var total_months := (ymd[0] * 12) + (ymd[1] - 1) + month_offset
-	var target_year := floori(float(total_months) / 12.0)
-	var target_month := posmod(total_months, 12) + 1
-	var days_in_month := _days_in_gregorian_month(target_year, target_month)
-	var start_day := _ymd_to_day_offset(target_year, target_month, 1)
-	var end_day := start_day + days_in_month - 1
-	var leading_blanks := day_of_week(start_day) - 1
-	var month_token := "UI_CAL_MONTH_%02d" % target_month
-	var month_label := TranslationServer.translate(month_token)
-	if month_label == month_token:
-		var fallback_months := ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-		month_label = fallback_months[target_month] if target_month < fallback_months.size() else "%02d" % target_month
-	return {
-		"year": target_year,
-		"month": target_month,
-		"start_day": start_day,
-		"end_day": end_day,
-		"days_in_month": days_in_month,
-		"leading_blank_days": leading_blanks,
-		"month_title": "%s %04d" % [month_label, target_year]
-	}

@@ -15,8 +15,8 @@ static func scout_and_bind_starting_crew(world_state: Dictionary, home_district_
 	assert(not home_district_id.is_empty(), "FATAL: [CrewScoutBootstrapper] home_district_id cannot be empty.")
 	assert(SCENARIO_MANIFEST_MANAGER.has_module("startpoint"), "FATAL: [CrewScoutBootstrapper] Missing 'startpoint' module.")
 
-	# 1. Resolve simulation temporal day offset (default to 1980-01-01 start day 29219)
-	var current_sim_day: int = int(world_state.get("metadata", {}).get("current_sim_day", 29219))
+	# 1. Resolve simulation temporal day offset via CalendarHelper
+	var current_sim_day: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 
 	# 2. Ingest generation criteria and operative templates from startpoint config
 	var startpoint: Dictionary = SCENARIO_MANIFEST_MANAGER.load_module("startpoint")

@@ -15,7 +15,7 @@ static func resolve(target_cat: Dictionary, world_state: Dictionary, _verb_code:
 	var module_data: Dictionary = ScenarioManifestManagerScript.load_module(rules_mod)
 	var obl_types: Dictionary = module_data.get("obligation_types", {})
 	var include_system: bool = bool(target_cat.get("include_system_types", false))
-	var current_day: int = int(world_state.get("metadata", {}).get("current_sim_day", CalendarHelperScript.get_simulation_start_day()))
+	var current_day: int = CalendarHelperScript.get_current_sim_day(world_state)
 	var sim_year: int = CalendarHelperScript.day_to_year(current_day)
 
 	var sorted_types: Array = obl_types.keys()

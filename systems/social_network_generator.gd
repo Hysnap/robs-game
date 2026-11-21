@@ -77,15 +77,15 @@ static func generate_city_society(
 	# -------------------------------------------------------------------------
 	var t0_premises: int = Time.get_ticks_msec()
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.05, 5.0, "Pass 1: Generate Initial Land Parcels...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	PARCEL_PLANNER.precalculate_district_metrics(world_state, _archetypes, rng)
 
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.20, 15.0, "Pass 2: Realignment of dedicated civic parcels...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	PARCEL_PLANNER.run_civic_cadence_pass(world_state, _archetypes, rng)
 
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.30, 20.0, "Pass 3: Populating physical premises & tenancies...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	var physical_state: Dictionary = await PREMISES_BUILDER.run(
 		world_state, _archetypes, _building_classes, _job_definitions, _cultural, _lexicon, rng, 
 		func(c, t, d):
@@ -97,7 +97,7 @@ static func generate_city_society(
 	)
 
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 0.92, 46.0, "Pass 4: Creating Boroughs...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	BOROUGH_CLUSTERER.cluster_districts_into_boroughs(world_state, _civic_hierarchy, _lexicon, rng)
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_PREMISES", 1.0, 49.0, "Physical premises & boroughs ready.")
 	_last_stage_durations_ms["SOCIETY_PREMISES"] = maxi(1, Time.get_ticks_msec() - t0_premises)
@@ -107,7 +107,7 @@ static func generate_city_society(
 	# -------------------------------------------------------------------------
 	var t0_citizens: int = Time.get_ticks_msec()
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_CITIZENS", 0.0, 50.0, "Pass 5: Hydrating citizens into households...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	await CITIZEN_HYDRATOR.run(
 		physical_state,
 		_demographics,
@@ -130,7 +130,7 @@ static func generate_city_society(
 	# -------------------------------------------------------------------------
 	var t0_dunbar: int = Time.get_ticks_msec()
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_DUNBAR", 0.05, 86.0, "Pass 6: Weaving social relationship graphs...")
-	await Engine.get_main_loop().process_frame
+	await _await_frame_if_available()
 	DUNBAR_WEAVER.run(physical_state, rng)
 	_emit_sub_progress(on_progress, stage_tagged_progress, "SOCIETY_DUNBAR", 1.0, 100.0, "Social relationship graphs complete.")
 	_last_stage_durations_ms["SOCIETY_DUNBAR"] = maxi(1, Time.get_ticks_msec() - t0_dunbar)
@@ -138,7 +138,7 @@ static func generate_city_society(
 	var elapsed: int = Time.get_ticks_msec() - start_ms
 	if not stage_tagged_progress and on_progress.is_valid():
 		on_progress.call(100.0, 100.0, "Living society complete in %d ms." % elapsed)
-		await Engine.get_main_loop().process_frame
+		await _await_frame_if_available()
 
 	SystemLogger.log_info("[SocialNetwork] Generation complete across all passes in %d ms." % elapsed)
 
@@ -158,6 +158,11 @@ static func generate_city_society(
 	else:
 		SystemLogger.log_warn("[SocialNetwork] CityAuditor did not write a report.")
 		push_warning("[SocialNetwork] CityAuditor did not write a report.")
+
+static func _await_frame_if_available() -> void:
+	var main_loop := Engine.get_main_loop()
+	if main_loop is SceneTree:
+		await (main_loop as SceneTree).process_frame
 
 static func _emit_sub_progress(
 	on_progress: Callable,

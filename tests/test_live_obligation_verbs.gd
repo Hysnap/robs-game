@@ -118,7 +118,7 @@ func _init() -> void:
 	var clears_on := int(settle_impact.get("settles_on_day", start_day))
 	assert(clears_on > start_day, "FAIL: CLEARING_BANK_CHEQUE settles_on_day (%d) must be after start_day (%d)." % [clears_on, start_day])
 
-	while int(world_state["metadata"]["current_sim_day"]) < clears_on:
+	while CalendarHelperScript.get_current_sim_day(world_state) < clears_on:
 		var tick_report := SimControllerScript.process_turn_cycle(world_state, [])
 		assert(tick_report.has("obligation_rollover"), "FAIL: process_turn_cycle missing obligation_rollover.")
 
@@ -134,7 +134,7 @@ func _init() -> void:
 		"obligation_type": "COMMODITY_FORWARD",
 		"principal": 4.0,
 		"balance": 4.0,
-		"created_day": int(world_state["metadata"]["current_sim_day"])
+		"created_day": CalendarHelperScript.get_current_sim_day(world_state)
 	})
 	var grain_settle_res := SimControllerScript.execute_directive(world_state, {
 		"verb": "SETTLE_OBLIGATION",

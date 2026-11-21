@@ -4,6 +4,7 @@ extends SceneTree
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
 const COMPOSER_CTRL = preload("res://systems/directive_composer_controller.gd")
 const ENGINE_RESULT = preload("res://systems/engine_result.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 func _init() -> void:
 	print("\n==========================================================================")
@@ -32,7 +33,7 @@ func _init() -> void:
 func _build_fixture_world_state() -> Dictionary:
 	return {
 		"metadata": {
-			"current_sim_day": 29219,
+			"current_sim_day": CalendarHelperScript.get_simulation_start_day(),
 			"current_day_tick": 1
 		},
 		"districts": {

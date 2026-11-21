@@ -3,6 +3,7 @@ class_name SocietyQueries
 extends RefCounted
 
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Returns an inspectable dossier for an establishment, applying continuous 0-100 Fog-of-War masking when player_context is supplied
 static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, player_context: Dictionary = {}) -> Dictionary:
@@ -37,11 +38,7 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 	var cat_code: String = docket["category_code"]
 
 	if current_sim_day <= 0:
-		var meta_rows = DBManager.query_rows("SELECT value FROM world_metadata WHERE key = 'current_sim_day';")
-		if not meta_rows.is_empty():
-			current_sim_day = int(meta_rows[0].get("value", 29219))
-		else:
-			current_sim_day = 29219
+		current_sim_day = CalendarHelperScript.get_current_sim_day()
 
 	var apply_fow: bool = not player_context.is_empty()
 	var known_res_lookup: Dictionary = {}
@@ -321,6 +318,7 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 
 ## Returns 1st-degree known contacts (kin, co-residents, and knowledge_pool acquaintances) for the crew, excluding 2nd-degree leaks
 static func get_known_contacts_for_crew(player_context: Dictionary, current_sim_day: int = 29219) -> Array[Dictionary]:
+	var effective_day: int = current_sim_day if current_sim_day > 0 else CalendarHelperScript.get_current_sim_day()
 	var crew_set: Dictionary = {}
 	var id_strings: Array[String] = []
 	for raw_id in player_context.get("crew_resident_ids", []):
@@ -408,7 +406,7 @@ static func get_known_contacts_for_crew(player_context: Dictionary, current_sim_
 		LEFT JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 		WHERE r.resident_id IN (%s) AND r.dod IS NULL
 		ORDER BY r.current_surname ASC, r.first_name ASC;
-	""" % [current_sim_day, ", ".join(contact_id_strs)])
+	""" % [effective_day, ", ".join(contact_id_strs)])
 
 	var contacts: Array[Dictionary] = []
 	for row in rows:
@@ -420,8 +418,9 @@ static func get_known_contacts_for_crew(player_context: Dictionary, current_sim_
 	return contacts
 
 ## Ensures reciprocal household peer/family edges exist in social_relationships for all living members of a household
-static func ensure_household_kinship_edges(household_id: int, sim_start_day: int = 29219) -> void:
+static func ensure_household_kinship_edges(household_id: int, sim_start_day: int = 0) -> void:
 	assert(household_id > 0, "FATAL: [SocietyQueries] household_id must be positive.")
+	var effective_start_day: int = sim_start_day if sim_start_day > 0 else CalendarHelperScript.get_simulation_start_day()
 	var members: Array = DBManager.query_rows("""
 		SELECT resident_id
 		FROM residents
@@ -446,7 +445,7 @@ static func ensure_household_kinship_edges(household_id: int, sim_start_day: int
 					from_resident_id, to_resident_id, relationship_type_id,
 					context_establishment_id, affinity_score, valid_from, valid_to, change_reason_id
 				) VALUES (%d, %d, %d, NULL, 0.90, %d, NULL, %d);
-			""" % [a, b, rel_family_id, sim_start_day, reason_id])
+			""" % [a, b, rel_family_id, effective_start_day, reason_id])
 
 	if not statements.is_empty():
 		DBManager.execute_batch(statements)
@@ -469,11 +468,12 @@ static func get_establishment_headcount(estab_id: int) -> int:
 	return int(rows[0].get("staff_count", 0))
 
 ## Queries the database for eligible young adult kinship clusters within a district using temporal DOB bounds
-static func find_kinship_crew_candidates(district_id: String, min_age: int = 18, max_age: int = 26, current_sim_day: int = 29219) -> Array:
+static func find_kinship_crew_candidates(district_id: String, min_age: int = 18, max_age: int = 26, current_sim_day: int = 0) -> Array:
 	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
+	var effective_day: int = current_sim_day if current_sim_day > 0 else CalendarHelperScript.get_current_sim_day()
 	
-	var dob_max: int = current_sim_day - int(round(float(min_age) * 365.25))
-	var dob_min: int = current_sim_day - int(round(float(max_age + 1) * 365.25))
+	var dob_max: int = effective_day - int(round(float(min_age) * 365.25))
+	var dob_min: int = effective_day - int(round(float(max_age + 1) * 365.25))
 
 	var sql := """
 		SELECT 
@@ -496,12 +496,13 @@ static func find_kinship_crew_candidates(district_id: String, min_age: int = 18,
 		  AND r.dod IS NULL
 		  AND r.dob <= %d AND r.dob >= %d
 		ORDER BY r.household_id, r.resident_id;
-	""" % [current_sim_day, district_id, dob_max, dob_min]
+	""" % [effective_day, district_id, dob_max, dob_min]
 	
 	return DBManager.query_rows(sql)
 
 ## Returns core profile, OCEAN traits, individual anchors, and primary livelihood for an operative
-static func get_resident_profile(resident_id: int, current_sim_day: int = 29219) -> Dictionary:
+static func get_resident_profile(resident_id: int, current_sim_day: int = 0) -> Dictionary:
+	var effective_day: int = current_sim_day if current_sim_day > 0 else CalendarHelperScript.get_current_sim_day()
 	var sql := """
 		SELECT 
 			r.resident_id,
@@ -527,7 +528,7 @@ static func get_resident_profile(resident_id: int, current_sim_day: int = 29219)
 		JOIN establishments e ON h.establishment_id = e.establishment_id
 		LEFT JOIN livelihood_contracts c ON r.resident_id = c.resident_id AND c.valid_to IS NULL
 		WHERE r.resident_id = %d;
-	""" % [current_sim_day, resident_id]
+	""" % [effective_day, resident_id]
 	
 	var rows: Array = DBManager.query_rows(sql)
 	return rows[0] if not rows.is_empty() else {}
@@ -540,6 +541,7 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 	var type_secondary_id: int = DBManager.get_label_id("CONTRACT_TYPE", "SECONDARY")
 	if type_secondary_id <= 0:
 		type_secondary_id = 1
+	var default_start_day: int = CalendarHelperScript.get_simulation_start_day()
 
 	var statements: Array[String] = []
 
@@ -556,7 +558,7 @@ static func bind_crew_contracts_and_activate(bindings: Array) -> bool:
 		var sched_id: int = int(b.get("schedule_window_id", 1))
 		var hours: float = float(b.get("weekly_hours", 20.0))
 		var rate: float = float(b.get("compensation_rate", 0.0))
-		var start_day: int = int(b.get("start_day", 29219))
+		var start_day: int = int(b.get("start_day", default_start_day))
 		var c_type_id: int = int(b.get("contract_type_id", type_secondary_id))
 
 		statements.append("""
@@ -1105,7 +1107,8 @@ static func _resolve_district_anchor_meters(district_rec: Dictionary) -> Vector2
 # ==============================================================================
 
 ## Returns presentation-ready crew family trees, marriages, births, and deaths gated by Fog of War
-static func get_crew_family_bible(player_context: Dictionary, current_sim_day: int = 29219) -> Dictionary:
+static func get_crew_family_bible(player_context: Dictionary, current_sim_day: int = 0) -> Dictionary:
+	var effective_day: int = current_sim_day if current_sim_day > 0 else CalendarHelperScript.get_current_sim_day()
 	var enterprise_title: String = "CREW_ENTERPRISE"
 	var ws_ref = player_context.get("world_state", null)
 	if ws_ref is Dictionary:
@@ -1147,7 +1150,7 @@ static func get_crew_family_bible(player_context: Dictionary, current_sim_day: i
 		JOIN establishments e ON h.establishment_id = e.establishment_id
 		WHERE r.resident_id IN (%s)
 		ORDER BY r.dob ASC, r.resident_id ASC;
-	""" % [current_sim_day, in_clause])
+	""" % [effective_day, in_clause])
 
 	# 2. Recorded kinship edges outbound from crew members
 	var kin_rows: Array = DBManager.query_rows("""

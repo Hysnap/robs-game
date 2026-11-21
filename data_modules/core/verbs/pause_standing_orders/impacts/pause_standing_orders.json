@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "entity_type": "VERB_IMPACT",
+    "verb": "PAUSE_STANDING_ORDERS",
+    "description": "Triggers the PAUSE_STANDING_ORDERS impact sink to stamp current_sim_day onto operations.paused_standing_orders_day.<resident_id>."
+  },
+  "metric_id": "PAUSE_STANDING_ORDERS",
+  "target_scope": "OPERATIONS_STAMP",
+  "delta": 1.0
+}

@@ -19,7 +19,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 	var ws: Dictionary = gs.world_state
 	var meta: Dictionary = ws.get("metadata", {})
 	var ops: Dictionary = ws.get("operations", {})
-	var current_day: int = int(meta.get("current_sim_day", _CalendarHelper.get_simulation_start_day()))
+	var current_day: int = _CalendarHelper.get_current_sim_day(ws)
 	var week_tick: int = int(meta.get("current_week_tick", _CalendarHelper.day_to_week(current_day)))
 	var dispatched_count: int = int(ops.get("total_dispatched_orders", 0))
 

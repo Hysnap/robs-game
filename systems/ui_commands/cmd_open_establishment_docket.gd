@@ -3,6 +3,7 @@ extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Opens a commercial, industrial, or civic establishment docket with Fog-of-War masking and summary projection
 static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
@@ -17,7 +18,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 
 	var gs = ScenarioManifestManager.get_game_state()
 	var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
-	var current_sim_day: int = int(ws.get("metadata", {}).get("current_sim_day", 29219))
+	var current_sim_day: int = CalendarHelperScript.get_current_sim_day(ws)
 	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(ws)
 
 	var raw_docket: Dictionary = SocietyQueriesScript.get_establishment_docket(estab_id, current_sim_day, intel_ctx)

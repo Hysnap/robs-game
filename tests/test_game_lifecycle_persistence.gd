@@ -7,6 +7,7 @@ const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootst
 const SIM_CONTROLLER = preload("res://systems/sim_controller.gd")
 const SAVE_MANAGER = preload("res://systems/save_manager.gd")
 const SCENARIO_MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
+const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
 func _init() -> void:
 	print("\n========================================================")
@@ -45,9 +46,9 @@ func _init() -> void:
 
 	# 4. Advance Simulation Turn Cycle
 	print("\n[STEP 3] Advancing simulation turn cycle...")
-	var day_start: int = int(world_state["metadata"]["current_sim_day"])
+	var day_start: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 	var _cycle_result: Dictionary = SIM_CONTROLLER.process_turn_cycle(world_state, [])
-	var day_after: int = int(world_state["metadata"]["current_sim_day"])
+	var day_after: int = CALENDAR_HELPER.get_current_sim_day(world_state)
 
 	assert(day_after == day_start + 1, "FAIL: SimController did not advance sim day by 1 (%d -> %d)." % [day_start, day_after])
 	print("  ✓ Sim day advanced cleanly: %d -> %d" % [day_start, day_after])
@@ -82,7 +83,7 @@ func _init() -> void:
 
 	# 7. Assert Post-Reload Invariants
 	print("\n[STEP 6] Asserting post-reload invariants across disk and SQLite...")
-	var loaded_day: int = int(restored_state.get("metadata", {}).get("current_sim_day", 0))
+	var loaded_day: int = CALENDAR_HELPER.get_current_sim_day(restored_state)
 	assert(loaded_day == day_after, "FAIL: Loaded current_sim_day (%d) does not match expected (%d)." % [loaded_day, day_after])
 	print("  ✓ Persisted temporal day preserved: %d" % loaded_day)
 

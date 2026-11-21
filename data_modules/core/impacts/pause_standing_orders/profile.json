@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "entity_type": "METRIC_PROFILE",
+    "version": "1.0.0",
+    "description": "Stamps current_sim_day onto operations.paused_standing_orders_day.<resident_id> so recurring standing orders are ignored for that single run."
+  },
+  "metric_id": "PAUSE_STANDING_ORDERS",
+  "target_scope": "OPERATIONS_STAMP",
+  "state_field": "paused_standing_orders_day",
+  "tuning": {
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 999999.0,
+    "default_baseline": 0.0
+  }
+}

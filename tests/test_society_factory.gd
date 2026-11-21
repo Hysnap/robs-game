@@ -4,12 +4,13 @@ extends RefCounted
 
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const SOCIAL_NETWORK_GENERATOR = preload("res://systems/social_network_generator.gd")
+const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 ## Generates a schema-compliant mock city and living society in SQLite for headless tests.
 ## Returns a standard world_state dictionary ready for simulation execution.
 static func create_test_world(grid_w: int = 2, grid_h: int = 2, seed_id: String = "test-factory-seed") -> Dictionary:
 	var mock_world: Dictionary = {"districts": {}}
-	var start_sim_day: int = 29219 # 1980-01-01
+	var start_sim_day: int = CalendarHelperScript.get_simulation_start_day()
 
 	var names: Array[String] = [
 		"Aston", "Nechells", "Highgate", "Sparkbrook", 
