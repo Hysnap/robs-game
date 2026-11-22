@@ -39,6 +39,8 @@ func _ready() -> void:
 	_rebuild_composer_options()
 
 func _build_layout() -> void:
+	if _review_panel != null:
+		return
 	# 1. Selected Mandate Review & Intervention Card
 	_review_panel = PanelContainer.new()
 	_review_panel.name = "SelectedMandateReviewPanel"
@@ -195,14 +197,14 @@ func _build_layout() -> void:
 	comp_vbox.add_child(submit_btn)
 
 func set_allocator_catalog(catalog: Dictionary) -> void:
+	_build_layout()
 	_catalog = catalog
-	if _assignee_opt != null:
-		_rebuild_composer_options()
+	_rebuild_composer_options()
 
 func set_selected_mandate_review(review: Dictionary) -> void:
+	_build_layout()
 	_review_data = review
-	if _review_panel != null:
-		_refresh_review_panel()
+	_refresh_review_panel()
 
 func _refresh_review_panel() -> void:
 	if _review_panel == null:
@@ -339,6 +341,7 @@ func _toggle_axis_value(axis_key: String, val: Variant) -> void:
 func _on_submit_mandate_pressed() -> void:
 	var title_txt: String = _title_edit.text.strip_edges() if _title_edit != null else ""
 	var spec: Dictionary = {
+		"org_id": "ORG:CREW_ENTERPRISE",
 		"title": title_txt,
 		"mandate_mode": str(_mode_opt.get_selected_metadata()) if _mode_opt.selected >= 0 else "CASHFLOW",
 		"planning_horizon": str(_horizon_opt.get_selected_metadata()) if _horizon_opt.selected >= 0 else "MONTH",

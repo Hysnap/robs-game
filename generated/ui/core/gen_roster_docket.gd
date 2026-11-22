@@ -62,6 +62,32 @@ func build_ui() -> void:
 	box_crew_header.add_child(HSeparator.new())
 	add_child(box_crew_header)
 
+	# --- Section: org_hierarchy_section ---
+	var sec_org_hierarchy_section := VBoxContainer.new()
+	sec_org_hierarchy_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sec_org_hierarchy_section.add_theme_constant_override("separation", 2)
+	var hdr_org_hierarchy_section := Label.new()
+	hdr_org_hierarchy_section.text = "[ " + tr("UI_ORG_HIERARCHY_HDR").to_upper() + " ]"
+	hdr_org_hierarchy_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_org_hierarchy_section.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_org_hierarchy_section.add_theme_font_override("font", mono_font)
+	hdr_org_hierarchy_section.add_theme_color_override("font_color", clr_blue)
+	sec_org_hierarchy_section.add_child(hdr_org_hierarchy_section)
+	var sep_org_hierarchy_section := HSeparator.new()
+	sec_org_hierarchy_section.add_child(sep_org_hierarchy_section)
+	add_child(sec_org_hierarchy_section)
+
+	var nav_script_personnel_hierarchy_nav := preload("res://scenes/ui/components/hierarchy_navigator.gd")
+	var nav_personnel_hierarchy_nav := nav_script_personnel_hierarchy_nav.new()
+	nav_personnel_hierarchy_nav.name = "personnel_hierarchy_nav"
+	nav_personnel_hierarchy_nav.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if has_signal("item_selected"):
+		nav_personnel_hierarchy_nav.item_selected.connect(func(route: String, key: Variant) -> void: emit_signal("item_selected", route, key))
+	if has_signal("action_clicked"):
+		nav_personnel_hierarchy_nav.action_clicked.connect(func(code: String, payload: Dictionary) -> void: emit_signal("action_clicked", code, payload))
+	_value_labels["personnel_hierarchy_nav"] = nav_personnel_hierarchy_nav
+	add_child(nav_personnel_hierarchy_nav)
+
 	# --- Section: operative_list_section ---
 	var sec_operative_list_section := VBoxContainer.new()
 	sec_operative_list_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -130,6 +156,11 @@ func bind_data(data: Dictionary) -> void:
 			_value_labels["crew_header_subtitle"].text = str(data["home_district_name"]).to_upper()
 		else:
 			_value_labels["crew_header_subtitle"].text = ""
+	if _value_labels.has("personnel_hierarchy_nav"):
+		var ctrl = _value_labels["personnel_hierarchy_nav"]
+		if ctrl != null and ctrl.has_method("set_tree_root"):
+			var tree_data = data.get("org_hierarchy_tree", {})
+			ctrl.set_tree_root(tree_data if tree_data is Dictionary else {})
 	if _value_labels.has("operative_cards"):
 		var ctrl = _value_labels["operative_cards"]
 		if ctrl is Container:

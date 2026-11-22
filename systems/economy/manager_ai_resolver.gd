@@ -4,6 +4,7 @@ extends RefCounted
 
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
 const OrgMandateManagerScript = preload("res://systems/economy/org_mandate_manager.gd")
+const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 const ConditionEvaluatorScript = preload("res://systems/condition_evaluator.gd")
 const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
@@ -200,6 +201,44 @@ static func evaluate_reporting_and_escalation(
 		"report_token": report_token
 	}
 	return _apply_hooks("on_reporting_evaluated", result, {"resident": resident, "mandate": mandate, "kpis": kpis, "profile": p})
+
+## Evaluates whether a mandate's spatial cohort targets unscouted districts ("planning with hope") and prioritizes SCOUT/INVESTIGATE
+static func plan_mandate_reconnaissance(world_state: Dictionary, mandate: Dictionary) -> Dictionary:
+	var scope_filter: Dictionary = mandate.get("scope_filter", {}) if mandate.get("scope_filter", null) is Dictionary else {}
+	var spatial_list: Array = scope_filter.get("spatial", ["*"]) if scope_filter.get("spatial", null) is Array else ["*"]
+	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(world_state)
+	var observers: Array = intel_ctx.get("observers", [])
+	var districts: Dictionary = world_state.get("districts", {})
+
+	var candidate_ids: Array[String] = []
+	if spatial_list.has("*"):
+		for d_key in districts.keys():
+			candidate_ids.append(str(d_key))
+	else:
+		for s_val in spatial_list:
+			var d_str: String = str(s_val).strip_edges()
+			if not d_str.is_empty():
+				candidate_ids.append(d_str)
+
+	candidate_ids.sort()
+	var unscouted: Array[String] = []
+	for d_id in candidate_ids:
+		var score: float = IntelManagerScript.get_collective_score(world_state, observers, "DISTRICT", d_id)
+		if not IntelManagerScript.is_entity_known(score, "DISTRICT"):
+			unscouted.append(d_id)
+
+	var requires_recon: bool = not unscouted.is_empty()
+	var priority_verbs: Array[String] = []
+	if requires_recon:
+		priority_verbs.append("SCOUT")
+		priority_verbs.append("INVESTIGATE")	
+	var result: Dictionary = {
+		"mandate_id": int(mandate.get("mandate_id", 0)),
+		"requires_recon_first": requires_recon,
+		"unscouted_districts": unscouted,
+		"priority_verbs": priority_verbs
+	}
+	return _apply_hooks("on_mandate_recon_planned", result, {"world_state": world_state, "mandate": mandate})
 
 ## Resolves dyadic interaction when two managers' 4-axis mandate scopes overlap via ConditionEvaluator rules
 static func resolve_dyadic_mandate_collision(
