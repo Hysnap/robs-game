@@ -46,6 +46,10 @@ var lbl_hdr_telemetry: Label
 var btn_pin: Button
 var btn_tear: Button
 
+var _target_search_edit: LineEdit
+var _location_search_edit: LineEdit
+var _lbl_standing_warning: Label
+
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
 var _cached_targets_for_verb: Array[Dictionary] = []
@@ -130,10 +134,16 @@ func _ready() -> void:
 		opt_category.item_selected.connect(_on_category_selected)
 	if opt_target:
 		opt_target.item_selected.connect(func(_idx): _recalculate_estimate())
+	if opt_who:
+		opt_who.item_selected.connect(func(_idx): _refresh_standing_order_warning())
 	if opt_where_filter:
 		opt_where_filter.item_selected.connect(_on_where_filter_selected)
 	if opt_where:
 		opt_where.item_selected.connect(_on_where_location_selected)
+
+	_ensure_dynamic_filter_controls()
+	_configure_scrollable_popups()
+	_populate_default_verbs()
 
 	_populate_default_verbs()
 	_sync_simulation_data()
@@ -190,18 +200,25 @@ func _populate_default_verbs() -> void:
 		push_error("[StickyOrderPad FATAL] DirectiveComposerController has 0 registered verbs mounted.")
 		return
 
-	var idx: int = 0
+	var verb_entries: Array[Dictionary] = []
 	for verb_code in registered:
 		var token_key := "UI_VERB_" + verb_code
 		var display_label := tr(token_key)
-		if display_label == token_key:
+		if display_label.is_empty() or display_label == token_key:
 			token_key = "VERB_" + verb_code
 			display_label = tr(token_key)
-			if display_label == token_key:
-				display_label = verb_code.to_upper()
+			if display_label.is_empty() or display_label == token_key:
+				display_label = verb_code.replace("_", " ").capitalize()
+		verb_entries.append({"code": verb_code, "label": display_label})
 
-		opt_verb.add_item(display_label, idx)
-		opt_verb.set_item_metadata(idx, verb_code)
+	verb_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["label"]).nocasecmp_to(str(b["label"])) < 0
+	)
+
+	var idx: int = 0
+	for entry in verb_entries:
+		opt_verb.add_item(str(entry["label"]), idx)
+		opt_verb.set_item_metadata(idx, str(entry["code"]))
 		idx += 1
 
 ## Dynamically adapts form slot visibility, labels, and bounds based on verb layout config
@@ -257,7 +274,7 @@ func _apply_form_layout_for_verb(verb_token: String) -> void:
 	opt_contact.visible = bool(contact_cfg.get("visible", false))
 
 	# 5. Telemetry Slot
-	slot_telemetry.visible = target_visible
+	slot_telemetry.visible = DirectiveComposerControllerScript.should_show_telemetry(verb_token)
 
 ## Ingests simulation state and populates form elements
 func _sync_simulation_data() -> void:
@@ -325,14 +342,21 @@ func _populate_actor_options(ws: Dictionary) -> void:
 		opt_who.set_item_metadata(0, "PLAYER")
 		return
 
+	var sorted_actors: Array[Dictionary] = crew_actors.duplicate()
+	sorted_actors.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("name", "")).nocasecmp_to(str(b.get("name", ""))) < 0
+	)
+
 	var idx: int = 0
-	for actor in crew_actors:
+	for actor in sorted_actors:
 		var a_name: String = str(actor.get("name", ""))
 		var a_role: String = str(actor.get("role", ""))
 		var display_str: String = "%s (%s)" % [a_name, a_role.capitalize()] if not a_role.is_empty() else a_name
 		opt_who.add_item(display_str, idx)
 		opt_who.set_item_metadata(idx, str(actor.get("id", "")))
 		idx += 1
+
+	_refresh_standing_order_warning()
 
 func _refresh_targets_for_active_verb(ws: Dictionary) -> void:
 	var verb := _get_active_verb()
@@ -353,8 +377,7 @@ func _populate_category_options() -> void:
 
 	var idx: int = 1
 	for cat in categories:
-		var token_key := "UI_CAT_" + cat
-		opt_category.add_item(tr(token_key), idx)
+		opt_category.add_item(_format_category_hierarchy_label(cat), idx)
 		opt_category.set_item_metadata(idx, cat)
 		idx += 1
 
@@ -367,19 +390,34 @@ func _apply_category_filter() -> void:
 	if opt_category.item_count > 0:
 		selected_cat = str(opt_category.get_item_metadata(opt_category.selected))
 
+	var query: String = _target_search_edit.text.strip_edges().to_lower() if _target_search_edit != null else ""
 	var filtered := DirectiveComposerControllerScript.filter_targets_by_category(_cached_targets_for_verb, selected_cat)
-	if filtered.is_empty():
+
+	var decorated: Array[Dictionary] = []
+	for item in filtered:
+		var token: String = str(item.get("label_token", item.get("id", "")))
+		var label_str: String = str(item.get("display", "")).strip_edges()
+		if label_str.is_empty():
+			var translated := tr(token)
+			label_str = translated if (not translated.is_empty() and translated != token) else str(item.get("id", "")).replace("_", " ").capitalize()
+		if not query.is_empty() and not label_str.to_lower().contains(query):
+			continue
+		decorated.append({"label": label_str, "item": item})
+
+	if decorated.is_empty():
 		opt_target.add_item(tr("UI_TARGET_NONE_AVAILABLE"), 0)
 		opt_target.set_item_metadata(0, {"id": "", "unit_cost": 0.0})
 		_recalculate_estimate()
 		return
 
+	decorated.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["label"]).nocasecmp_to(str(b["label"])) < 0
+	)
+
 	var idx: int = 0
-	for item in filtered:
-		var token: String = str(item.get("label_token", item.get("id", "")))
-		var label_str: String = str(item.get("display", tr(token)))
-		opt_target.add_item(label_str, idx)
-		opt_target.set_item_metadata(idx, item)
+	for entry in decorated:
+		opt_target.add_item(str(entry["label"]), idx)
+		opt_target.set_item_metadata(idx, entry["item"])
 		idx += 1
 
 	_recalculate_estimate()
@@ -418,10 +456,14 @@ func _apply_location_filter() -> void:
 	if opt_where_filter.item_count > 0:
 		filter_type = str(opt_where_filter.get_item_metadata(opt_where_filter.selected))
 
+	var query: String = _location_search_edit.text.strip_edges().to_lower() if _location_search_edit != null else ""
 	var filtered := DirectiveComposerControllerScript.filter_locations(_cached_locations, filter_type)
 	var idx: int = 0
 	for loc in filtered:
-		opt_where.add_item(loc["display"], idx)
+		var disp: String = str(loc.get("display", ""))
+		if not query.is_empty() and not disp.to_lower().contains(query):
+			continue
+		opt_where.add_item(disp, idx)
 		opt_where.set_item_metadata(idx, loc)
 		idx += 1
 
@@ -461,6 +503,10 @@ func _select_where_by_id(target_id: String) -> void:
 			return
 
 func _on_verb_selected(_idx: int) -> void:
+	if _target_search_edit:
+		_target_search_edit.text = ""
+	if _location_search_edit:
+		_location_search_edit.text = ""
 	var verb := _get_active_verb()
 	var ws: Dictionary = _get_world_state()
 	_apply_form_layout_for_verb(verb)
@@ -669,6 +715,75 @@ func _apply_ink_color_recursive(node: Node, ink_color: Color) -> void:
 
 	for child in node.get_children():
 		_apply_ink_color_recursive(child, ink_color)
+
+func _ensure_dynamic_filter_controls() -> void:
+	var target_vbox := get_node_or_null("VBox/NotesGrid/Slot_Target/VBox") as VBoxContainer
+	if target_vbox != null and _target_search_edit == null:
+		_target_search_edit = LineEdit.new()
+		_target_search_edit.placeholder_text = tr("UI_SEARCH_FILTER")
+		_target_search_edit.clear_button_enabled = true
+		_target_search_edit.text_changed.connect(func(_t: String): _apply_category_filter())
+		target_vbox.add_child(_target_search_edit)
+		target_vbox.move_child(_target_search_edit, opt_target.get_index())
+
+	var loc_vbox := get_node_or_null("VBox/NotesGrid/Slot_Location/VBox") as VBoxContainer
+	if loc_vbox != null and _location_search_edit == null:
+		_location_search_edit = LineEdit.new()
+		_location_search_edit.placeholder_text = tr("UI_SEARCH_FILTER")
+		_location_search_edit.clear_button_enabled = true
+		_location_search_edit.text_changed.connect(func(_t: String):
+			_apply_location_filter()
+			_refresh_contact_options()
+		)
+		loc_vbox.add_child(_location_search_edit)
+		loc_vbox.move_child(_location_search_edit, opt_where.get_index())
+
+	var actor_vbox := get_node_or_null("VBox/NotesGrid/Slot_Actor/VBox") as VBoxContainer
+	if actor_vbox != null and _lbl_standing_warning == null:
+		_lbl_standing_warning = Label.new()
+		_lbl_standing_warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_lbl_standing_warning.visible = false
+		_lbl_standing_warning.add_theme_color_override("font_color", Color("#9a3412"))
+		actor_vbox.add_child(_lbl_standing_warning)
+
+func _configure_scrollable_popups() -> void:
+	const MAX_TEN_ITEM_POPUP_HEIGHT := 280
+	var dropdowns: Array[OptionButton] = [
+		opt_verb, opt_category, opt_target, opt_rail, opt_postal,
+		opt_who, opt_where_filter, opt_where, opt_contact
+	]
+	for dd in dropdowns:
+		if dd != null:
+			var popup: PopupMenu = dd.get_popup()
+			if popup != null:
+				popup.max_size = Vector2i(0, MAX_TEN_ITEM_POPUP_HEIGHT)
+
+func _format_category_hierarchy_label(cat_path: String) -> String:
+	var segments: PackedStringArray = cat_path.split("/", false)
+	var out: PackedStringArray = []
+	for seg in segments:
+		var clean: String = seg.strip_edges().to_upper()
+		if clean.is_empty():
+			continue
+		var tok := "UI_CAT_" + clean
+		var translated := tr(tok)
+		if not translated.is_empty() and translated != tok:
+			out.append(translated)
+		else:
+			out.append(clean.replace("_", " ").capitalize())
+	return " / ".join(out)
+
+func _refresh_standing_order_warning() -> void:
+	if _lbl_standing_warning == null or opt_who == null or opt_who.item_count == 0:
+		return
+	var who_meta: Variant = opt_who.get_item_metadata(opt_who.selected)
+	var normalized_id: Variant = DirectiveComposerControllerScript._normalize_entity_id(who_meta)
+	var ws: Dictionary = _get_world_state()
+	var sim_day: int = DirectiveComposerControllerScript._resolve_current_sim_day(ws)
+	var has_so: bool = DirectiveComposerControllerScript._has_active_standing_orders_for_actor(ws, normalized_id, sim_day)
+	_lbl_standing_warning.visible = has_so
+	if has_so:
+		_lbl_standing_warning.text = tr("UI_WARN_STANDING_ORDER_CONFLICT")
 
 func _on_drag_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

@@ -36,7 +36,36 @@ static func resolve(config: Dictionary, world_state: Dictionary, category_filter
 	if not estab_ids.is_empty():
 		scope_clauses.append("(recipient_scope = 'ESTABLISHMENT' AND recipient_id IN (%s))" % ", ".join(estab_ids))
 
-	if scope_clauses.is_empty():
+	# Always expose optimistic ("planning with hope") instrument-class targets so players can
+	# stage deposit/encash runs at a counter without requiring pre-existing inventory in hand.
+	const OPTIMISTIC_INSTRUMENTS: Array[Dictionary] = [
+		{"id": "ALL_REDEEMABLE_INSTRUMENTS", "label_token": "UI_INSTR_ALL_REDEEMABLE", "category": "INSTRUMENT"},
+		{"id": "CHEQUE", "label_token": "UI_INSTR_CHEQUE", "category": "INSTRUMENT"},
+		{"id": "GIRO_VOUCHER", "label_token": "UI_INSTR_GIRO_VOUCHER", "category": "INSTRUMENT"},
+		{"id": "POSTAL_ORDER", "label_token": "UI_INSTR_POSTAL_ORDER", "category": "INSTRUMENT"}
+	]
+	for opt in OPTIMISTIC_INSTRUMENTS:
+		var opt_type: String = str(opt["id"])
+		if not allowed_types.is_empty() and opt_type != "ALL_REDEEMABLE_INSTRUMENTS" and not allowed_types.has(opt_type):
+			continue
+		if not cat_upper.is_empty() and cat_upper != "ALL" and cat_upper != "INSTRUMENT" and opt_type != cat_upper:
+			continue
+		var tok: String = str(opt["label_token"])
+		var disp: String = str(TranslationServer.translate(tok))
+		if disp.is_empty() or disp == tok:
+			disp = opt_type.replace("_", " ").capitalize()
+		results.append({
+			"id": opt_type,
+			"label_token": tok,
+			"display": disp,
+			"category": "INSTRUMENT",
+			"unit_cost": 0.0
+		})
+
+	if scope_clauses.is_empty() or not DB_MGR.is_database_open():
+		results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return str(a.get("display", "")).nocasecmp_to(str(b.get("display", ""))) < 0
+		)
 		return results
 
 	var sql := """
@@ -60,13 +89,23 @@ static func resolve(config: Dictionary, world_state: Dictionary, category_filter
 		var payload: Dictionary = parsed if parsed is Dictionary else {}
 		var val := float(payload.get("amount", payload.get("closing_balance", row.get("enclosed_cash", 0.0))))
 
+		var subj_tok: String = str(row.get("subject_token", "UI_MAIL_SUBJECT_DEFAULT"))
+		var subj_disp: String = str(TranslationServer.translate(subj_tok))
+		if subj_disp.is_empty() or subj_disp == subj_tok:
+			subj_disp = item_type.replace("_", " ").capitalize()
+
 		results.append({
 			"id": str(row["mail_id"]),
-			"label_token": str(row.get("subject_token", "UI_MAIL_SUBJECT_DEFAULT")),
+			"label_token": subj_tok,
+			"display": "#%s %s" % [str(row["mail_id"]), subj_disp],
 			"category": item_type,
 			"unit_cost": val,
 			"mail_id": int(row["mail_id"]),
 			"payload": payload
 		})
+
+	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display", "")).nocasecmp_to(str(b.get("display", ""))) < 0
+	)
 
 	return results

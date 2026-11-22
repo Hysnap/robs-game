@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS districts (
 
 CREATE TABLE IF NOT EXISTS organizations (
 	org_id TEXT PRIMARY KEY,
+	parent_org_id TEXT DEFAULT NULL,
+	autonomy_mode TEXT NOT NULL DEFAULT 'DIRECT',
 	display_name TEXT NOT NULL,
 	org_type TEXT NOT NULL,
 	legal_status TEXT NOT NULL DEFAULT 'FORMAL',
@@ -43,7 +45,8 @@ CREATE TABLE IF NOT EXISTS organizations (
 	hq_establishment_id INTEGER DEFAULT NULL,
 	valid_from INTEGER NOT NULL,
 	valid_to INTEGER,
-	change_reason_id INTEGER
+	change_reason_id INTEGER,
+	FOREIGN KEY (parent_org_id) REFERENCES organizations(org_id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS establishments (

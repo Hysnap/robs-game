@@ -47,6 +47,20 @@
           "token": "UI_BTN_OPEN_ORDER_PAD",
           "action_signal": "action_clicked",
           "emit_args": "\"open_order_composer\""
+        },
+        {
+          "id": "btn_save_standing_order",
+          "type": "BUTTON",
+          "token": "UI_BTN_SAVE_STANDING_ORDER",
+          "action_signal": "action_clicked",
+          "emit_args": "\"save_standing_order\""
+        },
+        {
+          "id": "btn_pause_standing_orders",
+          "type": "BUTTON",
+          "token": "UI_BTN_PAUSE_STANDING_ORDERS",
+          "action_signal": "action_clicked",
+          "emit_args": "\"pause_standing_orders\""
         }
       ]
     },

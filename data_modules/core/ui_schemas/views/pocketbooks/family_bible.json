@@ -22,7 +22,7 @@
       "rows": [
         {
           "id": "lbl_crew_lineages",
-          "type": "LABEL",
+          "type": "TEXT_METRIC",
           "token": "UI_SEC_FAMILY_LINEAGES",
           "autowrap": true
         },
@@ -42,7 +42,7 @@
       "rows": [
         {
           "id": "lbl_vital_records",
-          "type": "LABEL",
+          "type": "TEXT_METRIC",
           "token": "UI_SEC_VITAL_RECORDS",
           "autowrap": true
         },
@@ -55,13 +55,8 @@
     },
     {
       "id": "inscriptions_section",
-      "rows": [
-        {
-          "id": "family_notes",
-          "type": "INSCRIPTIONS",
-          "token": "UI_SEC_FAMILY_NOTES"
-        }
-      ]
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FAMILY_NOTES"
     },
     {
       "id": "bible_signals",

@@ -55,15 +55,32 @@ static func resolve(config: Dictionary, world_state: Dictionary, category_filter
 		if vis == "PRIVATE" and linked_obl_id == 0:
 			continue
 
+		var title_tok: String = str(ev.get("title_token", "")).strip_edges()
+		if title_tok.is_empty():
+			title_tok = "UI_EVENT_DEFAULT"
+		var translated_title: String = TranslationServer.translate(title_tok)
+		if translated_title.is_empty() or translated_title == title_tok:
+			var raw_title: String = str(ev.get("title", ev.get("description", ""))).strip_edges()
+			translated_title = raw_title if not raw_title.is_empty() else ev_type.replace("_", " ").capitalize()
+
+		var s_day: int = int(ev.get("start_day", current_day))
+		var e_day: int = int(ev.get("end_day", s_day))
+		var display_label: String = "%s (Day %d)" % [translated_title, s_day] if e_day <= s_day else "%s (Days %d–%d)" % [translated_title, s_day, e_day]
+
 		results.append({
 			"id": str(ev_id),
-			"label_token": str(ev.get("title_token", "UI_EVENT_DEFAULT")),
+			"label_token": title_tok,
+			"display": display_label,
 			"category": ev_type,
 			"target_node_id": str(ev.get("location_id", "")),
 			"event_id": ev_id,
 			"obligation_id": linked_obl_id,
-			"start_day": int(ev.get("start_day", current_day)),
-			"end_day": int(ev.get("end_day", current_day))
+			"start_day": s_day,
+			"end_day": e_day
 		})
+
+	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("display", "")).nocasecmp_to(str(b.get("display", ""))) < 0
+	)
 
 	return results

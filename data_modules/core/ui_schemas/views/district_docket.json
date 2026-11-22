@@ -133,13 +133,8 @@
     {
       "id": "field_observations",
       "header_token": "UI_SEC_FIELD_OBSERVATIONS",
-      "color": "body",
-      "rows": [
-        {
-          "id": "observations_box",
-          "type": "INSCRIPTIONS_CONTAINER"
-        }
-      ]
+      "type": "INSCRIPTIONS",
+      "color": "body"
     },
     {
       "id": "district_docket_signals",

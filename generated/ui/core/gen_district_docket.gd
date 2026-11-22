@@ -242,27 +242,18 @@ func build_ui() -> void:
 	_value_labels["heat"] = val_heat
 	add_child(row_heat)
 
-	# --- Section: field_observations ---
-	var sec_field_observations := VBoxContainer.new()
-	sec_field_observations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sec_field_observations.add_theme_constant_override("separation", 2)
+	# --- Inscriptions Container: field_observations ---
 	var hdr_field_observations := Label.new()
 	hdr_field_observations.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
 	hdr_field_observations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hdr_field_observations.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hdr_field_observations.add_theme_font_override("font", mono_font)
 	hdr_field_observations.add_theme_color_override("font_color", clr_blue)
-	sec_field_observations.add_child(hdr_field_observations)
-	var sep_field_observations := HSeparator.new()
-	sec_field_observations.add_child(sep_field_observations)
-	add_child(sec_field_observations)
-
-	# --- Inscriptions Container ---
-	var insc_box_observations_box := VBoxContainer.new()
-	insc_box_observations_box.name = "observations_box"
-	insc_box_observations_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_value_labels["__inscriptions__"] = insc_box_observations_box
-	add_child(insc_box_observations_box)
+	add_child(hdr_field_observations)
+	var insc_list_field_observations := VBoxContainer.new()
+	insc_list_field_observations.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_field_observations
+	add_child(insc_list_field_observations)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("docket_header_title"):

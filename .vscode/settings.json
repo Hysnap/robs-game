@@ -17,10 +17,11 @@
     },
     "workbench.editorAssociations": {
         "*.gddoc": "gddoc",
-        "*.csv": "csv.editor",
+        "*.csv": "default",
         "*.tsv": "csv.editor",
         "*.tab": "csv.editor",
-        "*.psv": "csv.editor"
+        "*.psv": "csv.editor",
+        "*.copilotmd": "vscode.markdown.preview.editor"
     },
     "files.associations": {
         "*.gd": "gdscript",

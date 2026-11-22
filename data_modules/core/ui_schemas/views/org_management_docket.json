@@ -1,0 +1,122 @@
+{
+  "_meta": {
+    "target_class": "GenOrgManagementDocket",
+    "extends": "VBoxContainer",
+    "description": "Organization hierarchy, active 4-axis delegated mandates, managerial reports, and dyadic scope collisions."
+  },
+  "sections": [
+    {
+      "id": "header_section",
+      "header_token": "UI_ORG_CHART_TITLE",
+      "rows": [
+        {
+          "id": "org_header",
+          "type": "HEADER_BLOCK",
+          "field": "enterprise_title",
+          "subtitle_field": "cycle_summary",
+          "show_separator": true,
+          "autowrap": true
+        },
+        {
+          "id": "active_mandate_count",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_ACTIVE_MANDATES",
+          "field": "active_mandate_count",
+          "format": "INT"
+        },
+        {
+          "id": "arms_length_count",
+          "type": "TEXT_METRIC",
+          "token": "UI_LBL_ARMS_LENGTH_ORGS",
+          "field": "arms_length_count",
+          "format": "INT"
+        }
+      ]
+    },
+    {
+      "id": "org_hierarchy_section",
+      "header_token": "UI_ORG_HIERARCHY_HDR",
+      "rows": [
+        {
+          "id": "org_hierarchy_list",
+          "type": "LINKED_LIST",
+          "field": "organization_nodes",
+          "key_field": "org_id",
+          "target_route": "ORG_NODE_SELECTED",
+          "label_field": "display_name",
+          "sublabel_field": "status_summary",
+          "action_signal": "item_selected",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "active_mandates_section",
+      "header_token": "UI_ORG_MANDATES_HDR",
+      "rows": [
+        {
+          "id": "mandate_cards",
+          "type": "LINKED_LIST",
+          "field": "active_mandates",
+          "key_field": "mandate_id",
+          "target_route": "MANDATE_SELECTED",
+          "label_field": "title",
+          "sublabel_field": "scope_summary",
+          "action_signal": "item_selected",
+          "autowrap": true
+        },
+        {
+          "id": "btn_create_mandate",
+          "type": "BUTTON",
+          "token": "UI_BTN_CREATE_MANDATE",
+          "action_signal": "action_clicked",
+          "emit_args": "\"create_org_mandate\", {}"
+        },
+        {
+          "id": "btn_grant_assistance",
+          "type": "BUTTON",
+          "token": "UI_BTN_GRANT_ASSISTANCE",
+          "action_signal": "action_clicked",
+          "emit_args": "\"grant_mandate_assistance\", {}"
+        },
+        {
+          "id": "btn_revoke_mandate",
+          "type": "BUTTON",
+          "token": "UI_BTN_REVOKE_MANDATE",
+          "action_signal": "action_clicked",
+          "emit_args": "\"revoke_org_mandate\", {}"
+        }
+      ]
+    },
+    {
+      "id": "collisions_and_reports_section",
+      "header_token": "UI_ORG_COLLISIONS_HDR",
+      "rows": [
+        {
+          "id": "collision_cards",
+          "type": "LINKED_LIST",
+          "field": "dyadic_collisions",
+          "key_field": "collision_key",
+          "target_route": "COLLISION_SELECTED",
+          "label_field": "outcome_label",
+          "sublabel_field": "overlap_summary",
+          "action_signal": "item_selected",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "manager_memos_section",
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_MANAGER_MEMOS"
+    },
+    {
+      "id": "org_management_signals",
+      "type": "SIGNALS",
+      "signals": [
+        "action_clicked(action_code: String, payload: Dictionary)",
+        "item_selected(target_route: String, filter_key: Variant)"
+      ]
+    }
+  ]
+}

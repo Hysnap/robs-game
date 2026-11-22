@@ -10,11 +10,25 @@ const VerbRouterScript = preload("res://systems/verb_router.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 const SimControllerScript = preload("res://systems/sim_controller.gd")
 
+var _frame_count: int = 0
+var _executed: bool = false
+
 func _init() -> void:
 	print("\n--- [Test] Verifying Step 1B: Standing Orders, Planning Fat, Billy Issue & PAUSE_STANDING_ORDERS ---")
 
-	# 1. Generate standardized test society via TestSocietyFactory
-	var world_state: Dictionary = TestSocietyFactoryScript.create_test_world(2, 2, "standing-orders-billy-seed")
+func _process(_delta: float) -> bool:
+	if _executed:
+		return false
+	_frame_count += 1
+	if _frame_count < 2:
+		return false
+	_executed = true
+	_run_tests_async()
+	return false
+
+func _run_tests_async() -> void:
+	# 1. Generate standardized radial test society via TestSocietyFactory
+	var world_state: Dictionary = await TestSocietyFactoryScript.create_test_world(4, 4, "standing-orders-billy-seed")
 	var tbl_check: Array = DBManagerScript.query_rows(
 		"SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='standing_orders';"
 	)

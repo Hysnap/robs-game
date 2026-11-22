@@ -179,6 +179,8 @@ func get_display_lines() -> Array[String]:
 		]
 		if not contact.is_empty():
 			line += " [Contact: %s]" % contact
+		if not str(d.get("standing_order_warning", "")).is_empty():
+			line += " [%s]" % TranslationServer.translate("UI_BADGE_STANDING_CONFLICT")
 		display_queue.append(line)
 	return display_queue
 

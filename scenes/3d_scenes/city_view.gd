@@ -164,7 +164,8 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 	view_host.register_view("DIARY", ShellRegistryScript.instantiate_generated_view("gen_diary_log.gd", current_year))
 	view_host.register_view("ROSTER", ShellRegistryScript.instantiate_generated_view("gen_roster_docket.gd", current_year))
 	view_host.register_view("FAMILY_BIBLE", ShellRegistryScript.instantiate_generated_view("gen_family_bible.gd", current_year))
-
+	view_host.register_view("MANAGEMENT", ShellRegistryScript.instantiate_generated_view("gen_org_management_docket.gd", current_year))
+	
 	# Sub-Docket Inspection Views
 	view_host.register_view("ESTABLISHMENT_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_establishment_docket.gd", current_year))
 	view_host.register_view("RESIDENTIAL_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_residential_docket.gd", current_year))

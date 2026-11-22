@@ -7,7 +7,7 @@ const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const MANIFEST_MGR = preload("res://systems/scenario_manifest_manager.gd")
 const PIPELINE_HELPERS = preload("res://systems/action_pipeline/action_pipeline_helpers.gd")
 
-const VALID_SCOPES: Array[String] = ["RESIDENT", "ESTABLISHMENT", "ORG"]
+const VALID_SCOPES: Array[String] = ["RESIDENT", "ESTABLISHMENT", "ORG", "DISTRICT", "GLOBAL"]
 
 ## Parses a canonical "<SCOPE>:<ID>" string into { "scope": String, "id": String }
 static func parse_scoped_entity(scoped_ref: String) -> Dictionary:

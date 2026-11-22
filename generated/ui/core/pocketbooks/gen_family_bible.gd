@@ -94,22 +94,18 @@ func build_ui() -> void:
 	_value_labels["vital_records_list"] = list_vital_records_list
 	add_child(list_vital_records_list)
 
-	var row_family_notes := HBoxContainer.new()
-	row_family_notes.name = "family_notes"
-	row_family_notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var lbl_family_notes := Label.new()
-	lbl_family_notes.text = tr("UI_SEC_FAMILY_NOTES")
-	lbl_family_notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_family_notes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row_family_notes.add_child(lbl_family_notes)
-	var val_family_notes := Label.new()
-	val_family_notes.name = "family_notes_value"
-	val_family_notes.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	val_family_notes.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	val_family_notes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row_family_notes.add_child(val_family_notes)
-	_value_labels["family_notes"] = val_family_notes
-	add_child(row_family_notes)
+	# --- Inscriptions Container: inscriptions_section ---
+	var hdr_inscriptions_section := Label.new()
+	hdr_inscriptions_section.text = "[ " + tr("UI_SEC_FAMILY_NOTES").to_upper() + " ]"
+	hdr_inscriptions_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_inscriptions_section.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_inscriptions_section.add_theme_font_override("font", mono_font)
+	hdr_inscriptions_section.add_theme_color_override("font_color", clr_blue)
+	add_child(hdr_inscriptions_section)
+	var insc_list_inscriptions_section := VBoxContainer.new()
+	insc_list_inscriptions_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_inscriptions_section
+	add_child(insc_list_inscriptions_section)
 
 func bind_data(data: Dictionary) -> void:
 	if _value_labels.has("crew_lineages"):
@@ -151,3 +147,22 @@ func bind_data(data: Dictionary) -> void:
 				var items: Array = data["vital_records"]
 				for item in items:
 					ctrl.add_item(str(item))
+
+func inscribe_entry(entry: Dictionary) -> void:
+	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
+		return
+	var target_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+	if not target_box is Container:
+		return
+	var author: String = str(entry.get("author", ""))
+	var text_content: String = str(entry.get("text", ""))
+	var note_lbl := Label.new()
+	if not author.is_empty():
+		note_lbl.text = "[" + author + "] " + text_content
+	else:
+		note_lbl.text = text_content
+	note_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	target_box.add_child(note_lbl)

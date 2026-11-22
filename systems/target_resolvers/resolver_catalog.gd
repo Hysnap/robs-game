@@ -5,7 +5,7 @@ const DOMAIN_TOKEN := "COMMODITY"
 const ALIASES: Array[String] = ["RECIPE"]
 
 static func resolve(target_cat: Dictionary, world_state: Dictionary, verb_code: String) -> Array[Dictionary]:
-	var catalog_source: String = str(target_cat.get("catalog_source", "commodities"))
+	var catalog_source: String = str(target_cat.get("catalog_source", "commodity_registry"))
 	var catalog: Dictionary = world_state.get(catalog_source, {})
 	if catalog.is_empty():
 		push_warning("[ResolverCatalog] Catalog '%s' in world_state is empty for verb '%s'." % [catalog_source, verb_code])

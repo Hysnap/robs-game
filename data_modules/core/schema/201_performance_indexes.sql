@@ -79,3 +79,7 @@ CREATE INDEX IF NOT EXISTS idx_slots_cat ON workplace_job_slots (sector_category
 CREATE INDEX IF NOT EXISTS idx_standing_orders_resident ON standing_orders(assigned_resident_id, is_active, valid_to);
 
 CREATE INDEX IF NOT EXISTS idx_standing_orders_org ON standing_orders(org_id, is_active, valid_to);
+CREATE INDEX IF NOT EXISTS idx_organizations_parent ON organizations(parent_org_id);
+CREATE INDEX IF NOT EXISTS idx_org_mandates_org ON org_mandates(org_id, is_active, valid_to);
+CREATE INDEX IF NOT EXISTS idx_org_mandates_target_org ON org_mandates(target_org_id, is_active, valid_to);
+CREATE INDEX IF NOT EXISTS idx_org_mandates_manager ON org_mandates(manager_resident_id, is_active, valid_to);
