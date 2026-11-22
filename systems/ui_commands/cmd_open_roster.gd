@@ -3,9 +3,10 @@ extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+const HierarchyTreeProjectorScript = preload("res://systems/multilayer_info_loop/hierarchy_tree_projector.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
-## Switches to the Roster view and binds active crew members plus 1st-degree known contacts
+## Switches to the Roster view and binds personnel hierarchy roll-up, active crew, and 1st-degree known contacts
 static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
 	if view_host == null:
 		return
@@ -19,6 +20,7 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 	var home_id: String = str(ws.get("operations", {}).get("home_district_id", ""))
 	var home_dist_name: String = str(ws.get("districts", {}).get(home_id, {}).get("display_name", home_id))
 	var enterprise_title: String = str(ws.get("operations", {}).get("enterprise_name", "CREW_ENTERPRISE"))
+	var crew_org_id: String = str(ws.get("operations", {}).get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
 
 	var crew_source: Dictionary = ws.get("residents", {})
 	var crew_members: Array[Dictionary] = []
@@ -54,6 +56,12 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 			})
 
 	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(ws)
+	var org_tree: Dictionary = HierarchyTreeProjectorScript.project_player_org_tree(
+		ws,
+		intel_ctx,
+		crew_org_id
+	)
+
 	var raw_contacts: Array[Dictionary] = SocietyQueriesScript.get_known_contacts_for_crew(
 		intel_ctx,
 		current_sim_day
@@ -74,6 +82,7 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 	view_host.update_active_view_data({
 		"enterprise_title": enterprise_title,
 		"home_district_name": home_dist_name,
+		"org_hierarchy_tree": org_tree,
 		"crew_members": crew_members,
 		"known_contacts": known_contacts
 	})

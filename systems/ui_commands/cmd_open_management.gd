@@ -4,8 +4,9 @@ extends RefCounted
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _OrgMandateManager = preload("res://systems/economy/org_mandate_manager.gd")
 const _ManagerAIResolver = preload("res://systems/economy/manager_ai_resolver.gd")
+const _MandateCohortCatalog = preload("res://systems/economy/mandate_cohort_catalog.gd")
 
-## Switches to the Organization & Mandate Management view and binds hierarchy, mandates, and collisions
+## Switches to the Organization & Mandate Management view and binds hierarchy, cohort allocator, mandates, review detail, and collisions
 static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
 	if view_host == null:
 		return
@@ -53,11 +54,16 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 
 	var active_mandates_list: Array[Dictionary] = []
 	var active_raw: Array[Dictionary] = []
+	var first_active_id: int = 0
 	for m_id in mandates.keys():
 		var m = mandates[m_id]
 		if not (m is Dictionary) or not bool(m.get("is_active", true)):
 			continue
 		active_raw.append(m)
+		var m_int_id: int = int(m.get("mandate_id", m_id))
+		if first_active_id <= 0:
+			first_active_id = m_int_id
+
 		var mgr_id: int = int(m.get("manager_resident_id", 0))
 		var target_org: String = str(m.get("target_org_id", "")).strip_edges()
 		var owner_label: String = target_org if not target_org.is_empty() else str(residents.get(str(mgr_id), residents.get(mgr_id, {})).get("name", str(mgr_id)))
@@ -67,7 +73,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 		var lock_tok: String = "UI_STATUS_ASSISTANCE_OPEN" if assist_open else ("UI_STATUS_LOCKED" if locked else "UI_STATUS_OPEN")
 
 		active_mandates_list.append({
-			"mandate_id": int(m.get("mandate_id", m_id)),
+			"mandate_id": m_int_id,
 			"title": "%s (%s)" % [str(m.get("title", "")), owner_label],
 			"scope_summary": "%s | %s | %s | %s" % [
 				str(m.get("mandate_mode", "CASHFLOW")),
@@ -76,6 +82,14 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 				scope_str
 			]
 		})
+
+	var ui_state: Dictionary = ws.get("ui_state", {}) if ws.get("ui_state", null) is Dictionary else {}
+	var selected_mandate_id: int = int(payload.get("mandate_id", ui_state.get("selected_mandate_id", first_active_id)))
+	if selected_mandate_id > 0 and not mandates.has(selected_mandate_id):
+		selected_mandate_id = first_active_id
+
+	var selected_mandate_review: Dictionary = _MandateCohortCatalog.build_mandate_review_summary(ws, selected_mandate_id)
+	var allocator_catalog: Dictionary = _MandateCohortCatalog.build_allocator_catalog(ws)
 
 	var collisions: Array[Dictionary] = []
 	for i in range(active_raw.size()):
@@ -106,6 +120,8 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 		"cycle_summary": cycle_text,
 		"active_mandate_count": active_mandates_list.size(),
 		"arms_length_count": arms_length_count,
+		"allocator_catalog": allocator_catalog,
+		"selected_mandate_review": selected_mandate_review,
 		"organization_nodes": org_nodes,
 		"active_mandates": active_mandates_list,
 		"dyadic_collisions": collisions

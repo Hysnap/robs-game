@@ -4,12 +4,18 @@ extends CanvasLayer
 
 signal toggle_filofax_requested
 signal toggle_messages_inbox_requested
+signal map_overlay_selected(overlay_id: String)
 
+const MapOverlayHudBarScript = preload("res://scenes/ui/hud/map_overlay_hud_bar.gd")
+
+@onready var top_bar: HBoxContainer = $MarginContainer/TopBar
 @onready var btn_main_menu: Button = $MarginContainer/TopBar/HBoxLeft/BtnMainMenu
 @onready var btn_toggle_filofax: Button = $MarginContainer/TopBar/HBoxLeft/BtnFilofax
 @onready var btn_messages_alert: Button = $MarginContainer/TopBar/HBoxLeft/BtnMessagesAlert
 @onready var lbl_date_tick: Label = $MarginContainer/TopBar/HBoxRight/LblDateTick
 @onready var lbl_ticker_status: Label = $MarginContainer/BottomBar/LblTickerStatus
+
+var _map_overlay_bar: HBoxContainer = null
 
 func _ready() -> void:
 	layer = 10
@@ -28,12 +34,35 @@ func _ready() -> void:
 	if lbl_ticker_status:
 		lbl_ticker_status.text = tr("UI_HUD_TICKER_STATUS_DEFAULT")
 
+	_mount_map_overlay_bar()
+
 	# Bind reactive timeline updates from GameState safely
 	var gs = ScenarioManifestManager.get_game_state()
 	if gs != null and gs.has_signal("turn_advanced"):
 		gs.turn_advanced.connect(_on_turn_advanced)
 		
 	_refresh_timeline_display()
+
+func _mount_map_overlay_bar() -> void:
+	if top_bar == null or _map_overlay_bar != null:
+		return
+	_map_overlay_bar = MapOverlayHudBarScript.new()
+	_map_overlay_bar.name = "MapOverlayHudBar"
+	top_bar.add_child(_map_overlay_bar)
+	# Place right after HBoxLeft (index 1), before HBoxRight
+	if top_bar.get_child_count() > 2:
+		top_bar.move_child(_map_overlay_bar, 1)
+	_map_overlay_bar.overlay_selected.connect(func(overlay_id: String) -> void:
+		map_overlay_selected.emit(overlay_id)
+	)
+
+func set_overlay_legend(legend_entries: Array) -> void:
+	if _map_overlay_bar != null:
+		_map_overlay_bar.update_legend(legend_entries)
+
+func set_selected_map_overlay(overlay_id: String) -> void:
+	if _map_overlay_bar != null:
+		_map_overlay_bar.set_selected_overlay(overlay_id)
 
 func _on_return_to_main_menu_pressed() -> void:
 	var main_scene_path: String = str(ProjectSettings.get_setting("application/run/main_scene", ""))
