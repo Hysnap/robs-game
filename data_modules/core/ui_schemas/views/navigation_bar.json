@@ -43,6 +43,13 @@
           "emit_args": "\"open_finance\", {}"
         },
         {
+          "id": "management",
+          "type": "BUTTON",
+          "token": "UI_TAB_MACRO_MANAGEMENT",
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_management\", {}"
+        },
+        {
           "id": "styles",
           "type": "BUTTON",
           "token": "UI_TAB_MACRO_STYLES",

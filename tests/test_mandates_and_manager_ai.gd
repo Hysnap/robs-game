@@ -9,13 +9,28 @@ const OrgMandateManagerScript = preload("res://systems/economy/org_mandate_manag
 const ManagerAIResolverScript = preload("res://systems/economy/manager_ai_resolver.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
+var _frame_count: int = 0
+var _executed: bool = false
+
 func _init() -> void:
 	print("--- [Test] Verifying 4-Axis Mandates, OCEAN Manager AI & Staggered Horizons (TestSocietyFactory) ---")
+
+func _process(_delta: float) -> bool:
+	if _executed:
+		return false
+	_frame_count += 1
+	if _frame_count < 2:
+		return false
+	_executed = true
+	_run_tests_async()
+	return false
+
+func _run_tests_async() -> void:
 	ScenarioManifestManagerScript.reset_cache()
 	ManagerAIResolverScript.reset_cache()
 	DirAccess.make_dir_recursive_absolute("user://saves/test_mandate_slot")
 
-	var ws: Dictionary = TestSocietyFactoryScript.create_test_world_with_crew(2, 2, "mandates-factory-seed", "month")
+	var ws: Dictionary = await TestSocietyFactoryScript.create_test_world_with_crew(4, 4, "mandates-factory-seed", "month")
 	ws["metadata"]["active_slot_id"] = "test_mandate_slot"
 
 	var start_day: int = CalendarHelperScript.get_current_sim_day(ws)

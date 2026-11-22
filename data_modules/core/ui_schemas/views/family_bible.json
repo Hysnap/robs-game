@@ -52,13 +52,8 @@
     },
     {
       "id": "inscriptions_section",
-      "rows": [
-        {
-          "id": "family_notes",
-          "type": "TEXT_METRIC",
-          "token": "UI_SEC_FAMILY_NOTES"
-        }
-      ]
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FAMILY_NOTES"
     },
     {
       "id": "bible_signals",

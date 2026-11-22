@@ -5,13 +5,27 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const TEST_SOCIETY_FACTORY = preload("res://tests/test_society_factory.gd")
 const CREW_SCOUT_BOOTSTRAPPER = preload("res://systems/society/crew_scout_bootstrapper.gd")
 
+var _frame_count: int = 0
+var _executed: bool = false
+
 func _init() -> void:
 	print("\n========================================================")
 	print("🧪 RUNNING HEADLESS TEST: CREW SCOUT BOOTSTRAPPER")
 	print("========================================================")
 
-	# 1. Initialize schema and generate standardized test society via factory
-	var world_state: Dictionary = TEST_SOCIETY_FACTORY.create_test_world(2, 2, "bootstrapper-test-seed")
+func _process(_delta: float) -> bool:
+	if _executed:
+		return false
+	_frame_count += 1
+	if _frame_count < 2:
+		return false
+	_executed = true
+	_run_tests_async()
+	return false
+
+func _run_tests_async() -> void:
+	# 1. Initialize schema and generate standardized radial test society via factory
+	var world_state: Dictionary = await TEST_SOCIETY_FACTORY.create_test_world(4, 4, "bootstrapper-test-seed")
 	var home_district: String = str(world_state.get("operations", {}).get("home_district_id", world_state.get("player_knowledge", {}).get("home_district_id", "")))
 	assert(not home_district.is_empty(), "FAIL: TestSocietyFactory produced empty home_district_id.")
 
@@ -63,5 +77,6 @@ func _init() -> void:
 		assert(not c_rows.is_empty(), "FAIL: Resident #%d missing ORG:CREW_ENTERPRISE secondary contract." % r_id)
 		print("   • Verified SQLite ORG:CREW_ENTERPRISE contract for %s (Resident #%d)" % [slot_id, r_id])
 
+	DB_MANAGER.close_database()
 	print("\n🎉 ALL CREW SCOUT BOOTSTRAPPER CHECKS PASSED CLEANLY.\n")
 	quit(0)

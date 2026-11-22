@@ -216,6 +216,49 @@ static func grant_assistance_window(world_state: Dictionary, mandate_id: int, ex
 			"UPDATE org_mandates SET assistance_request_expires_day = %d WHERE mandate_id = %d;" % [expires_day, mandate_id]
 		)
 
+## Revokes an active mandate, persists valid_to / is_active in SQLite, and applies mid-horizon loyalty friction if locked
+static func revoke_mandate(world_state: Dictionary, mandate_id: int, current_sim_day: int = -1) -> Dictionary:
+	var mandates: Dictionary = world_state.get("org_mandates", {})
+	if not mandates.has(mandate_id) or not (mandates[mandate_id] is Dictionary):
+		return {"revoked": false, "mandate_id": mandate_id}
+
+	var mandate: Dictionary = mandates[mandate_id]
+	var sim_day: int = current_sim_day if current_sim_day >= 0 else CalendarHelperScript.get_current_sim_day(world_state)
+	var target_org_id: String = str(mandate.get("target_org_id", "")).strip_edges()
+	var orgs: Dictionary = world_state.get("organizations", {})
+	var is_arms_length: bool = false
+	if not target_org_id.is_empty() and orgs.has(target_org_id) and orgs[target_org_id] is Dictionary:
+		is_arms_length = str(orgs[target_org_id].get("autonomy_mode", "")).to_upper() == "ARMS_LENGTH"
+
+	var auth: Dictionary = evaluate_intervention_authorization(mandate, sim_day, is_arms_length)
+	var loyalty_delta: float = 0.0
+	if not bool(auth.get("authorized", true)):
+		loyalty_delta = float(auth.get("loyalty_delta", 0.0))
+	mandate["is_active"] = false
+	mandate["valid_to"] = sim_day
+
+	if loyalty_delta != 0.0:
+		if not target_org_id.is_empty() and orgs.has(target_org_id) and orgs[target_org_id] is Dictionary:
+			orgs[target_org_id]["loyalty"] = clampf(float(orgs[target_org_id].get("loyalty", 0.75)) + loyalty_delta, 0.0, 1.0)
+		var mgr_id: int = int(mandate.get("manager_resident_id", 0))
+		var residents: Dictionary = world_state.get("residents", {})
+		if mgr_id > 0:
+			var res_key: Variant = mgr_id if residents.has(mgr_id) else str(mgr_id)
+			if residents.has(res_key) and residents[res_key] is Dictionary:
+				residents[res_key]["loyalty"] = clampf(float(residents[res_key].get("loyalty", 0.75)) + loyalty_delta, 0.0, 1.0)
+
+	if DBManagerScript.is_database_open() and _has_org_mandates_table():
+		DBManagerScript.query_rows(
+			"UPDATE org_mandates SET is_active = 0, valid_to = %d WHERE mandate_id = %d;" % [sim_day, mandate_id]
+		)
+
+	return {
+		"revoked": true,
+		"mandate_id": mandate_id,
+		"reason": str(auth.get("reason", "")),
+		"loyalty_delta": loyalty_delta
+	}
+
 ## Evaluates whether a direct intervention on a delegated mandate is authorized or triggers friction
 static func evaluate_intervention_authorization(mandate: Dictionary, current_sim_day: int, is_arms_length_org: bool = false) -> Dictionary:
 	var assist_until: int = int(mandate.get("assistance_request_expires_day", -1))

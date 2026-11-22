@@ -73,6 +73,16 @@ func build_ui() -> void:
 	_value_labels["finance"] = btn_finance
 	add_child(btn_finance)
 
+	var btn_management := Button.new()
+	btn_management.name = "management"
+	btn_management.text = tr("UI_TAB_MACRO_MANAGEMENT")
+	btn_management.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_management.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	btn_management.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	btn_management.pressed.connect(func(): self.action_clicked.emit("open_management", {}))
+	_value_labels["management"] = btn_management
+	add_child(btn_management)
+
 	var btn_styles := Button.new()
 	btn_styles.name = "styles"
 	btn_styles.text = tr("UI_TAB_MACRO_STYLES")

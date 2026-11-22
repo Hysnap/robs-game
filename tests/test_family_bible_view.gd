@@ -8,11 +8,25 @@ const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 
+var _frame_count: int = 0
+var _executed: bool = false
+
 func _init() -> void:
 	print("=== RUNNING FAMILY BIBLE & GENEALOGY VIEW TEST SUITE ===")
 
-	# 1. Generate deterministic society + scout starting crew
-	var world_state: Dictionary = TEST_SOCIETY_FACTORY.create_test_world(2, 2, "family-bible-test-seed")
+func _process(_delta: float) -> bool:
+	if _executed:
+		return false
+	_frame_count += 1
+	if _frame_count < 2:
+		return false
+	_executed = true
+	_run_tests_async()
+	return false
+
+func _run_tests_async() -> void:
+	# 1. Generate deterministic radial society + scout starting crew
+	var world_state: Dictionary = await TEST_SOCIETY_FACTORY.create_test_world(4, 4, "family-bible-test-seed")
 	var home_district: String = str(world_state.get("operations", {}).get("home_district_id", ""))
 	assert(not home_district.is_empty(), "FAIL: Empty home_district_id from TestSocietyFactory.")
 
