@@ -2,7 +2,7 @@
   "_meta": {
     "locale": "en_GB",
     "display_language": "English (British Regional)",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "Civic landmarks, district toponyms, borough labels, street names, street property caps, building identifiers, and era-windowed commercial/civic naming rules for British urban generation."
   },
   "civic_sites": {
@@ -877,6 +877,112 @@
           "institution_rail_class": "POSTAL_AGENT",
           "valid_from_year": 1900,
           "valid_to_year": 2020
+        }
+      ],
+      "INSURANCE_DISTRICT_OFFICE": [
+        {
+          "org_id": "ORG:PRUDENTIAL",
+          "name": "The Prudential Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:PEARL_ASSURANCE",
+          "name": "Pearl Assurance Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2005
+        },
+        {
+          "org_id": "ORG:BRITANNIC_ASSURANCE",
+          "name": "Britannic Assurance Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2005
+        },
+        {
+          "org_id": "ORG:REFUGE_ASSURANCE",
+          "name": "Refuge Assurance Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 1996
+        },
+        {
+          "org_id": "ORG:CO_OP_INSURANCE",
+          "name": "Co-operative Insurance Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        }
+      ],
+      "SOFT_DRINKS_DEPOT": [
+        {
+          "org_id": "ORG:CORONA_DRINKS",
+          "name": "Corona Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1925,
+          "valid_to_year": 1995
+        },
+        {
+          "org_id": "ORG:ALPINE_DRINKS",
+          "name": "Alpine Soft Drinks Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1960,
+          "valid_to_year": 1992
+        },
+        {
+          "org_id": "ORG:TIZER_BEVERAGES",
+          "name": "Tizer & Pop Distribution Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1924,
+          "valid_to_year": 2005
+        }
+      ],
+      "DAIRY_DEPOT": [
+        {
+          "org_id": "ORG:EXPRESS_DAIRY",
+          "name": "Express Dairy Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2005
+        },
+        {
+          "org_id": "ORG:UNIGATE_DAIRY",
+          "name": "Unigate Dairy Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1959,
+          "valid_to_year": 2004
+        },
+        {
+          "org_id": "ORG:MIDLAND_COUNTIES_DAIRY",
+          "name": "Midland Counties Dairy Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1920,
+          "valid_to_year": 1992
+        },
+        {
+          "org_id": "ORG:CO_OP_DAIRY",
+          "name": "Co-op Dairy Depot",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1920,
+          "valid_to_year": 2015
+        }
+      ],
+      "CLUB_CHECK_CREDIT_OFFICE": [
+        {
+          "org_id": "ORG:PROVIDENT_FINANCIAL",
+          "name": "Provident Financial Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:CATTLES_CREDIT",
+          "name": "Cattles Tallyman Office",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1950,
+          "valid_to_year": 2009
         }
       ]
     }

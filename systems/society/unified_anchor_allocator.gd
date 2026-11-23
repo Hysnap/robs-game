@@ -158,31 +158,48 @@ static func match_best_job_slot_for_resident(
 	var best_idx: int = -1
 	var best_score: float = -1.0
 
-	# When spatial index + commute distances are active, query all open slots within the candidate's moving circle
+	# Build unclaimed, education- and age-eligible pool before sampling so stride never skips valid matches
+	var raw_pool: Array = []
 	if enable_commute and slot_spatial_index != null:
-		var nearby_slots: Array = slot_spatial_index.query_radius(cand_home_pos, max_search_radius_m, "")
-		var candidate_count: int = nearby_slots.size()
-		if candidate_count > 0:
-			var stride: int = maxi(1, ceili(float(candidate_count) / 96.0))
-			var offset: int = rng.randi_range(0, stride - 1) if stride > 1 else 0
-			var idx_cursor: int = offset
-			while idx_cursor < candidate_count:
-				var slot: Dictionary = nearby_slots[idx_cursor]
-				idx_cursor += stride
-				if bool(slot.get("_claimed", false)):
-					continue
-				var slot_idx: int = int(slot.get("_index", -1))
-				if slot_idx < 0 or slot_idx >= open_slots.size():
-					continue
-				var score: float = _score_job_slot(
-					slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
-					edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
-					exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
-				)
-				if score > best_score:
-					best_score = score
-					best_idx = slot_idx
-			return best_idx
+		raw_pool = slot_spatial_index.query_radius(cand_home_pos, max_search_radius_m, "")
+	else:
+		raw_pool = open_slots
+
+	var eligible_slots: Array[Dictionary] = []
+	for i in range(raw_pool.size()):
+		var slot: Dictionary = raw_pool[i]
+		if bool(slot.get("_claimed", false)):
+			continue
+		var slot_idx: int = int(slot.get("_index", i))
+		if slot_idx < 0 or slot_idx >= open_slots.size():
+			continue
+		var req_edu_code: String = str(slot.get("min_education_code", "NO_FORMAL"))
+		if cand_edu_rank < int(edu_rank_map.get(req_edu_code, 0)):
+			continue
+		var role_def: Dictionary = job_roles_cfg.get(str(slot["role_code"]), {})
+		if cand_age < int(role_def.get("age_min", 16)) or cand_age > int(role_def.get("age_max", 65)):
+			continue
+		eligible_slots.append(slot)
+
+	var eligible_count: int = eligible_slots.size()
+	if eligible_count == 0:
+		return -1
+
+	var stride: int = maxi(1, ceili(float(eligible_count) / 96.0))
+	var offset: int = rng.randi_range(0, stride - 1) if stride > 1 else 0
+	var idx_cursor: int = offset
+	while idx_cursor < eligible_count:
+		var slot: Dictionary = eligible_slots[idx_cursor]
+		idx_cursor += stride
+		var slot_idx: int = int(slot.get("_index", -1))
+		var score: float = _score_job_slot(
+			slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
+			edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
+			exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
+		)
+		if score > best_score:
+			best_score = score
+			best_idx = slot_idx
 
 	# Fallback bounded scan when commute distances are disabled or no spatial index is supplied
 	var total_slots: int = open_slots.size()

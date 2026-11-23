@@ -50,8 +50,11 @@ static func run(
 	var total_tied_units_count: int = 0
 
 	var block_estimates: Dictionary = {}
+	var total_city_est_pop: float = 0.0
 	for dist_id in districts.keys():
-		block_estimates[dist_id] = float(districts[dist_id].get("estimated_population", 0.0))
+		var d_est: float = float(districts[dist_id].get("estimated_population", districts[dist_id].get("population", 0.0)))
+		block_estimates[dist_id] = d_est
+		total_city_est_pop += d_est
 
 	# Address & commercial resolution tables from merged lexicon
 	var street_cfg: Dictionary = lexicon.get("street_names", {})
@@ -266,11 +269,13 @@ static func run(
 
 			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id, capacity)
 			employer_wage_biases[institution_estab_id] = 0.0
+			var inst_pop_ratio: float = float(arch.get("pop_ratio", 0.0))
+			var inst_pop_scale: float = clampf(total_city_est_pop / inst_pop_ratio, 0.08, 1.0) if inst_pop_ratio > 0.0 else 1.0
 			var hosted_orgs: Array = host_orgs_by_category.get(cat_name, [])
 			current_slot_id = expand_staffing_slots(
 				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
 				inst_sector, inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng,
-				inst_owner_org, hosted_orgs
+				inst_owner_org, hosted_orgs, inst_pop_scale
 			)
 			est_id += 1
 			establishments_created_in_district += 1
@@ -383,10 +388,12 @@ static func run(
 
 				_register_est_cat(by_cat, c_cat_name, embedded_estab_id, dist_id, c_cap)
 				employer_wage_biases[embedded_estab_id] = 0.0
+				var c_pop_ratio: float = float(c_arch.get("pop_ratio", 0.0))
+				var c_pop_scale: float = clampf(total_city_est_pop / c_pop_ratio, 0.08, 1.0) if c_pop_ratio > 0.0 else 1.0
 				current_slot_id = expand_staffing_slots(
 					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
 					c_sector, c_inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng,
-					c_owner_org, host_orgs_by_category.get(c_cat_name, [])
+					c_owner_org, host_orgs_by_category.get(c_cat_name, []), c_pop_scale
 				)
 				est_id += 1
 				establishments_created_in_district += 1
@@ -1002,7 +1009,8 @@ static func expand_staffing_slots(
 	reason_id: int,
 	rng: RandomNumberGenerator,
 	primary_org_id: String = "",
-	hosted_sub_orgs: Array = []
+	hosted_sub_orgs: Array = [],
+	roster_scale: float = 1.0
 ) -> int:
 	var slot_id_counter: int = starting_slot_id
 	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
@@ -1058,7 +1066,9 @@ static func expand_staffing_slots(
 			var intel_clearance: float = float(master_job.get("intel_clearance", 0.3))
 
 			var count_range: Array = item.get("target_count", [1, 1])
-			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
+			var scaled_min: int = maxi(1, int(round(float(count_range[0]) * roster_scale)))
+			var scaled_max: int = maxi(scaled_min, int(round(float(count_range[1]) * roster_scale)))
+			var count: int = rng.randi_range(scaled_min, scaled_max)
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", job_code)
 
 			for slot_idx in range(count):

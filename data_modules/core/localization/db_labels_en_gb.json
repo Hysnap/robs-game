@@ -1889,6 +1889,72 @@
       "title": "Plater / Welder / Fabricator",
       "description": "Skilled industrial metal fabricator and welder."
     },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CHARTERED_ACCOUNTANT",
+      "title": "Chartered Accountant & Auditor",
+      "description": "Qualified accountant and auditor providing professional financial services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "INSURANCE_BROKER",
+      "title": "Insurance Broker & Underwriter",
+      "description": "Insurance professional arranging policies and assessing underwriting risk."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ARCHITECT_SURVEYOR",
+      "title": "Architect / Chartered Surveyor",
+      "description": "Design, building assessment, and property surveying professional."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "OPHTHALMIC_OPTICIAN",
+      "title": "Ophthalmic Optician",
+      "description": "Qualified optician providing eye examinations and optical services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "JOURNALIST_EDITOR",
+      "title": "Local Reporter & Sub-Editor",
+      "description": "Journalist reporting local news and editing submitted copy."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TRAVEL_CLERK",
+      "title": "Travel Agent & Booking Clerk",
+      "description": "Travel professional arranging journeys, reservations, and bookings."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ELECTRONICS_ENGINEER",
+      "title": "TV & Wireless Service Engineer",
+      "description": "Service engineer repairing and maintaining television and wireless equipment."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TAILOR_DRESSMAKER",
+      "title": "Bespoke Tailor & Dressmaker",
+      "description": "Skilled maker producing tailored garments and dresses."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "INSURANCE_AGENT_COLLECTOR",
+      "title": "Home-Service Insurance Agent & Collector",
+      "description": "Field insurance agent selling policies and collecting customer payments."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ROUNDSMAN_DELIVERY",
+      "title": "Door-to-Door Roundsman (Milk / Pop / Coal)",
+      "description": "Delivery worker serving a regular household round."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "RENT_COLLECTOR_AGENT",
+      "title": "Rent & Weekly Check Collector",
+      "description": "Field agent collecting rent and conducting scheduled household checks."
+    },
 
     {
       "domain": "ROLE_TITLE",

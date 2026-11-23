@@ -719,6 +719,170 @@ static func run(
 	open_job_slots.clear()
 	open_job_slots.append_array(remaining_unfilled_slots)
 
+	# Stage 2B: Guarantee zero vacancies in all non-custodial tied housing (e.g. when local household heads took the post or for student halls)
+	var tied_role_defaults: Dictionary = {
+		"STUDENT_HALLS": {"role": "HIGHER_ED_STUDENT", "class": "ENCLAVE_STUDENT", "edu": "A_LEVELS"},
+		"RECTORY": {"role": "CLERGY", "class": "FORMAL_LEGAL", "edu": "O_LEVELS_CSE"},
+		"CARETAKER_LODGE": {"role": "CARETAKER", "class": "FORMAL_LEGAL", "edu": "NO_FORMAL"},
+		"CHURCH_CARETAKER_LODGE": {"role": "CLERGY_OR_CARETAKER", "class": "FORMAL_LEGAL", "edu": "O_LEVELS_CSE"},
+		"NURSES_QUARTERS": {"role": "HOSPITAL_NURSE", "class": "FORMAL_LEGAL", "edu": "POLYTECHNIC_DIPLOMA"},
+		"DOCTORS_QUARTERS": {"role": "HOSPITAL_RESIDENT_DOCTOR", "class": "FORMAL_LEGAL", "edu": "DEGREE_OR_HIGHER"},
+		"STATION_HOUSE": {"role": "POLICE_CONSTABLE", "class": "FORMAL_LEGAL", "edu": "O_LEVELS_CSE"}
+	}
+	for tied_type in available_tied_housing.keys():
+		if str(tied_type) == "CELL_BLOCK":
+			continue
+		var unit_queue: Array = available_tied_housing[tied_type]
+		var fallback_spec: Dictionary = tied_role_defaults.get(str(tied_type), {"role": "CARETAKER", "class": "FORMAL_LEGAL", "edu": "NO_FORMAL"})
+		var role_key: String = str(fallback_spec["role"])
+		var c_class_code: String = str(fallback_spec["class"])
+		var master_def: Dictionary = job_roles_cfg.get(role_key, {})
+		var comp: Dictionary = PremisesWorkplaceBuilder.resolve_standardized_compensation(master_def, job_definitions, 0.0) if not master_def.is_empty() else {"weekly_hours": 37.5, "hourly_rate": 3.5, "schedule_window": "DAYTIME"}
+		var class_id: int = DB_MANAGER.get_label_id("CONTRACT_CLASS", c_class_code)
+		var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", role_key)
+		var slot_sched_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", str(comp.get("schedule_window", "DAYTIME")))
+		var age_min: int = int(master_def.get("age_min", 18))
+		var age_max: int = int(master_def.get("age_max", 35))
+		var edu_req: String = str(master_def.get("education_required", fallback_spec["edu"]))
+		var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_req)
+		var edu_nudges: Dictionary = PERSONALITY_HYDRATOR.get_education_nudges(demographics, edu_req)
+
+		while not unit_queue.is_empty():
+			var tied_unit: Dictionary = unit_queue.pop_back()
+			var r_id: int = current_resident_id
+			current_resident_id += 1
+
+			var migrant_age: int = rng.randi_range(age_min, age_max)
+			var is_male: bool = (rng.randf() > 0.5)
+			var gender_code: String = "MALE" if is_male else "FEMALE"
+			var gender_id: int = male_gender_id if is_male else female_gender_id
+			var cult: Dictionary = PremisesWorkplaceBuilder.roll_household_culture(cultural, rng, "suburban_low_density")
+			var first_name: String = HOUSEHOLD_COMPOSER.pick_first_name(lexicon, is_male, str(cult["surnames_pool"]), str(cult["religion"]), rng)
+			var eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", cult["ethnicity"])
+			var rel_id: int = DB_MANAGER.get_label_id("RELIGION", cult["religion"])
+			var surname_pool: Array = lexicon.get(cult["surnames_pool"], lexicon.get("surnames", ["Smith", "Jones"]))
+			var migrant_surname: String = str(surname_pool[rng.randi() % surname_pool.size()]).replace("'", "''")
+
+			var days_old: int = int(round(float(migrant_age) * 365.25)) + rng.randi_range(0, 364)
+			var dob_day: int = sim_start_day - days_old
+
+			var ocean_traits: Dictionary = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, {}, edu_nudges, rng)
+			PERSONALITY_HYDRATOR.populate_cognitive_and_clinical_profile(
+				ocean_traits, ocean_rules, float(migrant_age), edu_req, 0.25, rng
+			)
+
+			var tied_h_id: int = next_household_id
+			next_household_id += 1
+
+			var tied_est_id: int = int(tied_unit["establishment_id"])
+			var tied_res_type_id: int = int(tied_unit["residence_type_id"])
+			var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
+			var influx_est_id: int = int(tied_unit.get("parent_establishment_id", tied_est_id))
+			var home_pos: Vector2 = estab_positions.get(tied_est_id, estab_positions.get(influx_est_id, Vector2.ZERO))
+
+			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
+				"HEAD", str(cult["religion"]), home_pos, -1, -1,
+				church_estabs, estab_positions, ocean_rules, rng, church_spatial_index
+			)
+
+			var res_record: Dictionary = {
+				"resident_id": r_id,
+				"household_id": tied_h_id,
+				"household_role": "HEAD",
+				"birth_surname": migrant_surname,
+				"ethnicity_id": eth_id,
+				"gender_code": gender_code,
+				"age_years": migrant_age,
+				"dob": dob_day,
+				"home_pos": home_pos,
+				"church_id": church_id,
+				"local_pub_id": -1,
+				"employer_establishment_id": influx_est_id,
+				"role_code": role_key,
+				"ocean_traits": ocean_traits
+			}
+
+			var local_pub_id: int = ANCHOR_ALLOCATOR.resolve_individual_pub_id(
+				res_record, pub_estabs, estab_positions, estab_capacities,
+				workplace_cohort_pubs, kin_graph, residents_by_id,
+				job_roles_cfg, ocean_rules, rng, pub_spatial_index
+			)
+			res_record["local_pub_id"] = local_pub_id
+			residents_by_id[r_id] = res_record
+
+			var church_sql_str: String = "NULL" if church_id <= 0 else str(church_id)
+			var pub_sql_str: String = "NULL" if local_pub_id <= 0 else str(local_pub_id)
+
+			influx_hh_inserts.append("""
+				INSERT INTO households (
+					household_id, establishment_id, head_resident_id, residence_type_id,
+					wealth_bracket_id, ethnicity_id, religion_id,
+					valid_from, valid_to, change_reason_id
+				) VALUES (%d, %d, %d, %d, %d, %d, %d, %d, NULL, %d);
+			""" % [
+				tied_h_id, tied_est_id, r_id, tied_res_type_id,
+				tied_wealth_id, eth_id, rel_id, sim_start_day, reason_world_gen_id
+			])
+
+			influx_resident_inserts.append("""
+				INSERT INTO residents (
+					resident_id, household_id, first_name, birth_surname, current_surname,
+					dob, dod, death_reason_id, gender_id, education_level_id,
+					ethnicity_id, religion_id, church_id, local_pub_id,
+					openness, conscientiousness, extraversion, agreeableness, neuroticism,
+					iq_score, mental_agility, machiavellianism, empathy_affective, power_entitlement,
+					is_active_agent, valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, %s, %s,
+					%.3f, %.3f, %.3f, %.3f, %.3f,
+					%.1f, %.3f, %.3f, %.3f, %.3f,
+					0, %d, NULL, %d
+				);
+			""" % [
+				r_id, tied_h_id, first_name, migrant_surname, migrant_surname,
+				dob_day, gender_id, edu_id, eth_id, rel_id,
+				church_sql_str, pub_sql_str,
+				float(ocean_traits["openness"]), float(ocean_traits["conscientiousness"]),
+				float(ocean_traits["extraversion"]), float(ocean_traits["agreeableness"]),
+				float(ocean_traits["neuroticism"]),
+				float(ocean_traits["iq_score"]), float(ocean_traits["mental_agility"]),
+				float(ocean_traits["machiavellianism"]), float(ocean_traits["empathy_affective"]),
+				float(ocean_traits["power_entitlement"]),
+				sim_start_day, reason_world_gen_id
+			])
+
+			for tag_entry in ocean_traits.get("behavioral_tags", []):
+				var t_code: String = str(tag_entry["code"])
+				var t_label_id: int = int(behavioral_tag_label_ids[t_code])
+				influx_tag_inserts.append("""
+					INSERT INTO resident_behavioral_tags (
+						resident_id, tag_label_id, severity, is_diagnosed, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %.2f, 0, %d, NULL, %d);
+				""" % [r_id, t_label_id, float(tag_entry["severity"]), sim_start_day, reason_world_gen_id])
+
+			influx_contract_inserts.append("""
+				INSERT INTO livelihood_contracts (
+					resident_id, employer_org_id, employer_establishment_id, contract_class_id, role_title_id,
+					contract_type_id, schedule_window_id, weekly_hours, compensation_rate, 
+					valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, (SELECT owner_org_id FROM establishments WHERE establishment_id = %d), %d, %d, %d, %d, %d, %.1f, %.2f, %d, NULL, %d
+				);
+			""" % [
+				r_id, influx_est_id, influx_est_id, class_id, role_id, contract_std_id, slot_sched_id,
+				float(comp["weekly_hours"]), float(comp["hourly_rate"]), sim_start_day, reason_world_gen_id
+			])
+
+			influx_slot_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
+
+			tied_occupants.append({
+				"resident_id": r_id,
+				"establishment_id": tied_est_id,
+				"workplace_id": influx_est_id,
+				"residence_type_id": tied_res_type_id,
+				"age": migrant_age
+			})
+			external_tied_influx_count += 1
 	# Release Pass 3 spatial indexes once labor & venue allocation is finished
 	job_slot_index.clear()
 	church_spatial_index.clear()
