@@ -57,6 +57,7 @@
     "spatial_lexicon": "res://data_modules/core/spatial/districts/names/en_gb.json",
     "startpoint": "res://data_modules/crime/startpoints/street_crew_1980.json",
     "transport_modes": "res://data_modules/core/spatial/transport/transport_modes.json",
+    "route_rounds": "res://data_modules/core/spatial/society/route_rounds.json",
     "manager_adaptation": "res://data_modules/core/economy/manager_adaptation_rules.json"
   }
 }

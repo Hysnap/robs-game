@@ -984,7 +984,12 @@
       "title": "Builders Merchants & Contracting Yard",
       "description": "Civil construction contractor and trade yard."
     },
-
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MUNICIPAL_ALLOTMENTS",
+      "title": "Council Managed Allotments",
+      "description": "Council owned and managed allotments."
+    },
     {
       "domain": "ESTABLISHMENT_CATEGORY",
       "code": "FOUNDRY_CASTINGS",

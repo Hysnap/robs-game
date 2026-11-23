@@ -60,7 +60,7 @@ static func generate_city_society(
 		return
 
 	_load_configs()
-	DB_MANAGER.initialize_database(true)
+	# DB_MANAGER.initialize_database(true)
 	DB_MANAGER.record_active_seed(seed_id)
 
 	var start_ms: int = Time.get_ticks_msec()

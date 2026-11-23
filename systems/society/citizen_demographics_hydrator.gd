@@ -12,6 +12,7 @@ const FAMILY_WEAVER = preload("res://systems/society/family_tree_weaver.gd")
 const ANCHOR_ALLOCATOR = preload("res://systems/society/unified_anchor_allocator.gd")
 const SPATIAL_RADIUS_INDEX = preload("res://systems/society/spatial_radius_index.gd")
 const GENERATION_AUDITOR = preload("res://systems/society/society_generation_auditor.gd")
+const ROUTE_ROUND_SEEDER = preload("res://systems/society/route_round_seeder.gd")
 
 ## Pass 3: Orchestrates household composition, OCEAN/cognitive/clinical profiles, kinship trees, labor, org governance, and calendar schedules
 static func run(
@@ -963,6 +964,7 @@ static func run(
 	# STAGE 5: Layer A Civic & Employer Recurring Schedule Bricks (calendar_events)
 	# --------------------------------------------------------------------------
 	_seed_layer_a_calendar_schedules(civic_cfg, sim_start_day)
+	ROUTE_ROUND_SEEDER.seed_service_routes(physical_state, sim_start_day)
 
 	for d_id in districts.keys():
 		districts[d_id]["population"] = district_residents_map.get(d_id, []).size()

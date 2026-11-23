@@ -1,0 +1,118 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "version": "1.0.0",
+    "description": "Service round definitions, absence and part-time coverage rules, Friday afternoon milk cash collection, and anti-collision district/day allocation."
+  },
+  "staffing_coverage": {
+    "absence_days_per_year": 30,
+    "sickness_allowance_days": 12,
+    "non_bank_holiday_rest_days": 18,
+    "exclude_bank_holidays": true,
+    "part_time_hours_ratio": 0.5,
+    "min_roundsmen_per_active_depot": 1
+  },
+  "anti_collision_rules": {
+    "stagger_services_across_days": true,
+    "stagger_districts_across_days_for_rotating_routes": true,
+    "keep_fixed_patch_for_milk_round": true,
+    "same_day_same_district_service_penalty": 100.0,
+    "same_service_same_day_district_penalty": 50.0,
+    "depot_worker_overlap_penalty": 25.0
+  },
+  "rounds": {
+    "MILK_ROUND": {
+      "service_code": "MILK_ROUND",
+      "depot_building_classes": ["DAIRY_DEPOT"],
+      "staff_role_ids": ["ROUNDSMAN_DELIVERY"],
+      "era_brand_category": "DAIRY_DEPOT",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 1,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "MORNING",
+        "action_mode": "DELIVER_AND_STOCK"
+      },
+      "collection_schedule": {
+        "enabled": true,
+        "days_of_week": [5],
+        "time_window": "AFTERNOON",
+        "action_mode": "COLLECT_CASH",
+        "settlement_method": "CASH"
+      },
+      "seasonal_winter_multiplier": 1.0
+    },
+    "POP_DELIVERY_ROUND": {
+      "service_code": "POP_DELIVERY_ROUND",
+      "depot_building_classes": ["SOFT_DRINKS_DEPOT"],
+      "staff_role_ids": ["ROUNDSMAN_DELIVERY"],
+      "era_brand_category": "SOFT_DRINKS_DEPOT",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 4,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "DAYTIME",
+        "action_mode": "DELIVER_AND_COLLECT_EMPTIES"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 0.75
+    },
+    "COAL_ROUND": {
+      "service_code": "COAL_ROUND",
+      "depot_building_classes": ["COAL_MERCHANT_YARD"],
+      "staff_role_ids": ["ROUNDSMAN_DELIVERY"],
+      "era_brand_category": "",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 4,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "DAYTIME",
+        "action_mode": "DELIVER_SOLID_FUEL"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.5
+    },
+    "INSURANCE_COLLECTION_ROUND": {
+      "service_code": "INSURANCE_COLLECTION_ROUND",
+      "depot_building_classes": ["INSURANCE_DISTRICT_OFFICE"],
+      "staff_role_ids": ["INSURANCE_AGENT_COLLECTOR"],
+      "era_brand_category": "INSURANCE_DISTRICT_OFFICE",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 5,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5],
+        "time_window": "DAYTIME",
+        "action_mode": "COLLECT_PREMIUMS_CASH"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.0
+    },
+    "RENT_AND_CHECK_ROUND": {
+      "service_code": "RENT_AND_CHECK_ROUND",
+      "depot_building_classes": [
+        "PRIVATE_LANDLORDS_OFFICE",
+        "CLUB_CHECK_CREDIT_OFFICE"
+      ],
+      "staff_role_ids": ["RENT_COLLECTOR_AGENT"],
+      "era_brand_category": "CLUB_CHECK_CREDIT_OFFICE",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 5,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "DAYTIME",
+        "action_mode": "COLLECT_RENT_AND_INSTALMENTS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.0
+    }
+  }
+}
