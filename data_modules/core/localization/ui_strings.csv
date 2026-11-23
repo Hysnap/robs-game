@@ -515,3 +515,7 @@
 "UI_COHORT_ALL_VERBS","All Actions (*)","All Actions (*)","All Actions (*)","Alle Aktionen (*)","Toutes les actions (*)","Todas las acciones (*)","Todas as ações (*)"
 "UI_TAG_UNSCOUTED","UNSCOUTED","UNSCOUTED","UNSCOUTED","UNERKUNDET","NON EXPLORÉ","SIN EXPLORAR","NÃO EXPLORADO"
 "UI_WARN_UNSCOUTED_MANDATE_RECON","Planning with Hope — Manager will scout unscouted districts first","Planning with Hope — Manager will scout unscouted districts first","Planning with Hope — Manager will scout unscouted districts first","Planung auf Hoffnung — Manager erkundet zuerst","Planification à l'aveugle — Reconnaissance prioritaire","Planificación con esperanza — Exploración prioritaria","Planeamento com esperança — Reconhecimento prioritário"
+"UI_HDR_RESIDENTIAL_STREETS","Residential Directory","","","","","",""
+"UI_LBL_RESIDENTIAL_STREETS","residential_streets","","","","","",""
+"UI_HDR_STREET_PROPERTIES","Units Directory","","","","","",""
+"UI_LBL_STREET_PROPERTIES","street_units","","","","","",""

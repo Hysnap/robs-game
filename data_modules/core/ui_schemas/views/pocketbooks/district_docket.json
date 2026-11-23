@@ -91,6 +91,7 @@
     {
       "id": "civic_infrastructure",
       "header_token": "UI_HDR_CIVIC_FEATURES",
+      "font_size": 8,
       "rows": [
         {
           "id": "civic_features",
@@ -103,6 +104,25 @@
           "action_signal": "item_selected",
           "route_field": "detail_route",
           "target_route": "OPEN_ESTABLISHMENT_DOCKET",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "residential_directory",
+      "header_token": "UI_HDR_RESIDENTIAL_STREETS",
+      "font_size": 8,
+      "rows": [
+        {
+          "id": "residential_streets",
+          "type": "LINKED_LIST",
+          "field": "residential_streets_summary",
+          "key_field": "street_key",
+          "label_field": "street_name",
+          "sublabel_field": "summary_line",
+          "token": "UI_LBL_RESIDENTIAL_STREETS",
+          "action_signal": "item_selected",
+          "target_route": "OPEN_STREET_RESIDENCES",
           "autowrap": true
         }
       ]
@@ -145,9 +165,7 @@
     {
       "id": "district_docket_signals",
       "type": "SIGNALS",
-      "signals": [
-        "action_clicked(action_code: String, payload: Dictionary)"
-      ]
+      "signals": ["action_clicked(action_code: String, payload: Dictionary)"]
     }
   ]
 }

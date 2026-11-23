@@ -28,6 +28,11 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 	if not out_world_state.has("districts"):
 		out_world_state["districts"] = {}
 
+	var spatial_lexicon: Dictionary = {}
+	if ScenarioManifestManager.has_module("spatial_lexicon"):
+		spatial_lexicon = ScenarioManifestManager.load_module("spatial_lexicon")
+	var used_district_names: Dictionary = {}
+
 	# Derive active spatial metrics from the configuration resource
 	var cfg = ScenarioManifestManager.get_city_configuration()
 	var block_side_m: float = float(cfg.get("block_size")) if (cfg and "block_size" in cfg) else 200.0
@@ -50,6 +55,7 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 			return
 
 		var archetype: Dictionary = _archetypes[district_type]
+		var is_vacant_plot: bool = bool(archetype.get("is_vacant_plot", false))
 
 		# 2. Extract block geometry & calculate true discrete grid cell footprint
 		var raw_size_m := Vector2(block_side_m, block_side_m)
@@ -80,15 +86,19 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 
 		var grid_x := int(round(pos_3d.x / cell_pitch))
 		var grid_z := int(round(pos_3d.z / cell_pitch))
-		var display_name := DistrictNamer.generate_district_name(district_type, seed_id, grid_x, grid_z)
+		var display_name := _resolve_unique_district_name(
+			district_type, seed_id, grid_x, grid_z, spatial_lexicon, used_district_names
+		)
 
 		var base_pop: int = rng.randi_range(int(pop_rng[0]), int(pop_rng[1]))
 		var pop_val: int = int(round(float(base_pop) * scale_factor))
 
-		var bldg_range: Array = archetype.get("buildings", [1, 2])
-		var min_bldgs: int = int(round(float(bldg_range[0]) * scale_factor))
-		var max_bldgs: int = int(round(float(bldg_range[1]) * scale_factor))
-		var target_buildings: int = rng.randi_range(min_bldgs, max_bldgs)
+		var target_buildings: int = 0
+		if not is_vacant_plot:
+			var bldg_range: Array = archetype.get("buildings", [1, 1])
+			var min_bldgs: int = int(round(float(bldg_range[0]) * scale_factor))
+			var max_bldgs: int = int(round(float(bldg_range[1]) * scale_factor))
+			target_buildings = maxi(1, rng.randi_range(min_bldgs, max_bldgs))
 
 		var unemp_val: float = rng.randf_range(float(unemp_rng[0]), float(unemp_rng[1]))
 		var inc_val: float = rng.randf_range(float(inc_rng[0]), float(inc_rng[1]))
@@ -102,6 +112,7 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 			"district_id": block_id,
 			"display_name": display_name,
 			"district_type": district_type,
+			"is_vacant_plot": is_vacant_plot,
 			"spatial_anchor": Vector2(pos_3d.x, pos_3d.z),
 			"grid_coords": Vector2i(grid_x, grid_z),
 			"grid_size": block_size,
@@ -128,6 +139,48 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 		out_world_state["districts"].size(),
 		deployed_stops.size()
 	])
+
+static func _resolve_unique_district_name(
+	district_type: String,
+	seed_id: String,
+	grid_x: int,
+	grid_z: int,
+	spatial_lexicon: Dictionary,
+	used_names: Dictionary
+) -> String:
+	var base_candidate: String = DistrictNamer.generate_district_name(district_type, seed_id, grid_x, grid_z)
+	if not used_names.has(base_candidate.to_lower()):
+		used_names[base_candidate.to_lower()] = true
+		return base_candidate
+
+	# 1. Try alternative coordinates in DistrictNamer pools before falling back
+	for attempt in range(1, 32):
+		var alt_candidate: String = DistrictNamer.generate_district_name(
+			district_type, seed_id, grid_x + attempt * 7, grid_z + attempt * 13
+		)
+		if not used_names.has(alt_candidate.to_lower()):
+			used_names[alt_candidate.to_lower()] = true
+			return alt_candidate
+
+	# 2. Apply configured duplicate_fallbacks templates from spatial_lexicon (en_gb.json)
+	var prefix_token: String = base_candidate.split(" ")[0] if not base_candidate.is_empty() else "Ward"
+	var grammar: Dictionary = spatial_lexicon.get("grammar", {})
+	var fallbacks: Array = grammar.get("duplicate_fallbacks", [])
+	for fb_tmpl in fallbacks:
+		var fb_name: String = str(fb_tmpl).replace("{prefix}", prefix_token)
+		if not used_names.has(fb_name.to_lower()):
+			used_names[fb_name.to_lower()] = true
+			return fb_name
+
+	# 3. Deterministic ward qualifier guarantee if every configured pool entry is exhausted
+	var ward_idx: int = 2
+	while true:
+		var qualified: String = "%s (%d)" % [base_candidate, ward_idx]
+		if not used_names.has(qualified.to_lower()):
+			used_names[qualified.to_lower()] = true
+			return qualified
+		ward_idx += 1
+	return base_candidate
 
 ## Evaluates finalized districts to find a valid, populated residential neighborhood.
 ## Seeds public landmarks and the selected home district into sparse knowledge_pools via IntelManager.

@@ -2,8 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.3.0",
-    "description": "Municipal clustering scales, public/banking holiday calendar, institutional organizations, civic disbursement schedules, postal delivery rules, and settlement clearing rails."
+    "version": "1.5.0",
+    "description": "Municipal clustering scales, public/banking holiday calendar, hierarchical public organizations with autonomy modes, physical wing sub-establishments, civic disbursement schedules, and postal delivery rules."
   },
   "hierarchy_scales": {
     "blocks_per_borough": 90,
@@ -107,6 +107,8 @@
     "seeded_organizations": [
       {
         "org_id": "ORG:CIVIC",
+        "parent_org_id": null,
+        "autonomy_mode": "DIRECT",
         "display_name": "Municipal & Civic Government",
         "org_type": "CIVIC",
         "legal_status": "FORMAL",
@@ -117,87 +119,558 @@
         "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
+        "org_id": "ORG:COUNCIL_OFFICES",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Council Offices & Civic Administration",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_ENV_HEALTH",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Environmental Health & Inspectors",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_RATES",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Local Tax & Rates Collection",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "PUBLIC_DISBURSER",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_HOUSING_PLANNING",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Council Housing Maintenance & Planning",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_COUNCILLORS",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Borough Councillors & Committees",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_ADULT_CARE",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Adult Social Care",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_CHILD_CARE",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Child & Family Social Care",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_HIGHWAYS_ENV",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Transport, Highways & Environment",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:COUNCIL_WASTE",
+        "parent_org_id": "ORG:CIVIC",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Waste & Street Scene",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["LOCAL_GOVERNMENT", "TOWN_HALL"],
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:POLICE_FORCE",
+        "parent_org_id": null,
+        "autonomy_mode": "DIRECT",
+        "display_name": "Regional Constabulary",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "matched_categories": ["POLICE_HQ", "POLICE_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_BOROUGH_DIVISIONS",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Borough Police Divisions",
+        "org_type": "DIVISION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "per_borough_template": {
+          "org_id_pattern": "ORG:POLICE_DIV_{borough_slug}",
+          "display_name_pattern": "{borough_name} Police Division"
+        },
+        "matched_categories": ["POLICE_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_CID",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Criminal Investigation Department (CID)",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ", "POLICE_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_FLYING_SQUAD",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Regional Crime Squad (Flying Squad)",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_SPG",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Special Patrol Group (SPG)",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_FIREARMS",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Firearms Unit",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_DOGS",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Dog Handling Squad",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ", "POLICE_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_FRAUD",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Fraud Squad",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_MURDER",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Murder Squad",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_BOMB",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Bomb Squad",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_VICE",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Vice Squad",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_FORENSICS",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Forensic Department",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_SPECIAL_BRANCH",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Special Branch",
+        "org_type": "UNIT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:POLICE_TRAFFIC",
+        "parent_org_id": "ORG:POLICE_FORCE",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Traffic, Roads Policing & Control Rooms",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["POLICE_HQ", "POLICE_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:BTP",
+        "parent_org_id": null,
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "British Transport Police (BTP)",
+        "org_type": "INSTITUTION",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "matched_categories": ["BTP_STATION"],
+        "host_categories": ["RAILWAY_STATION"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
         "org_id": "ORG:NHS",
+        "parent_org_id": null,
+        "autonomy_mode": "DIRECT",
         "display_name": "National Health Service Authority",
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "STANDARD",
-        "matched_categories": ["HOSPITAL"],
+        "matched_categories": ["HOSPITAL", "CLINIC"],
         "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       },
       {
+        "org_id": "ORG:HOSP_MANAGEMENT",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Hospital Management & Administration",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_AE",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Accident & Emergency (A&E)",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_GEN_MED",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "General Medicine",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_GEN_SURG",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "General Surgery",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_ORTHOPAEDICS",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Orthopaedics",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_PAEDIATRICS",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Paediatrics",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_OBGYN",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Obstetrics & Gynaecology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_CARDIOLOGY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Cardiology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_NEUROLOGY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Neurology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_ONCOLOGY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Oncology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_PSYCHIATRY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Psychiatry",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_RADIOLOGY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Radiology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_PATHOLOGY",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Pathology",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_ANAESTHETICS",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Anaesthetics & Theatres",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
+      },
+      {
+        "org_id": "ORG:HOSP_HOTEL_SERVICES",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Hotel Services (Porters, Cleaners & Maintenance)",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:HOSP_NON_CLINICAL",
+        "parent_org_id": "ORG:NHS",
+        "autonomy_mode": "DIRECT",
+        "display_name": "Non-Clinical Support Services (Print, Medical Photography, Uniform, Laundry, Staff Accommodation, Mortuary, Catering, Transport & Non-Emergency Ambulance)",
+        "org_type": "DEPARTMENT",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "host_categories": ["HOSPITAL"],
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
         "org_id": "ORG:POST_OFFICE",
+        "parent_org_id": null,
+        "autonomy_mode": "DIRECT",
         "display_name": "General Post Office",
         "org_type": "INSTITUTION",
         "legal_status": "FORMAL",
         "institution_rail_class": "POSTAL_AGENT",
         "matched_categories": ["POST_OFFICE"],
         "default_pay_cadence": "WEEKLY_FRIDAY"
-      },
-      {
-        "org_id": "ORG:MIDLAND_BANK",
-        "display_name": "Midland Bank",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Midland Bank"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:BARCLAYS_BANK",
-        "display_name": "Barclays Bank",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Barclays Bank"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:LLOYDS_BANK",
-        "display_name": "Lloyds Bank",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["Lloyds Bank", "Lloyds TSB"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:NATWEST",
-        "display_name": "NatWest",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "CLEARING_BANK",
-        "matched_titles": ["NatWest"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:TSB",
-        "display_name": "TSB",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["TSB"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:HALIFAX",
-        "display_name": "Halifax",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["Halifax"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
-      },
-      {
-        "org_id": "ORG:ABBEY_NATIONAL",
-        "display_name": "Abbey National",
-        "org_type": "INSTITUTION",
-        "legal_status": "FORMAL",
-        "institution_rail_class": "SAVINGS_INSTITUTION",
-        "matched_titles": ["Abbey National"],
-        "default_pay_cadence": "MONTHLY_LAST_WORKING_DAY"
       }
-    ]
+    ],
+    "site_wing_templates": {
+      "HOSPITAL": [
+        {
+          "wing_code": "AE_WING",
+          "name_suffix": "Accident & Emergency (A&E) Wing",
+          "category_code": "HOSPITAL",
+          "owner_org_id": "ORG:HOSP_AE",
+          "capacity_ratio": 0.25
+        },
+        {
+          "wing_code": "MORTUARY_PATHOLOGY",
+          "name_suffix": "Mortuary & Pathology Block",
+          "category_code": "HOSPITAL",
+          "owner_org_id": "ORG:HOSP_PATHOLOGY",
+          "capacity_ratio": 0.1
+        },
+        {
+          "wing_code": "SUPPORT_SERVICES",
+          "name_suffix": "Laundry, Catering & Non-Clinical Support Block",
+          "category_code": "HOSPITAL",
+          "owner_org_id": "ORG:HOSP_NON_CLINICAL",
+          "capacity_ratio": 0.15
+        },
+        {
+          "wing_code": "HOTEL_WORKS",
+          "name_suffix": "Hospital Maintenance & Porters Yard",
+          "category_code": "HOSPITAL",
+          "owner_org_id": "ORG:HOSP_HOTEL_SERVICES",
+          "capacity_ratio": 0.1
+        }
+      ],
+      "POLICE_HQ": [
+        {
+          "wing_code": "CID_FORENSICS",
+          "name_suffix": "CID & Forensic Laboratories",
+          "category_code": "POLICE_HQ",
+          "owner_org_id": "ORG:POLICE_CID",
+          "capacity_ratio": 0.25
+        },
+        {
+          "wing_code": "FLYING_SQUAD_OPS",
+          "name_suffix": "Regional Crime Squad & SPG Operations Block",
+          "category_code": "POLICE_HQ",
+          "owner_org_id": "ORG:POLICE_FLYING_SQUAD",
+          "capacity_ratio": 0.2
+        },
+        {
+          "wing_code": "SPECIAL_BRANCH_WING",
+          "name_suffix": "Special Branch & Specialist Squads Wing",
+          "category_code": "POLICE_HQ",
+          "owner_org_id": "ORG:POLICE_SPECIAL_BRANCH",
+          "capacity_ratio": 0.15
+        },
+        {
+          "wing_code": "TRAFFIC_CONTROL",
+          "name_suffix": "Traffic & Force Control Room",
+          "category_code": "POLICE_HQ",
+          "owner_org_id": "ORG:POLICE_TRAFFIC",
+          "capacity_ratio": 0.2
+        }
+      ],
+      "LOCAL_GOVERNMENT": [
+        {
+          "wing_code": "RATES_HOUSING",
+          "name_suffix": "Rates Collection & Housing Office",
+          "category_code": "LOCAL_GOVERNMENT",
+          "owner_org_id": "ORG:COUNCIL_RATES",
+          "capacity_ratio": 0.25
+        },
+        {
+          "wing_code": "SOCIAL_SERVICES",
+          "name_suffix": "Social Services & Environmental Health Annexe",
+          "category_code": "LOCAL_GOVERNMENT",
+          "owner_org_id": "ORG:COUNCIL_ADULT_CARE",
+          "capacity_ratio": 0.25
+        },
+        {
+          "wing_code": "HIGHWAYS_WASTE_DEPOT",
+          "name_suffix": "Highways, Transport & Waste Depot",
+          "category_code": "LOCAL_GOVERNMENT",
+          "owner_org_id": "ORG:COUNCIL_HIGHWAYS_ENV",
+          "capacity_ratio": 0.2
+        }
+      ]
+    }
   },
   "civic_schedules": {
     "authority_org_id": "ORG:CIVIC",

@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "target_class": "GenStreetResidencesDocket",
+    "extends": "VBoxContainer",
+    "description": "Pocket index-card street and building residential address drill-down view"
+  },
+  "sections": [
+    {
+      "id": "nav_controls",
+      "rows": [
+        {
+          "id": "btn_back",
+          "type": "BUTTON",
+          "font_size": 8,
+          "token": "UI_BTN_BACK_DOSSIER",
+          "action_signal": "action_clicked",
+          "emit_args": "\"open_dossier\", {}"
+        }
+      ]
+    },
+    {
+      "id": "street_identity",
+      "rows": [
+        {
+          "id": "street_header",
+          "type": "HEADER_BLOCK",
+          "color": "body",
+          "field": "street_name",
+          "subtitle_field": "district_name",
+          "title_color": "body",
+          "subtitle_color": "body",
+          "title_font_size": 12,
+          "subtitle_font_size": 10,
+          "show_separator": true,
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "units_directory",
+      "header_token": "UI_HDR_STREET_PROPERTIES",
+      "font_size": 8,
+      "rows": [
+        {
+          "id": "street_units",
+          "type": "LINKED_LIST",
+          "font_size": 8,
+          "field": "units_summary",
+          "key_field": "establishment_id",
+          "label_field": "unit_door_number",
+          "sublabel_field": "occupant_summary",
+          "token": "UI_LBL_STREET_PROPERTIES",
+          "action_signal": "item_selected",
+          "target_route": "OPEN_RESIDENTIAL_DOCKET",
+          "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "street_residences_signals",
+      "type": "SIGNALS",
+      "signals": ["action_clicked(action_code: String, payload: Dictionary)"]
+    }
+  ]
+}

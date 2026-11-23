@@ -2,7 +2,7 @@
   "_meta": {
 	"era": "1980s",
 	"region": "United Kingdom",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"description": "Establishment classes, tenancy types, catchment thresholds, and job_definition staffing rosters."
   },
   "commercial_tenants": {
@@ -10,6 +10,7 @@
 	  "display_name": "Corner Shop & Newsagent",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -50,6 +51,7 @@
 	  "display_name": "Off-Licence & Wine Merchant",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -89,6 +91,7 @@
 	  "display_name": "Public House & Taproom",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -138,6 +141,7 @@
 	  "display_name": "Private Hire & Minicab Office",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -181,6 +185,7 @@
 	  "display_name": "Commercial Cleaning & Maintenance Services",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -222,6 +227,7 @@
 	  "display_name": "Fish and Chip Shop",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -265,6 +271,8 @@
 	  "display_name": "Chinese Take Away",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
+	  "proproetor_ethnicity": "CHINESE",
 	  "spawns_in_archetypes": [
 		"commercial",
 		"high_density_low_rise",
@@ -315,6 +323,8 @@
 	  "display_name": "Indian Take Away",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
+	  "proproetor_ethnicity": "SOUTH_ASIAN",
 	  "spawns_in_archetypes": [
 		"commercial",
 		"high_density_low_rise",
@@ -348,6 +358,8 @@
 	  "display_name": "Indian Restaurant",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
+	  "proproetor_ethnicity": "SOUTH_ASIAN",
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -397,6 +409,7 @@
 	  "display_name": "Turf Accountant & Bookmakers",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -440,6 +453,7 @@
 	  "display_name": "Family Butcher",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -488,6 +502,7 @@
 	  "display_name": "Family Bakery",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -536,6 +551,7 @@
 	  "display_name": "Green Grocers",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -577,6 +593,7 @@
 	  "display_name": "Pet Shop",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -604,6 +621,7 @@
 	  "display_name": "Toy Shop",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -631,6 +649,7 @@
 	  "display_name": "High Steet Bank Branch",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -686,6 +705,7 @@
 	  "display_name": "Ironmonger & DIY Supplies",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -713,6 +733,7 @@
 	  "display_name": "Dispensing Chemist & Pharmacy",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "6430",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -756,6 +777,7 @@
 	  "display_name": "Coin-Op Launderette & Dry Cleaners",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "9811",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -791,6 +813,7 @@
 	  "display_name": "Hairdressing Salon & Barbers",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "9820",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -825,6 +848,7 @@
 	  "display_name": "Estate Agents & Surveyors Office",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "8340",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -864,6 +888,7 @@
 	  "display_name": "Solicitors & Legal Practice",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "8350",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -910,6 +935,7 @@
 	  "display_name": "Petrol Filling Station & Forecourt",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "6520",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -949,6 +975,7 @@
 	  "display_name": "Wholesale Cash & Carry Warehouse",
 	  "sector": "COMMERCIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "6170",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -1004,6 +1031,7 @@
 	  "display_name": "Charter Coach & Road Haulage Depot",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1045,6 +1073,7 @@
 	  "display_name": "Builders Yard & Civil Contracting",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1100,6 +1129,7 @@
 	  "display_name": "Metal Foundry & Heavy Engineering",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1149,6 +1179,7 @@
 	  "display_name": "Motor Repair Works & Body Shop",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1197,6 +1228,7 @@
 	  "display_name": "Scrap & Metal Reclamation",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1230,6 +1262,7 @@
 	  "display_name": "Joinery Works & Timber Yard",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1270,6 +1303,7 @@
 	  "display_name": "Textiles and Cloth",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1318,6 +1352,7 @@
 	  "display_name": "Clothes Manufacturers",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1363,6 +1398,7 @@
 	},
 	"INDURSTRIAL_PRINTERS": {
 	  "display_name": "Printers",
+	  "use_proprietor_name": true,
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
 	  "spawns_in_archetypes": [
@@ -1411,6 +1447,7 @@
 	  "display_name": "Mail house",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1458,6 +1495,7 @@
 	  "display_name": "Furniture Manufacturer",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"industrial",
 		"high_density_low_rise",
@@ -1509,6 +1547,7 @@
 	  "display_name": "Brewery",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1563,6 +1602,7 @@
 	  "display_name": "Wholesale Plant Bakery",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "4196",
 	  "spawns_in_archetypes": [
 		"industrial",
@@ -1614,6 +1654,7 @@
 	  "display_name": "Sheet Metal Works & Light Engineering",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "3169",
 	  "spawns_in_archetypes": [
 		"industrial",
@@ -1658,6 +1699,7 @@
 	  "display_name": "Plastics Injection & Moulding Works",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "4836",
 	  "spawns_in_archetypes": [
 		"industrial",
@@ -1702,6 +1744,7 @@
 	  "display_name": "Freight Warehousing & Distribution Depot",
 	  "sector": "INDUSTRIAL",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "sic_1980_code": "7700",
 	  "spawns_in_archetypes": [
 		"industrial",
@@ -1755,6 +1798,7 @@
 	  "display_name": "Medical Practice & Surgery",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1800,6 +1844,7 @@
 	  "display_name": "Dental Surgery",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1843,6 +1888,7 @@
 	  "display_name": "Chiropodist Surgery",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": true,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1885,7 +1931,8 @@
 	"SUB_POST_OFFICE": {
 	  "display_name": "Sub-Post Office & Newsagent",
 	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
+	  "is_public_landmark": true,
+	  "use_proprietor_name": false,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1932,7 +1979,8 @@
 	"LOCAL_POLICE_POST": {
 	  "display_name": "Section Police Station",
 	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
+	  "is_public_landmark": true,
+	  "use_proprietor_name": false,
 	  "spawns_in_archetypes": [
 		"commercial",
 		"industrial",
@@ -1985,6 +2033,7 @@
 	  "display_name": "Borough Fire Station",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": true,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "9140",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -2034,6 +2083,7 @@
 	  "display_name": "Borough Public Library",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": true,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "9770",
 	  "spawns_in_archetypes": [
 		"commercial",
@@ -2074,6 +2124,7 @@
 	  "display_name": "Council Direct Labour & Cleansing Depot",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": false,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "9112",
 	  "spawns_in_archetypes": [
 		"industrial",
@@ -2118,6 +2169,7 @@
 	  "display_name": "Magistrates' Court & Petty Sessions",
 	  "sector": "CIVIC_SERVICE",
 	  "is_public_landmark": true,
+	  "use_proprietor_name": false,
 	  "sic_1980_code": "9120",
 	  "spawns_in_archetypes": [
 		"local_government",

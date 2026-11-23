@@ -19,6 +19,7 @@ static func run(
 	on_progress: Callable
 ) -> Dictionary:
 	var districts: Dictionary = world_state.get("districts", {})
+	var boroughs: Dictionary = world_state.get("boroughs", {})
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var sim_start_year: int = int(world_state.get("metadata", {}).get("calendar_year", 1980))
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
@@ -58,6 +59,10 @@ static func run(
 	var street_suffixes: Array = street_cfg.get("suffixes", [])
 	assert(not street_roots.is_empty() and not street_suffixes.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing street_names in lexicon.")
 
+	var street_cap_cfg: Dictionary = lexicon.get("street_property_cap", {"min": 40, "max": 200})
+	var street_cap_min: int = maxi(1, int(street_cap_cfg.get("min", 40)))
+	var street_cap_max: int = maxi(street_cap_min, int(street_cap_cfg.get("max", 200)))
+
 	var bldg_cfg: Dictionary = lexicon.get("residential_building_names", {})
 	var bldg_roots: Array = bldg_cfg.get("roots", [])
 	var bldg_suffixes: Array = bldg_cfg.get("suffixes", [])
@@ -69,19 +74,23 @@ static func run(
 	var fmt_street_unit: String = str(address_fmts.get("street_unit", "{door} {street}"))
 	var fmt_street_door: String = str(address_fmts.get("street_door", "{door}"))
 
+	var civic_naming_formats: Array = lexicon.get("civic_naming_formats", ["{district_name} {trade}", "{borough_name} {trade}", "{street_root} {trade}"])
 	var comm_naming: Dictionary = lexicon.get("commercial_naming", {})
 	assert(not comm_naming.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'commercial_naming' in spatial lexicon.")
 
-	# 0. Seed Canonical Organizations from civic_hierarchy module (ORG:CIVIC, ORG:NHS, ORG:POST_OFFICE, Banks, etc.)
+	# 0. Seed Hierarchical Public Organizations & Era-Brand Corporate Organizations
 	var civic_cfg: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
 	var institutions_cfg: Dictionary = civic_cfg.get("institutions", {})
 	var default_civic_org_id: String = str(institutions_cfg.get("default_civic_org_id", "ORG:CIVIC"))
 	var seeded_orgs: Array = institutions_cfg.get("seeded_organizations", [])
+	var site_wing_templates: Dictionary = institutions_cfg.get("site_wing_templates", {})
 
 	var org_inserts: Array[String] = []
 	var brand_org_map: Dictionary = {}
 	var category_org_map: Dictionary = {}
+	var host_orgs_by_category: Dictionary = {}
 	var org_pay_cadences: Dictionary = {}
+	var borough_police_orgs: Dictionary = {}
 
 	for org_def in seeded_orgs:
 		if not (org_def is Dictionary):
@@ -89,23 +98,81 @@ static func run(
 		var oid: String = str(org_def.get("org_id", "")).strip_edges()
 		if oid.is_empty():
 			continue
+		var parent_raw = org_def.get("parent_org_id", null)
+		var parent_sql: String = "NULL" if (parent_raw == null or str(parent_raw).is_empty()) else ("'%s'" % str(parent_raw).replace("'", "''"))
+		var autonomy_mode: String = str(org_def.get("autonomy_mode", "DIRECT"))
 		var dname: String = str(org_def.get("display_name", oid)).replace("'", "''")
 		var otype: String = str(org_def.get("org_type", "INSTITUTION"))
 		var lstatus: String = str(org_def.get("legal_status", "FORMAL"))
 		var rclass: String = str(org_def.get("institution_rail_class", "STANDARD"))
-		org_pay_cadences[oid] = str(org_def.get("default_pay_cadence", "MONTHLY"))
+		org_pay_cadences[oid] = str(org_def.get("default_pay_cadence", "MONTHLY_LAST_WORKING_DAY"))
 
 		org_inserts.append("""
 			INSERT OR IGNORE INTO organizations (
-				org_id, display_name, org_type, legal_status, institution_rail_class,
-				valid_from, valid_to, change_reason_id
-			) VALUES ('%s', '%s', '%s', '%s', '%s', %d, NULL, %d);
-		""" % [oid, dname, otype, lstatus, rclass, sim_start_day, reason_world_gen_id])
+				org_id, parent_org_id, display_name, org_type, legal_status,
+				institution_rail_class, autonomy_mode, valid_from, valid_to, change_reason_id
+			) VALUES ('%s', %s, '%s', '%s', '%s', '%s', '%s', %d, NULL, %d);
+		""" % [oid, parent_sql, dname, otype, lstatus, rclass, autonomy_mode, sim_start_day, reason_world_gen_id])
 
 		for m_title in org_def.get("matched_titles", []):
 			brand_org_map[str(m_title)] = oid
 		for m_cat in org_def.get("matched_categories", []):
 			category_org_map[str(m_cat)] = oid
+		for h_cat in org_def.get("host_categories", []):
+			var hc: String = str(h_cat)
+			if not host_orgs_by_category.has(hc):
+				host_orgs_by_category[hc] = []
+			host_orgs_by_category[hc].append(oid)
+
+		# Instantiate per-borough sub-divisions (e.g. Borough Police Divisions)
+		if org_def.has("per_borough_template") and org_def["per_borough_template"] is Dictionary:
+			var tmpl: Dictionary = org_def["per_borough_template"]
+			var id_pat: String = str(tmpl.get("org_id_pattern", "%s_{borough_slug}" % oid))
+			var name_pat: String = str(tmpl.get("display_name_pattern", "{borough_name} %s" % dname))
+			for b_id in boroughs.keys():
+				var b_dict: Dictionary = boroughs[b_id]
+				var b_name: String = str(b_dict.get("display_name", b_id))
+				var b_slug: String = str(b_id).to_upper().replace("BOROUGH_", "").replace(" ", "_")
+				var sub_oid: String = id_pat.replace("{borough_slug}", b_slug)
+				var sub_name: String = name_pat.replace("{borough_name}", b_name).replace("'", "''")
+				borough_police_orgs[str(b_id)] = sub_oid
+				org_pay_cadences[sub_oid] = org_pay_cadences[oid]
+				org_inserts.append("""
+					INSERT OR IGNORE INTO organizations (
+						org_id, parent_org_id, display_name, org_type, legal_status,
+						institution_rail_class, autonomy_mode, valid_from, valid_to, change_reason_id
+					) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, NULL, %d);
+				""" % [sub_oid, oid, sub_name, otype, lstatus, rclass, autonomy_mode, sim_start_day, reason_world_gen_id])
+
+	# Seed Corporate Organizations from era_brands in spatial_lexicon (Single Source of Truth)
+	var era_brands_all: Dictionary = comm_naming.get("era_brands", {})
+	for brand_cat in era_brands_all.keys():
+		var entries = era_brands_all[brand_cat]
+		if not (entries is Array):
+			continue
+		for entry in entries:
+			if not (entry is Dictionary):
+				continue
+			var b_org_id: String = str(entry.get("org_id", "")).strip_edges()
+			var b_name: String = str(entry.get("name", "")).strip_edges()
+			if b_org_id.is_empty() or b_name.is_empty():
+				continue
+			if not b_name.contains("{"):
+				brand_org_map[b_name] = b_org_id
+			if b_org_id == "ORG:POST_OFFICE":
+				continue
+			var b_rail: String = str(entry.get("institution_rail_class", "STANDARD"))
+			var from_yr: int = int(entry.get("valid_from_year", 1900))
+			var to_yr: int = int(entry.get("valid_to_year", 2099))
+			var b_valid_from: int = sim_start_day if from_yr <= sim_start_year else sim_start_day + ((from_yr - sim_start_year) * 365)
+			var b_valid_to_sql: String = "NULL" if to_yr >= 2020 else str(sim_start_day + (maxi(1, to_yr - sim_start_year + 1) * 365))
+			org_pay_cadences[b_org_id] = "MONTHLY_LAST_WORKING_DAY"
+			org_inserts.append("""
+				INSERT OR IGNORE INTO organizations (
+					org_id, parent_org_id, display_name, org_type, legal_status,
+					institution_rail_class, autonomy_mode, valid_from, valid_to, change_reason_id
+				) VALUES ('%s', NULL, '%s', 'CORPORATION', 'FORMAL', '%s', 'DIRECT', %d, %s, %d);
+			""" % [b_org_id, b_name.replace("'", "''"), b_rail, b_valid_from, b_valid_to_sql, reason_world_gen_id])
 
 	if not org_inserts.is_empty():
 		DB_MANAGER.execute_batch(org_inserts)
@@ -116,22 +183,32 @@ static func run(
 		assert(archetypes.has(district_type), "FATAL: Archetype '%s' not registered." % district_type)
 
 		var arch: Dictionary = archetypes[district_type]
+		var is_vacant_plot: bool = bool(d.get("is_vacant_plot", arch.get("is_vacant_plot", false)))
 		var coords: Vector2i = d.get("grid_coords", Vector2i(0, 0))
 		var g_size: Vector2i = d.get("grid_size", Vector2i(1, 1))
-		var building_count: int = int(d.get("actual_building_count", 1))
+		var building_count: int = 0 if is_vacant_plot else maxi(1, int(d.get("actual_building_count", 1)))
 		var pop_range: Array = arch.get("population_range", [0, 0])
 		var exp_min: int = int(d.get("expected_pop_min", pop_range[0]))
 		var exp_max: int = int(d.get("expected_pop_max", pop_range[1]))
 		var center_vec: Vector2 = SPATIAL_RESOLVER._resolve_vector2(d.get("spatial_anchor", Vector2.ZERO))
 
-		# 1. Establish Primary Street Name & District Prefix for this parcel
-		var street_root: String = str(street_roots[rng.randi() % street_roots.size()])
-		var street_suf: String = str(street_suffixes[rng.randi() % street_suffixes.size()])
-		var parcel_street_name := "%s %s" % [street_root, street_suf]
+		var borough_id: String = str(d.get("borough_id", "BOROUGH_UNASSIGNED"))
+		var borough_name: String = str(boroughs.get(borough_id, {}).get("display_name", "")).replace(" Council", "").strip_edges()
+
+		# 1. Establish Primary Street Name, UK Street Cap (40-200) & District Prefix for this parcel
+		var used_streets_in_district: Dictionary = {}
+		var first_street: Dictionary = _pick_unique_street(street_roots, street_suffixes, used_streets_in_district, rng)
+		var street_root: String = first_street["root"]
+		var parcel_street_name: String = first_street["full"]
+		var active_street_cap: int = rng.randi_range(street_cap_min, street_cap_max)
+
 		var district_display: String = str(d.get("display_name", dist_id))
 		var district_prefix: String = district_display.split(" ")[0] if not district_display.is_empty() else street_root
+		if borough_name.is_empty():
+			borough_name = district_prefix
 		var street_door_counter: int = 1
 		var used_names_in_district: Dictionary = {}
+		var establishments_created_in_district: int = 0
 
 		dist_inserts.append("""
 			INSERT INTO districts (
@@ -141,14 +218,14 @@ static func run(
 				base_unemployment_rate, base_disposable_income, base_zone_health, base_police_heat,
 				is_home_turf, valid_from, valid_to, change_reason_id
 			) VALUES (
-				'%s', 'BOROUGH_UNASSIGNED', '%s', '%s',
+				'%s', '%s', '%s', '%s',
 				%d, %d, %d, %d,
 				%d, %d, %d,
 				%f, %f, %f, %f,
 				0, %d, NULL, %d
 			);
 		""" % [
-			dist_id, district_display.replace("'", "''"), district_type,
+			dist_id, borough_id, district_display.replace("'", "''"), district_type,
 			coords.x, coords.y, g_size.x, g_size.y,
 			building_count, exp_min, exp_max,
 			float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
@@ -158,17 +235,27 @@ static func run(
 
 		district_residents_map[dist_id] = []
 
+		# Vacant / Abandoned Plots remain bare land (0 establishments) until constructed on
+		if is_vacant_plot:
+			block_idx += 1
+			continue
+
 		# 2. Dedicated Institutional Anchor
 		if arch.has("institution_profile"):
 			var inst: Dictionary = arch["institution_profile"]
 			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
 			assert(arch.has("sector_class"), "FATAL: Archetype '%s' with institution_profile is missing mandatory 'sector_class'!" % district_type)
 			var inst_sector: String = str(arch["sector_class"]).to_upper()
-			var display_label: String = str(arch.get("display_name", cat_name)).replace("'", "''")
+			var base_inst_label: String = str(arch.get("display_name", cat_name))
+			var display_label: String = _format_civic_anchor_title(
+				base_inst_label, district_display, borough_name, street_root, civic_naming_formats, rng
+			).replace("'", "''")
 			var capacity: int = int(inst.get("default_capacity", 250))
 			var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_name)
 			var institution_estab_id: int = est_id
 			var inst_owner_org: String = str(category_org_map.get(cat_name, default_civic_org_id))
+			if cat_name == "POLICE_STATION" and borough_police_orgs.has(borough_id):
+				inst_owner_org = str(borough_police_orgs[borough_id])
 
 			estab_inserts.append("""
 				INSERT INTO establishments (
@@ -179,11 +266,42 @@ static func run(
 
 			_register_est_cat(by_cat, cat_name, institution_estab_id, dist_id, capacity)
 			employer_wage_biases[institution_estab_id] = 0.0
+			var hosted_orgs: Array = host_orgs_by_category.get(cat_name, [])
 			current_slot_id = expand_staffing_slots(
 				available_job_slots, job_slot_inserts, current_slot_id, institution_estab_id, dist_id,
-				inst_sector, inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng
+				inst_sector, inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng,
+				inst_owner_org, hosted_orgs
 			)
 			est_id += 1
+			establishments_created_in_district += 1
+
+			# Materialize Physical Wing Sub-Establishments for major multi-department institutional sites
+			if site_wing_templates.has(cat_name):
+				var wings: Array = site_wing_templates[cat_name]
+				var wing_b_idx: int = 1
+				for wing_def in wings:
+					if not (wing_def is Dictionary):
+						continue
+					var wing_code: String = str(wing_def.get("wing_code", "WING_%d" % wing_b_idx))
+					var wing_suffix: String = str(wing_def.get("name_suffix", wing_code))
+					var wing_cat: String = str(wing_def.get("category_code", cat_name))
+					var wing_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", wing_cat)
+					var wing_owner: String = str(wing_def.get("owner_org_id", inst_owner_org))
+					var wing_cap: int = maxi(10, int(round(float(capacity) * float(wing_def.get("capacity_ratio", 0.15)))))
+					var wing_title: String = ("%s — %s" % [display_label, wing_suffix]).replace("'", "''")
+
+					estab_inserts.append("""
+						INSERT INTO establishments (
+							establishment_id, district_id, building_index, unit_door_number,
+							owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+						) VALUES (%d, '%s', %d, '%s', '%s', '%s', %d, %d, 0, %d, NULL, %d);
+					""" % [est_id, dist_id, wing_b_idx, wing_code, wing_owner, wing_title, wing_cat_id, wing_cap, sim_start_day, reason_world_gen_id])
+
+					_register_est_cat(by_cat, wing_cat, est_id, dist_id, wing_cap)
+					employer_wage_biases[est_id] = 0.0
+					est_id += 1
+					wing_b_idx += 1
+					establishments_created_in_district += 1
 
 			# Generate Tied Living Accommodation Units anchored to this institution
 			var housing_profiles: Array[Dictionary] = _extract_housing_profiles(arch)
@@ -235,6 +353,7 @@ static func run(
 
 					total_tied_units_count += 1
 					est_id += 1
+					establishments_created_in_district += 1
 
 		# 3. Sub-Block Embedded Civics placed in Pass 1
 		if d.has("embedded_civics"):
@@ -244,11 +363,16 @@ static func run(
 				var c_cat_name: String = str(c_arch.get("establishment_category", civic_key.to_upper()))
 				assert(c_arch.has("sector_class"), "FATAL: Embedded civic archetype '%s' missing mandatory 'sector_class'!" % civic_key)
 				var c_sector: String = str(c_arch["sector_class"]).to_upper()
-				var c_display: String = str(c_arch.get("display_name", c_cat_name)).replace("'", "''")
+				var c_base_label: String = str(c_arch.get("display_name", c_cat_name))
+				var c_display: String = _format_civic_anchor_title(
+					c_base_label, district_display, borough_name, street_root, civic_naming_formats, rng
+				).replace("'", "''")
 				var c_cap: int = int(c_inst.get("default_capacity", 250))
 				var c_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", c_cat_name)
 				var embedded_estab_id: int = est_id
 				var c_owner_org: String = str(category_org_map.get(c_cat_name, default_civic_org_id))
+				if c_cat_name == "POLICE_STATION" and borough_police_orgs.has(borough_id):
+					c_owner_org = str(borough_police_orgs[borough_id])
 
 				estab_inserts.append("""
 					INSERT INTO establishments (
@@ -261,9 +385,11 @@ static func run(
 				employer_wage_biases[embedded_estab_id] = 0.0
 				current_slot_id = expand_staffing_slots(
 					available_job_slots, job_slot_inserts, current_slot_id, embedded_estab_id, dist_id,
-					c_sector, c_inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng
+					c_sector, c_inst, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng,
+					c_owner_org, host_orgs_by_category.get(c_cat_name, [])
 				)
 				est_id += 1
+				establishments_created_in_district += 1
 
 				# Embedded civic tied accommodations
 				var embedded_h_profiles: Array[Dictionary] = _extract_housing_profiles(c_arch)
@@ -303,6 +429,7 @@ static func run(
 
 					total_tied_units_count += 1
 					est_id += 1
+					establishments_created_in_district += 1
 
 		# 4. Units from building_allocations
 		var h_profiles: Array[Dictionary] = _extract_housing_profiles(arch)
@@ -323,7 +450,7 @@ static func run(
 			var num_comm: int = int(alloc["commercial_units"])
 			var num_ind: int = int(alloc["industrial_units"])
 
-			# A. Residential Units
+			# A. Residential Units (Partitioned across UK street caps of 40-200 properties per road)
 			if num_homes > 0 and res_type_code != "NONE":
 				var building_name := ""
 				if is_multi_flat_block:
@@ -340,6 +467,13 @@ static func run(
 						unit_door = fmt_flat_door.replace("{door}", str(flat_num))
 						unit_name = fmt_flat_unit.replace("{door}", str(flat_num)).replace("{building}", building_name)
 					else:
+						if street_door_counter > active_street_cap:
+							var next_street: Dictionary = _pick_unique_street(street_roots, street_suffixes, used_streets_in_district, rng)
+							street_root = next_street["root"]
+							parcel_street_name = next_street["full"]
+							street_door_counter = 1
+							active_street_cap = rng.randi_range(street_cap_min, street_cap_max)
+
 						var door_num: int = street_door_counter
 						street_door_counter += 1
 						unit_door = fmt_street_door.replace("{door}", str(door_num))
@@ -389,6 +523,7 @@ static func run(
 						current_household_id += 1
 
 					est_id += 1
+					establishments_created_in_district += 1
 
 			# B. Commercial Units
 			if num_comm > 0:
@@ -406,9 +541,9 @@ static func run(
 					block_tenancy_counts[cat_code] = block_tenancy_counts.get(cat_code, 0) + 1
 
 					var name_result: Dictionary = _generate_business_name(
-						cat_code, tenancy["display_name"], false, district_type,
-						street_root, district_prefix, sim_start_year,
-						comm_naming, cultural, lexicon, used_names_in_district, rng
+						cat_code, tenancy, false, district_type,
+						street_root, district_prefix, district_display, borough_name, sim_start_year,
+						comm_naming, civic_naming_formats, cultural, lexicon, used_names_in_district, rng
 					)
 					var display_title: String = str(name_result["title"])
 					used_names_in_district[display_title] = true
@@ -429,14 +564,20 @@ static func run(
 						is_vacant = 1
 						cap = 0
 
-					var comm_owner_sql: String = "NULL"
+					var comm_owner_org: String = ""
 					if category_org_map.has(cat_code):
-						comm_owner_sql = "'%s'" % str(category_org_map[cat_code])
+						comm_owner_org = str(category_org_map[cat_code])
+					elif cat_code == "LOCAL_POLICE_POST" and borough_police_orgs.has(borough_id):
+						comm_owner_org = str(borough_police_orgs[borough_id])
+					elif str(tenancy.get("sector", "")).to_upper() == "CIVIC_SERVICE" and not bool(tenancy.get("use_proprietor_name", true)):
+						comm_owner_org = default_civic_org_id
 					else:
 						for b_title in brand_org_map.keys():
 							if display_title == b_title or display_title.begins_with("%s (" % b_title):
-								comm_owner_sql = "'%s'" % str(brand_org_map[b_title])
+								comm_owner_org = str(brand_org_map[b_title])
 								break
+
+					var comm_owner_sql: String = "'%s'" % comm_owner_org if not comm_owner_org.is_empty() else "NULL"
 
 					var cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", cat_code)
 					estab_inserts.append("""
@@ -460,10 +601,12 @@ static func run(
 						employer_wage_biases[est_id] = wage_bias
 						current_slot_id = expand_staffing_slots(
 							available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
-							comm_sector, tenancy, job_definitions, wage_bias, sim_start_day, reason_world_gen_id, rng
+							comm_sector, tenancy, job_definitions, wage_bias, sim_start_day, reason_world_gen_id, rng,
+							comm_owner_org
 						)
 
 					est_id += 1
+					establishments_created_in_district += 1
 
 			# C. Industrial Units
 			if num_ind > 0:
@@ -471,9 +614,9 @@ static func run(
 					var ind_tenancy: Dictionary = pick_tenancy(rng, ind_classes, {}, district_type)
 					var i_code: String = ind_tenancy["code"]
 					var ind_name_res: Dictionary = _generate_business_name(
-						i_code, ind_tenancy["display_name"], true, district_type,
-						street_root, district_prefix, sim_start_year,
-						comm_naming, cultural, lexicon, used_names_in_district, rng
+						i_code, ind_tenancy, true, district_type,
+						street_root, district_prefix, district_display, borough_name, sim_start_year,
+						comm_naming, civic_naming_formats, cultural, lexicon, used_names_in_district, rng
 					)
 					var i_title: String = str(ind_name_res["title"])
 					used_names_in_district[i_title] = true
@@ -502,6 +645,29 @@ static func run(
 						ind_sector, ind_tenancy, job_definitions, ind_wage_bias, sim_start_day, reason_world_gen_id, rng
 					)
 					est_id += 1
+					establishments_created_in_district += 1
+
+		# 5. Single-Entity District Canonical Establishment Guarantee (Item 1)
+		# Non-vacant single-entity districts always materialize a canonical MAIN establishment
+		if establishments_created_in_district == 0:
+			var fallback_cat: String = str(arch.get("establishment_category", district_type.to_upper()))
+			var fallback_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", fallback_cat)
+			var fallback_title: String = _format_civic_anchor_title(
+				str(arch.get("display_name", fallback_cat)),
+				district_display, borough_name, street_root, civic_naming_formats, rng
+			).replace("'", "''")
+			var fallback_owner: String = str(category_org_map.get(fallback_cat, default_civic_org_id if str(arch.get("sector_class", "")).to_upper() == "CIVIC" else ""))
+			var fallback_owner_sql: String = "'%s'" % fallback_owner if not fallback_owner.is_empty() else "NULL"
+
+			estab_inserts.append("""
+				INSERT INTO establishments (
+					establishment_id, district_id, building_index, unit_door_number,
+					owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+				) VALUES (%d, '%s', 0, 'MAIN', %s, '%s', %d, 25, 0, %d, NULL, %d);
+			""" % [est_id, dist_id, fallback_owner_sql, fallback_title, fallback_cat_id, sim_start_day, reason_world_gen_id])
+			_register_est_cat(by_cat, fallback_cat, est_id, dist_id, 25)
+			employer_wage_biases[est_id] = 0.0
+			est_id += 1
 
 		# Batch commit every 25 districts
 		if block_idx > 0 and block_idx % 25 == 0:
@@ -551,6 +717,40 @@ static func run(
 		"org_pay_cadences": org_pay_cadences
 	}
 
+static func _pick_unique_street(
+	street_roots: Array,
+	street_suffixes: Array,
+	used_streets: Dictionary,
+	rng: RandomNumberGenerator
+) -> Dictionary:
+	for _attempt in range(40):
+		var root: String = str(street_roots[rng.randi() % street_roots.size()])
+		var suf: String = str(street_suffixes[rng.randi() % street_suffixes.size()])
+		var full: String = "%s %s" % [root, suf]
+		if not used_streets.has(full):
+			used_streets[full] = true
+			return {"root": root, "suffix": suf, "full": full}
+
+	var fallback_root: String = str(street_roots[rng.randi() % street_roots.size()])
+	var fallback_suf: String = str(street_suffixes[rng.randi() % street_suffixes.size()])
+	var idx: int = used_streets.size() + 1
+	var qualified: String = "%s %s (%d)" % [fallback_root, fallback_suf, idx]
+	used_streets[qualified] = true
+	return {"root": fallback_root, "suffix": fallback_suf, "full": qualified}
+
+static func _format_civic_anchor_title(
+	base_trade_name: String,
+	district_display: String,
+	borough_name: String,
+	street_root: String,
+	civic_formats: Array,
+	rng: RandomNumberGenerator
+) -> String:
+	if civic_formats.is_empty():
+		return "%s %s" % [district_display, base_trade_name]
+	var fmt: String = str(civic_formats[rng.randi() % civic_formats.size()])
+	return fmt.replace("{district_name}", district_display).replace("{borough_name}", borough_name).replace("{street_root}", street_root).replace("{trade}", base_trade_name)
+
 ## Rolls an employer-level wage generosity bias [-1.0..+1.0] representing owner generosity & future-planning vs. greed
 static func _roll_employer_wage_bias(rng: RandomNumberGenerator) -> float:
 	# Triangular/normal-ish draw centered around 0.0 (midpoint rate)
@@ -563,21 +763,28 @@ static func compute_ocean_wage_bias(ocean_traits: Dictionary) -> float:
 	var openness: float = float(ocean_traits.get("openness", 0.5))
 	return clampf((0.45 * agreeableness) + (0.35 * conscientiousness) + (0.20 * openness) - 0.50, -1.0, 1.0)
 
-## Resolves an era-appropriate brand, pub, location-anchored, or family proprietor business title
+## Resolves an era-appropriate brand, pub, civic/location-anchored, or family proprietor business title
 static func _generate_business_name(
 	cat_code: String,
-	base_trade_name: String,
+	tenancy: Dictionary,
 	is_industrial: bool,
 	district_type: String,
 	street_root: String,
 	district_prefix: String,
+	district_display: String,
+	borough_name: String,
 	calendar_year: int,
 	comm_naming: Dictionary,
+	civic_naming_formats: Array,
 	cultural: Dictionary,
 	lexicon: Dictionary,
 	used_names: Dictionary,
 	rng: RandomNumberGenerator
 ) -> Dictionary:
+	var base_trade_name: String = str(tenancy.get("display_name", cat_code))
+	var allow_proprietor: bool = bool(tenancy.get("use_proprietor_name", true))
+	var forced_ethnicity: String = str(tenancy.get("proprietor_ethnicity", "")).strip_edges()
+
 	# 1. Dedicated Pub Name Pool
 	if cat_code == "LOCAL_PUB":
 		var pub_names: Array = comm_naming.get("pub_names", [])
@@ -587,11 +794,19 @@ static func _generate_business_name(
 			candidate_pub = "%s (%s)" % [candidate_pub, street_root]
 		return { "title": candidate_pub }
 
-	# 2. Era-Windowed Corporate / High-Street Chains
+	# 2. Era-Windowed Corporate / High-Street Chains (mapped to era_brands keys)
+	var brand_lookup_key: String = cat_code
+	if cat_code == "RETAIL_BANK":
+		brand_lookup_key = "BANK_BRANCH"
+	elif cat_code == "CHEMIST_PHARMACY":
+		brand_lookup_key = "CHEMIST"
+	elif cat_code == "SUB_POST_OFFICE":
+		brand_lookup_key = "POST_OFFICE"
+
 	var era_brands: Dictionary = comm_naming.get("era_brands", {})
-	if era_brands.has(cat_code):
+	if era_brands.has(brand_lookup_key):
 		var active_brands: Array[String] = []
-		for entry in era_brands[cat_code]:
+		for entry in era_brands[brand_lookup_key]:
 			if entry is Dictionary:
 				var from_yr: int = int(entry.get("valid_from_year", 1900))
 				var to_yr: int = int(entry.get("valid_to_year", 2100))
@@ -604,12 +819,21 @@ static func _generate_business_name(
 				resolved_brand = "%s (%s)" % [resolved_brand, street_root]
 			return { "title": resolved_brand }
 
-	# 3. Industrial Formats
+	# 3. Non-Proprietor / Civic Establishments (Police, Clinics, Courts, Libraries, Depots)
+	if not allow_proprietor:
+		var civic_title: String = _format_civic_anchor_title(
+			base_trade_name, district_display, borough_name, street_root, civic_naming_formats, rng
+		)
+		if used_names.has(civic_title):
+			civic_title = "%s (%s)" % [civic_title, street_root]
+		return { "title": civic_title }
+
+	# 4. Industrial Formats
 	if is_industrial:
 		var ind_formats: Array = comm_naming.get("industrial_formats", [])
 		assert(not ind_formats.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'industrial_formats' in commercial_naming.")
 		var fmt: String = str(ind_formats[rng.randi() % ind_formats.size()])
-		var cult: Dictionary = roll_household_culture(cultural, rng, district_type)
+		var cult: Dictionary = _resolve_proprietor_culture(cultural, rng, district_type, forced_ethnicity)
 		var pool_key: String = str(cult.get("surnames_pool", "surnames"))
 		var surnames_arr: Array = lexicon.get(pool_key, lexicon.get("surnames", ["Smith"]))
 		var surname: String = str(surnames_arr[rng.randi() % surnames_arr.size()])
@@ -624,13 +848,13 @@ static func _generate_business_name(
 			}
 		return res
 
-	# 4. Independent Commercial Trades (Family Proprietor vs Street/District Location)
-	var fam_prob: float = float(comm_naming.get("family_trade_probability", 0.65))
+	# 5. Independent Commercial Trades (Family Proprietor vs Street/District Location)
+	var fam_prob: float = 1.0 if not forced_ethnicity.is_empty() else float(comm_naming.get("family_trade_probability", 0.65))
 	if rng.randf() < fam_prob:
 		var fam_formats: Array = comm_naming.get("family_formats", [])
 		assert(not fam_formats.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'family_formats' in commercial_naming.")
 		var fmt: String = str(fam_formats[rng.randi() % fam_formats.size()])
-		var cult: Dictionary = roll_household_culture(cultural, rng, district_type)
+		var cult: Dictionary = _resolve_proprietor_culture(cultural, rng, district_type, forced_ethnicity)
 		var pool_key: String = str(cult.get("surnames_pool", "surnames"))
 		var surnames_arr: Array = lexicon.get(pool_key, lexicon.get("surnames", ["Smith"]))
 		var surname: String = str(surnames_arr[rng.randi() % surnames_arr.size()])
@@ -655,6 +879,34 @@ static func _generate_business_name(
 		if used_names.has(title):
 			title = "%s (%s)" % [title, street_root]
 		return { "title": title }
+
+static func _resolve_proprietor_culture(
+	cultural: Dictionary,
+	rng: RandomNumberGenerator,
+	district_type: String,
+	forced_ethnicity: String
+) -> Dictionary:
+	if forced_ethnicity.is_empty():
+		return roll_household_culture(cultural, rng, district_type)
+	var ethnicities: Dictionary = cultural.get("ethnicities", {})
+	if not ethnicities.has(forced_ethnicity):
+		return roll_household_culture(cultural, rng, district_type)
+	var eth_profile: Dictionary = ethnicities[forced_ethnicity]
+	var defaults: Dictionary = cultural.get("defaults", {})
+	var rel_weights: Dictionary = eth_profile.get("religion_distribution", {})
+	var chosen_rel: String = str(defaults.get("secular_or_unaffiliated_religion_key", "UNAFFILIATED"))
+	var roll: float = rng.randf()
+	var cumulative: float = 0.0
+	for rel in rel_weights.keys():
+		cumulative += float(rel_weights[rel])
+		if roll <= cumulative:
+			chosen_rel = str(rel)
+			break
+	return {
+		"ethnicity": forced_ethnicity,
+		"religion": chosen_rel,
+		"surnames_pool": eth_profile.get("surnames_pool", "surnames")
+	}
 
 static func _extract_housing_profiles(arch: Dictionary) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
@@ -748,7 +1000,9 @@ static func expand_staffing_slots(
 	employer_wage_bias: float,
 	sim_start_day: int,
 	reason_id: int,
-	rng: RandomNumberGenerator
+	rng: RandomNumberGenerator,
+	primary_org_id: String = "",
+	hosted_sub_orgs: Array = []
 ) -> int:
 	var slot_id_counter: int = starting_slot_id
 	var estab_multiplier: float = float(host_def.get("wage_multiplier", 1.0))
@@ -807,14 +1061,18 @@ static func expand_staffing_slots(
 			var count: int = rng.randi_range(int(count_range[0]), int(count_range[1]))
 			var role_id: int = DB_MANAGER.get_label_id("ROLE_TITLE", job_code)
 
-			for _i in range(count):
+			for slot_idx in range(count):
 				var s_id: int = slot_id_counter
 				slot_id_counter += 1
+				var slot_org_id: String = primary_org_id
+				if not hosted_sub_orgs.is_empty():
+					slot_org_id = str(hosted_sub_orgs[slot_idx % hosted_sub_orgs.size()])
 
 				slots_array.append({
 					"slot_id": s_id,
 					"estab_id": estab_id,
 					"district_id": dist_id,
+					"employer_org_id": slot_org_id,
 					"sector_category_id": sector_category_id,
 					"role_title": job_code,
 					"role_title_id": role_id,
@@ -891,6 +1149,7 @@ static func expand_staffing_slots(
 				"slot_id": s_id,
 				"estab_id": estab_id,
 				"district_id": dist_id,
+				"employer_org_id": primary_org_id,
 				"sector_category_id": sector_category_id,
 				"role_title": fallback_job,
 				"role_title_id": fallback_role_id,

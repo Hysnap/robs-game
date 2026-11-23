@@ -2,119 +2,403 @@
   "_meta": {
     "locale": "en_GB",
     "display_language": "English (British Regional)",
-    "version": "2.0.0",
-    "description": "Civic landmarks, district toponyms, borough labels, street names, and building identifiers for British urban generation."
+    "version": "2.3.0",
+    "description": "Civic landmarks, district toponyms, borough labels, street names, street property caps, building identifiers, and era-windowed commercial/civic naming rules for British urban generation."
   },
   "civic_sites": {
     "local_government": [
-      "Guildhall Precinct", "Council House Yard", "Victoria Square", 
-      "St. Mary's Gate", "Magistrates' Walk", "The Council Chamber",
-      "Civic Centre Plaza", "Rates & Housing Office", "Municipal Annexe",
-      "Social Security Office", "The Law Courts", "Borough Registry"
+      "Guildhall Precinct",
+      "Council House Yard",
+      "Victoria Square",
+      "St. Mary's Gate",
+      "Magistrates' Walk",
+      "The Council Chamber",
+      "Civic Centre Plaza",
+      "Rates & Housing Office",
+      "Municipal Annexe",
+      "Social Security Office",
+      "The Law Courts",
+      "Borough Registry"
     ],
     "hospital_site": [
-      "Queen Elizabeth Infirmary", "St. Jude's General Hospital", 
-      "Calthorpe Medical Trust", "Victoria Memorial Hospital",
-      "City General Maternity Wing", "St. Jude's Health Centre",
-      "District Outpatients Clinic", "Royal Orthopaedic Annexe"
+      "Queen Elizabeth Infirmary",
+      "St. Jude's General Hospital",
+      "Calthorpe Medical Trust",
+      "Victoria Memorial Hospital",
+      "City General Maternity Wing",
+      "St. Jude's Health Centre",
+      "District Outpatients Clinic",
+      "Royal Orthopaedic Annexe"
     ],
     "university_campus": [
-      "Redbrick Campus", "St. Jude's College Estate", 
-      "Polytechnic Precinct", "Faculty Row", "University Grove",
-      "Technical College Annexe", "Students' Union Building",
-      "Science Park Phase I", "Halls of Residence"
+      "Redbrick Campus",
+      "St. Jude's College Estate",
+      "Polytechnic Precinct",
+      "Faculty Row",
+      "University Grove",
+      "Technical College Annexe",
+      "Students' Union Building",
+      "Science Park Phase I",
+      "Halls of Residence"
     ]
   },
   "prefixes": {
     "commercial": [
-      "Market", "High", "Crown", "Bull", "Broad", "Victoria", "St. Jude's", 
-      "Corporation", "Albert", "Colmore", "Regent", "New", "Exchange",
-      "Shopping", "Town", "Jubilee", "Centenary", "Arndale", "Pallasades",
-      "Central", "Empire", "Grand"
+      "Market",
+      "High",
+      "Crown",
+      "Bull",
+      "Broad",
+      "Victoria",
+      "St. Jude's",
+      "Corporation",
+      "Albert",
+      "Colmore",
+      "Regent",
+      "New",
+      "Exchange",
+      "Shopping",
+      "Town",
+      "Jubilee",
+      "Centenary",
+      "Arndale",
+      "Pallasades",
+      "Central",
+      "Empire",
+      "Grand"
     ],
     "high_density_low_rise": [
-      "Aston", "Handsworth", "Birch", "Moor", "Heath", "Blackthorn", "Summer", 
-      "Wharf", "Ladywood", "Lozells", "Nechells", "Hockley", "Balsall",
-      "Sparkhill", "Deritend", "Digbeth", "Duddeston", "Witton", "Gosta",
-      "Saltley", "Winson"
+      "Aston",
+      "Handsworth",
+      "Birch",
+      "Moor",
+      "Heath",
+      "Blackthorn",
+      "Summer",
+      "Wharf",
+      "Ladywood",
+      "Lozells",
+      "Nechells",
+      "Hockley",
+      "Balsall",
+      "Sparkhill",
+      "Deritend",
+      "Digbeth",
+      "Duddeston",
+      "Witton",
+      "Gosta",
+      "Saltley",
+      "Winson"
     ],
     "high_density_high_rise": [
-      "Westfield", "Blackthorn", "Greenfields", "Parkview", "Moor Rise", 
-      "Paddock", "Rednal", "Castle", "Newtown", "Highgate", "Falcon",
-      "Chelmsley", "Druids", "Shard", "Lee Bank", "Attwood", "Hawkesley",
-      "Frankley", "Bromford", "Kestrel"
+      "Westfield",
+      "Blackthorn",
+      "Greenfields",
+      "Parkview",
+      "Moor Rise",
+      "Paddock",
+      "Rednal",
+      "Castle",
+      "Newtown",
+      "Highgate",
+      "Falcon",
+      "Chelmsley",
+      "Druids",
+      "Shard",
+      "Lee Bank",
+      "Attwood",
+      "Hawkesley",
+      "Frankley",
+      "Bromford",
+      "Kestrel"
     ],
     "industrial": [
-      "Vulcan", "Iron", "Canal", "Foundry", "Gasworks", "Mill", "Wharfside", 
-      "Soho", "Forge", "Depot", "Minworth", "Siding", "Basin",
-      "Smethwick", "Tyseley", "Longbridge", "Washwood", "Gravelly", "Heartlands",
-      "Bromford", "Aston Cross", "Fort"
+      "Vulcan",
+      "Iron",
+      "Canal",
+      "Foundry",
+      "Gasworks",
+      "Mill",
+      "Wharfside",
+      "Soho",
+      "Forge",
+      "Depot",
+      "Minworth",
+      "Siding",
+      "Basin",
+      "Smethwick",
+      "Tyseley",
+      "Longbridge",
+      "Washwood",
+      "Gravelly",
+      "Heartlands",
+      "Bromford",
+      "Aston Cross",
+      "Fort"
     ],
     "suburban_low_density": [
-      "Kings", "Oak", "Hazel", "Meadow", "Church", "Elm", "Selly", "Edgbaston", 
-      "Solihull", "Bourn", "Harborne", "North", "Green", "Hall",
-      "Moseley", "Sutton", "Four Oaks", "Knowle", "Dorridge", "Barnt",
-      "Alvechurch", "Wythall", "Shirley"
+      "Kings",
+      "Oak",
+      "Hazel",
+      "Meadow",
+      "Church",
+      "Elm",
+      "Selly",
+      "Edgbaston",
+      "Solihull",
+      "Bourn",
+      "Harborne",
+      "North",
+      "Green",
+      "Hall",
+      "Moseley",
+      "Sutton",
+      "Four Oaks",
+      "Knowle",
+      "Dorridge",
+      "Barnt",
+      "Alvechurch",
+      "Wythall",
+      "Shirley"
     ]
   },
   "suffixes": {
     "commercial": [
-      "Cross", "Parade", "Row", "Square", "Precinct", "Gate", "Circus", "Street", "Arcade",
-      "Centre", "Mall", "Walk", "Concourse", "Piazza", "Gallery"
+      "Cross",
+      "Parade",
+      "Row",
+      "Square",
+      "Precinct",
+      "Gate",
+      "Circus",
+      "Street",
+      "Arcade",
+      "Centre",
+      "Mall",
+      "Walk",
+      "Concourse",
+      "Piazza",
+      "Gallery"
     ],
     "high_density_low_rise": [
-      "Row", "Terrace", "Lane", "End", "Street", "Corner", "Alley", "Place",
-      "Passage", "Mews", "Bank", "Steps"
+      "Row",
+      "Terrace",
+      "Lane",
+      "End",
+      "Street",
+      "Corner",
+      "Alley",
+      "Place",
+      "Passage",
+      "Mews",
+      "Bank",
+      "Steps"
     ],
     "high_density_high_rise": [
-      "Estate", "Rise", "Court", "Grange", "Towers", "Mount", "Park", "Gardens",
-      "Point", "Heights", "Walk", "View", "Green"
+      "Estate",
+      "Rise",
+      "Court",
+      "Grange",
+      "Towers",
+      "Mount",
+      "Park",
+      "Gardens",
+      "Point",
+      "Heights",
+      "Walk",
+      "View",
+      "Green"
     ],
     "industrial": [
-      "Works", "Wharf", "Cut", "Basin", "Yard", "Bank", "Sidings", "Foundry", "Way",
-      "Trading Estate", "Industrial Estate", "Business Park", "Enterprise Zone", "Park"
+      "Works",
+      "Wharf",
+      "Cut",
+      "Basin",
+      "Yard",
+      "Bank",
+      "Sidings",
+      "Foundry",
+      "Way",
+      "Trading Estate",
+      "Industrial Estate",
+      "Business Park",
+      "Enterprise Zone",
+      "Park"
     ],
     "suburban_low_density": [
-      "Green", "Close", "Copse", "Common", "Hill", "End", "Meadow", "Avenue", "Vale", "Drive",
-      "Gardens", "Rise", "Wood", "Grove", "Way", "Croft"
+      "Green",
+      "Close",
+      "Copse",
+      "Common",
+      "Hill",
+      "End",
+      "Meadow",
+      "Avenue",
+      "Vale",
+      "Drive",
+      "Gardens",
+      "Rise",
+      "Wood",
+      "Grove",
+      "Way",
+      "Croft"
     ]
   },
   "grammar": {
     "format": "{prefix} {suffix}",
-    "duplicate_fallback": "{prefix} Common"
+    "duplicate_fallback": "{prefix} Common",
+    "duplicate_fallbacks": [
+      "{prefix} Common",
+      "North {prefix}",
+      "South {prefix}",
+      "East {prefix}",
+      "West {prefix}",
+      "Lower {prefix}",
+      "Upper {prefix}",
+      "{prefix} End",
+      "Old {prefix}",
+      "New {prefix}"
+    ]
   },
   "borough_names": [
-    "Aston", "Edgbaston", "Selly Oak", "Handsworth", "Ladywood",
-    "Erdington", "Moseley", "Kings Heath", "Perry Barr", "Yardley",
-    "Harborne", "Northfield", "Solihull", "Saltley", "Bordesley",
-    "Nechells", "Hockley", "Sparkbrook", "Small Heath", "Bournville",
-    "Acocks Green", "Sutton Coldfield", "Smethwick", "West Bromwich",
-    "Quinton", "Sheldon", "Stechford", "Alum Rock", "Hall Green", "Longbridge"
+    "Aston",
+    "Edgbaston",
+    "Selly Oak",
+    "Handsworth",
+    "Ladywood",
+    "Erdington",
+    "Moseley",
+    "Kings Heath",
+    "Perry Barr",
+    "Yardley",
+    "Harborne",
+    "Northfield",
+    "Solihull",
+    "Saltley",
+    "Bordesley",
+    "Nechells",
+    "Hockley",
+    "Sparkbrook",
+    "Small Heath",
+    "Bournville",
+    "Acocks Green",
+    "Sutton Coldfield",
+    "Smethwick",
+    "West Bromwich",
+    "Quinton",
+    "Sheldon",
+    "Stechford",
+    "Alum Rock",
+    "Hall Green",
+    "Longbridge"
   ],
+  "street_property_cap": {
+    "min": 40,
+    "max": 200
+  },
   "street_names": {
     "roots": [
-      "Victoria", "Albert", "Church", "St. Jude's", "High", "Queen", "Station", 
-      "Canal", "Mill", "Moor", "Park", "Green", "Grange", "Kings", "Grove",
-      "Wellington", "Nelson", "Gladstone", "Salisbury", "York", "Albany",
-      "Bristol", "Coventry", "Pershore", "Hagley", "Stratford", "Lichfield",
-      "Walsall", "Dudley", "Holyhead", "Alcester", "Chester", "Warwick"
+      "Victoria",
+      "Albert",
+      "Church",
+      "St. Jude's",
+      "High",
+      "Queen",
+      "Station",
+      "Canal",
+      "Mill",
+      "Moor",
+      "Park",
+      "Green",
+      "Grange",
+      "Kings",
+      "Grove",
+      "Wellington",
+      "Nelson",
+      "Gladstone",
+      "Salisbury",
+      "York",
+      "Albany",
+      "Bristol",
+      "Coventry",
+      "Pershore",
+      "Hagley",
+      "Stratford",
+      "Lichfield",
+      "Walsall",
+      "Dudley",
+      "Holyhead",
+      "Alcester",
+      "Chester",
+      "Warwick"
     ],
     "suffixes": [
-      "Road", "Street", "Lane", "Avenue", "Terrace", "Close", "Crescent", "Row", "Way", "Parade",
-      "Drive", "Grove", "Gardens", "Walk", "Rise", "Circus", "Ringway"
+      "Road",
+      "Street",
+      "Lane",
+      "Avenue",
+      "Terrace",
+      "Close",
+      "Crescent",
+      "Row",
+      "Way",
+      "Parade",
+      "Drive",
+      "Grove",
+      "Gardens",
+      "Walk",
+      "Rise",
+      "Circus",
+      "Ringway"
     ]
   },
   "residential_building_names": {
     "roots": [
-      "Birch", "Falcon", "Moor", "Aston", "Westfield", "Victoria", "Rednal", 
-      "Greenfields", "Highgate", "Blackthorn", "Castle", "Paddock", "Rowan",
-      "Oakfield", "Kings", "Charter", "Caledonian", "Cumberland", "Portland",
-      "Albion", "Britannia", "Centenary", "Civic", "Coronation", "Elizabeth",
-      "Jubilee", "Meridian", "Regency", "Sovereign", "Trafalgar", "Windsor"
+      "Birch",
+      "Falcon",
+      "Moor",
+      "Aston",
+      "Westfield",
+      "Victoria",
+      "Rednal",
+      "Greenfields",
+      "Highgate",
+      "Blackthorn",
+      "Castle",
+      "Paddock",
+      "Rowan",
+      "Oakfield",
+      "Kings",
+      "Charter",
+      "Caledonian",
+      "Cumberland",
+      "Portland",
+      "Albion",
+      "Britannia",
+      "Centenary",
+      "Civic",
+      "Coronation",
+      "Elizabeth",
+      "Jubilee",
+      "Meridian",
+      "Regency",
+      "Sovereign",
+      "Trafalgar",
+      "Windsor"
     ],
     "suffixes": [
-      "House", "Court", "Towers", "Grange", "Mansions", "Lodge", "Buildings",
-      "Point", "Heights", "Chambers", "Apartments", "Walk"
+      "House",
+      "Court",
+      "Towers",
+      "Grange",
+      "Mansions",
+      "Lodge",
+      "Buildings",
+      "Point",
+      "Heights",
+      "Chambers",
+      "Apartments",
+      "Walk"
     ]
   },
   "address_formats": {
@@ -125,6 +409,11 @@
     "street_name": "{root} {suffix}",
     "building_name": "{root} {suffix}"
   },
+  "civic_naming_formats": [
+    "{district_name} {trade}",
+    "{borough_name} {trade}",
+    "{street_root} {trade}"
+  ],
   "commercial_naming": {
     "family_formats": [
       "{initial}. {surname} {trade}",
@@ -151,81 +440,444 @@
     ],
     "family_trade_probability": 0.65,
     "pub_names": [
-      "The Red Lion", "The Crown & Anchor", "The Royal Oak", "The White Hart",
-      "The Plough & Harrow", "The Bull's Head", "The Swan", "The Railway Tavern",
-      "The Fox & Grapes", "The King's Arms", "The Cross Keys", "The Black Horse",
-      "The Duke of York", "The Navigation Inn", "The Moulders Arms", "The Gunmakers Arms",
-      "The Three Horseshoes", "The Rose & Crown", "The Bell Inn", "The Station Hotel",
-      "The Wheatsheaf", "The Barley Mow", "The Coach & Horses", "The Dog & Partridge",
-      "The George & Dragon", "The New Inn", "The Old Crown", "The Vine Inn"
+      "The Red Lion",
+      "The Crown & Anchor",
+      "The Royal Oak",
+      "The White Hart",
+      "The Plough & Harrow",
+      "The Bull's Head",
+      "The Swan",
+      "The Railway Tavern",
+      "The Fox & Grapes",
+      "The King's Arms",
+      "The Cross Keys",
+      "The Black Horse",
+      "The Duke of York",
+      "The Navigation Inn",
+      "The Moulders Arms",
+      "The Gunmakers Arms",
+      "The Three Horseshoes",
+      "The Rose & Crown",
+      "The Bell Inn",
+      "The Station Hotel",
+      "The Wheatsheaf",
+      "The Barley Mow",
+      "The Coach & Horses",
+      "The Dog & Partridge",
+      "The George & Dragon",
+      "The New Inn",
+      "The Old Crown",
+      "The Vine Inn"
     ],
     "era_brands": {
       "SUPERMARKET": [
-        { "name": "Fine Fare", "valid_from_year": 1960, "valid_to_year": 1987 },
-        { "name": "Presto", "valid_from_year": 1965, "valid_to_year": 1989 },
-        { "name": "International Stores", "valid_from_year": 1960, "valid_to_year": 1986 },
-        { "name": "Kwik Save", "valid_from_year": 1970, "valid_to_year": 2006 },
-        { "name": "Gateway", "valid_from_year": 1984, "valid_to_year": 1994 },
-        { "name": "Co-op Foodstore", "valid_from_year": 1960, "valid_to_year": 2020 },
-        { "name": "Somerfield", "valid_from_year": 1990, "valid_to_year": 2009 },
-        { "name": "Safeway", "valid_from_year": 1987, "valid_to_year": 2005 },
-        { "name": "Netto", "valid_from_year": 1990, "valid_to_year": 2011 },
-        { "name": "Tesco Metro", "valid_from_year": 1994, "valid_to_year": 2020 },
-        { "name": "Key Markets", "valid_from_year": 1963, "valid_to_year": 1985 },
-        { "name": "Lo-Cost", "valid_from_year": 1975, "valid_to_year": 1996 },
-        { "name": "Bejam", "valid_from_year": 1968, "valid_to_year": 1989 },
-        { "name": "Iceland", "valid_from_year": 1970, "valid_to_year": 2020 },
-        { "name": "Sainsbury's", "valid_from_year": 1975, "valid_to_year": 2020 },
-        { "name": "Asda", "valid_from_year": 1975, "valid_to_year": 2020 },
-        { "name": "Aldi", "valid_from_year": 1990, "valid_to_year": 2020 },
-        { "name": "Lidl", "valid_from_year": 1994, "valid_to_year": 2020 },
-        { "name": "Spar", "valid_from_year": 1975, "valid_to_year": 2020 },
-        { "name": "Mace", "valid_from_year": 1975, "valid_to_year": 2010 }
+        {
+          "org_id": "ORG:FINE_FARE",
+          "name": "Fine Fare",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1960,
+          "valid_to_year": 1987
+        },
+        {
+          "org_id": "ORG:PRESTO",
+          "name": "Presto",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1965,
+          "valid_to_year": 1989
+        },
+        {
+          "org_id": "ORG:INTERNATIONAL_STORES",
+          "name": "International Stores",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1960,
+          "valid_to_year": 1986
+        },
+        {
+          "org_id": "ORG:KWIK_SAVE",
+          "name": "Kwik Save",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1970,
+          "valid_to_year": 2006
+        },
+        {
+          "org_id": "ORG:GATEWAY",
+          "name": "Gateway",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1984,
+          "valid_to_year": 1994
+        },
+        {
+          "org_id": "ORG:CO_OP_FOODSTORE",
+          "name": "Co-op Foodstore",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1960,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:SOMERFIELD",
+          "name": "Somerfield",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1990,
+          "valid_to_year": 2009
+        },
+        {
+          "org_id": "ORG:SAFEWAY",
+          "name": "Safeway",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1987,
+          "valid_to_year": 2005
+        },
+        {
+          "org_id": "ORG:NETTO",
+          "name": "Netto",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1990,
+          "valid_to_year": 2011
+        },
+        {
+          "org_id": "ORG:TESCO",
+          "name": "Tesco Metro",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1994,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:KEY_MARKETS",
+          "name": "Key Markets",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1963,
+          "valid_to_year": 1985
+        },
+        {
+          "org_id": "ORG:LO_COST",
+          "name": "Lo-Cost",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 1996
+        },
+        {
+          "org_id": "ORG:BEJAM",
+          "name": "Bejam",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1968,
+          "valid_to_year": 1989
+        },
+        {
+          "org_id": "ORG:ICELAND",
+          "name": "Iceland",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1970,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:SAINSBURYS",
+          "name": "Sainsbury's",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:ASDA",
+          "name": "Asda",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:ALDI",
+          "name": "Aldi",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1990,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:LIDL",
+          "name": "Lidl",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1994,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:SPAR",
+          "name": "Spar",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:MACE",
+          "name": "Mace",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2010
+        }
       ],
       "BANK_BRANCH": [
-        { "name": "Midland Bank", "valid_from_year": 1900, "valid_to_year": 1998 },
-        { "name": "Barclays Bank", "valid_from_year": 1900, "valid_to_year": 2020 },
-        { "name": "Lloyds Bank", "valid_from_year": 1900, "valid_to_year": 1994 },
-        { "name": "NatWest", "valid_from_year": 1970, "valid_to_year": 2020 },
-        { "name": "TSB", "valid_from_year": 1975, "valid_to_year": 1994 },
-        { "name": "Lloyds TSB", "valid_from_year": 1995, "valid_to_year": 2013 },
-        { "name": "HSBC", "valid_from_year": 1999, "valid_to_year": 2020 },
-        { "name": "Halifax", "valid_from_year": 1997, "valid_to_year": 2020 },
-        { "name": "Abbey National", "valid_from_year": 1989, "valid_to_year": 2010 },
-        { "name": "Halifax Building Society", "valid_from_year": 1975, "valid_to_year": 1996 },
-        { "name": "Abbey National Building Society", "valid_from_year": 1975, "valid_to_year": 1988 },
-        { "name": "Woolwich Building Society", "valid_from_year": 1975, "valid_to_year": 1996 },
-        { "name": "The Woolwich", "valid_from_year": 1997, "valid_to_year": 2006 },
-        { "name": "Alliance & Leicester", "valid_from_year": 1985, "valid_to_year": 2010 },
-        { "name": "Bradford & Bingley", "valid_from_year": 1975, "valid_to_year": 2008 },
-        { "name": "Nationwide Building Society", "valid_from_year": 1975, "valid_to_year": 2020 },
-        { "name": "National Girobank", "valid_from_year": 1978, "valid_to_year": 1990 },
-        { "name": "Santander", "valid_from_year": 2010, "valid_to_year": 2020 }
+        {
+          "org_id": "ORG:MIDLAND_BANK",
+          "name": "Midland Bank",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1900,
+          "valid_to_year": 1998
+        },
+        {
+          "org_id": "ORG:BARCLAYS_BANK",
+          "name": "Barclays Bank",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:LLOYDS_BANK",
+          "name": "Lloyds Bank",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1900,
+          "valid_to_year": 1994
+        },
+        {
+          "org_id": "ORG:NATWEST",
+          "name": "NatWest",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1970,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:TSB",
+          "name": "TSB",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 1994
+        },
+        {
+          "org_id": "ORG:LLOYDS_TSB",
+          "name": "Lloyds TSB",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1995,
+          "valid_to_year": 2013
+        },
+        {
+          "org_id": "ORG:HSBC",
+          "name": "HSBC",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1999,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:HALIFAX",
+          "name": "Halifax",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1997,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:ABBEY_NATIONAL",
+          "name": "Abbey National",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1989,
+          "valid_to_year": 2010
+        },
+        {
+          "org_id": "ORG:HALIFAX_BUILDING_SOCIETY",
+          "name": "Halifax Building Society",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 1996
+        },
+        {
+          "org_id": "ORG:ABBEY_NATIONAL_BUILDING_SOCIETY",
+          "name": "Abbey National Building Society",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 1988
+        },
+        {
+          "org_id": "ORG:WOOLWICH_BUILDING_SOCIETY",
+          "name": "Woolwich Building Society",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 1996
+        },
+        {
+          "org_id": "ORG:THE_WOOLWICH",
+          "name": "The Woolwich",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1997,
+          "valid_to_year": 2006
+        },
+        {
+          "org_id": "ORG:ALLIANCE_AND_LEICESTER",
+          "name": "Alliance & Leicester",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 1985,
+          "valid_to_year": 2010
+        },
+        {
+          "org_id": "ORG:BRADFORD_AND_BINGLEY",
+          "name": "Bradford & Bingley",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 2008
+        },
+        {
+          "org_id": "ORG:NATIONWIDE_BUILDING_SOCIETY",
+          "name": "Nationwide Building Society",
+          "institution_rail_class": "SAVINGS_INSTITUTION",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:NATIONAL_GIROBANK",
+          "name": "National Girobank",
+          "institution_rail_class": "PUBLIC_DISBURSER",
+          "valid_from_year": 1978,
+          "valid_to_year": 1990
+        },
+        {
+          "org_id": "ORG:SANTANDER",
+          "name": "Santander",
+          "institution_rail_class": "CLEARING_BANK",
+          "valid_from_year": 2010,
+          "valid_to_year": 2020
+        }
       ],
       "BETTING_SHOP": [
-        { "name": "Mecca Bookmakers", "valid_from_year": 1965, "valid_to_year": 1990 },
-        { "name": "Ladbrokes", "valid_from_year": 1961, "valid_to_year": 2020 },
-        { "name": "William Hill", "valid_from_year": 1961, "valid_to_year": 2020 },
-        { "name": "Coral", "valid_from_year": 1961, "valid_to_year": 2020 },
-        { "name": "Done Brothers", "valid_from_year": 1975, "valid_to_year": 2003 },
-        { "name": "Betfred", "valid_from_year": 2004, "valid_to_year": 2020 },
-        { "name": "Ladbroke Racing", "valid_from_year": 1975, "valid_to_year": 1999 },
-        { "name": "Stanley Racing", "valid_from_year": 1975, "valid_to_year": 2005 },
-        { "name": "Tote Bookmakers", "valid_from_year": 1975, "valid_to_year": 2011 },
-        { "name": "Paddy Power", "valid_from_year": 2000, "valid_to_year": 2020 }
-],
+        {
+          "org_id": "ORG:MECCA_BOOKMAKERS",
+          "name": "Mecca Bookmakers",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1965,
+          "valid_to_year": 1990
+        },
+        {
+          "org_id": "ORG:LADBROKES",
+          "name": "Ladbrokes",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1961,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:WILLIAM_HILL",
+          "name": "William Hill",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1961,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:CORAL",
+          "name": "Coral",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1961,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:DONE_BROTHERS",
+          "name": "Done Brothers",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2003
+        },
+        {
+          "org_id": "ORG:BETFRED",
+          "name": "Betfred",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 2004,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:LADBROKE_RACING",
+          "name": "Ladbroke Racing",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 1999
+        },
+        {
+          "org_id": "ORG:STANLEY_RACING",
+          "name": "Stanley Racing",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2005
+        },
+        {
+          "org_id": "ORG:TOTE_BOOKMAKERS",
+          "name": "Tote Bookmakers",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2011
+        },
+        {
+          "org_id": "ORG:PADDY_POWER",
+          "name": "Paddy Power",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 2000,
+          "valid_to_year": 2020
+        }
+      ],
       "CHEMIST": [
-        { "name": "Boots the Chemists", "valid_from_year": 1900, "valid_to_year": 2020 },
-        { "name": "Timothy Whites", "valid_from_year": 1950, "valid_to_year": 1985 },
-        { "name": "Lloyds Pharmacy", "valid_from_year": 1986, "valid_to_year": 2020 },
-        { "name": "Superdrug", "valid_from_year": 1975, "valid_to_year": 2020 },
-        { "name": "Allen & Lloyd", "valid_from_year": 1975, "valid_to_year": 1992 },
-        { "name": "Moss Chemists", "valid_from_year": 1975, "valid_to_year": 2007 },
-        { "name": "Rowlands Pharmacy", "valid_from_year": 1975, "valid_to_year": 2020 }
+        {
+          "org_id": "ORG:BOOTS",
+          "name": "Boots the Chemists",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:TIMOTHY_WHITES",
+          "name": "Timothy Whites",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1950,
+          "valid_to_year": 1985
+        },
+        {
+          "org_id": "ORG:LLOYDS_PHARMACY",
+          "name": "Lloyds Pharmacy",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1986,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:SUPERDRUG",
+          "name": "Superdrug",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:ALLEN_AND_LLOYD",
+          "name": "Allen & Lloyd",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 1992
+        },
+        {
+          "org_id": "ORG:MOSS_CHEMISTS",
+          "name": "Moss Chemists",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2007
+        },
+        {
+          "org_id": "ORG:ROWLANDS_PHARMACY",
+          "name": "Rowlands Pharmacy",
+          "institution_rail_class": "STANDARD",
+          "valid_from_year": 1975,
+          "valid_to_year": 2020
+        }
       ],
       "POST_OFFICE": [
-        { "name": "{street_root} Post Office", "valid_from_year": 1900, "valid_to_year": 2020 },
-        { "name": "{district_prefix} Sub-Post Office", "valid_from_year": 1900, "valid_to_year": 2020 }
+        {
+          "org_id": "ORG:POST_OFFICE",
+          "name": "{street_root} Post Office",
+          "institution_rail_class": "POSTAL_AGENT",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        },
+        {
+          "org_id": "ORG:POST_OFFICE",
+          "name": "{district_prefix} Sub-Post Office",
+          "institution_rail_class": "POSTAL_AGENT",
+          "valid_from_year": 1900,
+          "valid_to_year": 2020
+        }
       ]
     }
   }

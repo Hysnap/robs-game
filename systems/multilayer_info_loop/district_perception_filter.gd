@@ -5,7 +5,7 @@ extends RefCounted
 const CONDITION_EVALUATOR = preload("res://systems/condition_evaluator.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
-const FOG_OF_WAR_PATH := "res://data_modules/core/spatial/districts/fog_of_war_rules.json"
+const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 
 static var _rules_cache: Dictionary = {}
 static var _metric_profiles_cache: Array = []
@@ -15,23 +15,17 @@ static func reset_cache() -> void:
 	_rules_cache.clear()
 	_metric_profiles_cache.clear()
 
-## Loads rules dynamically from manifest ("fog_of_war") or fog_of_war_rules.json
+## Loads rules strictly from the active scenario manifest ("fog_of_war")
 static func _get_rules() -> Dictionary:
 	if not _rules_cache.is_empty():
 		return _rules_cache
 
-	var parsed: Dictionary = {}
-	if ScenarioManifestManagerScript.has_module("fog_of_war"):
-		parsed = ScenarioManifestManagerScript.load_module("fog_of_war")
-	else:
-		assert(FileAccess.file_exists(FOG_OF_WAR_PATH),
-			"FATAL: [DistrictPerceptionFilter] fog_of_war_rules.json not found at: %s" % FOG_OF_WAR_PATH)
-		var f := FileAccess.open(FOG_OF_WAR_PATH, FileAccess.READ)
-		assert(f != null, "FATAL: [DistrictPerceptionFilter] Failed to open: %s" % FOG_OF_WAR_PATH)
-		var raw = JSON.parse_string(f.get_as_text())
-		assert(raw is Dictionary, "FATAL: [DistrictPerceptionFilter] Root must be a Dictionary in: %s" % FOG_OF_WAR_PATH)
-		parsed = raw
+	assert(ScenarioManifestManagerScript.has_module("fog_of_war"),
+		"FATAL: [DistrictPerceptionFilter] Active scenario manifest missing required 'fog_of_war' module registration.")
 
+	var parsed: Dictionary = ScenarioManifestManagerScript.load_module("fog_of_war")
+	assert(not parsed.is_empty(),
+		"FATAL: [DistrictPerceptionFilter] Loaded empty 'fog_of_war' module from scenario manifest.")
 	assert(parsed.has("general"), "FATAL: [DistrictPerceptionFilter] Missing 'general' section in fog_of_war rules.")
 	assert(parsed.has("field_access"), "FATAL: [DistrictPerceptionFilter] Missing 'field_access' section in fog_of_war rules.")
 
@@ -285,6 +279,8 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 	for estab in raw_estabs:
 		if not (estab is Dictionary):
 			continue
+		if str(estab.get("category_code", "")) == "RESIDENTIAL_UNIT":
+			continue
 		var estab_id: String = str(estab.get("establishment_id", ""))
 		var estab_intel: Dictionary = _resolve_entity_intel_status(player_context, "ESTABLISHMENT", estab_id)
 		var estab_score: float = float(estab_intel.get("score", 0.0))
@@ -312,4 +308,20 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 
 	if view_data.has("establishments_summary"):
 		view_data["establishments_summary"] = perceived_estabs
+
+	# 7. Group Residential Addresses by Road Name / Building Name (with drill-down to house/flat numbers)
+	var street_groups: Array[Dictionary] = SocietyQueriesScript.get_district_residential_streets(district_id, player_context)
+	var residential_streets_summary: Array[Dictionary] = []
+	var units_lbl: String = str(TranslationServer.translate("UI_LBL_RESIDENTIAL_UNITS"))
+	for grp in street_groups:
+		var s_name: String = str(grp.get("street_name", ""))
+		var u_count: int = int(grp.get("known_unit_count", 0))
+		if s_name.is_empty() or u_count <= 0:
+			continue
+		residential_streets_summary.append({
+			"street_key": "%s::%s" % [district_id, s_name],
+			"street_name": s_name,
+			"summary_line": "%d %s" % [u_count, units_lbl]
+		})
+	view_data["residential_streets_summary"] = residential_streets_summary
 	return view_data
