@@ -992,6 +992,12 @@
     },
     {
       "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "RAILWAY_SIDLINGS_AND_SCRAP",
+      "title": "Abandoned Railway sidlings and scrap",
+      "description": "Abandoned Industrial and Infrastructure."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
       "code": "FOUNDRY_CASTINGS",
       "title": "Metal Foundry & Heavy Engineering",
       "description": "Heavy metallurgical casting and metalworks."
@@ -1013,6 +1019,102 @@
       "code": "TEXTILE_OR_JOINERY",
       "title": "Joinery Works & Timber Yard",
       "description": "Timber mill, joinery workshop, and textile assembly."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "ACCOUNTANTS_PRACTICE",
+      "title": "Chartered Accountants & Auditors",
+      "description": "Accountancy, audit, taxation, and financial advisory practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "ARCHITECT_AND_SURVEYOR",
+      "title": "Architects & Chartered Surveyors",
+      "description": "Architectural design, property surveying, and planning practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BESPOKE_TAILOR_OUTFITTER",
+      "title": "Bespoke Tailor & Gentlemen's Outfitter",
+      "description": "Made-to-measure tailoring and men's clothing outfitting."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CLUB_CHECK_CREDIT_OFFICE",
+      "title": "Provident & Weekly Check Credit Office",
+      "description": "Weekly check trading and household credit collection office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COAL_MERCHANT_YARD",
+      "title": "Coal & Solid Fuel Merchant Yard",
+      "description": "Wholesale and delivery yard for coal and solid fuels."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "DAIRY_DEPOT",
+      "title": "Retail Dairy & Milk Rounds Depot",
+      "description": "Dairy distribution depot serving retail outlets and milk rounds."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "DRIVING_SCHOOL",
+      "title": "Motor School & Driving Tuition",
+      "description": "Private motor instruction and driving test preparation."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INSURANCE_BROKERAGE",
+      "title": "Insurance Brokers & Assurance Office",
+      "description": "Independent insurance brokerage and assurance advisory office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INSURANCE_DISTRICT_OFFICE",
+      "title": "District Assurance & Home-Service Office",
+      "description": "District office for assurance policies and home-service collections."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "JEWELLER_AND_WATCHMAKER",
+      "title": "Jeweller & Horologist",
+      "description": "Retail jewellery, watch sales, and clock and watch repair."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LOCAL_NEWSPAPER_OFFICE",
+      "title": "Borough Gazette & Editorial Office",
+      "description": "Local newspaper editorial, advertising, and publishing office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "OPHTHALMIC_OPTICIANS",
+      "title": "Ophthalmic Opticians",
+      "description": "Eye examination, spectacles, and optical dispensing practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PRIVATE_LANDLORDS_OFFICE",
+      "title": "Private Landlord & Rent Collection Office",
+      "description": "Private property management and residential rent collection office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SOFT_DRINKS_DEPOT",
+      "title": "Mineral Water & Pop Delivery Depot",
+      "description": "Bottled soft drinks, mineral water, and delivery distribution depot."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TRAVEL_AGENCY",
+      "title": "High Street Travel Bureau",
+      "description": "Booking agency for holidays, rail, coach, and travel arrangements."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TV_AND_WIRELESS_REPAIR",
+      "title": "Television & Wireless Rental & Repair",
+      "description": "Television and radio rental, sales, installation, and repair."
     },
 
     {
@@ -1092,6 +1194,12 @@
       "code": "LOCAL_GOVERNMENT",
       "title": "Municipal Administrative Hub & Town Hall",
       "description": "District centred on municipal administration and a town hall."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "POLICE_HQ",
+      "title": "Police Headquarters",
+      "description": "Regional police headquarters, specialist operations, and force control facilities."
     },
     {
       "domain": "ESTABLISHMENT_CATEGORY",
