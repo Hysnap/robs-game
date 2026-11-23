@@ -291,5 +291,31 @@
         "neuroticism": 0.15
       }
     }
+  },
+  "dunbar_venue_weaving": {
+    "pub": {
+      "relationship_type": "DRINKING_MATE",
+      "affinity_score": 0.55,
+      "link_probability": 0.65,
+      "pairs_per_member": 0.5,
+      "max_pairs_per_venue": 25,
+      "reciprocal": true
+    },
+    "workplace": {
+      "relationship_type": "CIVIC_PEER",
+      "affinity_score": 0.5,
+      "link_probability": 1.0,
+      "pairs_per_member": 1.0,
+      "max_pairs_per_venue": 80,
+      "reciprocal": true
+    },
+    "church": {
+      "relationship_type": "CONGREGATIONAL",
+      "affinity_score": 0.65,
+      "link_probability": 0.5,
+      "pairs_per_member": 0.6,
+      "max_pairs_per_venue": 40,
+      "reciprocal": true
+    }
   }
 }

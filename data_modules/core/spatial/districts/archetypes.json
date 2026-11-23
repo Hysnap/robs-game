@@ -531,12 +531,16 @@
       {
         "residence_type": "RECTORY",
         "wealth_bracket": 3,
-        "tenure_type": "EMPLOYMENT_TIED"
+        "tenure_type": "EMPLOYMENT_TIED",
+        "require_unmarried": false,
+        "relocates_family": true
       },
       {
         "residence_type": "CHURCH_CARETAKER_LODGE",
         "wealth_bracket": 3,
-        "tenure_type": "EMPLOYMENT_TIED"
+        "tenure_type": "EMPLOYMENT_TIED",
+        "require_unmarried": false,
+        "relocates_family": true
       }
     ],
     "visual_profile": {
@@ -603,7 +607,9 @@
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
       "wealth_bracket": 2,
-      "tenure_type": "EMPLOYMENT_TIED"
+      "tenure_type": "EMPLOYMENT_TIED",
+      "require_unmarried": false,
+      "relocates_family": true
     },
     "visual_profile": {
       "color": "#FBBF24",
@@ -749,7 +755,9 @@
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
       "wealth_bracket": 2,
-      "tenure_type": "EMPLOYMENT_TIED"
+      "tenure_type": "EMPLOYMENT_TIED",
+      "require_unmarried": false,
+      "relocates_family": true
     },
     "visual_profile": {
       "color": "#F59E0B",
@@ -897,13 +905,17 @@
         "residence_type": "NURSES_QUARTERS",
         "wealth_bracket": 4,
         "capacity": 100,
-        "tenure_type": "EMPLOYMENT_TIED"
+        "tenure_type": "EMPLOYMENT_TIED",
+        "require_unmarried": true,
+        "relocates_family": false
       },
       {
         "residence_type": "DOCTORS_QUARTERS",
         "wealth_bracket": 3,
         "capacity": 75,
-        "tenure_type": "EMPLOYMENT_TIED"
+        "tenure_type": "EMPLOYMENT_TIED",
+        "require_unmarried": true,
+        "relocates_family": false
       }
     ],
     "visual_profile": {
@@ -995,7 +1007,9 @@
       "residence_type": "STUDENT_HALLS",
       "capacity": 600,
       "wealth_bracket": 1,
-      "tenure_type": "STUDENT"
+      "tenure_type": "STUDENT",
+      "require_unmarried": true,
+      "relocates_family": false
     },
     "visual_profile": {
       "color": "#7E22CE",
@@ -1161,7 +1175,9 @@
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
       "wealth_bracket": 3,
-      "tenure_type": "EMPLOYMENT_TIED"
+      "tenure_type": "EMPLOYMENT_TIED",
+      "require_unmarried": false,
+      "relocates_family": true
     },
     "visual_profile": {
       "color": "#22C55E",
@@ -1394,7 +1410,9 @@
       "residence_type": "STATION_HOUSE",
       "capacity": 35,
       "wealth_bracket": 3,
-      "tenure_type": "EMPLOYMENT_TIED"
+      "tenure_type": "EMPLOYMENT_TIED",
+      "require_unmarried": true,
+      "relocates_family": false
     },
     "visual_profile": {
       "color": "#4338CA",

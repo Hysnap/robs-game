@@ -15,6 +15,7 @@ const GENERATION_AUDITOR = preload("res://systems/society/society_generation_aud
 const ROUTE_ROUND_SEEDER = preload("res://systems/society/route_round_seeder.gd")
 
 ## Pass 3: Orchestrates household composition, OCEAN/cognitive/clinical profiles, kinship trees, labor, org governance, and calendar schedules
+## Legacy single-call entry point (delegates to the 2 phased hydrators for zero duplication)
 static func run(
 	physical_state: Dictionary,
 	demographics: Dictionary,
@@ -24,132 +25,63 @@ static func run(
 	rng: RandomNumberGenerator,
 	on_progress: Callable
 ) -> void:
+	var hydration_ctx: Dictionary = await hydrate_households_and_residents(
+		physical_state, demographics, lexicon, rng, on_progress
+	)
+	await allocate_roles_and_housing(
+		physical_state, hydration_ctx, demographics, lexicon, job_definitions, cultural, rng, on_progress
+	)
+
+## Phase 1 (Pre-Index Wave 1): Hydrates households, residents, OCEAN/clinical profiles, and nuclear kinship without job/school allocation
+static func hydrate_households_and_residents(
+	physical_state: Dictionary,
+	demographics: Dictionary,
+	lexicon: Dictionary,
+	rng: RandomNumberGenerator,
+	on_progress: Callable = Callable()
+) -> Dictionary:
 	var districts: Dictionary = physical_state.get("districts", {})
 	var generated_households: Array[Dictionary] = physical_state["households"]
-	var by_cat: Dictionary = physical_state["by_cat"]
 	var district_residents_map: Dictionary = physical_state["district_residents_map"]
-	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
-	var available_tied_housing: Dictionary = physical_state.get("available_tied_housing", {})
 
 	var archetypes_cfg: Dictionary = MANIFEST_MANAGER.load_module("archetypes")
 	var ocean_rules: Dictionary = MANIFEST_MANAGER.load_module("ocean_personality")
-	var civic_cfg: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
 	var kinship_rules: Dictionary = FAMILY_WEAVER.get_kinship_rules(demographics)
-	var edu_rank_map: Dictionary = HOUSEHOLD_COMPOSER.get_education_rank_map(demographics)
-	var job_roles_cfg: Dictionary = job_definitions.get("roles", job_definitions)
 
 	var cfg := ConfigFile.new()
 	var err: int = cfg.load(MANIFEST_MANAGER.BUSINESS_RULES_PATH)
 	assert(err == OK, "FATAL: [CitizenDemographicsHydrator] Could not load business_rules.cfg")
-	var enable_commute: bool = bool(cfg.get_value("labor_market", "enable_commute_distances", false))
+	var hh_flush_batch: int = maxi(25, int(cfg.get_value("city_generation", "household_flush_batch_size", 250)))
 
 	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
 	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 	var male_gender_id: int = DB_MANAGER.get_label_id("GENDER", "M")
 	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
-	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
-	var rel_civic_peer_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
-	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
 
-	# Pre-resolve behavioral tag label IDs once for O(1) lookup during citizen hydration
 	var behavioral_tag_label_ids: Dictionary = {}
 	var profiles_cfg: Dictionary = ocean_rules.get("neurodivergence_and_clinical_profiles", {})
 	for tag_code in profiles_cfg.keys():
 		behavioral_tag_label_ids[str(tag_code)] = DB_MANAGER.get_label_id("BEHAVIORAL_TAG", str(tag_code))
 
-	var proprietor_hints: Dictionary = physical_state.get("proprietor_hints", {})
-
-	# Build spatial position, capacity, and category ID indexes for UnifiedAnchorAllocator
-	var by_cat_and_district: Dictionary = {}
-	var cat_estab_ids: Dictionary = {}
-	var estab_positions: Dictionary = {}
-	var estab_capacities: Dictionary = {}
-	var enrolled_counts: Dictionary = {}
-
-	for cat in by_cat.keys():
-		by_cat_and_district[cat] = {}
-		cat_estab_ids[cat] = []
-		for item in by_cat[cat]:
-			var est_id: int = int(item["id"])
-			var d_id: String = str(item.get("district_id", ""))
-			if not by_cat_and_district[cat].has(d_id):
-				by_cat_and_district[cat][d_id] = []
-			by_cat_and_district[cat][d_id].append(item)
-			cat_estab_ids[cat].append(est_id)
-
-			var d_pos: Vector2 = Vector2.ZERO
-			if districts.has(d_id):
-				d_pos = SPATIAL_RESOLVER._resolve_vector2(districts[d_id].get("spatial_anchor", Vector2.ZERO))
-			estab_positions[est_id] = d_pos
-			estab_capacities[est_id] = int(item.get("capacity", 250))
-
-	var church_estabs: Array = []
-	for ch_cat in ["PLACE_OF_WORSHIP", "CHURCH", "COMMUNITY_PARISH"]:
-		if cat_estab_ids.has(ch_cat):
-			for cid in cat_estab_ids[ch_cat]:
-				if not church_estabs.has(cid):
-					church_estabs.append(cid)
-
-	var pub_estabs: Array = []
-	for pb_cat in ["LOCAL_PUB", "PUB", "PUBLIC_HOUSE", "SOCIAL_CLUB", "HOSPITALITY"]:
-		if cat_estab_ids.has(pb_cat):
-			for pid in cat_estab_ids[pb_cat]:
-				if not pub_estabs.has(pid):
-					pub_estabs.append(pid)
-
-	# Normalize open_job_slots keys for UnifiedAnchorAllocator
-	open_job_slots.shuffle()
-	for slot in open_job_slots:
-		if not slot.has("establishment_id") and slot.has("estab_id"):
-			slot["establishment_id"] = int(slot["estab_id"])
-		if not slot.has("role_code") and slot.has("role_title"):
-			slot["role_code"] = str(slot["role_title"])
-		if not slot.has("min_education_code"):
-			var r_code: String = str(slot.get("role_code", ""))
-			var r_def: Dictionary = job_roles_cfg.get(r_code, {})
-			slot["min_education_code"] = str(slot.get("edu_req", r_def.get("education_required", "NO_FORMAL")))
-
-	# Build 2D spatial hash indexes for O(1) moving-circle commute and venue queries
-	var job_slot_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_job_slot_spatial_index(open_job_slots, estab_positions, 1500.0)
-	var church_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(church_estabs, estab_positions, 1500.0)
-	var pub_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(pub_estabs, estab_positions, 1500.0)
-	var school_spatial_indexes: Dictionary = {}
-	for s_cat in ["PRIMARY_SCHOOL", "SECONDARY_SCHOOL", "UNIVERSITY_OR_POLYTECHNIC"]:
-		var s_ids: Array = cat_estab_ids.get(s_cat, [])
-		if not s_ids.is_empty():
-			school_spatial_indexes[s_cat] = ANCHOR_ALLOCATOR.build_establishment_spatial_index(s_ids, estab_positions, 1500.0)
-
 	var resident_inserts: Array[String] = []
 	var behavioral_tag_inserts: Array[String] = []
-	var contract_inserts: Array[String] = []
-	var org_member_inserts: Array[String] = []
 	var edge_inserts: Array[String] = []
-	var slot_updates: Array[String] = []
 	var resident_updates: Array[String] = []
-	var tied_household_inserts: Array[String] = []
 
 	var residents_by_id: Dictionary = {}
+	var household_members_by_hh: Dictionary = {}
+	var household_meta: Dictionary = {}
 	var kin_graph: Dictionary = {}
-	var workplace_cohort_pubs: Dictionary = {}
 
 	var current_resident_id: int = 1
 	var total_hh: int = generated_households.size()
 	var hh_idx: int = 0
-	var next_household_id: int = total_hh + 1
 	var is_headless: bool = (DisplayServer.get_name() == "headless")
-
 	var pass3_start_ms: int = Time.get_ticks_msec()
 	var chunk_start_ms: int = pass3_start_ms
 
-	var tied_occupants: Array[Dictionary] = []
-	var local_tied_relocated_count := 0
-	var external_tied_influx_count := 0
+	SystemLogger.log_info("  [Pass 3A] Hydrating %d households (residents, OCEAN/clinical profiles, nuclear kinship)..." % total_hh)
 
-	SystemLogger.log_info("  [Pass 3] Hydrating %d households with OCEAN, cognitive, clinical profiles, kinship trees, and anchors..." % total_hh)
-
-	# --------------------------------------------------------------------------
-	# STAGE 1: Standard Household Hydration & Local Tied Youth Relocation (50% -> 75%)
-	# --------------------------------------------------------------------------
 	for hh in generated_households:
 		hh_idx += 1
 		var surname_list: Array = lexicon.get(hh["surnames_pool"], ["Smith"])
@@ -180,12 +112,26 @@ static func run(
 			if str(m.get("role_in_home", "")) == "SPOUSE":
 				is_married_couple = bool(m.get("is_married", true))
 
+		household_meta[hh_id] = {
+			"household_id": hh_id,
+			"establishment_id": home_estab_id,
+			"district_id": hh_dist_id,
+			"district_type": district_type,
+			"home_pos": home_pos,
+			"ethnicity_id": int(hh["ethnicity_id"]),
+			"religion": str(hh.get("religion", "")),
+			"religion_id": int(hh["religion_id"]),
+			"surnames_pool": str(hh.get("surnames_pool", "surnames")),
+			"unemp_rate": unemp_rate,
+			"has_child_under_5": has_child_under_5,
+			"has_child_5_to_15": has_child_5_to_15,
+			"is_married_couple": is_married_couple,
+			"relocated_to_tied": false
+		}
+
 		var hh_member_records: Array[Dictionary] = []
 		var head_traits: Dictionary = {}
 		var spouse_traits: Dictionary = {}
-		var head_church_id: int = -1
-		var spouse_church_id: int = -1
-		var hh_sibling_school_by_cat: Dictionary = {}
 
 		for member in planned_members:
 			var r_id := current_resident_id
@@ -219,7 +165,6 @@ static func run(
 			var edu_id: int = DB_MANAGER.get_label_id("EDUCATION_LEVEL", edu_code)
 			var edu_nudges: Dictionary = PERSONALITY_HYDRATOR.get_education_nudges(demographics, edu_code)
 
-			# 1. Roll OCEAN Personality, Cognitive (IQ/Agility), Dark Triad, & Sparse Clinical Tags
 			var ocean_traits: Dictionary = {}
 			if role_in_home == "HEAD":
 				ocean_traits = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, arch_nudges, edu_nudges, rng)
@@ -236,7 +181,261 @@ static func run(
 				ocean_traits, ocean_rules, float(age_years), edu_code, deprivation_ratio, rng
 			)
 
-			# 2. Resolve Individual Church / Parish Anchor
+			var res_record: Dictionary = {
+				"resident_id": r_id,
+				"household_id": hh_id,
+				"household_role": role_in_home,
+				"is_head": is_head,
+				"is_married": is_married,
+				"is_male": is_male,
+				"birth_surname": member_surname,
+				"ethnicity_id": int(hh["ethnicity_id"]),
+				"gender_code": gender_code,
+				"age_years": age_years,
+				"dob": dob_day,
+				"education_code": edu_code,
+				"home_pos": home_pos,
+				"church_id": -1,
+				"local_pub_id": -1,
+				"employer_establishment_id": 0,
+				"role_code": "",
+				"ocean_traits": ocean_traits
+			}
+			residents_by_id[r_id] = res_record
+			hh_member_records.append(res_record)
+
+			resident_inserts.append("""
+				INSERT INTO residents (
+					resident_id, household_id, first_name, birth_surname, current_surname,
+					dob, dod, death_reason_id, gender_id, education_level_id,
+					ethnicity_id, religion_id, church_id, local_pub_id,
+					openness, conscientiousness, extraversion, agreeableness, neuroticism,
+					iq_score, mental_agility, machiavellianism, empathy_affective, power_entitlement,
+					is_active_agent, valid_from, valid_to, change_reason_id
+				) VALUES (
+					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, NULL, NULL,
+					%.3f, %.3f, %.3f, %.3f, %.3f,
+					%.1f, %.3f, %.3f, %.3f, %.3f,
+					0, %d, NULL, %d
+				);
+			""" % [
+				r_id, hh_id, first_name, member_surname, member_surname,
+				dob_day, gender_id, edu_id, int(hh["ethnicity_id"]), int(hh["religion_id"]),
+				float(ocean_traits["openness"]), float(ocean_traits["conscientiousness"]),
+				float(ocean_traits["extraversion"]), float(ocean_traits["agreeableness"]),
+				float(ocean_traits["neuroticism"]),
+				float(ocean_traits["iq_score"]), float(ocean_traits["mental_agility"]),
+				float(ocean_traits["machiavellianism"]), float(ocean_traits["empathy_affective"]),
+				float(ocean_traits["power_entitlement"]),
+				sim_start_day, reason_world_gen_id
+			])
+
+			for tag_entry in ocean_traits.get("behavioral_tags", []):
+				var t_code: String = str(tag_entry["code"])
+				var t_label_id: int = int(behavioral_tag_label_ids[t_code])
+				behavioral_tag_inserts.append("""
+					INSERT INTO resident_behavioral_tags (
+						resident_id, tag_label_id, severity, is_diagnosed, valid_from, valid_to, change_reason_id
+					) VALUES (%d, %d, %.2f, 0, %d, NULL, %d);
+				""" % [r_id, t_label_id, float(tag_entry["severity"]), sim_start_day, reason_world_gen_id])
+
+		household_members_by_hh[hh_id] = hh_member_records
+
+		if hh_member_records.size() > 1:
+			FAMILY_WEAVER.weave_intra_household_edges(
+				edge_inserts, hh_member_records, is_married_couple,
+				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph
+			)
+
+		if hh_idx % hh_flush_batch == 0:
+			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
+			var db_t0: int = Time.get_ticks_msec()
+			var empty_a: Array[String] = []
+			_flush_stage1_batches(
+				resident_inserts, behavioral_tag_inserts, empty_a, empty_a, edge_inserts,
+				empty_a, empty_a, resident_updates
+			)
+			var db_time: int = Time.get_ticks_msec() - db_t0
+			if hh_idx % 1000 == 0:
+				SystemLogger.log_info("  [Pass 3A Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
+					hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
+				])
+			if on_progress.is_valid():
+				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 12.0)
+				on_progress.call(pct, 100.0, "Hydrating Households: ~%d pop (%d/%d homes)" % [current_resident_id - 1, hh_idx, total_hh])
+				if not is_headless:
+					var main_loop = Engine.get_main_loop()
+					if main_loop is SceneTree:
+						await (main_loop as SceneTree).process_frame
+			chunk_start_ms = Time.get_ticks_msec()
+
+	var empty_tail: Array[String] = []
+	_flush_stage1_batches(
+		resident_inserts, behavioral_tag_inserts, empty_tail, empty_tail, edge_inserts,
+		empty_tail, empty_tail, resident_updates
+	)
+
+	return {
+		"residents_by_id": residents_by_id,
+		"household_members_by_hh": household_members_by_hh,
+		"household_meta": household_meta,
+		"kin_graph": kin_graph,
+		"current_resident_id": current_resident_id,
+		"next_household_id": total_hh + 1,
+		"pass3_start_ms": pass3_start_ms,
+		"behavioral_tag_label_ids": behavioral_tag_label_ids,
+		"hh_flush_batch": hh_flush_batch
+	}
+
+## Phase 2 (Post-Index Wave 2): Allocates job roles, students, tied accommodation (with family/unmarried rules), pubs/churches, extended kinship, and schedules
+static func allocate_roles_and_housing(
+	physical_state: Dictionary,
+	hydration_ctx: Dictionary,
+	demographics: Dictionary,
+	lexicon: Dictionary,
+	job_definitions: Dictionary,
+	cultural: Dictionary,
+	rng: RandomNumberGenerator,
+	on_progress: Callable = Callable()
+) -> void:
+	var districts: Dictionary = physical_state.get("districts", {})
+	var by_cat: Dictionary = physical_state["by_cat"]
+	var district_residents_map: Dictionary = physical_state["district_residents_map"]
+	var open_job_slots: Array[Dictionary] = physical_state["available_job_slots"]
+	var available_tied_housing: Dictionary = physical_state.get("available_tied_housing", {})
+	var proprietor_hints: Dictionary = physical_state.get("proprietor_hints", {})
+
+	var ocean_rules: Dictionary = MANIFEST_MANAGER.load_module("ocean_personality")
+	var civic_cfg: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
+	var kinship_rules: Dictionary = FAMILY_WEAVER.get_kinship_rules(demographics)
+	var edu_rank_map: Dictionary = HOUSEHOLD_COMPOSER.get_education_rank_map(demographics)
+	var job_roles_cfg: Dictionary = job_definitions.get("roles", job_definitions)
+
+	var cfg := ConfigFile.new()
+	var err: int = cfg.load(MANIFEST_MANAGER.BUSINESS_RULES_PATH)
+	assert(err == OK, "FATAL: [CitizenDemographicsHydrator] Could not load business_rules.cfg")
+	var enable_commute: bool = bool(cfg.get_value("labor_market", "enable_commute_distances", false))
+
+	var sim_start_day: int = CALENDAR_HELPER.get_simulation_start_day()
+	var reason_world_gen_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+	var male_gender_id: int = DB_MANAGER.get_label_id("GENDER", "M")
+	var female_gender_id: int = DB_MANAGER.get_label_id("GENDER", "F")
+	var contract_std_id: int = DB_MANAGER.get_label_id("CONTRACT_TYPE", "STANDARD")
+	var rel_civic_peer_id: int = DB_MANAGER.get_label_id("RELATIONSHIP_TYPE", "CIVIC_PEER")
+	var default_daytime_id: int = DB_MANAGER.get_label_id("SCHEDULE_WINDOW", "DAYTIME")
+
+	var residents_by_id: Dictionary = hydration_ctx["residents_by_id"]
+	var household_members_by_hh: Dictionary = hydration_ctx["household_members_by_hh"]
+	var household_meta: Dictionary = hydration_ctx["household_meta"]
+	var kin_graph: Dictionary = hydration_ctx["kin_graph"]
+	var current_resident_id: int = int(hydration_ctx["current_resident_id"])
+	var next_household_id: int = int(hydration_ctx["next_household_id"])
+	var pass3_start_ms: int = int(hydration_ctx["pass3_start_ms"])
+	var behavioral_tag_label_ids: Dictionary = hydration_ctx["behavioral_tag_label_ids"]
+	var hh_flush_batch: int = int(hydration_ctx.get("hh_flush_batch", 250))
+
+	# Build spatial position, capacity, and category ID indexes
+	var by_cat_and_district: Dictionary = {}
+	var cat_estab_ids: Dictionary = {}
+	var estab_positions: Dictionary = {}
+	var estab_capacities: Dictionary = {}
+	var enrolled_counts: Dictionary = {}
+
+	for cat in by_cat.keys():
+		by_cat_and_district[cat] = {}
+		cat_estab_ids[cat] = []
+		for item in by_cat[cat]:
+			var est_id: int = int(item["id"])
+			var d_id: String = str(item.get("district_id", ""))
+			if not by_cat_and_district[cat].has(d_id):
+				by_cat_and_district[cat][d_id] = []
+			by_cat_and_district[cat][d_id].append(item)
+			cat_estab_ids[cat].append(est_id)
+			var d_pos: Vector2 = Vector2.ZERO
+			if districts.has(d_id):
+				d_pos = SPATIAL_RESOLVER._resolve_vector2(districts[d_id].get("spatial_anchor", Vector2.ZERO))
+			estab_positions[est_id] = d_pos
+			estab_capacities[est_id] = int(item.get("capacity", 250))
+
+	var church_estabs: Array = []
+	for ch_cat in ["PLACE_OF_WORSHIP", "CHURCH", "COMMUNITY_PARISH"]:
+		if cat_estab_ids.has(ch_cat):
+			for cid in cat_estab_ids[ch_cat]:
+				if not church_estabs.has(cid):
+					church_estabs.append(cid)
+
+	var pub_estabs: Array = []
+	for pb_cat in ["LOCAL_PUB", "PUB", "PUBLIC_HOUSE", "SOCIAL_CLUB", "HOSPITALITY"]:
+		if cat_estab_ids.has(pb_cat):
+			for pid in cat_estab_ids[pb_cat]:
+				if not pub_estabs.has(pid):
+					pub_estabs.append(pid)
+
+	open_job_slots.shuffle()
+	for slot in open_job_slots:
+		if not slot.has("establishment_id") and slot.has("estab_id"):
+			slot["establishment_id"] = int(slot["estab_id"])
+		if not slot.has("role_code") and slot.has("role_title"):
+			slot["role_code"] = str(slot["role_title"])
+		if not slot.has("min_education_code"):
+			var r_code: String = str(slot.get("role_code", ""))
+			var r_def: Dictionary = job_roles_cfg.get(r_code, {})
+			slot["min_education_code"] = str(slot.get("edu_req", r_def.get("education_required", "NO_FORMAL")))
+
+	var job_slot_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_job_slot_spatial_index(open_job_slots, estab_positions, 1500.0)
+	var church_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(church_estabs, estab_positions, 1500.0)
+	var pub_spatial_index: SpatialRadiusIndex = ANCHOR_ALLOCATOR.build_establishment_spatial_index(pub_estabs, estab_positions, 1500.0)
+	var school_spatial_indexes: Dictionary = {}
+	for s_cat in ["PRIMARY_SCHOOL", "SECONDARY_SCHOOL", "UNIVERSITY_OR_POLYTECHNIC"]:
+		var s_ids: Array = cat_estab_ids.get(s_cat, [])
+		if not s_ids.is_empty():
+			school_spatial_indexes[s_cat] = ANCHOR_ALLOCATOR.build_establishment_spatial_index(s_ids, estab_positions, 1500.0)
+
+	var contract_inserts: Array[String] = []
+	var org_member_inserts: Array[String] = []
+	var slot_updates: Array[String] = []
+	var resident_updates: Array[String] = []
+	var tied_household_inserts: Array[String] = []
+	var workplace_cohort_pubs: Dictionary = {}
+	var tied_occupants: Array[Dictionary] = []
+	var local_tied_relocated_count := 0
+	var external_tied_influx_count := 0
+
+	var is_headless: bool = (DisplayServer.get_name() == "headless")
+	var total_hh: int = household_meta.size()
+	var hh_idx: int = 0
+	var stage3b_start_ms: int = Time.get_ticks_msec()
+	var chunk_start_ms: int = stage3b_start_ms
+
+	SystemLogger.log_info("  [Pass 3B] Allocating roles, students, tied accommodation, and social anchors for %d households..." % total_hh)
+
+	for hh_id in household_meta.keys():
+		hh_idx += 1
+		var h_meta: Dictionary = household_meta[hh_id]
+		var hh_members: Array = household_members_by_hh.get(hh_id, [])
+		var home_estab_id: int = int(h_meta["establishment_id"])
+		var hh_dist_id: String = str(h_meta["district_id"])
+		var home_pos: Vector2 = h_meta["home_pos"]
+		var unemp_rate: float = float(h_meta["unemp_rate"])
+		var has_child_under_5: bool = bool(h_meta["has_child_under_5"])
+		var has_child_5_to_15: bool = bool(h_meta["has_child_5_to_15"])
+		var hh_religion: String = str(h_meta["religion"])
+
+		var head_church_id: int = -1
+		var spouse_church_id: int = -1
+		var hh_sibling_school_by_cat: Dictionary = {}
+
+		for res_record in hh_members:
+			var r_id: int = int(res_record["resident_id"])
+			var role_in_home: String = str(res_record["household_role"])
+			var is_head: bool = bool(res_record["is_head"])
+			var is_married: bool = bool(res_record["is_married"])
+			var is_male: bool = bool(res_record["is_male"])
+			var age_years: int = int(res_record["age_years"])
+			var edu_code: String = str(res_record["education_code"])
+			var ocean_traits: Dictionary = res_record["ocean_traits"]
+
+			# 1. Church / Parish Anchor
 			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
 				role_in_home, hh_religion, home_pos, head_church_id, spouse_church_id,
 				church_estabs, estab_positions, ocean_rules, rng, church_spatial_index
@@ -245,13 +444,13 @@ static func run(
 				head_church_id = church_id
 			elif role_in_home == "SPOUSE":
 				spouse_church_id = church_id
+			res_record["church_id"] = church_id
 
-			# 3. Resolve Role & Employment / School Profile
+			# 2. Role / Student Allocation
 			var demo_profile: Dictionary = HOUSEHOLD_COMPOSER.resolve_citizen_demographics(
 				demographics, rng, age_years, is_male, unemp_rate, edu_code,
 				is_married, has_child_under_5, has_child_5_to_15
 			)
-
 			var occ_title: String = demo_profile["occupation"]
 			var anchor_cat: String = demo_profile["anchor_category"]
 			var contract_class: String = demo_profile["contract_class"]
@@ -287,13 +486,6 @@ static func run(
 					back_slot["_index"] = matched_idx
 					open_job_slots.pop_back()
 
-					assert(slot.has("estab_id"), "FATAL: Slot missing mandatory 'estab_id'!")
-					assert(slot.has("role_title"), "FATAL: Slot missing mandatory 'role_title'!")
-					assert(slot.has("role_title_id"), "FATAL: Slot missing mandatory 'role_title_id'!")
-					assert(slot.has("contract_class_id"), "FATAL: Slot missing mandatory 'contract_class_id'!")
-					assert(slot.has("hours"), "FATAL: Slot missing mandatory 'hours'!")
-					assert(slot.has("rate"), "FATAL: Slot missing mandatory 'rate'!")
-
 					assigned_est_id = int(slot["estab_id"])
 					occ_title = str(slot["role_title"])
 					weekly_hours = float(slot["hours"])
@@ -307,7 +499,6 @@ static func run(
 							r_id, int(slot["slot_id"])
 						])
 
-					# Bind organization governance membership for leadership/executive roles at owned establishments
 					var slot_tier: String = str(slot.get("social_tier", "STAFF"))
 					var slot_clearance: float = float(slot.get("intel_clearance", 0.3))
 					if slot_tier == "MANAGEMENT" or slot_clearance >= 0.85:
@@ -328,8 +519,7 @@ static func run(
 						var prop_eth_id: int = DB_MANAGER.get_label_id("ETHNICITY", str(hint["ethnicity"]))
 						var prop_rel_id: int = DB_MANAGER.get_label_id("RELIGION", str(hint["religion"]))
 						var prop_first: String = HOUSEHOLD_COMPOSER.pick_first_name(lexicon, is_male, str(hint["surnames_pool"]), str(hint["religion"]), rng)
-						family_surname = prop_surname
-						member_surname = prop_surname
+						res_record["birth_surname"] = prop_surname
 						resident_updates.append("UPDATE residents SET birth_surname = '%s', current_surname = '%s', ethnicity_id = %d, religion_id = %d WHERE household_id = %d;" % [
 							prop_surname, prop_surname, prop_eth_id, prop_rel_id, hh_id
 						])
@@ -337,40 +527,62 @@ static func run(
 							prop_first, r_id
 						])
 
+					# Tied Accommodation Relocation (Archetype-driven require_unmarried & relocates_family)
 					var tied_type: String = str(slot.get("tied_accomodation", ""))
-					if not tied_type.is_empty() and available_tied_housing.has(tied_type) and not is_head:
+					if not tied_type.is_empty() and available_tied_housing.has(tied_type):
 						var unit_list: Array = available_tied_housing[tied_type]
 						if not unit_list.is_empty():
-							var tied_unit: Dictionary = unit_list.pop_back()
-							var tied_h_id: int = next_household_id
-							next_household_id += 1
+							var peek_unit: Dictionary = unit_list.back()
+							var req_unmarried: bool = bool(peek_unit.get("require_unmarried", false))
+							var reloc_family: bool = bool(peek_unit.get("relocates_family", false))
 
-							var tied_est_id: int = int(tied_unit["establishment_id"])
-							var tied_res_type_id: int = int(tied_unit["residence_type_id"])
-							var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
+							if reloc_family and not bool(h_meta["relocated_to_tied"]):
+								var tied_unit: Dictionary = unit_list.pop_back()
+								var tied_est_id: int = int(tied_unit["establishment_id"])
+								var tied_res_type_id: int = int(tied_unit["residence_type_id"])
+								h_meta["relocated_to_tied"] = true
+								# Move entire household (or single person if solo) into tied accommodation; old home remains vacant
+								resident_updates.append("UPDATE households SET establishment_id = %d, residence_type_id = %d WHERE household_id = %d;" % [
+									tied_est_id, tied_res_type_id, hh_id
+								])
+								resident_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
+								resident_updates.append("UPDATE establishments SET is_vacant = 1 WHERE establishment_id = %d;" % home_estab_id)
+								tied_occupants.append({
+									"resident_id": r_id,
+									"establishment_id": tied_est_id,
+									"workplace_id": assigned_est_id,
+									"residence_type_id": tied_res_type_id,
+									"age": age_years
+								})
+								local_tied_relocated_count += 1
+							elif (not req_unmarried or not is_married) and not is_head:
+								var tied_unit: Dictionary = unit_list.pop_back()
+								var tied_h_id: int = next_household_id
+								next_household_id += 1
+								var tied_est_id: int = int(tied_unit["establishment_id"])
+								var tied_res_type_id: int = int(tied_unit["residence_type_id"])
+								var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
 
-							tied_household_inserts.append("""
-								INSERT INTO households (
-									household_id, establishment_id, head_resident_id, residence_type_id,
-									wealth_bracket_id, ethnicity_id, religion_id,
-									valid_from, valid_to, change_reason_id
-								) VALUES (%d, %d, %d, %d, %d, %d, %d, %d, NULL, %d);
-							""" % [
-								tied_h_id, tied_est_id, r_id, tied_res_type_id,
-								tied_wealth_id, hh["ethnicity_id"], hh["religion_id"], sim_start_day, reason_world_gen_id
-							])
-
-							resident_updates.append("UPDATE residents SET household_id = %d WHERE resident_id = %d;" % [tied_h_id, r_id])
-							resident_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
-
-							tied_occupants.append({
-								"resident_id": r_id,
-								"establishment_id": tied_est_id,
-								"workplace_id": assigned_est_id,
-								"residence_type_id": tied_res_type_id,
-								"age": age_years
-							})
-							local_tied_relocated_count += 1
+								tied_household_inserts.append("""
+									INSERT INTO households (
+										household_id, establishment_id, head_resident_id, residence_type_id,
+										wealth_bracket_id, ethnicity_id, religion_id,
+										valid_from, valid_to, change_reason_id
+									) VALUES (%d, %d, %d, %d, %d, %d, %d, %d, NULL, %d);
+								""" % [
+									tied_h_id, tied_est_id, r_id, tied_res_type_id,
+									tied_wealth_id, int(h_meta["ethnicity_id"]), int(h_meta["religion_id"]), sim_start_day, reason_world_gen_id
+								])
+								resident_updates.append("UPDATE residents SET household_id = %d WHERE resident_id = %d;" % [tied_h_id, r_id])
+								resident_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
+								tied_occupants.append({
+									"resident_id": r_id,
+									"establishment_id": tied_est_id,
+									"workplace_id": assigned_est_id,
+									"residence_type_id": tied_res_type_id,
+									"age": age_years
+								})
+								local_tied_relocated_count += 1
 				else:
 					assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
 					occ_title = "UNEMPLOYED"
@@ -404,71 +616,21 @@ static func run(
 			if assigned_est_id <= 0:
 				assigned_est_id = _transition_to_dole(by_cat, home_estab_id, rng)
 
-			var res_record: Dictionary = {
-				"resident_id": r_id,
-				"household_id": hh_id,
-				"household_role": role_in_home,
-				"birth_surname": member_surname,
-				"ethnicity_id": int(hh["ethnicity_id"]),
-				"gender_code": gender_code,
-				"age_years": age_years,
-				"dob": dob_day,
-				"home_pos": home_pos,
-				"church_id": church_id,
-				"local_pub_id": -1,
-				"employer_establishment_id": assigned_est_id,
-				"role_code": occ_title,
-				"ocean_traits": ocean_traits
-			}
+			res_record["employer_establishment_id"] = assigned_est_id
+			res_record["role_code"] = occ_title
 
-			# 4. Resolve Individual Social-Cohort Pub
+			# 3. Social-Cohort Pub Anchor
 			var local_pub_id: int = ANCHOR_ALLOCATOR.resolve_individual_pub_id(
 				res_record, pub_estabs, estab_positions, estab_capacities,
 				workplace_cohort_pubs, kin_graph, residents_by_id,
 				job_roles_cfg, ocean_rules, rng, pub_spatial_index
 			)
 			res_record["local_pub_id"] = local_pub_id
-			residents_by_id[r_id] = res_record
-			hh_member_records.append(res_record)
 
-			var church_sql_str: String = "NULL" if church_id <= 0 else str(church_id)
-			var pub_sql_str: String = "NULL" if local_pub_id <= 0 else str(local_pub_id)
-
-			resident_inserts.append("""
-				INSERT INTO residents (
-					resident_id, household_id, first_name, birth_surname, current_surname,
-					dob, dod, death_reason_id, gender_id, education_level_id,
-					ethnicity_id, religion_id, church_id, local_pub_id,
-					openness, conscientiousness, extraversion, agreeableness, neuroticism,
-					iq_score, mental_agility, machiavellianism, empathy_affective, power_entitlement,
-					is_active_agent, valid_from, valid_to, change_reason_id
-				) VALUES (
-					%d, %d, '%s', '%s', '%s', %d, NULL, NULL, %d, %d, %d, %d, %s, %s,
-					%.3f, %.3f, %.3f, %.3f, %.3f,
-					%.1f, %.3f, %.3f, %.3f, %.3f,
-					0, %d, NULL, %d
-				);
-			""" % [
-				r_id, hh_id, first_name, member_surname, member_surname,
-				dob_day, gender_id, edu_id, int(hh["ethnicity_id"]), int(hh["religion_id"]),
-				church_sql_str, pub_sql_str,
-				float(ocean_traits["openness"]), float(ocean_traits["conscientiousness"]),
-				float(ocean_traits["extraversion"]), float(ocean_traits["agreeableness"]),
-				float(ocean_traits["neuroticism"]),
-				float(ocean_traits["iq_score"]), float(ocean_traits["mental_agility"]),
-				float(ocean_traits["machiavellianism"]), float(ocean_traits["empathy_affective"]),
-				float(ocean_traits["power_entitlement"]),
-				sim_start_day, reason_world_gen_id
-			])
-
-			for tag_entry in ocean_traits.get("behavioral_tags", []):
-				var t_code: String = str(tag_entry["code"])
-				var t_label_id: int = int(behavioral_tag_label_ids[t_code])
-				behavioral_tag_inserts.append("""
-					INSERT INTO resident_behavioral_tags (
-						resident_id, tag_label_id, severity, is_diagnosed, valid_from, valid_to, change_reason_id
-					) VALUES (%d, %d, %.2f, 0, %d, NULL, %d);
-				""" % [r_id, t_label_id, float(tag_entry["severity"]), sim_start_day, reason_world_gen_id])
+			if church_id > 0 or local_pub_id > 0:
+				var c_sql: String = "NULL" if church_id <= 0 else str(church_id)
+				var p_sql: String = "NULL" if local_pub_id <= 0 else str(local_pub_id)
+				resident_updates.append("UPDATE residents SET church_id = %s, local_pub_id = %s WHERE resident_id = %d;" % [c_sql, p_sql, r_id])
 
 			var class_id: int = active_contract_class_id if active_contract_class_id > 0 else DB_MANAGER.get_label_id("CONTRACT_CLASS", contract_class)
 			var role_id: int = active_role_title_id if active_role_title_id > 0 else DB_MANAGER.get_label_id("ROLE_TITLE", occ_title)
@@ -486,45 +648,39 @@ static func run(
 				weekly_hours, compensation_rate, sim_start_day, reason_world_gen_id
 			])
 
-		# 5. Weave Directional Intra-Household Nuclear Kinship Edges (with realistic marriage dates)
-		if hh_member_records.size() > 1:
-			FAMILY_WEAVER.weave_intra_household_edges(
-				edge_inserts, hh_member_records, is_married_couple,
-				home_estab_id, kinship_rules, reason_world_gen_id, kin_graph
-			)
-
-		# Flush batches every 250 households for low peak RAM and smooth progress bar updates
-		if hh_idx % 250 == 0:
+		if hh_idx % hh_flush_batch == 0:
 			var gen_time: int = Time.get_ticks_msec() - chunk_start_ms
 			var db_t0: int = Time.get_ticks_msec()
+			var empty_a: Array[String] = []
 			_flush_stage1_batches(
-				resident_inserts, behavioral_tag_inserts, contract_inserts, org_member_inserts, edge_inserts,
+				empty_a, empty_a, contract_inserts, org_member_inserts, empty_a,
 				slot_updates, tied_household_inserts, resident_updates
 			)
 			var db_time: int = Time.get_ticks_msec() - db_t0
-
-			if hh_idx % 1000 == 0:
-				SystemLogger.log_info("  [Pass 3 Benchmark] HH %5d/%d | Pop %5d | Gen: %4dms | DB Batch: %4dms" % [
-					hh_idx, total_hh, current_resident_id - 1, gen_time, db_time
+			if hh_idx % 2000 == 0:
+				SystemLogger.log_info("  [Pass 3B Benchmark] HH %5d/%d | Gen: %4dms | DB Batch: %4dms" % [
+					hh_idx, total_hh, gen_time, db_time
 				])
-
 			if on_progress.is_valid():
-				var pct: float = 50.0 + ((float(hh_idx) / float(max(1, total_hh))) * 25.0)
-				on_progress.call(pct, 100.0, "Hydrating Citizens: ~%d pop (%d/%d homes)" % [current_resident_id - 1, hh_idx, total_hh])
+				var pct: float = 62.0 + ((float(hh_idx) / float(max(1, total_hh))) * 13.0)
+				on_progress.call(pct, 100.0, "Allocating Roles & Housing: %d/%d homes" % [hh_idx, total_hh])
 				if not is_headless:
 					var main_loop = Engine.get_main_loop()
 					if main_loop is SceneTree:
 						await (main_loop as SceneTree).process_frame
-
 			chunk_start_ms = Time.get_ticks_msec()
 
+	var empty_end: Array[String] = []
 	_flush_stage1_batches(
-		resident_inserts, behavioral_tag_inserts, contract_inserts, org_member_inserts, edge_inserts,
+		empty_end, empty_end, contract_inserts, org_member_inserts, empty_end,
 		slot_updates, tied_household_inserts, resident_updates
 	)
+	household_members_by_hh.clear()
+	household_meta.clear()
+	SystemLogger.log_info("  ✓ [Pass 3B.1] Role, student & venue allocation finished in %dms." % (Time.get_ticks_msec() - stage3b_start_ms))
 
 	# --------------------------------------------------------------------------
-	# STAGE 2: External Migrant Influx (Unmarried Newcomers for Remaining Tied Slots)
+	# STAGE 2: External Migrant Influx (Single Newcomers for Remaining Tied Slots)
 	# --------------------------------------------------------------------------
 	if on_progress.is_valid():
 		on_progress.call(75.5, 100.0, "Assigning Work-Tied Housing & Migrant Influx...")
@@ -547,12 +703,6 @@ static func run(
 			var tied_unit: Dictionary = available_tied_housing[tied_type].pop_back()
 			var r_id: int = current_resident_id
 			current_resident_id += 1
-
-			assert(slot.has("role_title"), "FATAL: Influx slot missing mandatory 'role_title'!")
-			assert(slot.has("role_title_id"), "FATAL: Influx slot missing mandatory 'role_title_id'!")
-			assert(slot.has("contract_class_id"), "FATAL: Influx slot missing mandatory 'contract_class_id'!")
-			assert(slot.has("hours"), "FATAL: Influx slot missing mandatory 'hours'!")
-			assert(slot.has("rate"), "FATAL: Influx slot missing mandatory 'rate'!")
 
 			var role_key: String = str(slot["role_title"])
 			var master_def: Dictionary = job_roles_cfg.get(role_key, {})
@@ -583,7 +733,6 @@ static func run(
 
 			var tied_h_id: int = next_household_id
 			next_household_id += 1
-
 			var tied_est_id: int = int(tied_unit["establishment_id"])
 			var tied_res_type_id: int = int(tied_unit["residence_type_id"])
 			var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
@@ -720,7 +869,7 @@ static func run(
 	open_job_slots.clear()
 	open_job_slots.append_array(remaining_unfilled_slots)
 
-	# Stage 2B: Guarantee zero vacancies in all non-custodial tied housing (e.g. when local household heads took the post or for student halls)
+	# Stage 2B: Guarantee zero vacancies in non-custodial tied housing
 	var tied_role_defaults: Dictionary = {
 		"STUDENT_HALLS": {"role": "HIGHER_ED_STUDENT", "class": "ENCLAVE_STUDENT", "edu": "A_LEVELS"},
 		"RECTORY": {"role": "CLERGY", "class": "FORMAL_LEGAL", "edu": "O_LEVELS_CSE"},
@@ -766,7 +915,6 @@ static func run(
 
 			var days_old: int = int(round(float(migrant_age) * 365.25)) + rng.randi_range(0, 364)
 			var dob_day: int = sim_start_day - days_old
-
 			var ocean_traits: Dictionary = PERSONALITY_HYDRATOR.roll_independent_adult_traits(ocean_rules, {}, edu_nudges, rng)
 			PERSONALITY_HYDRATOR.populate_cognitive_and_clinical_profile(
 				ocean_traits, ocean_rules, float(migrant_age), edu_req, 0.25, rng
@@ -774,11 +922,10 @@ static func run(
 
 			var tied_h_id: int = next_household_id
 			next_household_id += 1
-
 			var tied_est_id: int = int(tied_unit["establishment_id"])
 			var tied_res_type_id: int = int(tied_unit["residence_type_id"])
 			var tied_wealth_id: int = int(tied_unit["wealth_bracket_id"])
-			var influx_est_id: int = int(tied_unit.get("parent_establishment_id", tied_est_id))
+			var influx_est_id: int = int(tied_unit.get("parent_workplace_id", tied_unit.get("parent_establishment_id", tied_est_id)))
 			var home_pos: Vector2 = estab_positions.get(tied_est_id, estab_positions.get(influx_est_id, Vector2.ZERO))
 
 			var church_id: int = ANCHOR_ALLOCATOR.resolve_individual_church_id(
@@ -875,7 +1022,6 @@ static func run(
 			])
 
 			influx_slot_updates.append("UPDATE establishments SET is_vacant = 0 WHERE establishment_id = %d;" % tied_est_id)
-
 			tied_occupants.append({
 				"resident_id": r_id,
 				"establishment_id": tied_est_id,
@@ -884,7 +1030,7 @@ static func run(
 				"age": migrant_age
 			})
 			external_tied_influx_count += 1
-	# Release Pass 3 spatial indexes once labor & venue allocation is finished
+
 	job_slot_index.clear()
 	church_spatial_index.clear()
 	pub_spatial_index.clear()
@@ -900,33 +1046,29 @@ static func run(
 			DB_MANAGER.execute_batch(influx_org_member_inserts)
 		DB_MANAGER.execute_batch(influx_slot_updates)
 
-	# Ensure every seeded organization has at least senior contracted representatives in organization_members
 	_backfill_seeded_org_leadership(sim_start_day, reason_world_gen_id)
 
-	# --------------------------------------------------------------------------
-	# STAGE 3: Cross-Household Extended Kinship Tree Weaving (76% -> 85%)
-	# --------------------------------------------------------------------------
-	# Prune fields not needed by FamilyTreeWeaver to keep Stage 3 working memory flat
 	for res_key in residents_by_id.keys():
 		var r_entry: Dictionary = residents_by_id[res_key]
 		r_entry.erase("ocean_traits")
 		r_entry.erase("local_pub_id")
 		r_entry.erase("employer_establishment_id")
 		r_entry.erase("role_code")
+	var kin_t0: int = Time.get_ticks_msec()
+	SystemLogger.log_info("  [Pass 3B.3] Weaving extended kinship trees across %d residents..." % residents_by_id.size())
 	var extended_kin_edges: Array[String] = []
 	var extended_kin_count: int = await FAMILY_WEAVER.weave_extended_family_trees(
 		extended_kin_edges, residents_by_id, kinship_rules,
 		reason_world_gen_id, kin_graph, rng, on_progress
 	)
+	SystemLogger.log_info("  ✓ [Pass 3B.3] Extended kinship weaving finished in %dms (%d edges)." % [
+		Time.get_ticks_msec() - kin_t0, extended_kin_count
+	])
 
-	# Release heavy resident & kinship working dictionaries before Pass 4
 	residents_by_id.clear()
 	kin_graph.clear()
 	workplace_cohort_pubs.clear()
 
-	# --------------------------------------------------------------------------
-	# STAGE 4: Intake-Cohort Peer Relationship Weaving (Tied Accommodation)
-	# --------------------------------------------------------------------------
 	var cohort_groups: Dictionary = {}
 	for occ in tied_occupants:
 		var key := "%d_%d_%d" % [occ["workplace_id"], occ["residence_type_id"], occ["age"]]
@@ -960,9 +1102,6 @@ static func run(
 	if not cohort_edge_inserts.is_empty():
 		DB_MANAGER.execute_batch(cohort_edge_inserts)
 
-	# --------------------------------------------------------------------------
-	# STAGE 5: Layer A Civic & Employer Recurring Schedule Bricks (calendar_events)
-	# --------------------------------------------------------------------------
 	_seed_layer_a_calendar_schedules(civic_cfg, sim_start_day)
 	ROUTE_ROUND_SEEDER.seed_service_routes(physical_state, sim_start_day)
 
