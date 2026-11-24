@@ -4,12 +4,28 @@
     "tier_level": 1,
     "scope_id": "CORE_COMMODITIES",
     "display_scope": "Core -> Commodities",
-    "description": "Establishes baseline properties for the Core -> Commodities commodity scope."
+    "description": "Establishes baseline properties, fiscal tax/duty classes, and default demand curve coefficients for the Core -> Commodities scope."
   },
   "category": "COMMODITY",
   "tags": [],
   "can_be_stored": true,
   "unit_type": "ITEM",
   "base_cost": 1.0,
-  "storage_footprint_per_unit": 0.05
+  "storage_footprint_per_unit": 0.05,
+  "tax_class": "STANDARD",
+  "duty_class": "NONE",
+  "demand_profile": {
+    "primary_driver": "DEMAND_LED",
+    "base_per_capita_daily": 0.05,
+    "income_elasticity": 0.60,
+    "price_elasticity": -0.75,
+    "compulsion_floor": 0.0,
+    "fomo_sensitivity": 0.25,
+    "status_multiplier": 0.0,
+    "legality": "LEGAL",
+    "credit_tick_allowed": false,
+    "substitution_group": "",
+    "substitution_priority": 1,
+    "event_multipliers": {}
+  }
 }

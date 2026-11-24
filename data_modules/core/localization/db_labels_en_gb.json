@@ -2275,6 +2275,48 @@
       "code": "YOUTH_CONDUCT_ODD",
       "title": "Youth Conduct / Oppositional Profile",
       "description": "Adolescent pattern of authority defiance and rule violation."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_GAMBLING",
+      "title": "Compulsive Gambling Profile",
+      "description": "Persistent gambling compulsion that may drain pocket cash, household savings, or bank deposits."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_ALCOHOL",
+      "title": "Alcohol Dependence Profile",
+      "description": "Compulsive alcohol use that can reduce liquidity and increase household strain."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_OPIATES",
+      "title": "Opiate Dependence Profile",
+      "description": "Compulsive opiate use with severe risk to personal, household, and credit liquidity."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "SECRET_AFFAIR_MISTRESS",
+      "title": "Secret Affair / Mistress Profile",
+      "description": "Covert extramarital relationship that creates recurring expenditure and personal blackmail exposure."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CORRUPT_OFFICIAL",
+      "title": "Corrupt Official Profile",
+      "description": "Abuse of public or institutional authority for kickbacks, with corresponding blackmail vulnerability."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "HIDDEN_SEXUALITY_GAY",
+      "title": "Hidden Same-Sex Relationship Profile",
+      "description": "Covert same-sex relationship that may create secrecy costs and historical-period blackmail exposure."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "HIDDEN_SEXUALITY_ILLEGAL",
+      "title": "Hidden Illegal Sexuality Profile",
+      "description": "Secret relationship carrying severe historical-period criminal prosecution and blackmail risk."
     }
   ]
 }

@@ -13,6 +13,7 @@ const _ManagerAIResolver = preload("res://systems/economy/manager_ai_resolver.gd
 const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
+const _MacroEconomyProcessor = preload("res://systems/economy/macro_economy_processor.gd")
 
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
@@ -284,6 +285,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 	meta["background_district_count"] = district_partition["background_count"]
 
 	var crossed_boundary := _CalendarHelper.crosses_week_boundary(start_day, days_to_advance)
+	var economy_rollover: Dictionary = {}
 	var obligation_rollover := {
 		"delivered_mail": [],
 		"cleared_settlements": [],
@@ -320,6 +322,12 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	if crossed_boundary:
 		_ImpactRouter.dispatch_ambient_tick(world_state)
+		economy_rollover = _MacroEconomyProcessor.process_cycle(
+			world_state,
+			current_day,
+			district_partition["active_districts"],
+			is_month_close
+		)
 		_evaluate_active_mandates_and_collisions(world_state, current_day, horizon, is_month_close, executed_events, diary_memos)
 
 	_append_ledger_rollover_events(obligation_rollover, current_day, executed_events, diary_memos)
@@ -351,6 +359,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"active_districts": district_partition["active_districts"],
 		"background_district_count": district_partition["background_count"],
 		"week_rollover": crossed_boundary,
+		"economy_rollover": economy_rollover,
 		"obligation_rollover": obligation_rollover,
 		"executed_events": executed_events,
 		"diary_memos": diary_memos
