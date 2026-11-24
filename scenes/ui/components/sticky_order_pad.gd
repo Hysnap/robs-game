@@ -49,6 +49,9 @@ var btn_tear: Button
 var _target_search_edit: LineEdit
 var _location_search_edit: LineEdit
 var _lbl_standing_warning: Label
+var _lbl_cascade: Label
+var _opt_cascade: OptionButton
+var _active_cascade_field: String = ""
 
 var _is_dragging: bool = false
 var _drag_offset: Vector2 = Vector2.ZERO
@@ -221,12 +224,61 @@ func _populate_default_verbs() -> void:
 		opt_verb.set_item_metadata(idx, str(entry["code"]))
 		idx += 1
 
+## Returns currently selected cascading field key-value pair (e.g. {"intent": "BRIBE"})
+func _get_selected_cascade_params() -> Dictionary:
+	if _active_cascade_field.is_empty() or _opt_cascade == null or not _opt_cascade.visible or _opt_cascade.item_count == 0:
+		return {}
+	var meta: Variant = _opt_cascade.get_item_metadata(_opt_cascade.selected)
+	var val: String = str(meta).strip_edges() if meta != null else ""
+	if val.is_empty():
+		return {}
+	return { _active_cascade_field: val }
+
+func _on_cascade_selected(_idx: int) -> void:
+	_apply_form_layout_for_verb(_get_active_verb(), true)
+	_recalculate_estimate()
+
 ## Dynamically adapts form slot visibility, labels, and bounds based on verb layout config
-func _apply_form_layout_for_verb(verb_token: String) -> void:
+func _apply_form_layout_for_verb(verb_token: String, preserve_cascade_selection: bool = false) -> void:
 	if verb_token.is_empty():
 		return
 
-	var layout: Dictionary = DirectiveComposerControllerScript.get_form_layout(verb_token)
+	var initial_params: Dictionary = _get_selected_cascade_params() if preserve_cascade_selection else {}
+	var layout: Dictionary = DirectiveComposerControllerScript.resolve_effective_form_layout(verb_token, initial_params)
+
+	# 0. Cascading Intent / Mode Selector inside Slot_Action
+	var cascade_cfg: Dictionary = DirectiveComposerControllerScript.get_cascading_section(layout)
+	if cascade_cfg.is_empty():
+		_active_cascade_field = ""
+		if _lbl_cascade != null:
+			_lbl_cascade.visible = false
+		if _opt_cascade != null:
+			_opt_cascade.visible = false
+	else:
+		_active_cascade_field = str(cascade_cfg.get("mapped_field", "intent")).strip_edges()
+		if _lbl_cascade != null:
+			_lbl_cascade.text = tr(str(cascade_cfg.get("label_token", "UI_LBL_INTENT")))
+			_lbl_cascade.visible = true
+		if _opt_cascade != null:
+			_opt_cascade.visible = true
+			if not preserve_cascade_selection:
+				_opt_cascade.clear()
+				var default_id: String = str(cascade_cfg.get("default_value", "")).strip_edges().to_upper()
+				var default_idx: int = 0
+				var opt_idx: int = 0
+				for raw_opt in cascade_cfg.get("options", []):
+					if not (raw_opt is Dictionary):
+						continue
+					var opt_id: String = str(raw_opt.get("id", raw_opt.get("value", ""))).strip_edges()
+					var opt_tok: String = str(raw_opt.get("label_token", opt_id))
+					_opt_cascade.add_item(tr(opt_tok), opt_idx)
+					_opt_cascade.set_item_metadata(opt_idx, opt_id)
+					if not default_id.is_empty() and opt_id.to_upper() == default_id:
+						default_idx = opt_idx
+					opt_idx += 1
+				if _opt_cascade.item_count > 0:
+					_opt_cascade.select(default_idx)
+				layout = DirectiveComposerControllerScript.resolve_effective_form_layout(verb_token, _get_selected_cascade_params())
 
 	# 1. Target Slot (Commodity / Entity / Obligation)
 	var target_cfg: Dictionary = layout.get("target_section", {})
@@ -598,6 +650,10 @@ func _on_pin_pressed() -> void:
 		"exposure_modifier": 1.0
 	}
 
+	var cascade_params: Dictionary = _get_selected_cascade_params()
+	for k in cascade_params.keys():
+		form_data[k] = cascade_params[k]
+
 	var directive: Dictionary = DirectiveComposerControllerScript.build_and_validate_directive(form_data)
 	if directive.is_empty():
 		return
@@ -717,6 +773,17 @@ func _apply_ink_color_recursive(node: Node, ink_color: Color) -> void:
 		_apply_ink_color_recursive(child, ink_color)
 
 func _ensure_dynamic_filter_controls() -> void:
+	var action_vbox := get_node_or_null("VBox/NotesGrid/Slot_Action/VBox") as VBoxContainer
+	if action_vbox != null and _opt_cascade == null:
+		_lbl_cascade = Label.new()
+		_lbl_cascade.visible = false
+		action_vbox.add_child(_lbl_cascade)
+
+		_opt_cascade = OptionButton.new()
+		_opt_cascade.visible = false
+		_opt_cascade.item_selected.connect(_on_cascade_selected)
+		action_vbox.add_child(_opt_cascade)
+
 	var target_vbox := get_node_or_null("VBox/NotesGrid/Slot_Target/VBox") as VBoxContainer
 	if target_vbox != null and _target_search_edit == null:
 		_target_search_edit = LineEdit.new()
@@ -749,7 +816,7 @@ func _ensure_dynamic_filter_controls() -> void:
 func _configure_scrollable_popups() -> void:
 	const MAX_TEN_ITEM_POPUP_HEIGHT := 280
 	var dropdowns: Array[OptionButton] = [
-		opt_verb, opt_category, opt_target, opt_rail, opt_postal,
+		opt_verb, _opt_cascade, opt_category, opt_target, opt_rail, opt_postal,
 		opt_who, opt_where_filter, opt_where, opt_contact
 	]
 	for dd in dropdowns:

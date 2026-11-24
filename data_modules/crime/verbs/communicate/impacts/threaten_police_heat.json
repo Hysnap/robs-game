@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COMMUNICATE",
+    "description": "Coercive threats raise local district police heat."
+  },
+  "metric_id": "POLICE_HEAT",
+  "when": {
+    "intent": "THREATEN"
+  },
+  "delta": 6.0
+}

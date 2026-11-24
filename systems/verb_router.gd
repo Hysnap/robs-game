@@ -81,7 +81,7 @@ static func dispatch(world_state: Dictionary, action_directive: Dictionary) -> D
 		"Invalid executable definition for verb."
 	).to_dict()
 
-## Scans directories recursively using FileSystemCrawler, mounting all declarative verb_definition.json files
+## Scans directories recursively using FileSystemCrawler, mounting or overlaying declarative verb_definition.json files
 static func _scan_and_mount_verbs(verbs_root_dir: String) -> void:
 	if not DirAccess.dir_exists_absolute(verbs_root_dir):
 		return
@@ -93,9 +93,63 @@ static func _scan_and_mount_verbs(verbs_root_dir: String) -> void:
 			var parsed = JSON.parse_string(file.get_as_text())
 			file.close()
 			if parsed is Dictionary:
-				var default_slug: String = file_path.get_base_dir().get_file()
-				var token: String = str(parsed.get("_meta", {}).get("verb_token", default_slug)).to_upper().strip_edges()
-				_registry[token] = parsed
+				var verb_dir: String = file_path.get_base_dir()
+				var default_slug: String = verb_dir.get_file()
+				var meta: Dictionary = parsed.get("_meta", {})
+				var token: String = str(meta.get("verb_token", default_slug)).to_upper().strip_edges()
+				var impacts_dir: String = verb_dir.path_join("impacts")
+
+				if not _registry.has(token) or bool(meta.get("replace_core", false)):
+					var entry: Dictionary = parsed.duplicate(true)
+					var entry_meta: Dictionary = entry.get("_meta", {}).duplicate(true)
+					entry_meta["impacts_dirs"] = [impacts_dir] if DirAccess.dir_exists_absolute(impacts_dir) else []
+					entry["_meta"] = entry_meta
+					_registry[token] = entry
+				elif _registry[token] is Dictionary:
+					_registry[token] = _merge_verb_overlay(_registry[token], parsed, impacts_dir)
+
+## Deep-merges a flavour pack verb_definition.json overlay onto an existing core verb definition
+static func _merge_verb_overlay(base_def: Dictionary, overlay_def: Dictionary, overlay_impacts_dir: String) -> Dictionary:
+	var merged: Dictionary = base_def.duplicate(true)
+
+	# 1. Merge parameters
+	var merged_params: Dictionary = merged.get("parameters", {}).duplicate(true)
+	var overlay_params: Dictionary = overlay_def.get("parameters", {})
+	for p_key in overlay_params.keys():
+		merged_params[p_key] = overlay_params[p_key]
+	merged["parameters"] = merged_params
+
+	# 2. Merge steps by step_id (update existing step in place, or append new mode/branch steps)
+	var merged_steps: Array = merged.get("steps", []).duplicate(true)
+	var step_index_by_id: Dictionary = {}
+	for i in range(merged_steps.size()):
+		if merged_steps[i] is Dictionary and merged_steps[i].has("step_id"):
+			step_index_by_id[str(merged_steps[i]["step_id"])] = i
+
+	for raw_step in overlay_def.get("steps", []):
+		if not (raw_step is Dictionary):
+			continue
+		var s_id: String = str(raw_step.get("step_id", ""))
+		if not s_id.is_empty() and step_index_by_id.has(s_id):
+			var idx: int = int(step_index_by_id[s_id])
+			var updated_step: Dictionary = merged_steps[idx].duplicate(true)
+			updated_step.merge(raw_step, true)
+			merged_steps[idx] = updated_step
+		else:
+			if not s_id.is_empty():
+				step_index_by_id[s_id] = merged_steps.size()
+			merged_steps.append(raw_step.duplicate(true))
+	merged["steps"] = merged_steps
+
+	# 3. Accumulate impacts_dirs so both core and flavour impacts execute
+	var merged_meta: Dictionary = merged.get("_meta", {}).duplicate(true)
+	var impacts_dirs: Array = merged_meta.get("impacts_dirs", []).duplicate()
+	if DirAccess.dir_exists_absolute(overlay_impacts_dir) and not impacts_dirs.has(overlay_impacts_dir):
+		impacts_dirs.append(overlay_impacts_dir)
+	merged_meta["impacts_dirs"] = impacts_dirs
+	merged["_meta"] = merged_meta
+
+	return merged
 
 ## Ingests alias translations from JSON
 static func _load_verb_mappings(path: String) -> void:
@@ -123,3 +177,23 @@ static func get_verb_mappings() -> Dictionary:
 	if not _initialized:
 		initialize()
 	return _verb_mappings.duplicate(true)
+
+## Returns the mounted verb definition dictionary for a verb token (resolving aliases)
+static func get_verb_definition(verb_token: String) -> Dictionary:
+	if not _initialized:
+		initialize()
+	var raw_verb: String = verb_token.to_upper().strip_edges()
+	var resolved_verb: String = _verb_mappings.get(raw_verb, raw_verb)
+	var entry: Variant = _registry.get(resolved_verb, {})
+	return entry.duplicate(true) if entry is Dictionary else {}
+
+## Returns the ordered list of active impacts/ directories (core + active flavour overlay) for a verb
+static func get_impacts_dirs(verb_token: String) -> Array[String]:
+	var def: Dictionary = get_verb_definition(verb_token)
+	var raw_dirs: Array = def.get("_meta", {}).get("impacts_dirs", [])
+	var dirs: Array[String] = []
+	for d in raw_dirs:
+		var clean_dir: String = str(d).strip_edges()
+		if not clean_dir.is_empty():
+			dirs.append(clean_dir)
+	return dirs

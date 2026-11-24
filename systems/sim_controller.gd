@@ -4,6 +4,8 @@ extends RefCounted
 
 const _VerbRouter = preload("res://systems/verb_router.gd")
 const _ImpactRouter = preload("res://systems/impacts/impact_router.gd")
+const _ConditionEvaluator = preload("res://systems/condition_evaluator.gd")
+const _ActionPipelineHelpers = preload("res://systems/action_pipeline/action_pipeline_helpers.gd")
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const _FileSystemCrawler = preload("res://systems/file_system_crawler.gd")
@@ -40,19 +42,45 @@ static func execute_directive(world_state: Dictionary, action_directive: Diction
 	SystemLogger.log_info("[SimController] Directive completed: success=%s" % result.get("success", false))
 	return result
 
-## Resolves the impacts/ directory for a core or flavour verb via FileSystemCrawler
-static func _resolve_verb_impacts_dir(verb_token: String) -> String:
-	var slug := verb_token.to_lower()
-	var def_files: Array[String] = _FileSystemCrawler.find_files_recursive("res://data_modules/", "verb_definition.json")
-	for def_path in def_files:
-		var verb_dir := def_path.get_base_dir()
-		if verb_dir.get_file().to_lower() == slug:
-			var candidate := verb_dir.path_join("impacts")
-			if DirAccess.dir_exists_absolute(candidate):
-				return candidate + "/"
-	return ""
+## Evaluates declarative "when" key-value guards and compound "conditions" gates on an impact JSON
+static func _matches_impact_conditions(world_state: Dictionary, directive: Dictionary, impact_cfg: Dictionary) -> bool:
+	if impact_cfg.has("when") and impact_cfg["when"] is Dictionary:
+		var when_map: Dictionary = impact_cfg["when"]
+		for raw_key in when_map.keys():
+			var key_str: String = str(raw_key)
+			var lookup_token: String = key_str if key_str.begins_with("PARAM.") else ("PARAM." + key_str)
+			var current_val: Variant = _ActionPipelineHelpers.resolve_param_value(lookup_token, directive, world_state)
+			var expected_val: Variant = when_map[raw_key]
+			if expected_val is Array:
+				var matched_any := false
+				for candidate in expected_val:
+					if _ConditionEvaluator.evaluate_gate({ "current": current_val, "target": candidate, "operator": "==" }):
+						matched_any = true
+						break
+				if not matched_any:
+					return false
+			elif not _ConditionEvaluator.evaluate_gate({ "current": current_val, "target": expected_val, "operator": "==" }):
+				return false
 
-## Loads and executes declarative JSON impact configs from a verb's impacts/ folder
+	if impact_cfg.has("conditions") and impact_cfg["conditions"] is Array:
+		var logic_gate: String = str(impact_cfg.get("logic_gate", "AND"))
+		var gates: Array = []
+		for cond in impact_cfg["conditions"]:
+			if cond is Dictionary:
+				var metric_expr: String = str(cond.get("metric", ""))
+				var curr: Variant = _ActionPipelineHelpers.resolve_param_value(metric_expr, directive, world_state)
+				var targ: Variant = _ActionPipelineHelpers.resolve_param_value(cond.get("value", ""), directive, world_state)
+				gates.append({
+					"current": curr,
+					"target": targ,
+					"operator": str(cond.get("operator", "=="))
+				})
+		if not _ConditionEvaluator.evaluate_logic_block(logic_gate, gates):
+			return false
+
+	return true
+
+## Loads and executes declarative JSON impact configs from the verb's mounted core + active flavour impacts_dirs
 static func _dispatch_verb_impacts(
 	world_state: Dictionary,
 	directive: Dictionary,
@@ -64,15 +92,22 @@ static func _dispatch_verb_impacts(
 	if verb_token.is_empty():
 		return applied
 
-	var impacts_dir := _resolve_verb_impacts_dir(verb_token)
-	if impacts_dir.is_empty():
+	var impacts_dirs: Array[String] = _VerbRouter.get_impacts_dirs(verb_token)
+	if impacts_dirs.is_empty():
 		return applied
 
-	var impact_files: Array[String] = _FileSystemCrawler.find_files_recursive(impacts_dir, "", ".json")
+	var impact_files: Array[String] = []
+	for dir_path in impacts_dirs:
+		var found: Array[String] = _FileSystemCrawler.find_files_recursive(dir_path, "", ".json")
+		impact_files.append_array(found)
+
 	for full_path in impact_files:
 		var parsed: Dictionary = ScenarioManifestManager.load_json_file(full_path)
 		if parsed.is_empty():
 			continue
+		if not _matches_impact_conditions(world_state, directive, parsed):
+			continue
+
 		var metric_id: String = str(parsed.get("metric_id", full_path.get_file().get_basename())).to_upper().strip_edges()
 		if metric_id == "OBLIGATION":
 			var obl_outcome: Dictionary = _ObligationLedger.process_verb_impact(world_state, directive, parsed)
@@ -107,9 +142,17 @@ static func _dispatch_verb_impacts(
 		elif parsed.has("delta"):
 			var delta_val: float = float(parsed["delta"])
 			var scope: String = _ImpactRouter.get_metric_scope(metric_id)
-			var recipient_id: String = actor_id if (scope == "ACTOR" or (scope == "OPERATIONS_STAMP" and target_node_id.is_empty())) else target_node_id
+			var target_role: String = str(parsed.get("target_role", "ACTOR")).to_upper().strip_edges()
+			var recipient_id: String = target_node_id
+			if scope == "ACTOR" or scope == "RESIDENT":
+				if target_role == "COUNTERPARTY":
+					recipient_id = str(directive.get("target_resident_id", directive.get("counterparty_id", directive.get("source_id", actor_id))))
+				else:
+					recipient_id = actor_id
+			elif scope == "OPERATIONS_STAMP" and target_node_id.is_empty():
+				recipient_id = actor_id
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
-			applied[metric_id] = delta_val
+			applied[metric_id] = float(applied.get(metric_id, 0.0)) + delta_val
 	return applied
 
 ## Applies N-actor / multi-target declarative impacts attached to a calendar_events row

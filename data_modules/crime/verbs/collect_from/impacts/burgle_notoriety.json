@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COLLECT_FROM",
+    "description": "Premises burglary elevates actor notoriety."
+  },
+  "metric_id": "NOTORIETY",
+  "when": {
+    "mode": "BURGLE"
+  },
+  "delta": 3.0
+}

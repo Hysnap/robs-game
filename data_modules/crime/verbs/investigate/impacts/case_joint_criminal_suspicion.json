@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "INVESTIGATE",
+    "description": "High-focus joint casing adds elevated personal criminal suspicion to the operative."
+  },
+  "metric_id": "CRIMINAL_SUSPICION",
+  "when": {
+    "mode": "CASE_JOINT"
+  },
+  "target_role": "ACTOR",
+  "delta": 4.0
+}

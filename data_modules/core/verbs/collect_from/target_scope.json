@@ -2,12 +2,10 @@
   "_meta": {
     "entity_type": "VERB_TARGET_SCOPE",
     "verb_token": "COLLECT_FROM",
-    "description": "Targeting rules for inbound spatial collection of cash or commodities from a source entity."
+    "version": 3,
+    "description": "Targeting rules and cascading extraction mode configuration for COLLECT_FROM directives."
   },
-  "target_scopes": [
-    "DISTRICT",
-    "ESTABLISHMENT"
-  ],
+  "allowed_scopes": ["DISTRICT", "ESTABLISHMENT"],
   "target_categories": [
     {
       "id": "CURRENCY",
@@ -22,6 +20,14 @@
     }
   ],
   "form_layout": {
+    "mode_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_MODE",
+      "mapped_field": "mode",
+      "default_value": "CONSENSUAL",
+      "options": [{ "id": "CONSENSUAL", "label_token": "UI_MODE_CONSENSUAL" }]
+    },
     "target_section": {
       "visible": true,
       "required": true,

@@ -1,15 +1,24 @@
 {
   "_meta": {
     "verb_token": "COMMUNICATE",
-    "version": 2,
-    "description": "Form layout, target scopes, and field mapping configuration for COMMUNICATE directives."
+    "version": 3,
+    "description": "Form layout, target scopes, and cascading intent configuration for COMMUNICATE directives."
   },
-  "allowed_scopes": [
-    "DISTRICT",
-    "ESTABLISHMENT"
-  ],
+  "allowed_scopes": ["DISTRICT", "ESTABLISHMENT"],
   "target_categories": [],
   "form_layout": {
+    "intent_section": {
+      "visible": true,
+      "required": true,
+      "label_token": "UI_LBL_INTENT",
+      "mapped_field": "intent",
+      "default_value": "FRIENDLY",
+      "options": [
+        { "id": "FRIENDLY", "label_token": "UI_INTENT_FRIENDLY" },
+        { "id": "QUESTION", "label_token": "UI_INTENT_QUESTION" },
+        { "id": "INFORM", "label_token": "UI_INTENT_INFORM" }
+      ]
+    },
     "target_section": {
       "visible": false,
       "required": false,

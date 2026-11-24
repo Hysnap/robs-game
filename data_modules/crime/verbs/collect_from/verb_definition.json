@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "verb_token": "COLLECT_FROM",
+    "version": 1,
+    "flavour_overlay": "crime",
+    "description": "Crime flavour overlay extending COLLECT_FROM with premises theft (BURGLE, SHOPLIFT) and person-targeted extraction (PICKPOCKET, MUG, ROB)."
+  },
+  "parameters": {
+    "source_id": { "type": "STRING", "required": false },
+    "target_entity_id": { "type": "STRING", "required": false }
+  },
+  "steps": [
+    {
+      "step_id": "branch_collect_mode",
+      "on_false": "branch_crime_premises_mode"
+    },
+    {
+      "step_id": "branch_crime_premises_mode",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.mode",
+        "operator": "==",
+        "value": "BURGLE"
+      },
+      "on_true": "gate_premises_stock",
+      "on_false": "branch_crime_shoplift"
+    },
+    {
+      "step_id": "branch_crime_shoplift",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.mode",
+        "operator": "==",
+        "value": "SHOPLIFT"
+      },
+      "on_true": "gate_premises_stock",
+      "on_false": "branch_crime_person_mode"
+    },
+    {
+      "step_id": "branch_crime_person_mode",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.mode",
+        "operator": "==",
+        "value": "PICKPOCKET"
+      },
+      "on_true": "gate_person_source_present",
+      "on_false": "branch_crime_mug"
+    },
+    {
+      "step_id": "branch_crime_mug",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.mode",
+        "operator": "==",
+        "value": "MUG"
+      },
+      "on_true": "gate_person_source_present",
+      "on_false": "branch_crime_rob"
+    },
+    {
+      "step_id": "branch_crime_rob",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.mode",
+        "operator": "==",
+        "value": "ROB"
+      },
+      "on_failure": {
+        "error_code": "INVALID_PARAMETER"
+      },
+      "on_true": "gate_person_source_present"
+    },
+    {
+      "step_id": "gate_person_source_present",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.source_id",
+        "operator": "!=",
+        "value": ""
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "gate_source_stock"
+    },
+    {
+      "step_id": "gate_premises_stock",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "COMMODITY",
+        "actor": "PARAM.target_entity_id",
+        "metric": "PARAM.item_id",
+        "operator": ">=",
+        "value": "PARAM.amount"
+      },
+      "on_failure": {
+        "error_code": "INSUFFICIENT_RESOURCE"
+      },
+      "next_step": "transit_premises"
+    },
+    {
+      "step_id": "transit_premises",
+      "primitive": "MOVE_ACTOR",
+      "params": {
+        "actor": "ORDER_ACTOR",
+        "destination": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "gate_premises_co_location"
+    },
+    {
+      "step_id": "gate_premises_co_location",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "LOCATION",
+        "actor": "ORDER_ACTOR",
+        "metric": "current_district_id",
+        "operator": "==",
+        "value": "TARGET_NODE"
+      },
+      "on_failure": {
+        "error_code": "INVALID_TARGET"
+      },
+      "next_step": "steal_from_premises"
+    },
+    {
+      "step_id": "steal_from_premises",
+      "primitive": "TRANSFER_ITEM",
+      "params": {
+        "from": "PARAM.target_entity_id",
+        "to": "ORDER_ACTOR",
+        "item_id": "PARAM.item_id",
+        "quantity": "PARAM.amount"
+      },
+      "next_step": null
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COLLECT_FROM",
+    "description": "Mugging elevates actor notoriety."
+  },
+  "metric_id": "NOTORIETY",
+  "when": {
+    "mode": "MUG"
+  },
+  "delta": 5.0
+}

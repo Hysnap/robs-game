@@ -49,6 +49,16 @@ static func run_action_pipeline(world_state: Dictionary, directive: Dictionary, 
 
 		# Evaluate success / failure
 		if not bool(step_outcome.get("success", false)):
+			if step_def.has("on_false"):
+				var raw_false = step_def.get("on_false")
+				var clean_false: String = str(raw_false).strip_edges() if raw_false != null else ""
+				if clean_false.is_empty() or clean_false.to_upper() == "COMPLETE":
+					current_step_id = ""
+					continue
+				if clean_false.to_upper() != "HALT":
+					current_step_id = clean_false
+					continue
+
 			var on_failure: Dictionary = step_def.get("on_failure", {})
 			var penalties: Dictionary = on_failure.get("penalties", {})
 
@@ -75,9 +85,14 @@ static func run_action_pipeline(world_state: Dictionary, directive: Dictionary, 
 			).to_dict()
 
 		# Branching / sequential progression
-		if step_def.has("next_step"):
+		if step_def.has("on_true"):
+			var raw_true = step_def.get("on_true")
+			var clean_true: String = str(raw_true).strip_edges() if raw_true != null else ""
+			current_step_id = "" if clean_true.to_upper() == "COMPLETE" else clean_true
+		elif step_def.has("next_step"):
 			var nxt = step_def.get("next_step")
-			current_step_id = str(nxt) if nxt != null else ""
+			var clean_nxt: String = str(nxt).strip_edges() if nxt != null else ""
+			current_step_id = "" if clean_nxt.to_upper() == "COMPLETE" else clean_nxt
 		else:
 			# Implicit sequential fallthrough
 			var curr_idx: int = -1
