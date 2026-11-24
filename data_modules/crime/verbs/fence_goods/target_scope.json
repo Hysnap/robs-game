@@ -1,0 +1,32 @@
+{
+	"_meta": {
+		"entity_type": "VERB_TARGET_SCOPE",
+		"module": "crime",
+		"verb": "FENCE_GOODS"
+	},
+	"form_layout": {
+		"amount_section": {
+			"label_token": "UI_LBL_QUANTITY",
+			"mapped_field": "amount",
+			"required": true,
+			"visible": true
+		},
+		"contact_section": {
+			"label_token": "UI_LBL_RECIPIENT",
+			"mapped_field": "counterparty_id",
+			"required": true,
+			"visible": true
+		},
+		"location_section": {
+			"label_token": "UI_LBL_VENUE",
+			"mapped_field": "target_node_id",
+			"required": true,
+			"visible": true
+		}
+	},
+	"label_token": "UI_VERB_FENCE_GOODS",
+	"target_scopes": [
+		"ESTABLISHMENT",
+		"RESIDENT"
+	]
+}

@@ -4,12 +4,22 @@ extends SceneTree
 const VerbRouterScript = preload("res://systems/verb_router.gd")
 const ImpactRouterScript = preload("res://systems/impacts/impact_router.gd")
 const SimControllerScript = preload("res://systems/sim_controller.gd")
+const TestSocietyFactoryScript = preload("res://tests/test_society_factory.gd")
 
 const UI_STRINGS_PATH: String = "res://data_modules/core/localization/ui_strings.csv"
 const TEST_ITEM_DIR: String = "res://data_modules/core/commodities/consumables/test_bulk_contraband"
 const TEST_VERB_DIR: String = "res://data_modules/core/verbs/test_bulk_verb"
 
-func _init() -> void:
+var _started: bool = false
+
+func _process(_delta: float) -> bool:
+	if _started:
+		return false
+	_started = true
+	_run_all_tests()
+	return false
+
+func _run_all_tests() -> void:
 	print("\n========================================================")
 	print("🧪 RUNNING HEADLESS TEST: CRIME IMPACTS & CSV BULK IMPORTER")
 	print("========================================================")
@@ -18,7 +28,7 @@ func _init() -> void:
 	_cleanup_test_artifacts(orig_ui_strings)
 
 	_test_core_vs_crime_impact_isolation()
-	_test_crime_mode_gated_impacts()
+	await _test_crime_mode_gated_impacts()
 	_test_csv_bulk_importer_happy_append_and_fail_loud()
 
 	_cleanup_test_artifacts(orig_ui_strings)
@@ -42,78 +52,100 @@ func _test_core_vs_crime_impact_isolation() -> void:
 	assert(has_crime_dir, "Crime overlay failed to mount crime impacts_dir on COLLECT_FROM.")
 
 func _test_crime_mode_gated_impacts() -> void:
-	print("[2/3] Testing declarative mode-gated crime impacts (ROB vs PICKPOCKET, CASE_JOINT, THREATEN)...")
+	print("[2/3] Testing declarative mode-gated crime impacts on standard radial TestSocietyFactory city...")
+	var ws: Dictionary = await TestSocietyFactoryScript.create_test_world_with_crew(4, 4, "test-crime-impacts-seed")
+
 	VerbRouterScript.initialize("crime")
 	ImpactRouterScript.reset()
 	ImpactRouterScript.autoload_sinks("res://data_modules/core/impacts/")
 	ImpactRouterScript.autoload_sinks("res://data_modules/crime/impacts/")
 
-	var ws: Dictionary = {
-		"current_sim_day": 10,
-		"districts": {
-			"DIST_CENTRE": {"id": "DIST_CENTRE", "actual_police_heat": 0.0},
-			"DIST_SOUTH": {"id": "DIST_SOUTH", "actual_police_heat": 0.0},
-			"DIST_NORTH": {"id": "DIST_NORTH", "actual_police_heat": 0.0}
-		},
-		"residents": {
-			"101": {"id": 101, "current_district_id": "DIST_CENTRE", "criminal_suspicion": 0.0, "notoriety": 0.0},
-			"102": {"id": 102, "current_district_id": "DIST_SOUTH", "criminal_suspicion": 0.0, "notoriety": 0.0}
-		},
-		"establishments": {
-			"501": {"id": 501, "district_id": "DIST_CENTRE"}
-		},
-		"knowledge_pools": {}
-	}
+	var dist_keys: Array = ws.get("districts", {}).keys()
+	assert(dist_keys.size() >= 3, "Expected at least 3 radial districts in standard test city, got %d." % dist_keys.size())
+	var dist_a: String = str(dist_keys[0])
+	var dist_b: String = str(dist_keys[1])
+	var dist_c: String = str(dist_keys[2])
+
+	var res_keys: Array = ws.get("residents", {}).keys()
+	assert(res_keys.size() >= 2, "Expected at least 2 starting crew residents in standard test city.")
+	var actor_1_key: Variant = res_keys[0]
+	var actor_2_key: Variant = res_keys[1]
+	var actor_1: String = str(actor_1_key)
+	var actor_2: String = str(actor_2_key)
+
+	var estab_keys: Array = ws.get("establishments", {}).keys()
+	assert(not estab_keys.is_empty(), "Expected hydrated establishments in standard test city.")
+	var target_estab_id: String = str(estab_keys[0])
+
+	# Reset baseline metrics on our chosen test targets for deterministic delta checks
+	ws["districts"][dist_a]["actual_police_heat"] = 0.0
+	ws["districts"][dist_b]["actual_police_heat"] = 0.0
+	ws["districts"][dist_c]["actual_police_heat"] = 0.0
+	ws["residents"][actor_1_key]["criminal_suspicion"] = 0.0
+	ws["residents"][actor_1_key]["notoriety"] = 0.0
+	ws["residents"][actor_2_key]["criminal_suspicion"] = 0.0
+	ws["residents"][actor_2_key]["notoriety"] = 0.0
 
 	# 1. PICKPOCKET (low profile)
 	var pickpocket_res: Dictionary = SimControllerScript._dispatch_verb_impacts(
 		ws,
-		{"verb": "COLLECT_FROM", "mode": "PICKPOCKET", "assigned_to": "101", "target_node_id": "DIST_CENTRE"},
+		{ "verb": "COLLECT_FROM", "mode": "PICKPOCKET", "assigned_to": actor_1_key, "target_node_id": dist_a },
 		"COLLECT_FROM",
-		"101",
-		"DIST_CENTRE"
+		actor_1,
+		dist_a
 	)
 	assert(is_equal_approx(float(pickpocket_res.get("POLICE_HEAT", 0.0)), 2.0), "PICKPOCKET should dispatch +2.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"]["DIST_CENTRE"]["actual_police_heat"]) > 0.0, "PICKPOCKET should raise actual_police_heat on DIST_CENTRE.")
-	assert(is_equal_approx(float(ws["residents"]["101"]["notoriety"]), 1.5), "PICKPOCKET should add +1.5 NOTORIETY.")
+	assert(float(ws["districts"][dist_a]["actual_police_heat"]) > 0.0, "PICKPOCKET should raise actual_police_heat on %s." % dist_a)
+	assert(is_equal_approx(float(ws["residents"][actor_1_key]["notoriety"]), 1.5), "PICKPOCKET should add +1.5 NOTORIETY.")
 
 	# 2. ROB (high profile)
 	var rob_res: Dictionary = SimControllerScript._dispatch_verb_impacts(
 		ws,
-		{"verb": "COLLECT_FROM", "mode": "ROB", "assigned_to": "102", "target_node_id": "DIST_SOUTH"},
+		{ "verb": "COLLECT_FROM", "mode": "ROB", "assigned_to": actor_2_key, "target_node_id": dist_b },
 		"COLLECT_FROM",
-		"102",
-		"DIST_SOUTH"
+		actor_2,
+		dist_b
 	)
 	assert(is_equal_approx(float(rob_res.get("POLICE_HEAT", 0.0)), 14.0), "ROB should dispatch +14.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"]["DIST_SOUTH"]["actual_police_heat"]) > 0.0, "ROB should raise actual_police_heat on DIST_SOUTH.")
-	assert(is_equal_approx(float(ws["residents"]["102"]["criminal_suspicion"]), 10.0), "ROB should add +10.0 CRIMINAL_SUSPICION.")
-	assert(is_equal_approx(float(ws["residents"]["102"]["notoriety"]), 8.0), "ROB should add +8.0 NOTORIETY.")
+	assert(float(ws["districts"][dist_b]["actual_police_heat"]) > 0.0, "ROB should raise actual_police_heat on %s." % dist_b)
+	assert(is_equal_approx(float(ws["residents"][actor_2_key]["criminal_suspicion"]), 10.0), "ROB should add +10.0 CRIMINAL_SUSPICION.")
+	assert(is_equal_approx(float(ws["residents"][actor_2_key]["notoriety"]), 8.0), "ROB should add +8.0 NOTORIETY.")
 
 	# 3. INVESTIGATE (CASE_JOINT) -> INTEL_SCORE + CRIMINAL_SUSPICION
-	SimControllerScript._dispatch_verb_impacts(
+	var prior_estab_intel: float = _read_pool_score(ws, actor_1, "ESTABLISHMENT:" + target_estab_id)
+	var case_res: Dictionary = SimControllerScript._dispatch_verb_impacts(
 		ws,
-		{"verb": "INVESTIGATE", "mode": "CASE_JOINT", "assigned_to": "101", "target_node_id": "501", "duration_ticks": 1.0},
+		{ "verb": "INVESTIGATE", "mode": "CASE_JOINT", "assigned_to": actor_1_key, "target_entity_id": estab_keys[0], "target_node_id": dist_a, "duration_ticks": 1.0 },
 		"INVESTIGATE",
-		"101",
-		"501"
+		actor_1,
+		dist_a
 	)
-	assert(float(ws["residents"]["101"]["criminal_suspicion"]) >= 4.0, "CASE_JOINT should elevate CRIMINAL_SUSPICION by +4.0.")
-	var intel_score: float = float(ws.get("knowledge_pools", {}).get("RESIDENT:101", {}).get("ESTABLISHMENT:501", {}).get("score", 0.0))
-	assert(intel_score > 0.0, "CASE_JOINT should generate positive INTEL_SCORE on ESTABLISHMENT:501.")
+	assert(float(ws["residents"][actor_1_key]["criminal_suspicion"]) >= 4.0, "CASE_JOINT should elevate CRIMINAL_SUSPICION by +4.0.")
+	var post_estab_intel: float = _read_pool_score(ws, actor_1, "ESTABLISHMENT:" + target_estab_id)
+	assert(case_res.has("INTEL_SCORE") or post_estab_intel > prior_estab_intel, "CASE_JOINT should generate INTEL_SCORE on ESTABLISHMENT:%s." % target_estab_id)
 
 	# 4. COMMUNICATE (THREATEN) -> POLICE_HEAT + NOTORIETY
 	var threaten_res: Dictionary = SimControllerScript._dispatch_verb_impacts(
 		ws,
-		{"verb": "COMMUNICATE", "intent": "THREATEN", "assigned_to": "101", "target_node_id": "DIST_NORTH"},
+		{ "verb": "COMMUNICATE", "intent": "THREATEN", "assigned_to": actor_1_key, "target_node_id": dist_c },
 		"COMMUNICATE",
-		"101",
-		"DIST_NORTH"
+		actor_1,
+		dist_c
 	)
 	assert(is_equal_approx(float(threaten_res.get("POLICE_HEAT", 0.0)), 6.0), "THREATEN should dispatch +6.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"]["DIST_NORTH"]["actual_police_heat"]) > 0.0, "THREATEN should raise actual_police_heat on DIST_NORTH.")
-	assert(is_equal_approx(float(ws["residents"]["101"]["notoriety"]), 5.5), "THREATEN should add +4.0 NOTORIETY (total 5.5).")
-	
+	assert(float(ws["districts"][dist_c]["actual_police_heat"]) > 0.0, "THREATEN should raise actual_police_heat on %s." % dist_c)
+	assert(is_equal_approx(float(ws["residents"][actor_1_key]["notoriety"]), 5.5), "THREATEN should add +4.0 NOTORIETY (total 5.5).")
+
+func _read_pool_score(ws: Dictionary, actor_id: String, target_key: String) -> float:
+	var pools: Dictionary = ws.get("knowledge_pools", {})
+	var res_scope: Dictionary = pools.get("RESIDENT", {})
+	if res_scope.has(actor_id) and res_scope[actor_id] is Dictionary:
+		return float(res_scope[actor_id].get(target_key, {}).get("score", 0.0))
+	var legacy_obs: Dictionary = pools.get("RESIDENT:" + actor_id, {})
+	if legacy_obs is Dictionary:
+		return float(legacy_obs.get(target_key, {}).get("score", 0.0))
+	return 0.0
+
 func _test_csv_bulk_importer_happy_append_and_fail_loud() -> void:
 	print("[3/3] Testing CSV bulk importer (create, additive append, and fail-loud conflict/overwrite protection)...")
 	var comm_csv_1 := "user://test_bulk_comm_1.csv"

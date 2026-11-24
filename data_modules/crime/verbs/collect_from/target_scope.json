@@ -1,29 +1,52 @@
 {
-  "_meta": {
-    "verb_token": "COLLECT_FROM",
-    "version": 1,
-    "flavour_overlay": "crime",
-    "description": "Crime flavour overlay extending COLLECT_FROM with covert and coercive extraction modes."
-  },
-  "form_layout": {
-    "mode_section": {
-      "options": [
-        { "id": "BURGLE", "label_token": "UI_MODE_BURGLE" },
-        { "id": "SHOPLIFT", "label_token": "UI_MODE_SHOPLIFT" },
-        { "id": "PICKPOCKET", "label_token": "UI_MODE_PICKPOCKET" },
-        { "id": "MUG", "label_token": "UI_MODE_MUG" },
-        { "id": "ROB", "label_token": "UI_MODE_ROB" }
-      ]
-    },
-    "contact_section": {
-      "visible_when": {
-        "mode": [
-          "CONSENSUAL",
-          "PICKPOCKET",
-          "MUG",
-          "ROB"
-        ]
-      }
-    }
-  }
+	"_meta": {
+		"description": "Crime flavour overlay extending COLLECT_FROM with covert and coercive extraction modes.",
+		"flavour_overlay": "crime",
+		"verb_token": "COLLECT_FROM",
+		"version": 1.0
+	},
+	"form_layout": {
+		"contact_section": {
+			"visible_when": {
+				"mode": [
+					"CONSENSUAL",
+					"PICKPOCKET",
+					"MUG",
+					"ROB"
+				]
+			}
+		},
+		"mode_section": {
+			"options": [
+				{
+					"id": "BURGLE",
+					"label_token": "UI_MODE_BURGLE"
+				},
+				{
+					"id": "SHOPLIFT",
+					"label_token": "UI_MODE_SHOPLIFT"
+				},
+				{
+					"id": "PICKPOCKET",
+					"label_token": "UI_MODE_PICKPOCKET"
+				},
+				{
+					"id": "MUG",
+					"label_token": "UI_MODE_MUG"
+				},
+				{
+					"id": "ROB",
+					"label_token": "UI_MODE_ROB"
+				},
+				{
+					"id": "COLLECT_DEBT",
+					"label_token": "UI_MODE_COLLECT_DEBT"
+				}
+			]
+		}
+	},
+	"target_scopes": [
+		"RESIDENT",
+		"ESTABLISHMENT"
+	]
 }

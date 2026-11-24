@@ -1,55 +1,80 @@
 {
-  "_meta": {
-    "verb_token": "COMMUNICATE",
-    "version": 1,
-    "flavour_overlay": "crime",
-    "description": "Crime flavour overlay extending COMMUNICATE with BRIBE cash transfer and coercive intent branches."
-  },
-  "parameters": {
-    "amount": { "type": "FLOAT", "required": false, "default": 0.0 }
-  },
-  "steps": [
-    {
-      "step_id": "branch_intent_dispatch",
-      "on_false": "branch_crime_bribe"
-    },
-    {
-      "step_id": "branch_crime_bribe",
-      "primitive": "REQUIRE",
-      "params": {
-        "domain": "PARAM",
-        "metric": "PARAM.intent",
-        "operator": "==",
-        "value": "BRIBE"
-      },
-      "on_true": "gate_bribe_cash",
-      "on_false": "COMPLETE"
-    },
-    {
-      "step_id": "gate_bribe_cash",
-      "primitive": "REQUIRE",
-      "params": {
-        "domain": "COMMODITY",
-        "actor": "ORDER_ACTOR",
-        "metric": "CASH",
-        "operator": ">=",
-        "value": "PARAM.amount"
-      },
-      "on_failure": {
-        "error_code": "INSUFFICIENT_RESOURCE"
-      },
-      "next_step": "transfer_bribe_cash"
-    },
-    {
-      "step_id": "transfer_bribe_cash",
-      "primitive": "TRANSFER_ITEM",
-      "params": {
-        "from": "ORDER_ACTOR",
-        "to": "PARAM.target_resident_id",
-        "item_id": "CASH",
-        "quantity": "PARAM.amount"
-      },
-      "next_step": "COMPLETE"
-    }
-  ]
+	"_meta": {
+		"description": "Crime flavour overlay extending COMMUNICATE with BRIBE cash transfer and coercive intent branches.",
+		"flavour_overlay": "crime",
+		"verb_token": "COMMUNICATE",
+		"version": 1.0
+	},
+	"parameters": {
+		"amount": {
+			"default": 0.0,
+			"required": false,
+			"type": "FLOAT"
+		}
+	},
+	"steps": [
+		{
+			"on_false": "branch_crime_bribe",
+			"step_id": "branch_intent_dispatch"
+		},
+		{
+			"on_false": "COMPLETE",
+			"on_true": "gate_bribe_cash",
+			"params": {
+				"domain": "PARAM",
+				"metric": "PARAM.intent",
+				"operator": "==",
+				"value": "BRIBE"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "branch_crime_bribe"
+		},
+		{
+			"next_step": "transfer_bribe_cash",
+			"on_failure": {
+				"error_code": "INSUFFICIENT_RESOURCE"
+			},
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "COMMODITY",
+				"metric": "CASH",
+				"operator": ">=",
+				"value": "PARAM.amount"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_bribe_cash"
+		},
+		{
+			"next_step": "COMPLETE",
+			"params": {
+				"from": "ORDER_ACTOR",
+				"item_id": "CASH",
+				"quantity": "PARAM.amount",
+				"to": "PARAM.target_resident_id"
+			},
+			"primitive": "TRANSFER_ITEM",
+			"step_id": "transfer_bribe_cash"
+		},
+		{
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "COMMODITY",
+				"metric": "CASH",
+				"operator": ">=",
+				"value": "PARAM.amount"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_cash"
+		},
+		{
+			"params": {
+				"from": "ORDER_ACTOR",
+				"item_id": "CASH",
+				"quantity": "PARAM.amount",
+				"to": "PARAM.counterparty_id"
+			},
+			"primitive": "TRANSFER_ITEM",
+			"step_id": "pay_bribe"
+		}
+	]
 }

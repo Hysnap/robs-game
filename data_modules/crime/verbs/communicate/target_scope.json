@@ -1,30 +1,44 @@
 {
-  "_meta": {
-    "verb_token": "COMMUNICATE",
-    "version": 1,
-    "flavour_overlay": "crime",
-    "description": "Crime flavour overlay extending COMMUNICATE form layout with THREATEN/BRIBE intents and conditional bribe amount."
-  },
-  "form_layout": {
-    "intent_section": {
-      "options": [
-        { "id": "THREATEN", "label_token": "UI_INTENT_THREATEN" },
-        { "id": "BRIBE", "label_token": "UI_INTENT_BRIBE" }
-      ]
-    },
-    "amount_section": {
-      "visible": true,
-      "required": false,
-      "label_token": "UI_LBL_BRIBE_AMOUNT",
-      "default_value": 10.0,
-      "min_value": 1.0,
-      "step": 5.0,
-      "mapped_field": "amount",
-      "visible_when": {
-        "intent": [
-          "BRIBE"
-        ]
-      }
-    }
-  }
+	"_meta": {
+		"description": "Crime flavour overlay extending COMMUNICATE form layout with THREATEN/BRIBE intents and conditional bribe amount.",
+		"flavour_overlay": "crime",
+		"verb_token": "COMMUNICATE",
+		"version": 1.0
+	},
+	"form_layout": {
+		"amount_section": {
+			"default_value": 10.0,
+			"label_token": "UI_LBL_BRIBE_AMOUNT",
+			"mapped_field": "amount",
+			"min_value": 1.0,
+			"required": false,
+			"step": 5.0,
+			"visible": true,
+			"visible_when": {
+				"intent": [
+					"BRIBE"
+				]
+			}
+		},
+		"intent_section": {
+			"options": [
+				{
+					"id": "THREATEN",
+					"label_token": "UI_INTENT_THREATEN"
+				},
+				{
+					"id": "BRIBE",
+					"label_token": "UI_INTENT_BRIBE"
+				},
+				{
+					"id": "BRIBE_OFFICIAL",
+					"label_token": "UI_INTENT_BRIBE_OFFICIAL"
+				}
+			]
+		}
+	},
+	"target_scopes": [
+		"RESIDENT",
+		"ESTABLISHMENT"
+	]
 }

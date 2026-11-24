@@ -1,0 +1,24 @@
+{
+	"_meta": {
+		"module": "crime",
+		"scope": "COMMODITY_PROFILE",
+		"version": "1.0.0"
+	},
+	"base_cost": 8.0,
+	"category": "CONSUMABLES",
+	"decay_properties": {
+		"shelf_life_ticks": 24
+	},
+	"demand_profile": {
+		"base_per_capita_daily": 0.015,
+		"legality": "ILLEGAL",
+		"primary_driver": "HABIT_LED"
+	},
+	"display_name": "UI_ITEM_AMPHETAMINE_SULPHATE",
+	"id": "AMPHETAMINE_SULPHATE",
+	"tags": [
+		"ILLICIT",
+		"STIMULANT",
+		"AMPHETAMINE"
+	]
+}

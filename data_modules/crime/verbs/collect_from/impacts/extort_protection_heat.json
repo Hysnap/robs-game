@@ -1,0 +1,13 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "COLLECT_FROM",
+		"version": "1.0.0"
+	},
+	"delta": 6.0,
+	"metric_id": "POLICE_HEAT",
+	"target_role": "DISTRICT",
+	"when": {
+		"mode": "EXTORT_PROTECTION"
+	}
+}

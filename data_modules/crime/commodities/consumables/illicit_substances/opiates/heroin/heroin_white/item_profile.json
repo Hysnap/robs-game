@@ -1,0 +1,24 @@
+{
+	"_meta": {
+		"module": "crime",
+		"scope": "COMMODITY_PROFILE",
+		"version": "1.0.0"
+	},
+	"base_cost": 35.0,
+	"category": "CONSUMABLES",
+	"decay_properties": {
+		"shelf_life_ticks": 36
+	},
+	"demand_profile": {
+		"base_per_capita_daily": 0.006,
+		"legality": "ILLEGAL",
+		"primary_driver": "HABIT_LED"
+	},
+	"display_name": "UI_ITEM_HEROIN_WHITE",
+	"id": "HEROIN_WHITE",
+	"tags": [
+		"ILLICIT",
+		"OPIATE",
+		"HEROIN"
+	]
+}
