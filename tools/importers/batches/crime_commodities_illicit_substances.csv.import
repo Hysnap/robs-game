@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://do4o8ghtearmn"
+
+[deps]
+
+files=["res://tools/importers/batches/crime_commodities_illicit_substances.module.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.category.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.subpath.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.display.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.base.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.label.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.legality.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.primary.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.base.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.shelf.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.tags.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation"]
+
+source_file="res://tools/importers/batches/crime_commodities_illicit_substances.csv"
+dest_files=["res://tools/importers/batches/crime_commodities_illicit_substances.module.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.category.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.subpath.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.display.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.base.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.label.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.legality.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.primary.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.base.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.shelf.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.tags.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation", "res://tools/importers/batches/crime_commodities_illicit_substances.impact.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
