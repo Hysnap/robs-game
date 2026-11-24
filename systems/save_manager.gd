@@ -5,6 +5,8 @@ extends RefCounted
 const SAVES_BASE_DIR := "user://saves"
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
+const VERB_ROUTER = preload("res://systems/verb_router.gd")
+const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
 const CORE_COMMODITIES_DIR := "res://data_modules/core/commodities/"
 const CORE_RECIPES_DIR := "res://data_modules/core/recipes/"
 
@@ -77,6 +79,7 @@ static func save_game(slot_id: String, city_crafter_node: Node3D = null, custom_
 		"slot_id": slot_id,
 		"city_name": str(meta_in.get("city_name", slot_id)),
 		"seed_id": str(meta_in.get("active_seed", "default")),
+		"active_flavours": meta_in.get("active_flavours", []),
 		"current_sim_day": current_day,
 		"current_week_tick": int(meta_in.get("current_week_tick", 1)),
 		"population": population_count,
@@ -128,6 +131,14 @@ static func load_game(slot_id: String) -> bool:
 		return false
 	_normalize_integer_entity_keys(parsed)
 
+	var module_chain: Array[String] = _resolve_module_chain(parsed)
+	VERB_ROUTER.initialize_chain(module_chain)
+	IMPACT_ROUTER.reset()
+	for mod_slug in module_chain:
+		var impacts_dir := "res://data_modules/%s/impacts/" % mod_slug
+		if DirAccess.dir_exists_absolute(impacts_dir):
+			IMPACT_ROUTER.autoload_sinks(impacts_dir)
+
 	var main_loop := Engine.get_main_loop()
 	if main_loop is SceneTree and main_loop.root and main_loop.root.has_node("GameState"):
 		var gs = main_loop.root.get_node("GameState")
@@ -176,21 +187,48 @@ static func load_game(slot_id: String) -> bool:
 	])
 	return true
 
+static func _resolve_module_chain(state: Dictionary) -> Array[String]:
+	var chain: Array[String] = ["core"]
+	var raw_flavours = state.get("metadata", {}).get("active_flavours", [])
+	if raw_flavours is Array:
+		for f in raw_flavours:
+			var slug := str(f).strip_edges()
+			if not slug.is_empty() and slug != "core" and slug != "shared" and not chain.has(slug):
+				chain.append(slug)
+	return chain
+
 ## Repairs legacy or incomplete saves that do not contain runtime catalog data.
 static func _ensure_catalog_registries(state: Dictionary, slot_id: String) -> Variant:
 	var commodity_registry: Dictionary = state.get("commodity_registry", {})
 	var recipe_registry: Dictionary = state.get("recipe_registry", {})
 	var repaired := false
+	var module_chain: Array[String] = _resolve_module_chain(state)
 
 	if commodity_registry.is_empty():
-		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty commodity registry; rehydrating from core catalog." % slot_id)
+		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty commodity registry; rehydrating from %s." % [slot_id, str(module_chain)])
 		commodity_registry = COMMODITY_MANAGER.load_hierarchical_commodities(CORE_COMMODITIES_DIR)
+		for mod_slug in module_chain:
+			if mod_slug == "core":
+				continue
+			var mod_comm_dir := "res://data_modules/%s/commodities/" % mod_slug
+			if DirAccess.dir_exists_absolute(mod_comm_dir):
+				var extra_comm := COMMODITY_MANAGER.load_hierarchical_commodities(mod_comm_dir)
+				for k in extra_comm.keys():
+					commodity_registry[k] = extra_comm[k]
 		state["commodity_registry"] = commodity_registry
 		repaired = true
 
 	if recipe_registry.is_empty():
-		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty recipe registry; rehydrating from core catalog." % slot_id)
+		SystemLogger.log_warn("[SaveManager] Save '%s' has an empty recipe registry; rehydrating from %s." % [slot_id, str(module_chain)])
 		recipe_registry = COMMODITY_MANAGER.load_hierarchical_commodities(CORE_RECIPES_DIR)
+		for mod_slug in module_chain:
+			if mod_slug == "core":
+				continue
+			var mod_rec_dir := "res://data_modules/%s/recipes/" % mod_slug
+			if DirAccess.dir_exists_absolute(mod_rec_dir):
+				var extra_rec := COMMODITY_MANAGER.load_hierarchical_commodities(mod_rec_dir)
+				for k in extra_rec.keys():
+					recipe_registry[k] = extra_rec[k]
 		state["recipe_registry"] = recipe_registry
 		repaired = true
 

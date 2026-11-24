@@ -24,13 +24,44 @@ const DISTRICT_PERCEPTION_FILTER = preload("res://systems/multilayer_info_loop/d
 const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
+const VERB_ROUTER = preload("res://systems/verb_router.gd")
+const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	initialize_fresh_state()
 
-## Initializes world_state entirely from external definition files
-func initialize_fresh_state() -> void:
+## Discovers all installed flavour directories under res://data_modules/ (excluding core and shared)
+static func discover_installed_flavours() -> Array[String]:
+	var found: Array[String] = []
+	var dir := DirAccess.open("res://data_modules/")
+	if dir == null:
+		return found
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		if entry != "." and entry != ".." and dir.current_is_dir():
+			var slug := entry.strip_edges()
+			if slug != "core" and slug != "shared" and not found.has(slug):
+				found.append(slug)
+		entry = dir.get_next()
+	dir.list_dir_end()
+	found.sort()
+	return found
+
+## Returns the ordered module chain ["core", ...active_flavours] for the live world_state
+func get_active_module_chain() -> Array[String]:
+	var chain: Array[String] = ["core"]
+	var raw_flavours = world_state.get("metadata", {}).get("active_flavours", [])
+	if raw_flavours is Array:
+		for f in raw_flavours:
+			var slug := str(f).strip_edges()
+			if not slug.is_empty() and slug != "core" and slug != "shared" and not chain.has(slug):
+				chain.append(slug)
+	return chain
+
+## Initializes world_state entirely from external definition files and selected flavour packs
+func initialize_fresh_state(custom_flavours: Array = []) -> void:
 	assert(ScenarioManifestManager.has_module("startpoint"),
 		"FATAL: [GAME_STATE] Active scenario manifest missing 'startpoint' registration.")
 
@@ -72,7 +103,22 @@ func initialize_fresh_state() -> void:
 	_load_section_into_state(config, "starting_operations", "operations")
 	SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
 
-	# 3. Dynamic Catalog Ingestion via CommodityManager (Rule 1 & Rule 8 — paths from business_rules.cfg)
+	# 3. Resolve & persist ordered flavour pack stack for this playthrough
+	var normalized_flavours: Array[String] = []
+	for raw_f in custom_flavours:
+		var slug := str(raw_f).strip_edges()
+		if slug.is_empty() or slug == "core" or slug == "shared":
+			continue
+		var mod_dir := "res://data_modules/%s" % slug
+		assert(DirAccess.dir_exists_absolute(mod_dir),
+			"FATAL: [GAME_STATE] Selected flavour pack '%s' does not exist at '%s'." % [slug, mod_dir])
+		if not normalized_flavours.has(slug):
+			normalized_flavours.append(slug)
+
+	world_state["metadata"]["active_flavours"] = normalized_flavours
+	var module_chain: Array[String] = get_active_module_chain()
+
+	# 4. Dynamic Catalog Ingestion across ["core", ...active_flavours]
 	var commodities_root: String = str(config.get_value("catalogs", "commodities_root", "")).strip_edges()
 	var recipes_root: String = str(config.get_value("catalogs", "recipes_root", "")).strip_edges()
 	var transports_root: String = str(config.get_value("catalogs", "transports_root", "")).strip_edges()
@@ -81,25 +127,65 @@ func initialize_fresh_state() -> void:
 	assert(not recipes_root.is_empty(), "FATAL: [GAME_STATE] [catalogs] recipes_root missing in %s" % active_rules_path)
 	assert(not transports_root.is_empty(), "FATAL: [GAME_STATE] [catalogs] transports_root missing in %s" % active_rules_path)
 
-	world_state["commodity_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(commodities_root)
+	var merged_commodities: Dictionary = COMMODITY_MANAGER.load_hierarchical_commodities(commodities_root)
+	var merged_recipes: Dictionary = COMMODITY_MANAGER.load_hierarchical_commodities(recipes_root)
+	var merged_transports: Dictionary = COMMODITY_MANAGER.load_hierarchical_transports(transports_root)
+
+	for mod_slug in normalized_flavours:
+		var mod_comm_dir := "res://data_modules/%s/commodities/" % mod_slug
+		if DirAccess.dir_exists_absolute(mod_comm_dir):
+			var extra_comm := COMMODITY_MANAGER.load_hierarchical_commodities(mod_comm_dir)
+			for k in extra_comm.keys():
+				merged_commodities[k] = extra_comm[k]
+
+		var mod_rec_dir := "res://data_modules/%s/recipes/" % mod_slug
+		if DirAccess.dir_exists_absolute(mod_rec_dir):
+			var extra_rec := COMMODITY_MANAGER.load_hierarchical_commodities(mod_rec_dir)
+			for k in extra_rec.keys():
+				merged_recipes[k] = extra_rec[k]
+
+		var mod_trans_dir := "res://data_modules/%s/transports/" % mod_slug
+		if DirAccess.dir_exists_absolute(mod_trans_dir):
+			var extra_trans := COMMODITY_MANAGER.load_hierarchical_transports(mod_trans_dir)
+			for k in extra_trans.keys():
+				merged_transports[k] = extra_trans[k]
+
+	world_state["commodity_registry"] = merged_commodities
 	if world_state["commodity_registry"].is_empty():
-		push_warning("[GAME_STATE] No commodities loaded from %s" % commodities_root)
+		push_warning("[GAME_STATE] No commodities loaded across %s" % str(module_chain))
 	else:
-		SystemLogger.log_info("[GAME_STATE] Ingested %d catalog commodities." % world_state["commodity_registry"].size())
+		SystemLogger.log_info("[GAME_STATE] Ingested %d catalog commodities across %s." % [world_state["commodity_registry"].size(), str(module_chain)])
 
-	world_state["recipe_registry"] = COMMODITY_MANAGER.load_hierarchical_commodities(recipes_root)
+	world_state["recipe_registry"] = merged_recipes
 	if world_state["recipe_registry"].is_empty():
-		push_warning("[GAME_STATE] No recipes loaded from %s" % recipes_root)
+		push_warning("[GAME_STATE] No recipes loaded across %s" % str(module_chain))
 	else:
-		SystemLogger.log_info("[GAME_STATE] Ingested %d recipes." % world_state["recipe_registry"].size())
+		SystemLogger.log_info("[GAME_STATE] Ingested %d recipes across %s." % [world_state["recipe_registry"].size(), str(module_chain)])
 
-	world_state["transport_registry"] = COMMODITY_MANAGER.load_hierarchical_transports(transports_root)
+	world_state["transport_registry"] = merged_transports
 	if world_state["transport_registry"].is_empty():
-		push_warning("[GAME_STATE] No transport service profiles loaded from %s" % transports_root)
+		push_warning("[GAME_STATE] No transport service profiles loaded across %s" % str(module_chain))
 	else:
-		SystemLogger.log_info("[GAME_STATE] Ingested %d transport services." % world_state["transport_registry"].size())
+		SystemLogger.log_info("[GAME_STATE] Ingested %d transport services across %s." % [world_state["transport_registry"].size(), str(module_chain)])
 
-	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager.")
+	# 5. Mount VerbRouter & ImpactRouter across the active module chain
+	var secondary_flavours: Array[String] = []
+	for mod_slug in module_chain:
+		if mod_slug != "core":
+			secondary_flavours.append(mod_slug)
+	if secondary_flavours.is_empty():
+		VERB_ROUTER.initialize()
+	else:
+		for mod_slug in secondary_flavours:
+			VERB_ROUTER.initialize(mod_slug)
+
+	IMPACT_ROUTER.reset()
+	for mod_slug in module_chain:
+		var impacts_dir := "res://data_modules/%s/impacts/" % mod_slug
+		if DirAccess.dir_exists_absolute(impacts_dir):
+			IMPACT_ROUTER.autoload_sinks(impacts_dir)
+
+	SystemLogger.log_info("[GAME_STATE] Data-driven world_state initialized via ScenarioManifestManager (flavours=%s)." % str(normalized_flavours))
 	world_state_reset.emit()
 
 ## Pure State Setter: Records the confirmed home district and seeds initial crew & home establishment intel

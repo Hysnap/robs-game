@@ -58,7 +58,11 @@ static func run_pipeline(
 		on_progress.call(GENERATION_TELEMETRY.map_stage_progress(stage_ranges, "DISTRICTS", 0.1), "DISTRICTS", "Classifying Urban Wards...")
 	var gs := ScenarioManifestManager.get_game_state()
 	assert(gs != null and "world_state" in gs, "FATAL: [CityGenerationController] Active GameState node unavailable.")
-	gs.initialize_fresh_state()
+	var selected_flavours: Array = []
+	var raw_flavours = settings_override.get("active_flavours", [])
+	if raw_flavours is Array:
+		selected_flavours = raw_flavours.duplicate()
+	gs.initialize_fresh_state(selected_flavours)
 	gs.world_state["metadata"]["active_seed"] = gen_seed
 	CitySpatialAdapter.ingest_citycrafter_generation(city_crafter, gs.world_state, gen_seed)
 	stage_durations_ms["DISTRICTS"] = maxi(1, Time.get_ticks_msec() - t0_districts)
