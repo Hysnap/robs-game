@@ -310,6 +310,26 @@
         "neuroticism": -0.1
       }
     },
+    "CANTEEN_STAFF": {
+      "display_name": "Canteen Staff",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
+      "education_required": "NO_FORMAL",
+      "work_schedule": "PART_TIME_DAYTIME_15",
+      "wage_bracket": "BRACKET_UNSKILLED",
+      "age_min": 16,
+      "age_max": 62,
+      "is_field_worker": false,
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.35,
+        "extraversion": 0.2,
+        "conscientiousness": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.1
+      }
+    },
     "SCHOOL_CARETAKER": {
       "display_name": "School Caretaker & Custodian",
       "contract_class": "FORMAL_LEGAL",
@@ -905,6 +925,27 @@
       "max_commute": 5000,
       "work_schedule": "DAYTIME_STANDARD_37_5",
       "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 16,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "agreeableness": 0.3,
+        "conscientiousness": 0.2,
+        "openness": 0.05,
+        "neuroticism": -0.1
+      }
+    },
+    "COMMERCIAL_SUPERVISOR": {
+      "display_name": "Shop Supervisor",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,

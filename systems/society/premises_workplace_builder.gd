@@ -331,13 +331,16 @@ static func build_districts_and_civics(state: Dictionary, on_progress: Callable 
 			block_idx += 1
 			continue
 
-		# Dedicated Institutional Anchor
-		if arch.has("institution_profile"):
-			var inst: Dictionary = arch["institution_profile"]
-			var cat_name: String = str(arch.get("establishment_category", district_type.to_upper()))
-			assert(arch.has("sector_class"), "FATAL: Archetype '%s' with institution_profile is missing mandatory 'sector_class'!" % district_type)
+		# Dedicated Institutional Anchor (resolved from building_classes via establishment_category)
+		var building_classes: Dictionary = state["building_classes"]
+		var anchor_cat_name: String = str(arch.get("establishment_category", "")).strip_edges().to_upper()
+		var anchor_class_def: Dictionary = _lookup_building_class(building_classes, anchor_cat_name) if not anchor_cat_name.is_empty() else {}
+		if not anchor_class_def.is_empty() and (str(arch.get("sector_class", "")).to_upper() == "CIVIC" or bool(arch.get("is_public_landmark", false))):
+			var inst: Dictionary = anchor_class_def
+			var cat_name: String = anchor_cat_name
+			assert(arch.has("sector_class"), "FATAL: Archetype '%s' is missing mandatory 'sector_class'!" % district_type)
 			var inst_sector: String = str(arch["sector_class"]).to_upper()
-			var base_inst_label: String = str(arch.get("display_name", cat_name))
+			var base_inst_label: String = str(inst.get("display_name", arch.get("display_name", cat_name)))
 			var display_label: String = _format_civic_anchor_title(
 				base_inst_label, district_display, borough_name, street_root, civic_naming_formats, rng
 			).replace("'", "''")
@@ -446,15 +449,16 @@ static func build_districts_and_civics(state: Dictionary, on_progress: Callable 
 					est_id += 1
 					district_estab_counts[dist_id] = int(district_estab_counts[dist_id]) + 1
 
-		# Sub-Block Embedded Civics
+		# Sub-Block Embedded Civics (resolved from building_classes via establishment_category)
 		if d.has("embedded_civics"):
 			for civic_key in d["embedded_civics"]:
 				var c_arch: Dictionary = archetypes.get(civic_key, {})
-				var c_inst: Dictionary = c_arch.get("institution_profile", {})
-				var c_cat_name: String = str(c_arch.get("establishment_category", civic_key.to_upper()))
+				var c_cat_name: String = str(c_arch.get("establishment_category", civic_key.to_upper())).strip_edges().to_upper()
+				var c_inst: Dictionary = _lookup_building_class(building_classes, c_cat_name)
+				assert(not c_inst.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Embedded civic category '%s' not found in building_classes!" % c_cat_name)
 				assert(c_arch.has("sector_class"), "FATAL: Embedded civic archetype '%s' missing mandatory 'sector_class'!" % civic_key)
 				var c_sector: String = str(c_arch["sector_class"]).to_upper()
-				var c_base_label: String = str(c_arch.get("display_name", c_cat_name))
+				var c_base_label: String = str(c_inst.get("display_name", c_arch.get("display_name", c_cat_name)))
 				var c_display: String = _format_civic_anchor_title(
 					c_base_label, district_display, borough_name, street_root, civic_naming_formats, rng
 				).replace("'", "''")
@@ -885,25 +889,36 @@ static func build_commercial_industrial_and_slots(state: Dictionary, on_progress
 					est_id += 1
 					district_estab_counts[dist_id] = int(district_estab_counts[dist_id]) + 1
 
-		# Single-Entity District Canonical Establishment Guarantee
+		# Single-Entity District Canonical Establishment Guarantee (backed by building_classes)
 		if int(district_estab_counts[dist_id]) == 0:
-			var fallback_cat: String = str(arch.get("establishment_category", district_type.to_upper()))
+			var building_classes_ref: Dictionary = state["building_classes"]
+			var fallback_cat: String = str(arch.get("establishment_category", district_type.to_upper())).strip_edges().to_upper()
+			var fallback_class_def: Dictionary = _lookup_building_class(building_classes_ref, fallback_cat)
+			var fallback_cap: int = int(fallback_class_def.get("default_capacity", 25))
 			var fallback_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", fallback_cat)
 			var fallback_title: String = _format_civic_anchor_title(
-				str(arch.get("display_name", fallback_cat)),
+				str(fallback_class_def.get("display_name", arch.get("display_name", fallback_cat))),
 				district_display, borough_name, street_root, civic_naming_formats, rng
 			).replace("'", "''")
-			var fallback_owner: String = str(category_org_map.get(fallback_cat, default_civic_org_id if str(arch.get("sector_class", "")).to_upper() == "CIVIC" else ""))
+			var fallback_sector: String = str(fallback_class_def.get("sector", arch.get("sector_class", "CIVIC"))).to_upper()
+			var fallback_owner: String = str(category_org_map.get(fallback_cat, default_civic_org_id if fallback_sector == "CIVIC" else ""))
 			var fallback_owner_sql: String = "'%s'" % fallback_owner if not fallback_owner.is_empty() else "NULL"
 
 			estab_inserts.append("""
 				INSERT INTO establishments (
 					establishment_id, district_id, building_index, unit_door_number,
 					owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
-				) VALUES (%d, '%s', 0, 'MAIN', %s, '%s', %d, 25, 0, %d, NULL, %d);
-			""" % [est_id, dist_id, fallback_owner_sql, fallback_title, fallback_cat_id, sim_start_day, reason_world_gen_id])
-			_register_est_cat(by_cat, fallback_cat, est_id, dist_id, 25)
+				) VALUES (%d, '%s', 0, 'MAIN', %s, '%s', %d, %d, 0, %d, NULL, %d);
+			""" % [est_id, dist_id, fallback_owner_sql, fallback_title, fallback_cat_id, fallback_cap, sim_start_day, reason_world_gen_id])
+			_register_est_cat(by_cat, fallback_cat, est_id, dist_id, fallback_cap)
 			employer_wage_biases[est_id] = 0.0
+			if not fallback_class_def.is_empty():
+				_record_establishment_footprint(d, fallback_class_def, building_classes_ref)
+				current_slot_id = expand_staffing_slots(
+					available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+					fallback_sector, fallback_class_def, job_definitions, 0.0, sim_start_day, reason_world_gen_id, rng,
+					fallback_owner
+				)
 			est_id += 1
 			district_estab_counts[dist_id] = 1
 
@@ -948,6 +963,30 @@ static func finalize_physical_state(state: Dictionary) -> Dictionary:
 		"employer_wage_biases": state["employer_wage_biases"],
 		"org_pay_cadences": state["org_pay_cadences"]
 	}
+
+## Looks up a class definition across civic_tenants, commercial_tenants, and industrial_tenants in building_classes.json
+static func _lookup_building_class(building_classes: Dictionary, cat_name: String) -> Dictionary:
+	var key: String = cat_name.strip_edges().to_upper()
+	for group_key in ["civic_tenants", "commercial_tenants", "industrial_tenants"]:
+		var group = building_classes.get(group_key, {})
+		if group is Dictionary and group.has(key) and group[key] is Dictionary:
+			return group[key]
+	if building_classes.has(key) and building_classes[key] is Dictionary:
+		return building_classes[key]
+	return {}
+
+## Updates district built_sqm and vacant_sqm when an establishment with a specific footprint_sqm spawns
+static func _record_establishment_footprint(d: Dictionary, class_def: Dictionary, building_classes: Dictionary) -> void:
+	var area_sqm: float = float(d.get("area_sqm", 0.0))
+	if area_sqm <= 0.0:
+		return
+	var fp: float = float(class_def.get("footprint_sqm", building_classes.get("default_footprint_sqm", 0.0)))
+	if fp <= 0.0:
+		return
+	var cur_built: float = float(d.get("built_sqm", 0.0))
+	var new_built: float = minf(area_sqm, cur_built + fp)
+	d["built_sqm"] = new_built
+	d["vacant_sqm"] = maxf(0.0, area_sqm - new_built)
 
 static func _pick_unique_street(
 	street_roots: Array,

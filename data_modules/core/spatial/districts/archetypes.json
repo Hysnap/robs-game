@@ -1,10 +1,21 @@
 {
   "_meta": {
-    "schema_version": "2.5.0",
-    "description": "Unified definitions for map district archetypes: spatial footprints, building densities, vacant plot flags, civic naming flags, visuals, and demographic targets."
+    "schema_version": "2.6.0",
+    "description": "Unified definitions for map district archetypes: spatial footprints, building densities, leftover area allocation mode, vacant plot flags, establishment_category mappings, visuals, and demographic targets."
   },
   "setup": {
     "default_fallback_archetype": "medium_density_residential",
+    "leftover_area_mode": "VACANT",
+    "initial_vacant_roll_probability": 0.09,
+    "vacant_avg_bldg_sqm": 800.0,
+    "persons_per_habitable_unit": 2.6,
+    "min_building_footprint_sqm": 50.0,
+    "default_building_footprint_sqm": 1600.0,
+    "multi_block_area_threshold_ratio": 1.05,
+    "whole_block_campus_min_ratio": 0.7,
+    "sub_block_max_carveout_ratio": 0.25,
+    "quota_variance_range": [0.9, 1.1],
+    "default_travel_dist_m": 750.0,
     "default_overall_10000m2_pop_density_estimate": 75,
     "default_residential_10000m2_pop_density_estimate": 125,
     "default_commercial_10000m2_pop_density_estimate": 60,
@@ -492,6 +503,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "PLACE_OF_WORSHIP",
     "footprint_size": 1600.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 1],
@@ -505,27 +517,6 @@
       "norm_distance_range": [0.1, 0.85],
       "pop_ratio": 3000.0,
       "travel_dist_m": 1600.0
-    },
-    "institution_profile": {
-      "serves_role": "COMMUNITY_PARISH",
-      "default_capacity": 300,
-      "staffing_roster": [
-        {
-          "job_id": "CLERGY",
-          "tied_accomodation": "RECTORY",
-          "target_count": [1, 1]
-        },
-        {
-          "job_id": "CARETAKER",
-          "tied_accomodation": "CHURCH_CARETAKER_LODGE",
-          "target_count": [1, 1]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "tied_accomodation": "CHURCH_CARETAKER_LODGE",
-          "target_count": [1, 1]
-        }
-      ]
     },
     "housing_profile": [
       {
@@ -560,6 +551,7 @@
     "sector_class": "CIVIC",
     "use_proprietor_name": false,
     "is_public_landmark": true,
+    "establishment_category": "PRIMARY_SCHOOL",
     "is_eligible_home": false,
     "footprint_size": 1600.0,
     "buildings": [1, 1],
@@ -574,35 +566,6 @@
       "norm_distance_range": [0.1, 0.85],
       "travel_dist_m": 2400.0,
       "pop_ratio": 2000.0
-    },
-    "institution_profile": {
-      "serves_role": "CHILD",
-      "default_capacity": 250,
-      "client_to_staff_ratio": 18.0,
-      "client_profile": {
-        "role_title": "PUPIL",
-        "contract_class": "ENCLAVE_STUDENT",
-        "schedule_window": "DAYTIME_SCHOOL",
-        "weekly_hours": 30,
-        "compensation_rate": 0.0,
-        "age_min": 4,
-        "age_max": 11
-      },
-      "staffing_roster": [
-        {
-          "job_id": "PRIMARY_TEACHER",
-          "target_count": [8, 14]
-        },
-        {
-          "job_id": "SCHOOL_CARETAKER",
-          "tied_accomodation": "CARETAKER_LODGE",
-          "target_count": [1, 1]
-        },
-        {
-          "job_id": "SCHOOL_MEALS_STAFF",
-          "target_count": [3, 6]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
@@ -628,6 +591,7 @@
     "sector_class": "INDUSTRIAL",
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "INDUSTRIAL_AUTOMOTIVE_WORKS",
     "footprint_size": 160000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
@@ -655,43 +619,6 @@
       "repel_sectors": ["RESIDENTIAL"],
       "prefer_sectors": ["INDUSTRIAL"]
     },
-    "institution_profile": {
-      "wage_multiplier": 1.05,
-      "staffing_roster": [
-        {
-          "job_id": "WORKS_CONVENOR",
-          "target_count": [2, 4]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [10, 25]
-        },
-        {
-          "job_id": "DEPOT_MANAGER",
-          "target_count": [15, 30]
-        },
-        {
-          "job_id": "CLERK",
-          "target_count": [50, 120]
-        },
-        {
-          "job_id": "VEHICLE_MECHANIC",
-          "target_count": [100, 250]
-        },
-        {
-          "job_id": "COACH_OR_LORRY_DRIVER",
-          "target_count": [80, 180]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [40, 90]
-        },
-        {
-          "job_id": "MANUAL_WORKS",
-          "target_count": [200, 2200]
-        }
-      ]
-    },
     "unemployment_rate_range": [0.0, 0.0],
     "avg_disposable_income_range": [70.0, 95.0],
     "zone_health_index_range": [75.0, 85.0],
@@ -705,6 +632,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "SECONDARY_SCHOOL",
     "footprint_size": 6400.0,
     "buildings": [2, 4],
     "habitable_units_per_building": [0, 1],
@@ -718,39 +646,6 @@
       "norm_distance_range": [0.1, 0.85],
       "travel_dist_m": 2500.0,
       "pop_ratio": 8000.0
-    },
-    "institution_profile": {
-      "serves_role": "STUDENT",
-      "default_capacity": 800,
-      "client_to_staff_ratio": 16.0,
-      "client_profile": {
-        "role_title": "STUDENT",
-        "contract_class": "ENCLAVE_STUDENT",
-        "schedule_window": "DAYTIME_SCHOOL",
-        "weekly_hours": 30,
-        "compensation_rate": 0.0,
-        "age_min": 11,
-        "age_max": 18
-      },
-      "staffing_roster": [
-        {
-          "job_id": "TEACHER_OR_STAFF",
-          "target_count": [35, 55]
-        },
-        {
-          "job_id": "CIVIC_CLERK_OR_OFFICIAL",
-          "target_count": [3, 6]
-        },
-        {
-          "job_id": "SCHOOL_CARETAKER",
-          "tied_accomodation": "CARETAKER_LODGE",
-          "target_count": [1, 2]
-        },
-        {
-          "job_id": "SCHOOL_MEALS_STAFF",
-          "target_count": [8, 16]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
@@ -777,6 +672,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "JOBCENTRE",
     "footprint_size": 1600.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
@@ -790,20 +686,6 @@
       "norm_distance_range": [0.1, 0.85],
       "travel_dist_m": 4000.0,
       "pop_ratio": 25000.0
-    },
-    "institution_profile": {
-      "serves_role": "UNEMPLOYED",
-      "default_capacity": 25000,
-      "staffing_roster": [
-        {
-          "job_id": "DHSS_OFFICER",
-          "target_count": [15, 30]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [2, 4]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "NONE",
@@ -827,6 +709,7 @@
     "sector_class": "CIVIC",
     "use_proprietor_name": false,
     "is_public_landmark": true,
+    "establishment_category": "LOCAL_GOVERNMENT",
     "is_eligible_home": false,
     "footprint_size": 40000.0,
     "buildings": [1, 1],
@@ -842,32 +725,6 @@
       "max_per_city": 1,
       "travel_dist_m": 15000.0,
       "pop_ratio": 120000.0
-    },
-    "institution_profile": {
-      "serves_role": "CIVIC_OFFICIAL",
-      "wage_multiplier": 1.1,
-      "staffing_roster": [
-        {
-          "job_id": "CIVIC_OFFICIAL",
-          "target_count": [8, 15]
-        },
-        {
-          "job_id": "CIVIC_CLERK_OR_OFFICIAL",
-          "target_count": [150, 300]
-        },
-        {
-          "job_id": "COUNCIL_MANUAL_LABOUR",
-          "target_count": [300, 600]
-        },
-        {
-          "job_id": "MUNICIPAL_BUS_DRIVER",
-          "target_count": [200, 480]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [15, 40]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "NONE",
@@ -932,55 +789,6 @@
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["COMMERCIAL", "RESIDENTIAL"]
     },
-    "institution_profile": {
-      "serves_role": "EMERGENCY_HEALTH",
-      "default_capacity": 650,
-      "wage_multiplier": 1.1,
-      "staffing_roster": [
-        {
-          "job_id": "CONSULTANT",
-          "target_count": [15, 25]
-        },
-        {
-          "job_id": "HOSPITAL_DOCTOR",
-          "target_count": [25, 60]
-        },
-        {
-          "job_id": "HOSPITAL_RESIDENT_DOCTOR",
-          "tied_accomodation": "DOCTORS_QUARTERS",
-          "target_count": [40, 75]
-        },
-        {
-          "job_id": "HOSPITAL_NURSE",
-          "target_count": [200, 400]
-        },
-        {
-          "job_id": "STUDENT_NURSE",
-          "tied_accomodation": "NURSES_QUARTERS",
-          "target_count": [50, 100]
-        },
-        {
-          "job_id": "HOSPITAL_SUPPORT_STAFF",
-          "target_count": [250, 500]
-        },
-        {
-          "job_id": "AMBULANCE_CREW",
-          "target_count": [40, 100]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [50, 100]
-        },
-        {
-          "job_id": "CLERK",
-          "target_count": [40, 60]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [5, 20]
-        }
-      ]
-    },
     "population_range": [90, 175],
     "unemployment_rate_range": [0.01, 0.03],
     "avg_disposable_income_range": [110.0, 140.0],
@@ -1025,39 +833,6 @@
       "repel_sectors": ["INDUSTRIAL"],
       "prefer_sectors": ["RESIDENTIAL", "COMMERCIAL"]
     },
-    "institution_profile": {
-      "serves_role": "HIGHER_ED_STUDENT",
-      "default_capacity": 1200,
-      "client_to_staff_ratio": 12.0,
-      "client_profile": {
-        "role_title": "HIGHER_ED_STUDENT",
-        "tied_accomodation": "STUDENT_HALLS",
-        "contract_class": "ENCLAVE_STUDENT",
-        "schedule_window": "FLEXIBLE_DAYTIME",
-        "weekly_hours": 20.0,
-        "compensation_rate": 18.5,
-        "age_min": 18,
-        "age_max": 24
-      },
-      "staffing_roster": [
-        {
-          "job_id": "LECTURER_OR_ADMIN",
-          "target_count": [40, 80]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [15, 30]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [2, 3]
-        },
-        {
-          "job_id": "GROUNDSMAN_OR_STEWARD",
-          "target_count": [1, 3]
-        }
-      ]
-    },
     "population_range": [26, 156],
     "unemployment_rate_range": [0.05, 0.1],
     "avg_disposable_income_range": [45.0, 70.0],
@@ -1079,6 +854,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "SPORTS_ARENA",
     "footprint_size": 27000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
@@ -1095,32 +871,6 @@
       "travel_dist_m": 4500.0,
       "repel_sectors": ["HOSPITAL"],
       "prefer_sectors": ["RESIDENTIAL", "INDUSTRIAL"]
-    },
-    "institution_profile": {
-      "serves_role": "COMMUNITY_RECREATION",
-      "default_capacity": 15000,
-      "staffing_roster": [
-        {
-          "job_id": "GROUNDSMAN_OR_STEWARD",
-          "target_count": [6, 12]
-        },
-        {
-          "job_id": "SPORTSMAN",
-          "target_count": [18, 36]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [6, 10]
-        },
-        {
-          "job_id": "CLERK",
-          "target_count": [3, 10]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [1, 3]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "NONE",
@@ -1145,6 +895,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "MUNICIPAL_PARK",
     "footprint_size": 40000.0,
     "buildings": [0, 1],
     "habitable_units_per_building": [0, 1],
@@ -1161,16 +912,6 @@
       "travel_dist_m": 2000.0,
       "repel_sectors": [],
       "prefer_sectors": ["RESIDENTIAL"]
-    },
-    "institution_profile": {
-      "serves_role": "COMMUNITY_RECREATION",
-      "default_capacity": 500,
-      "staffing_roster": [
-        {
-          "job_id": "PARK_KEEPER",
-          "target_count": [1, 3]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "CARETAKER_LODGE",
@@ -1197,6 +938,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "PRISON",
     "footprint_size": 25000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [45, 100],
@@ -1212,35 +954,6 @@
       "travel_dist_m": 5000.0,
       "repel_sectors": ["RESIDENTIAL", "COMMERCIAL"],
       "prefer_sectors": ["INDUSTRIAL"]
-    },
-    "institution_profile": {
-      "serves_role": "PRISON_INMATE",
-      "default_capacity": 650,
-      "client_to_staff_ratio": 4.0,
-      "client_profile": {
-        "role_title": "PRISON_INMATE",
-        "tied_accomodation": "CELL_BLOCK",
-        "contract_class": "CUSTODIAL_INMATE",
-        "schedule_window": "REGULATED_FULL_TIME",
-        "weekly_hours": 30.0,
-        "compensation_rate": 2.5,
-        "age_min": 17,
-        "age_max": 65
-      },
-      "staffing_roster": [
-        {
-          "job_id": "PRISON_OFFICER",
-          "target_count": [40, 75]
-        },
-        {
-          "job_id": "CLERK",
-          "target_count": [2, 5]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [1, 2]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "CELL_BLOCK",
@@ -1272,6 +985,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "POLICE_HQ",
     "footprint_size": 40000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
@@ -1286,46 +1000,6 @@
       "max_per_city": 1,
       "norm_distance_range": [0.0, 0.75],
       "travel_dist_m": 5000.0
-    },
-    "institution_profile": {
-      "serves_role": "CIVIC_OFFICIAL",
-      "default_capacity": 600,
-      "wage_multiplier": 1.1,
-      "staffing_roster": [
-        {
-          "job_id": "CIVIC_OFFICIAL",
-          "target_count": [1, 3]
-        },
-        {
-          "job_id": "POLICE_OFFICER",
-          "target_count": [25, 100]
-        },
-        {
-          "job_id": "POLICE_CONSTABLE",
-          "tied_accomodation": "STATION_HOUSE",
-          "target_count": [25, 50]
-        },
-        {
-          "job_id": "DETECTIVE",
-          "target_count": [5, 15]
-        },
-        {
-          "job_id": "CIVIC_CLERK_OR_OFFICIAL",
-          "target_count": [25, 45]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [2, 5]
-        },
-        {
-          "job_id": "COUNCIL_MANUAL_LABOUR",
-          "target_count": [6, 12]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [4, 8]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "STATION_HOUSE",
@@ -1351,6 +1025,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "POLICE_STATION",
     "footprint_size": 20000.0,
     "buildings": [1, 1],
     "habitable_units_per_building": [0, 0],
@@ -1365,46 +1040,6 @@
       "max_per_city": 10,
       "norm_distance_range": [0.0, 0.99],
       "travel_dist_m": 5000.0
-    },
-    "institution_profile": {
-      "serves_role": "CIVIC_OFFICIAL",
-      "default_capacity": 600,
-      "wage_multiplier": 1.1,
-      "staffing_roster": [
-        {
-          "job_id": "CIVIC_OFFICIAL",
-          "target_count": [1, 1]
-        },
-        {
-          "job_id": "POLICE_OFFICER",
-          "target_count": [15, 50]
-        },
-        {
-          "job_id": "POLICE_CONSTABLE",
-          "tied_accomodation": "STATION_HOUSE",
-          "target_count": [10, 35]
-        },
-        {
-          "job_id": "DETECTIVE",
-          "target_count": [2, 10]
-        },
-        {
-          "job_id": "CIVIC_CLERK_OR_OFFICIAL",
-          "target_count": [5, 9]
-        },
-        {
-          "job_id": "COUNCIL_MANUAL_LABOUR",
-          "target_count": [2, 4]
-        },
-        {
-          "job_id": "OFFICE_MANAGER",
-          "target_count": [1, 2]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [2, 4]
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "STATION_HOUSE",
@@ -1432,6 +1067,7 @@
     "use_proprietor_name": false,
     "is_eligible_home": false,
     "is_public_landmark": true,
+    "establishment_category": "FIRE_STATION",
     "footprint_size": 6400.0,
     "buildings": [1, 2],
     "habitable_units_per_building": [0, 0],
@@ -1447,30 +1083,6 @@
       "norm_distance_range": [0.15, 0.7],
       "travel_dist_m": 5000.0,
       "prefer_sectors": ["COMMERCIAL", "INDUSTRIAL"]
-    },
-    "institution_profile": {
-      "serves_role": "COMMUNITY_SAFETY",
-      "default_capacity": 40,
-      "wage_multiplier": 1.15,
-      "staffing_roster": [
-        {
-          "job_id": "FIRE_OFFICER",
-          "target_count": [2, 4]
-        },
-        {
-          "job_id": "FIREFIGHTER",
-          "target_count": [16, 32]
-        },
-        {
-          "job_id": "VEHICLE_MECHANIC",
-          "target_count": [1, 3]
-        },
-        {
-          "job_id": "COMMERCIAL_CLEANER",
-          "target_count": [1, 2],
-          "weekly_hours": 15.0
-        }
-      ]
     },
     "housing_profile": {
       "residence_type": "NONE",
