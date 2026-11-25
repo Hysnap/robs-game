@@ -1,0 +1,112 @@
+{
+  "labels": [
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SHEBEEN",
+      "title": "Shebeen",
+      "description": "Unlicensed after-hours drinking premises operating outside licensing hours."
+    },
+    {
+      "domain": "SECTOR_CATEGORY",
+      "code": "ILLICIT_CLANDESTINE",
+      "title": "Illicit Clandestine",
+      "description": "Hidden Illegal operations."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "GAMING_CLUB",
+      "title": "Gaming Club",
+      "description": "Back-room card, dice, or illegal gaming den."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "FENCE_SHOP",
+      "title": "Fence Shop",
+      "description": "Front premises used to launder or redistribute stolen goods."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "STASH_HOUSE",
+      "title": "Stash House",
+      "description": "Clandestine storage and distribution premises for illicit stock."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ENFORCER",
+      "title": "Enforcer",
+      "description": "Street-level muscle responsible for collections, intimidation, and turf security."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "STREET_DEALER",
+      "title": "Street Dealer",
+      "description": "Field operative distributing illicit goods along an assigned beat or line."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "BOOKIE_RUNNER",
+      "title": "Bookie Runner",
+      "description": "Mobile runner taking illegal bets and settling wagers across a round."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "LOAN_SHARK_COLLECTOR",
+      "title": "Loan Collector",
+      "description": "Operative collecting weekly interest and principal repayments on high-interest loans."
+    },
+    {
+      "domain": "TERRITORY_MODE",
+      "code": "CONTESTED",
+      "title": "Contested Turf",
+      "description": "Route or patch contested with rival operators or enforcement."
+    },
+    {
+      "domain": "TERRITORY_MODE",
+      "code": "SHARED_MARKETPLACE",
+      "title": "Shared Beat",
+      "description": "Open sole-proprietor beat where independent operators work side by side."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "PROTECTION_RACKET_PATCH",
+      "title": "Protection Patch",
+      "description": "Recurring collection route across commercial premises for protection payments."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "STREET_DEALER_LINE",
+      "title": "Dealer Line",
+      "description": "Street distribution line selling illicit commodities to buyers."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "MINDED_STREET_VICE_BEAT",
+      "title": "Minded Street Beat",
+      "description": "Structured street vice beat managed by a crew operative."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "SOLO_STREET_VICE_BEAT",
+      "title": "Solo Street Beat",
+      "description": "Independent sole-proprietor street beat operating in a shared marketplace."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "ILLEGAL_BOOKIE_RUNNER_ROUND",
+      "title": "Bookie Runner Round",
+      "description": "Illegal wagering collection and payout route across a district."
+    },
+    {
+      "domain": "SERVICE_CODE",
+      "code": "LOAN_SHARK_COLLECTION_ROUND",
+      "title": "Loan Collection Round",
+      "description": "Scheduled debt and interest collection round from borrowers."
+    },
+    {
+      "domain": "CONTRACT_CLASS",
+      "code": "INFORMAL_ILLICIT",
+      "title": "Informal Illicit",
+      "description": "Occasional Illegal working."
+    }
+  ]
+}

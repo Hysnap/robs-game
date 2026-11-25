@@ -17,6 +17,17 @@ const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 const _MacroEconomyProcessor = preload("res://systems/economy/macro_economy_processor.gd")
 
+const WINDOW_ANCHOR_HOURS := {
+	"EARLY_MORNING": 6.0,
+	"MORNING": 8.0,
+	"DAYTIME": 9.0,
+	"MIDDAY": 12.0,
+	"AFTERNOON": 13.0,
+	"EVENING": 18.0,
+	"NIGHT": 22.0,
+	"LATE_NIGHT": 23.0
+}
+
 ## Dispatches an action command through VerbRouter and routes resulting impacts
 static func execute_directive(world_state: Dictionary, action_directive: Dictionary) -> Dictionary:
 	var verb_token: String = str(action_directive.get("verb", action_directive.get("type", ""))).to_upper().strip_edges()
@@ -177,7 +188,7 @@ static func _apply_calendar_event_impacts(
 			_ImpactRouter.dispatch_delta(world_state, recipient_id, metric_id, delta_val)
 
 ## Processes complete operational cycle across adaptive horizons (day/shift/week/month/quarter)
-## and partitions active/impacted districts (fine resolution) from background districts (coarse cohort rollover).
+## with 1-hour continuous timeline scheduling and witness/ownership feedback slip filtering.
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
 	var meta: Dictionary = world_state.get("metadata", {})
@@ -202,11 +213,13 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			var directive: Dictionary = day_queue[i]
 			var author_str: String = _resolve_directive_author(world_state, directive)
 			var agent_key: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", "PLAYER"))))
+			var sched_hour: float = float(directive.get("scheduled_hour", 9.0))
 
 			if strict_halt and halted_agents.has(agent_key):
 				executed_events.append({
 					"trigger_type": "ACTION_ABORTED",
 					"day_offset": current_day,
+					"hour_of_day": sched_hour,
 					"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 					"week": current_week,
 					"day_of_week": _CalendarHelper.day_of_week(current_day),
@@ -228,6 +241,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 			var event_record := {
 				"trigger_type": "ACTION_RESOLUTION",
 				"day_offset": current_day,
+				"hour_of_day": sched_hour,
 				"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 				"week": current_week,
 				"day_of_week": _CalendarHelper.day_of_week(current_day),
@@ -249,6 +263,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		executed_events.append({
 			"trigger_type": "IDLE",
 			"day_offset": current_day,
+			"hour_of_day": 9.0,
 			"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 			"week": current_week,
 			"day_of_week": _CalendarHelper.day_of_week(current_day),
@@ -305,6 +320,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		executed_events.append({
 			"trigger_type": "ACTION_RESOLUTION",
 			"day_offset": current_day,
+			"hour_of_day": 18.0,
 			"calendar_date": _CalendarHelper.day_to_calendar_date(current_day),
 			"week": current_week,
 			"day_of_week": _CalendarHelper.day_of_week(current_day),
@@ -387,10 +403,12 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"INSERT OR REPLACE INTO world_metadata (key, value) VALUES ('current_sim_day', '%d');" % current_day
 	])
 
+	var witnessed_events: Array = _filter_witnessed_events(world_state, executed_events)
+
 	var active_slot := str(meta.get("active_slot_id", "slot_01"))
 	SaveManager.save_turn_snapshot(active_slot, current_day, world_state)
-	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (horizon=%s, active_districts=%d, background_districts=%d, week_rollover=%s)." % [
-		current_day, horizon, district_partition["active_districts"].size(), district_partition["background_count"], crossed_boundary
+	SystemLogger.log_info("[SimController] Turn cycle advanced to day %d (horizon=%s, active_districts=%d, background_districts=%d, week_rollover=%s, witnessed_slips=%d/%d)." % [
+		current_day, horizon, district_partition["active_districts"].size(), district_partition["background_count"], crossed_boundary, witnessed_events.size(), executed_events.size()
 	])
 
 	return {
@@ -404,11 +422,12 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"week_rollover": crossed_boundary,
 		"economy_rollover": economy_rollover,
 		"obligation_rollover": obligation_rollover,
-		"executed_events": executed_events,
+		"executed_events": witnessed_events,
+		"all_executed_events": executed_events,
 		"diary_memos": diary_memos
 	}
 
-## Merges staged ad-hoc directives with due standing orders using planning fat and OCEAN/cognitive resolution
+## Merges staged ad-hoc directives with due standing orders and schedules them onto a continuous 1-hour timeline
 static func _build_day_execution_queue(
 	world_state: Dictionary,
 	staged_directives: Array,
@@ -450,17 +469,48 @@ static func _build_day_execution_queue(
 	for k in standing_by_agent.keys():
 		all_agent_keys[k] = true
 
-	var final_queue: Array[Dictionary] = []
-	for u_task in unassigned_adhoc:
-		final_queue.append(u_task)
+	var timed_entries: Array[Dictionary] = []
+	var seq_counter: int = 0
 
-	for agent_key in all_agent_keys.keys():
+	var player_clock: float = 9.0
+	for u_task in unassigned_adhoc:
+		var start_hr: float = _resolve_task_start_hour(u_task, player_clock)
+		var dur_hrs: float = maxf(0.25, float(u_task.get("estimated_hours", u_task.get("duration_hours", 1.0))))
+		u_task["scheduled_hour"] = start_hr
+		timed_entries.append({
+			"scheduled_hour": start_hr,
+			"priority": int(u_task.get("priority", 60)),
+			"agent_key": "PLAYER",
+			"seq": seq_counter,
+			"task": u_task
+		})
+		player_clock = start_hr + dur_hrs
+		seq_counter += 1
+
+	var sorted_agents: Array = all_agent_keys.keys()
+	sorted_agents.sort()
+
+	for agent_key in sorted_agents:
 		var a_list: Array = adhoc_by_agent.get(agent_key, [])
 		var s_list: Array = standing_by_agent.get(agent_key, [])
 		var plan: Dictionary = _StandingOrderProcessor.resolve_operative_shift_plan(world_state, agent_key, a_list, s_list)
+		var actor_clock: float = 8.0
 		for q_item in plan.get("queue", []):
-			if q_item is Dictionary:
-				final_queue.append(q_item)
+			if not (q_item is Dictionary):
+				continue
+			var start_hr: float = _resolve_task_start_hour(q_item, actor_clock)
+			var dur_hrs: float = maxf(0.25, float(q_item.get("estimated_hours", q_item.get("duration_hours", 1.0))))
+			q_item["scheduled_hour"] = start_hr
+			timed_entries.append({
+				"scheduled_hour": start_hr,
+				"priority": int(q_item.get("priority", 50)),
+				"agent_key": str(agent_key),
+				"seq": seq_counter,
+				"task": q_item
+			})
+			actor_clock = start_hr + dur_hrs
+			seq_counter += 1
+
 		for m_txt in plan.get("memos", []):
 			var memo_str: String = str(m_txt)
 			diary_memos.append(memo_str)
@@ -471,7 +521,38 @@ static func _build_day_execution_queue(
 				"text": memo_str
 			})
 
+	# Sort chronologically by 1-hour timeline position (snapped to 1.0 hr buckets for concurrent meeting detection,
+	# then exact scheduled_hour, priority, and deterministic actor/sequence tie-breaker)
+	timed_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var bucket_a: int = int(floor(float(a["scheduled_hour"])))
+		var bucket_b: int = int(floor(float(b["scheduled_hour"])))
+		if bucket_a != bucket_b:
+			return bucket_a < bucket_b
+		var ha: float = float(a["scheduled_hour"])
+		var hb: float = float(b["scheduled_hour"])
+		if not is_equal_approx(ha, hb):
+			return ha < hb
+		var pa: int = int(a["priority"])
+		var pb: int = int(b["priority"])
+		if pa != pb:
+			return pa > pb
+		return int(a["seq"]) < int(b["seq"])
+	)
+
+	var final_queue: Array[Dictionary] = []
+	for entry in timed_entries:
+		final_queue.append(entry["task"])
 	return final_queue
+
+## Resolves a task's start hour on the 24-hour clock, anchored by explicit start_hour or role time_window,
+## while advancing smoothly past any prior travel/delay spillover on the actor's clock.
+static func _resolve_task_start_hour(task: Dictionary, actor_clock: float) -> float:
+	if task.has("start_hour"):
+		return maxf(actor_clock, float(task["start_hour"]))
+	var win_token: String = str(task.get("time_window", "")).to_upper().strip_edges()
+	if not win_token.is_empty() and WINDOW_ANCHOR_HOURS.has(win_token):
+		return maxf(actor_clock, float(WINDOW_ANCHOR_HOURS[win_token]))
+	return actor_clock
 
 ## Executes standing orders automatically on subsequent days during multi-day horizons (week/month/quarter)
 static func _execute_standing_orders_for_rollover_day(
@@ -492,13 +573,35 @@ static func _execute_standing_orders_for_rollover_day(
 	var cal_d: String = _CalendarHelper.day_to_calendar_date(day_tick)
 	var d_of_w: int = _CalendarHelper.day_of_week(day_tick)
 
-	for task in due_tasks:
+	var timed_rollover: Array[Dictionary] = []
+	var agent_clocks: Dictionary = {}
+	for idx in range(due_tasks.size()):
+		var t: Dictionary = due_tasks[idx]
+		var a_key: String = str(t.get("assigned_to", "PLAYER"))
+		var clk: float = float(agent_clocks.get(a_key, 8.0))
+		var s_hr: float = _resolve_task_start_hour(t, clk)
+		var dur: float = maxf(0.25, float(t.get("estimated_hours", 1.0)))
+		t["scheduled_hour"] = s_hr
+		agent_clocks[a_key] = s_hr + dur
+		timed_rollover.append({ "hour": s_hr, "seq": idx, "task": t })
+
+	timed_rollover.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ba: int = int(floor(float(a["hour"])))
+		var bb: int = int(floor(float(b["hour"])))
+		if ba != bb:
+			return ba < bb
+		return int(a["seq"]) < int(b["seq"])
+	)
+
+	for item in timed_rollover:
+		var task: Dictionary = item["task"]
 		var res: Dictionary = execute_directive(world_state, task)
 		var ok: bool = bool(res.get("success", false))
 		var msg: String = str(res.get("message", TranslationServer.translate("FEEDBACK_TASK_GENERIC_SUCCESS")))
 		executed_events.append({
 			"trigger_type": "STANDING_ORDER_EXECUTION",
 			"day_offset": day_tick,
+			"hour_of_day": float(task.get("scheduled_hour", 9.0)),
 			"calendar_date": cal_d,
 			"week": w_num,
 			"day_of_week": d_of_w,
@@ -744,6 +847,7 @@ static func _append_ledger_rollover_events(
 			"verb": "CALENDAR_EVENT_STARTED",
 			"target_item": str(ev.get("event_type", "")),
 			"event_id": int(ev.get("event_id", 0)),
+			"visibility_scope": str(ev.get("visibility_scope", "")),
 			"success": true,
 			"message": msg,
 			"author": TranslationServer.translate("UI_CALENDAR_DIARY"),
@@ -765,6 +869,7 @@ static func _append_ledger_rollover_events(
 			"verb": "CALENDAR_EVENT_COMPLETED",
 			"target_item": str(ev.get("event_type", "")),
 			"event_id": int(ev.get("event_id", 0)),
+			"visibility_scope": str(ev.get("visibility_scope", "")),
 			"success": true,
 			"message": msg,
 			"author": TranslationServer.translate("UI_CALENDAR_DIARY"),
@@ -837,6 +942,155 @@ static func _append_ledger_rollover_events(
 			"author": TranslationServer.translate("UI_CLEARING_HOUSE")
 		})
 		diary_memos.append(msg)
+
+## Filters turn events so player feedback slips include only:
+## 1. Active crew actions, direct interactions/outreach, & player-owned establishments
+## 2. Co-located events witnessed in districts where crew are present
+## 3. Universal public calendar events (bank holidays/major fixtures) OR cohort/personal events involving crew or 1st-degree associates
+static func _filter_witnessed_events(world_state: Dictionary, raw_events: Array) -> Array:
+	var crew_ids: Dictionary = { "PLAYER": true }
+	var crew_int_ids: Array[int] = []
+	var witness_districts: Dictionary = {}
+	var owned_estab_ids: Dictionary = {}
+	var crew_org_id: String = str(world_state.get("operations", {}).get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
+
+	var residents: Dictionary = world_state.get("residents", {})
+	var estabs: Dictionary = world_state.get("establishments", {})
+
+	for r_key in residents.keys():
+		var rec = residents[r_key]
+		if rec is Dictionary and (not str(rec.get("slot_id", "")).is_empty() or bool(rec.get("is_crew", false))):
+			var cid: String = str(rec.get("resident_id", r_key)).strip_edges()
+			if not cid.is_empty():
+				crew_ids[cid] = true
+				if cid.is_valid_int():
+					crew_int_ids.append(int(cid))
+			var cur_d: String = str(rec.get("current_district_id", "")).strip_edges()
+			if not cur_d.is_empty():
+				witness_districts[cur_d] = true
+
+	for e_key in estabs.keys():
+		var est = estabs[e_key]
+		if est is Dictionary:
+			var owner_org: String = str(est.get("owner_org_id", "")).strip_edges()
+			var owner_res: String = str(est.get("owner_resident_id", "")).strip_edges()
+			if (not crew_org_id.is_empty() and owner_org == crew_org_id) or crew_ids.has(owner_res) or bool(est.get("is_player_owned", false)):
+				var eid_str: String = str(est.get("establishment_id", e_key)).strip_edges()
+				owned_estab_ids[eid_str] = true
+				owned_estab_ids["ESTABLISHMENT:%s" % eid_str] = true
+
+	var relevant_event_ids: Dictionary = _resolve_crew_and_associate_event_ids(crew_int_ids)
+
+	var filtered: Array = []
+	for ev in raw_events:
+		if not (ev is Dictionary):
+			continue
+		var trig: String = str(ev.get("trigger_type", "")).to_upper()
+		if trig in ["IDLE", "MANDATE_COLLISION", "MANAGER_REPORT", "ARMS_LENGTH_EXCEPTION", "POSTAL_DELIVERY", "SETTLEMENT_CLEARED", "SETTLEMENT_DISHONOURED"]:
+			filtered.append(ev)
+			continue
+
+		if trig in ["CALENDAR_EVENT_STARTED", "CALENDAR_EVENT_COMPLETED"]:
+			var ev_id: int = int(ev.get("event_id", 0))
+			var vis_scope: String = str(ev.get("visibility_scope", "")).to_upper().strip_edges()
+			var ev_loc: String = str(ev.get("target_node_id", "")).strip_edges()
+			if vis_scope in ["PUBLIC", "GLOBAL", "JURISDICTION"]:
+				filtered.append(ev)
+			elif ev_id > 0 and relevant_event_ids.has(ev_id):
+				filtered.append(ev)
+			elif not ev_loc.is_empty() and (witness_districts.has(ev_loc) or owned_estab_ids.has(ev_loc)):
+				filtered.append(ev)
+			continue
+
+		var snap: Dictionary = ev.get("directive_snapshot", {})
+		var actor_str: String = str(snap.get("assigned_to", snap.get("assigned_agent", snap.get("initiator_id", "")))).strip_edges()
+		if crew_ids.has(actor_str) or owned_estab_ids.has(actor_str):
+			filtered.append(ev)
+			continue
+
+		var target_res: String = str(snap.get("target_resident_id", snap.get("counterparty_id", ""))).strip_edges()
+		if not target_res.is_empty() and crew_ids.has(target_res):
+			filtered.append(ev)
+			continue
+
+		var loc_raw: String = str(ev.get("target_node_id", snap.get("target_node_id", ""))).strip_edges()
+		var target_ent: String = str(snap.get("target_entity_id", "")).strip_edges()
+		if owned_estab_ids.has(loc_raw) or (not target_ent.is_empty() and owned_estab_ids.has(target_ent)):
+			filtered.append(ev)
+			continue
+
+		var resolved_dist: String = loc_raw
+		if loc_raw.begins_with("ESTABLISHMENT:"):
+			var est_tok: String = loc_raw.trim_prefix("ESTABLISHMENT:")
+			var est_rec = estabs.get(int(est_tok) if est_tok.is_valid_int() else est_tok, {})
+			if est_rec is Dictionary:
+				resolved_dist = str(est_rec.get("district_id", "")).strip_edges()
+		elif estabs.has(int(loc_raw) if loc_raw.is_valid_int() else loc_raw):
+			var est_rec2 = estabs.get(int(loc_raw) if loc_raw.is_valid_int() else loc_raw, {})
+			if est_rec2 is Dictionary:
+				resolved_dist = str(est_rec2.get("district_id", "")).strip_edges()
+
+		if not resolved_dist.is_empty() and witness_districts.has(resolved_dist):
+			filtered.append(ev)
+
+	return filtered
+
+## Resolves calendar event_ids relevant to crew or their 1st-degree close associates (linked obligations or organizer/subject ties)
+static func _resolve_crew_and_associate_event_ids(crew_int_ids: Array[int]) -> Dictionary:
+	var out: Dictionary = {}
+	if crew_int_ids.is_empty() or not _DBManager.is_database_open():
+		return out
+
+	var relevant_residents: Dictionary = {}
+	for cid in crew_int_ids:
+		relevant_residents[cid] = true
+
+	var id_tokens: Array[String] = []
+	for cid in crew_int_ids:
+		id_tokens.append(str(cid))
+	var id_csv := ", ".join(id_tokens)
+
+	var rel_tbl: Array = _DBManager.query_rows("SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='social_relationships';")
+	if not rel_tbl.is_empty() and int(rel_tbl[0].get("cnt", 0)) > 0:
+		var rel_rows: Array = _DBManager.query_rows("""
+			SELECT to_resident_id FROM social_relationships
+			WHERE valid_to IS NULL AND from_resident_id IN (%s);
+		""" % id_csv)
+		for rr in rel_rows:
+			var tid: int = int(rr.get("to_resident_id", 0))
+			if tid > 0:
+				relevant_residents[tid] = true
+
+	var all_res_tokens: Array[String] = []
+	for rid in relevant_residents.keys():
+		all_res_tokens.append(str(rid))
+	var all_res_csv := ", ".join(all_res_tokens)
+
+	var obl_tbl: Array = _DBManager.query_rows("SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='obligations';")
+	if not obl_tbl.is_empty() and int(obl_tbl[0].get("cnt", 0)) > 0:
+		var obl_rows: Array = _DBManager.query_rows("""
+			SELECT DISTINCT linked_event_id FROM obligations
+			WHERE linked_event_id IS NOT NULL
+			  AND ((debtor_scope = 'RESIDENT' AND debtor_id IN (%s))
+			    OR (creditor_scope = 'RESIDENT' AND creditor_id IN (%s)));
+		""" % [all_res_csv, all_res_csv])
+		for orow in obl_rows:
+			var eid: int = int(orow.get("linked_event_id", 0))
+			if eid > 0:
+				out[eid] = true
+
+	var ev_tbl: Array = _DBManager.query_rows("SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='calendar_events';")
+	if not ev_tbl.is_empty() and int(ev_tbl[0].get("cnt", 0)) > 0:
+		var ev_rows: Array = _DBManager.query_rows("""
+			SELECT event_id FROM calendar_events
+			WHERE organizer_scope = 'RESIDENT' AND organizer_id IN (%s);
+		""" % all_res_csv)
+		for erow in ev_rows:
+			var eid2: int = int(erow.get("event_id", 0))
+			if eid2 > 0:
+				out[eid2] = true
+
+	return out
 
 static func _resolve_directive_author(world_state: Dictionary, directive: Dictionary) -> String:
 	var agent_id: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", directive.get("counterparty_id", "")))))

@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "flavour_id": "crime",
+    "version": "1.0.0",
+    "description": "Crime flavour overlay manifest extending base scenario modules with illicit roles, clandestine premises, and illegal route enterprises."
+  },
+  "modules": {
+    "job_definitions": "res://data_modules/crime/spatial/job_definitions.json",
+    "building_classes": "res://data_modules/crime/spatial/crime_businesses.json",
+    "crime_businesses": "res://data_modules/crime/spatial/crime_businesses.json",
+    "route_rounds": "res://data_modules/crime/spatial/route_rounds.json"
+  }
+}

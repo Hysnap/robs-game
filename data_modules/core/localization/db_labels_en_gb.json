@@ -75,6 +75,12 @@
     },
     {
       "domain": "CONTRACT_TYPE",
+      "code": "INFORMAL",
+      "title": "Informal Agreement",
+      "description": "Informal ongoing contracted term."
+    },
+    {
+      "domain": "CONTRACT_TYPE",
       "code": "PART_TIME",
       "title": "Part-Time Agreement",
       "description": "Regular hourly employment under statutory full-time hours."

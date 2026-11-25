@@ -272,33 +272,51 @@ static func _extract_schema_tier(path: String) -> int:
 		return int(parts[0])
 	return 9999
 
-## 1. Populates core engine labels strictly from the scenario manifest's 'db_labels' module
+## 1. Populates core engine labels strictly from the scenario manifest's 'db_labels' module,
+## plus any active flavour localization/<db_labels_file> overlays.
 static func populate_core_system_labels(custom_labels_path: String = "") -> void:
 	var labels_file_path: String = custom_labels_path.strip_edges()
 	if labels_file_path.is_empty():
 		assert(MANIFEST_MANAGER.has_module("db_labels"), "FATAL: [DBManager] Scenario manifest missing required 'db_labels' module entry.")
 		labels_file_path = MANIFEST_MANAGER.get_module_path("db_labels").strip_edges()
 
-	assert(FileAccess.file_exists(labels_file_path), "FATAL: Core system label dictionary missing: %s" % labels_file_path)
-	var file := FileAccess.open(labels_file_path, FileAccess.READ)
-	assert(file != null, "FATAL: Could not read core label dictionary: %s" % labels_file_path)
-	var parsed = JSON.parse_string(file.get_as_text())
-	file.close()
+	var label_paths: Array[String] = [labels_file_path]
+	var labels_filename: String = labels_file_path.get_file()
+	var data_modules_root: String = labels_file_path.get_base_dir().get_base_dir().get_base_dir()
+	var flavour_candidates: Array[String] = MANIFEST_MANAGER.get_active_flavours()
+	var manifest_flavours: Variant = MANIFEST_MANAGER.get_manifest().get("active_flavours", [])
+	if manifest_flavours is Array:
+		for raw_f in manifest_flavours:
+			var slug: String = str(raw_f).strip_edges().to_lower()
+			if not slug.is_empty() and slug != "core" and not flavour_candidates.has(slug):
+				flavour_candidates.append(slug)
 
-	assert(parsed is Dictionary and parsed.has("labels"), "FATAL: Invalid dictionary format in: %s" % labels_file_path)
-	
+	for flavour_name in flavour_candidates:
+		var flavour_labels_path: String = data_modules_root.path_join(flavour_name).path_join("localization").path_join(labels_filename)
+		if FileAccess.file_exists(flavour_labels_path) and not label_paths.has(flavour_labels_path):
+			label_paths.append(flavour_labels_path)
+
 	var inserts: Array[String] = []
-	for item in parsed["labels"]:
-		var dom: String = str(item.get("domain", "")).to_upper()
-		var code: String = str(item.get("code", "")).to_upper()
-		var title: String = str(item.get("title", "")).replace("'", "''")
-		var desc: String = str(item.get("description", "")).replace("'", "''")
-		
-		inserts.append("""
-			INSERT INTO system_labels (domain, code, title, description)
-			VALUES ('%s', '%s', '%s', '%s')
-			ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title, description = excluded.description;
-		""" % [dom, code, title, desc])
+	for dict_path in label_paths:
+		assert(FileAccess.file_exists(dict_path), "FATAL: System label dictionary missing: %s" % dict_path)
+		var file := FileAccess.open(dict_path, FileAccess.READ)
+		assert(file != null, "FATAL: Could not read label dictionary: %s" % dict_path)
+		var parsed = JSON.parse_string(file.get_as_text())
+		file.close()
+
+		assert(parsed is Dictionary and parsed.has("labels"), "FATAL: Invalid dictionary format in: %s" % dict_path)
+		for item in parsed["labels"]:
+			var dom: String = str(item.get("domain", "")).to_upper().strip_edges()
+			var code: String = str(item.get("code", "")).to_upper().strip_edges()
+			var title: String = str(item.get("title", "")).replace("'", "''")
+			var desc: String = str(item.get("description", "")).replace("'", "''")
+			if dom.is_empty() or code.is_empty():
+				continue
+			inserts.append("""
+				INSERT INTO system_labels (domain, code, title, description)
+				VALUES ('%s', '%s', '%s', '%s')
+				ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title, description = excluded.description;
+			""" % [dom, code, title, desc])
 
 	execute_batch(inserts)
 

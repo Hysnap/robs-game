@@ -164,24 +164,33 @@ static func _harvest_building_classes(out_list: Array[Dictionary], seen: Diction
 
 	var bldg_classes: Dictionary = MANIFEST_MANAGER.load_module("building_classes")
 
-	for section_key in ["commercial_tenants", "industrial_tenants"]:
-		var tenants: Dictionary = bldg_classes.get(section_key, {})
-		for t_code in tenants.keys():
-			var t_data: Dictionary = tenants[t_code]
-			var t_title: String = str(t_data.get("display_name", t_code.capitalize().replace("_", " ")))
-			
-			# 1. Harvest establishment category
-			_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", t_code, t_title)
+	for section_key in bldg_classes.keys():
+		var sec_name: String = str(section_key).strip_edges()
+		if sec_name.is_empty() or sec_name.begins_with("_") or sec_name.begins_with("default_") or sec_name == "setup":
+			continue
+		var sec_val = bldg_classes[section_key]
+		if sec_val is Dictionary:
+			_harvest_tenant_map(out_list, seen, sec_val)
 
-			# 2. Harvest staff role titles if defined
-			if t_data.has("staff_roles"):
-				for r_code in t_data["staff_roles"]:
-					_add_token(out_list, seen, "ROLE_TITLE", str(r_code), str(r_code).capitalize().replace("_", " "))
-			if t_data.has("staffing_roster"):
-				for roster_entry in t_data["staffing_roster"]:
-					if roster_entry is Dictionary and roster_entry.has("job_id"):
-						var j_code: String = str(roster_entry["job_id"]).to_upper()
-						_add_token(out_list, seen, "ROLE_TITLE", j_code, j_code.capitalize().replace("_", " "))
+static func _harvest_tenant_map(out_list: Array[Dictionary], seen: Dictionary, tenants: Dictionary) -> void:
+	for t_code in tenants.keys():
+		var t_data = tenants[t_code]
+		if not (t_data is Dictionary):
+			continue
+		var t_title: String = str(t_data.get("display_name", str(t_code).capitalize().replace("_", " ")))
+
+		# 1. Harvest establishment category
+		_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", str(t_code), t_title)
+
+		# 2. Harvest staff role titles if defined
+		if t_data.has("staff_roles"):
+			for r_code in t_data["staff_roles"]:
+				_add_token(out_list, seen, "ROLE_TITLE", str(r_code), str(r_code).capitalize().replace("_", " "))
+		if t_data.has("staffing_roster"):
+			for roster_entry in t_data["staffing_roster"]:
+				if roster_entry is Dictionary and roster_entry.has("job_id"):
+					var j_code: String = str(roster_entry["job_id"]).to_upper()
+					_add_token(out_list, seen, "ROLE_TITLE", j_code, j_code.capitalize().replace("_", " "))
 
 static func _harvest_job_definitions(out_list: Array[Dictionary], seen: Dictionary) -> void:
 	if not MANIFEST_MANAGER.has_module("job_definitions"):

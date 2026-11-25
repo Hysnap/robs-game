@@ -6,20 +6,6 @@ const DB_MANAGER = preload("res://systems/db_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
-const ROLE_TO_SERVICE_MAP: Dictionary = {
-	"INSURANCE_AGENT_COLLECTOR": "INSURANCE_COLLECTION_ROUND",
-	"RENT_COLLECTOR_AGENT": "RENT_AND_CHECK_ROUND"
-}
-
-const DEPOT_CLASS_TO_SERVICE_MAP: Dictionary = {
-	"DAIRY_DEPOT": "MILK_ROUND",
-	"SOFT_DRINKS_DEPOT": "POP_DELIVERY_ROUND",
-	"COAL_MERCHANT_YARD": "COAL_ROUND",
-	"INSURANCE_DISTRICT_OFFICE": "INSURANCE_COLLECTION_ROUND",
-	"PRIVATE_LANDLORDS_OFFICE": "RENT_AND_CHECK_ROUND",
-	"CLUB_CHECK_CREDIT_OFFICE": "RENT_AND_CHECK_ROUND"
-}
-
 ## Computes effective working days per worker per year after excluding bank holidays (optional) and ~30 absence days
 static func compute_effective_working_days_per_year(
 	coverage_cfg: Dictionary,
@@ -68,7 +54,7 @@ static func compute_required_workers(
 
 	return maxi(min_per_depot, int(ceil(base_needed * absence_factor)))
 
-## Seeds persisted service_routes rows for contracted field/route workers using anti-collision district/day allocation
+## Seeds persisted service_routes rows for all registered rounds (legal cooperative + flavour contested/shared routes)
 static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) -> int:
 	assert(MANIFEST_MANAGER.has_module("route_rounds"), "FATAL: [RouteRoundSeeder] Scenario manifest missing 'route_rounds' module!")
 	var route_cfg: Dictionary = MANIFEST_MANAGER.load_module("route_rounds")
@@ -78,32 +64,72 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 	var rounds_def: Dictionary = route_cfg["rounds"]
 	var coverage_cfg: Dictionary = route_cfg["staffing_coverage"]
 	var collision_cfg: Dictionary = route_cfg.get("anti_collision_rules", {})
-	var same_day_service_penalty: float = float(collision_cfg.get("same_day_same_district_service_penalty", 100.0))
-	var same_service_day_penalty: float = float(collision_cfg.get("same_service_same_day_district_penalty", 50.0))
-	var worker_overlap_penalty: float = float(collision_cfg.get("depot_worker_overlap_penalty", 25.0))
+	var base_same_day_service_penalty: float = float(collision_cfg.get("same_day_same_district_service_penalty", 100.0))
+	var base_same_service_day_penalty: float = float(collision_cfg.get("same_service_same_day_district_penalty", 50.0))
+	var base_worker_overlap_penalty: float = float(collision_cfg.get("depot_worker_overlap_penalty", 25.0))
 	var pt_hours_threshold: float = 24.0
 
 	var reason_id: int = DB_MANAGER.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
 
 	var districts_map: Dictionary = physical_state.get("districts", {})
 	var residential_district_ids: Array[String] = []
+	var all_active_district_ids: Array[String] = []
 	var district_positions: Dictionary = {}
+	var district_populations: Dictionary = {}
+
 	for d_id_raw in districts_map.keys():
 		var d_id := str(d_id_raw)
 		var d_rec = districts_map[d_id_raw]
 		if not (d_rec is Dictionary):
 			continue
+		if bool(d_rec.get("is_vacant_plot", false)):
+			continue
+		all_active_district_ids.append(d_id)
 		var d_type := str(d_rec.get("district_type", ""))
 		if d_type.begins_with("residential") or d_type.begins_with("high_density") or d_type.begins_with("suburban"):
 			residential_district_ids.append(d_id)
 		district_positions[d_id] = _resolve_pos(d_rec.get("spatial_anchor", Vector2.ZERO))
+		district_populations[d_id] = maxi(50, int(d_rec.get("estimated_population", d_rec.get("population", 250))))
 
 	if residential_district_ids.is_empty():
-		for d_id_raw in districts_map.keys():
-			residential_district_ids.append(str(d_id_raw))
+		residential_district_ids = all_active_district_ids.duplicate()
 
 	if residential_district_ids.is_empty():
 		return 0
+
+	# Discover all staff_role_ids and depot_building_classes dynamically from route_rounds
+	var role_to_services: Dictionary = {}
+	var depot_to_services: Dictionary = {}
+	var all_role_codes: Array[String] = []
+
+	for svc_key in rounds_def.keys():
+		var r_entry = rounds_def[svc_key]
+		if not (r_entry is Dictionary):
+			continue
+		var svc_code: String = str(r_entry.get("service_code", svc_key)).strip_edges()
+		for role_raw in r_entry.get("staff_role_ids", []):
+			var r_code: String = str(role_raw).strip_edges()
+			if r_code.is_empty():
+				continue
+			if not all_role_codes.has(r_code):
+				all_role_codes.append(r_code)
+			if not role_to_services.has(r_code):
+				role_to_services[r_code] = []
+			role_to_services[r_code].append(svc_code)
+		for depot_raw in r_entry.get("depot_building_classes", []):
+			var d_code: String = str(depot_raw).strip_edges()
+			if d_code.is_empty():
+				continue
+			if not depot_to_services.has(d_code):
+				depot_to_services[d_code] = []
+			depot_to_services[d_code].append(svc_code)
+
+	if all_role_codes.is_empty():
+		return 0
+
+	var quoted_roles: Array[String] = []
+	for rc in all_role_codes:
+		quoted_roles.append("'%s'" % rc.replace("'", "''"))
 
 	var worker_rows: Array = DB_MANAGER.query_rows("""
 		SELECT
@@ -111,23 +137,21 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 			c.employer_establishment_id,
 			c.weekly_hours,
 			l_role.code AS role_code,
-			e.district_id AS depot_district_id,
+			COALESCE(e.district_id, h_e.district_id) AS depot_district_id,
 			l_cat.code AS depot_category_code
 		FROM livelihood_contracts c
 		JOIN residents r ON c.resident_id = r.resident_id
 		JOIN system_labels l_role ON c.role_title_id = l_role.label_id
 		LEFT JOIN establishments e ON c.employer_establishment_id = e.establishment_id
+		LEFT JOIN households h ON r.household_id = h.household_id
+		LEFT JOIN establishments h_e ON h.establishment_id = h_e.establishment_id
 		LEFT JOIN system_labels l_cat ON e.category_id = l_cat.label_id
 		WHERE c.valid_to IS NULL
 		  AND r.dod IS NULL
-		  AND l_role.code IN ('ROUNDSMAN_DELIVERY', 'INSURANCE_AGENT_COLLECTOR', 'RENT_COLLECTOR_AGENT')
+		  AND l_role.code IN (%s)
 		ORDER BY c.employer_establishment_id ASC, c.resident_id ASC;
-	""")
+	""" % ", ".join(quoted_roles))
 
-	if worker_rows.is_empty():
-		return 0
-
-	# Track global load per "district_id:day_of_week" and "service_code:district_id:day_of_week"
 	var district_day_load: Dictionary = {}
 	var service_district_day_load: Dictionary = {}
 	var worker_day_assigned: Dictionary = {}
@@ -135,20 +159,29 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 
 	for row in worker_rows:
 		var est_id: int = int(row.get("employer_establishment_id", 0))
-		var role_code: String = str(row.get("role_code", ""))
-		var depot_cat: String = str(row.get("depot_category_code", ""))
-		var service_code: String = ""
-		if DEPOT_CLASS_TO_SERVICE_MAP.has(depot_cat):
-			service_code = str(DEPOT_CLASS_TO_SERVICE_MAP[depot_cat])
-		elif ROLE_TO_SERVICE_MAP.has(role_code):
-			service_code = str(ROLE_TO_SERVICE_MAP[role_code])
-		else:
-			service_code = "COAL_ROUND"
+		var role_code: String = str(row.get("role_code", "")).strip_edges()
+		var depot_cat: String = str(row.get("depot_category_code", "")).strip_edges()
+		var matched_service: String = ""
 
-		if not rounds_def.has(service_code):
+		if not depot_cat.is_empty() and depot_to_services.has(depot_cat):
+			var depot_svcs: Array = depot_to_services[depot_cat]
+			for cand_svc in depot_svcs:
+				var r_roles: Array = rounds_def.get(cand_svc, {}).get("staff_role_ids", [])
+				if r_roles.is_empty() or r_roles.has(role_code):
+					matched_service = str(cand_svc)
+					break
+			if matched_service.is_empty() and not depot_svcs.is_empty():
+				matched_service = str(depot_svcs[0])
+
+		if matched_service.is_empty() and role_to_services.has(role_code):
+			var role_svcs: Array = role_to_services[role_code]
+			if not role_svcs.is_empty():
+				matched_service = str(role_svcs[0])
+
+		if matched_service.is_empty() or not rounds_def.has(matched_service):
 			continue
 
-		var key := "%d:%s" % [est_id, service_code]
+		var key := "%d:%s" % [est_id, matched_service]
 		if not depot_service_workers.has(key):
 			depot_service_workers[key] = []
 		depot_service_workers[key].append(row)
@@ -162,7 +195,19 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 		var service_code: String = str(parts[1])
 		var r_cfg: Dictionary = rounds_def[service_code]
 		var patch_mode: String = str(r_cfg.get("patch_mode", "ROTATING_DAILY"))
+		var territory_mode: String = str(r_cfg.get("territory_mode", "COOPERATIVE")).to_upper()
 		var districts_per_worker: int = maxi(1, int(r_cfg.get("districts_per_roundsman", 4)))
+
+		var same_day_service_penalty: float = base_same_day_service_penalty
+		var same_service_day_penalty: float = base_same_service_day_penalty
+		var worker_overlap_penalty: float = base_worker_overlap_penalty
+
+		if territory_mode == "CONTESTED":
+			same_day_service_penalty *= 0.15
+			same_service_day_penalty *= 0.15
+		elif territory_mode == "SHARED_MARKETPLACE":
+			same_day_service_penalty = 0.0
+			same_service_day_penalty = 0.0
 
 		var deliv_cfg: Dictionary = r_cfg.get("delivery_schedule", {})
 		var deliv_days: Array = deliv_cfg.get("days_of_week", [1, 2, 3, 4, 5])
@@ -176,32 +221,36 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 		var coll_action: String = str(coll_cfg.get("action_mode", "COLLECT_CASH"))
 
 		var group_workers: Array = depot_service_workers[key]
-		var depot_dist_id: String = str(group_workers[0].get("depot_district_id", ""))
-		var depot_pos: Vector2 = district_positions.get(depot_dist_id, Vector2.ZERO)
-
-		var sorted_districts: Array[String] = residential_district_ids.duplicate()
-		sorted_districts.sort_custom(func(a: String, b: String) -> bool:
-			var pa: Vector2 = district_positions.get(a, Vector2.ZERO)
-			var pb: Vector2 = district_positions.get(b, Vector2.ZERO)
-			return depot_pos.distance_squared_to(pa) < depot_pos.distance_squared_to(pb)
-		)
-
-		var used_district_days: Dictionary = {}
+		var candidate_pool: Array[String] = all_active_district_ids if not r_cfg.get("fulfillment_config", {}).is_empty() else residential_district_ids
+		if candidate_pool.is_empty():
+			candidate_pool = residential_district_ids
 
 		for w_idx in range(group_workers.size()):
 			var w_row: Dictionary = group_workers[w_idx]
 			var res_id: int = int(w_row.get("resident_id", 0))
 			var weekly_hrs: float = float(w_row.get("weekly_hours", 40.0))
 			var is_pt: int = 1 if weekly_hrs < pt_hours_threshold else 0
+			var worker_base_dist: String = str(w_row.get("depot_district_id", ""))
+			var depot_pos: Vector2 = district_positions.get(worker_base_dist, Vector2.ZERO)
 
-			# Partition candidate districts across workers in the same depot/service where possible
+			var sorted_districts: Array[String] = candidate_pool.duplicate()
+			sorted_districts.sort_custom(func(a: String, b: String) -> bool:
+				var pa: Vector2 = district_positions.get(a, Vector2.ZERO)
+				var pb: Vector2 = district_positions.get(b, Vector2.ZERO)
+				return depot_pos.distance_squared_to(pa) < depot_pos.distance_squared_to(pb)
+			)
+
 			var worker_patch: Array[String] = []
-			var start_slice: int = (w_idx * districts_per_worker) % maxi(1, sorted_districts.size())
-			for s_i in range(mini(districts_per_worker, sorted_districts.size())):
-				worker_patch.append(sorted_districts[(start_slice + s_i) % sorted_districts.size()])
+			if territory_mode == "SHARED_MARKETPLACE" and not worker_base_dist.is_empty() and sorted_districts.has(worker_base_dist):
+				worker_patch.append(worker_base_dist)
+			else:
+				var start_slice: int = (w_idx * districts_per_worker) % maxi(1, sorted_districts.size())
+				for s_i in range(mini(districts_per_worker, sorted_districts.size())):
+					worker_patch.append(sorted_districts[(start_slice + s_i) % sorted_districts.size()])
+
+			var est_sql: String = str(est_id) if est_id > 0 else "NULL"
 
 			if patch_mode == "FIXED_TERRITORY":
-				# Milkman stays on their fixed patch across scheduled days and collects cash Friday afternoon
 				var anchor_dist: String = worker_patch[0]
 				for d_raw in deliv_days:
 					var dow: int = int(d_raw)
@@ -210,9 +259,9 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 							establishment_id, worker_resident_id, service_code, day_of_week,
 							time_window, target_district_id, action_mode, is_part_time,
 							valid_from, valid_to, change_reason_id
-						) VALUES (%d, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
+						) VALUES (%s, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
 					""" % [
-						est_id, res_id, service_code, dow, deliv_window,
+						est_sql, res_id, service_code, dow, deliv_window,
 						anchor_dist.replace("'", "''"), deliv_action, is_pt, sim_start_day, reason_id
 					])
 					inserted_count += 1
@@ -226,15 +275,15 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 								establishment_id, worker_resident_id, service_code, day_of_week,
 								time_window, target_district_id, action_mode, is_part_time,
 								valid_from, valid_to, change_reason_id
-							) VALUES (%d, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
+							) VALUES (%s, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
 						""" % [
-							est_id, res_id, service_code, cdow, coll_window,
+							est_sql, res_id, service_code, cdow, coll_window,
 							anchor_dist.replace("'", "''"), coll_action, is_pt, sim_start_day, reason_id
 						])
 						inserted_count += 1
 						_bump_load(district_day_load, service_district_day_load, worker_day_assigned, anchor_dist, service_code, cdow, res_id, 1.0)
 			else:
-				# Rotating routes (Corona, Coal, Insurance/Pru, Rent/Check) pick least-colliding (district, day) pairs
+				var used_district_days: Dictionary = {}
 				var pool_candidates: Array[String] = worker_patch if not worker_patch.is_empty() else sorted_districts
 				for d_raw in deliv_days:
 					var dow: int = int(d_raw)
@@ -261,19 +310,157 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 							establishment_id, worker_resident_id, service_code, day_of_week,
 							time_window, target_district_id, action_mode, is_part_time,
 							valid_from, valid_to, change_reason_id
-						) VALUES (%d, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
+						) VALUES (%s, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
 					""" % [
-						est_id, res_id, service_code, dow, deliv_window,
+						est_sql, res_id, service_code, dow, deliv_window,
 						chosen_dist.replace("'", "''"), deliv_action, is_pt, sim_start_day, reason_id
 					])
 					inserted_count += 1
 					_bump_load(district_day_load, service_district_day_load, worker_day_assigned, chosen_dist, service_code, dow, res_id, 1.0)
 
+	# Seed un-premised sole-proprietor route operators (where depot_building_classes is empty) up to district demand capacity
+	inserted_count += _seed_unpremised_sole_routes(
+		route_inserts,
+		rounds_def,
+		all_active_district_ids,
+		district_populations,
+		district_day_load,
+		service_district_day_load,
+		worker_day_assigned,
+		sim_start_day,
+		reason_id
+	)
+
 	if not route_inserts.is_empty():
 		DB_MANAGER.execute_batch(route_inserts)
-		SystemLogger.log_info("  ✓ Seeded %d anti-collision service_routes entries across %d route workers." % [inserted_count, worker_rows.size()])
+		SystemLogger.log_info("  ✓ Seeded %d service_routes entries across cooperative, contested, and shared marketplace rounds." % inserted_count)
 
 	return inserted_count
+
+## Seeds un-premised sole-proprietor routes (e.g. paper rounds, Avon reps, solo street vice) driven by operator_eligibility
+static func _seed_unpremised_sole_routes(
+	route_inserts: Array[String],
+	rounds_def: Dictionary,
+	district_ids: Array[String],
+	district_populations: Dictionary,
+	district_day_load: Dictionary,
+	service_district_day_load: Dictionary,
+	worker_day_assigned: Dictionary,
+	sim_start_day: int,
+	reason_id: int
+) -> int:
+	var unpremised_rounds: Array[Dictionary] = []
+	for svc_key in rounds_def.keys():
+		var r_cfg = rounds_def[svc_key]
+		if not (r_cfg is Dictionary):
+			continue
+		var depots: Array = r_cfg.get("depot_building_classes", [])
+		var elig: Dictionary = r_cfg.get("operator_eligibility", {})
+		var fulf: Dictionary = r_cfg.get("fulfillment_config", {})
+		if depots.is_empty() and (not elig.is_empty() or not fulf.is_empty()):
+			unpremised_rounds.append(r_cfg)
+
+	if unpremised_rounds.is_empty() or district_ids.is_empty():
+		return 0
+
+	var claimed_residents: Dictionary = {}
+	var added: int = 0
+
+	for r_cfg in unpremised_rounds:
+		var svc_code: String = str(r_cfg.get("service_code", "")).strip_edges()
+		var elig: Dictionary = r_cfg.get("operator_eligibility", {})
+		assert(not elig.is_empty(), "FATAL: [RouteRoundSeeder] Un-premised round '%s' missing 'operator_eligibility' config!" % svc_code)
+
+		var age_min: int = int(elig.get("age_min", 18))
+		var age_max: int = int(elig.get("age_max", 55))
+		var max_ops: int = maxi(1, int(elig.get("max_operators_per_district", 3)))
+		var raw_roles: Array = elig.get("eligible_role_codes", [])
+		assert(not raw_roles.is_empty(), "FATAL: [RouteRoundSeeder] Un-premised round '%s' missing 'eligible_role_codes'!" % svc_code)
+
+		var quoted_roles: Array[String] = []
+		for rc in raw_roles:
+			var clean_rc: String = str(rc).strip_edges().to_upper()
+			if not clean_rc.is_empty():
+				quoted_roles.append("'%s'" % clean_rc.replace("'", "''"))
+
+		var gender_clause: String = ""
+		var raw_genders: Array = elig.get("gender_codes", [])
+		if not raw_genders.is_empty():
+			var quoted_genders: Array[String] = []
+			for gc in raw_genders:
+				var clean_gc: String = str(gc).strip_edges().to_upper()
+				if not clean_gc.is_empty():
+					quoted_genders.append("'%s'" % clean_gc.replace("'", "''"))
+			if not quoted_genders.is_empty():
+				gender_clause = "AND l_gen.code IN (%s)" % ", ".join(quoted_genders)
+
+		var min_dob: int = sim_start_day - int(round(float(age_max) * 365.25))
+		var max_dob: int = sim_start_day - int(round(float(age_min) * 365.25))
+
+		var candidate_residents: Array = DB_MANAGER.query_rows("""
+			SELECT DISTINCT r.resident_id, e.district_id
+			FROM residents r
+			JOIN households h ON r.household_id = h.household_id
+			JOIN establishments e ON h.establishment_id = e.establishment_id
+			JOIN system_labels l_gen ON r.gender_id = l_gen.label_id
+			JOIN livelihood_contracts c ON c.resident_id = r.resident_id AND c.valid_to IS NULL
+			JOIN system_labels l_role ON c.role_title_id = l_role.label_id
+			WHERE r.dod IS NULL
+			  AND r.dob BETWEEN %d AND %d
+			  AND l_role.code IN (%s)
+			  %s
+			ORDER BY r.resident_id ASC;
+		""" % [min_dob, max_dob, ", ".join(quoted_roles), gender_clause])
+
+		if candidate_residents.is_empty():
+			continue
+
+		var residents_by_dist: Dictionary = {}
+		for row in candidate_residents:
+			var res_id: int = int(row.get("resident_id", 0))
+			if res_id <= 0 or claimed_residents.has(res_id):
+				continue
+			var d_id: String = str(row.get("district_id", ""))
+			if not residents_by_dist.has(d_id):
+				residents_by_dist[d_id] = []
+			residents_by_dist[d_id].append(res_id)
+
+		var cap_per_worker: float = maxf(100.0, float(r_cfg.get("demand_capacity_per_worker", 400.0)))
+		var deliv_cfg: Dictionary = r_cfg.get("delivery_schedule", {})
+		var deliv_days: Array = deliv_cfg.get("days_of_week", [5, 6])
+		var deliv_window: String = str(deliv_cfg.get("time_window", "EVENING"))
+		var deliv_action: String = str(deliv_cfg.get("action_mode", "SOLE_ROUTE"))
+
+		for d_id in district_ids:
+			var pool: Array = residents_by_dist.get(d_id, [])
+			if pool.is_empty():
+				continue
+			var pop: float = float(district_populations.get(d_id, 250))
+			var desired_operators: int = mini(max_ops, int(floor(pop / cap_per_worker)))
+			if desired_operators <= 0:
+				continue
+
+			for _op_i in range(desired_operators):
+				if pool.is_empty():
+					break
+				var res_id: int = int(pool.pop_front())
+				claimed_residents[res_id] = true
+				for d_raw in deliv_days:
+					var dow: int = int(d_raw)
+					route_inserts.append("""
+						INSERT INTO service_routes (
+							establishment_id, worker_resident_id, service_code, day_of_week,
+							time_window, target_district_id, action_mode, is_part_time,
+							valid_from, valid_to, change_reason_id
+						) VALUES (NULL, %d, '%s', %d, '%s', '%s', '%s', 1, %d, NULL, %d);
+					""" % [
+						res_id, svc_code, dow, deliv_window,
+						d_id.replace("'", "''"), deliv_action, sim_start_day, reason_id
+					])
+					added += 1
+					_bump_load(district_day_load, service_district_day_load, worker_day_assigned, d_id, svc_code, dow, res_id, 1.0)
+
+	return added
 
 static func _bump_load(
 	district_day_load: Dictionary,
