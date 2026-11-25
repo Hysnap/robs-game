@@ -984,7 +984,18 @@
       "title": "Builders Merchants & Contracting Yard",
       "description": "Civil construction contractor and trade yard."
     },
-
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "MUNICIPAL_ALLOTMENTS",
+      "title": "Council Managed Allotments",
+      "description": "Council owned and managed allotments."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "RAILWAY_SIDLINGS_AND_SCRAP",
+      "title": "Abandoned Railway sidlings and scrap",
+      "description": "Abandoned Industrial and Infrastructure."
+    },
     {
       "domain": "ESTABLISHMENT_CATEGORY",
       "code": "FOUNDRY_CASTINGS",
@@ -1008,6 +1019,102 @@
       "code": "TEXTILE_OR_JOINERY",
       "title": "Joinery Works & Timber Yard",
       "description": "Timber mill, joinery workshop, and textile assembly."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "ACCOUNTANTS_PRACTICE",
+      "title": "Chartered Accountants & Auditors",
+      "description": "Accountancy, audit, taxation, and financial advisory practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "ARCHITECT_AND_SURVEYOR",
+      "title": "Architects & Chartered Surveyors",
+      "description": "Architectural design, property surveying, and planning practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "BESPOKE_TAILOR_OUTFITTER",
+      "title": "Bespoke Tailor & Gentlemen's Outfitter",
+      "description": "Made-to-measure tailoring and men's clothing outfitting."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "CLUB_CHECK_CREDIT_OFFICE",
+      "title": "Provident & Weekly Check Credit Office",
+      "description": "Weekly check trading and household credit collection office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "COAL_MERCHANT_YARD",
+      "title": "Coal & Solid Fuel Merchant Yard",
+      "description": "Wholesale and delivery yard for coal and solid fuels."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "DAIRY_DEPOT",
+      "title": "Retail Dairy & Milk Rounds Depot",
+      "description": "Dairy distribution depot serving retail outlets and milk rounds."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "DRIVING_SCHOOL",
+      "title": "Motor School & Driving Tuition",
+      "description": "Private motor instruction and driving test preparation."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INSURANCE_BROKERAGE",
+      "title": "Insurance Brokers & Assurance Office",
+      "description": "Independent insurance brokerage and assurance advisory office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "INSURANCE_DISTRICT_OFFICE",
+      "title": "District Assurance & Home-Service Office",
+      "description": "District office for assurance policies and home-service collections."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "JEWELLER_AND_WATCHMAKER",
+      "title": "Jeweller & Horologist",
+      "description": "Retail jewellery, watch sales, and clock and watch repair."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "LOCAL_NEWSPAPER_OFFICE",
+      "title": "Borough Gazette & Editorial Office",
+      "description": "Local newspaper editorial, advertising, and publishing office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "OPHTHALMIC_OPTICIANS",
+      "title": "Ophthalmic Opticians",
+      "description": "Eye examination, spectacles, and optical dispensing practice."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "PRIVATE_LANDLORDS_OFFICE",
+      "title": "Private Landlord & Rent Collection Office",
+      "description": "Private property management and residential rent collection office."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "SOFT_DRINKS_DEPOT",
+      "title": "Mineral Water & Pop Delivery Depot",
+      "description": "Bottled soft drinks, mineral water, and delivery distribution depot."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TRAVEL_AGENCY",
+      "title": "High Street Travel Bureau",
+      "description": "Booking agency for holidays, rail, coach, and travel arrangements."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "TV_AND_WIRELESS_REPAIR",
+      "title": "Television & Wireless Rental & Repair",
+      "description": "Television and radio rental, sales, installation, and repair."
     },
 
     {
@@ -1087,6 +1194,12 @@
       "code": "LOCAL_GOVERNMENT",
       "title": "Municipal Administrative Hub & Town Hall",
       "description": "District centred on municipal administration and a town hall."
+    },
+    {
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "code": "POLICE_HQ",
+      "title": "Police Headquarters",
+      "description": "Regional police headquarters, specialist operations, and force control facilities."
     },
     {
       "domain": "ESTABLISHMENT_CATEGORY",
@@ -1889,6 +2002,72 @@
       "title": "Plater / Welder / Fabricator",
       "description": "Skilled industrial metal fabricator and welder."
     },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "CHARTERED_ACCOUNTANT",
+      "title": "Chartered Accountant & Auditor",
+      "description": "Qualified accountant and auditor providing professional financial services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "INSURANCE_BROKER",
+      "title": "Insurance Broker & Underwriter",
+      "description": "Insurance professional arranging policies and assessing underwriting risk."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ARCHITECT_SURVEYOR",
+      "title": "Architect / Chartered Surveyor",
+      "description": "Design, building assessment, and property surveying professional."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "OPHTHALMIC_OPTICIAN",
+      "title": "Ophthalmic Optician",
+      "description": "Qualified optician providing eye examinations and optical services."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "JOURNALIST_EDITOR",
+      "title": "Local Reporter & Sub-Editor",
+      "description": "Journalist reporting local news and editing submitted copy."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TRAVEL_CLERK",
+      "title": "Travel Agent & Booking Clerk",
+      "description": "Travel professional arranging journeys, reservations, and bookings."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ELECTRONICS_ENGINEER",
+      "title": "TV & Wireless Service Engineer",
+      "description": "Service engineer repairing and maintaining television and wireless equipment."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "TAILOR_DRESSMAKER",
+      "title": "Bespoke Tailor & Dressmaker",
+      "description": "Skilled maker producing tailored garments and dresses."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "INSURANCE_AGENT_COLLECTOR",
+      "title": "Home-Service Insurance Agent & Collector",
+      "description": "Field insurance agent selling policies and collecting customer payments."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "ROUNDSMAN_DELIVERY",
+      "title": "Door-to-Door Roundsman (Milk / Pop / Coal)",
+      "description": "Delivery worker serving a regular household round."
+    },
+    {
+      "domain": "ROLE_TITLE",
+      "code": "RENT_COLLECTOR_AGENT",
+      "title": "Rent & Weekly Check Collector",
+      "description": "Field agent collecting rent and conducting scheduled household checks."
+    },
 
     {
       "domain": "ROLE_TITLE",
@@ -2096,6 +2275,48 @@
       "code": "YOUTH_CONDUCT_ODD",
       "title": "Youth Conduct / Oppositional Profile",
       "description": "Adolescent pattern of authority defiance and rule violation."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_GAMBLING",
+      "title": "Compulsive Gambling Profile",
+      "description": "Persistent gambling compulsion that may drain pocket cash, household savings, or bank deposits."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_ALCOHOL",
+      "title": "Alcohol Dependence Profile",
+      "description": "Compulsive alcohol use that can reduce liquidity and increase household strain."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "ADDICTION_OPIATES",
+      "title": "Opiate Dependence Profile",
+      "description": "Compulsive opiate use with severe risk to personal, household, and credit liquidity."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "SECRET_AFFAIR_MISTRESS",
+      "title": "Secret Affair / Mistress Profile",
+      "description": "Covert extramarital relationship that creates recurring expenditure and personal blackmail exposure."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "CORRUPT_OFFICIAL",
+      "title": "Corrupt Official Profile",
+      "description": "Abuse of public or institutional authority for kickbacks, with corresponding blackmail vulnerability."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "HIDDEN_SEXUALITY_GAY",
+      "title": "Hidden Same-Sex Relationship Profile",
+      "description": "Covert same-sex relationship that may create secrecy costs and historical-period blackmail exposure."
+    },
+    {
+      "domain": "BEHAVIORAL_TAG",
+      "code": "HIDDEN_SEXUALITY_ILLEGAL",
+      "title": "Hidden Illegal Sexuality Profile",
+      "description": "Secret relationship carrying severe historical-period criminal prosecution and blackmail risk."
     }
   ]
 }

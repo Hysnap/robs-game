@@ -127,7 +127,7 @@ static func allocate_school_or_enclave_anchor(
 		inout_enrolled_counts[chosen_id] = int(inout_enrolled_counts.get(chosen_id, 0)) + 1
 	return chosen_id
 
-## Scores and selects the best open workplace job slot for a candidate using SpatialRadiusIndex + Education Tier + OCEAN Affinity + Commute Decay
+## Scores and selects the best open workplace job slot for a candidate in O(1) bounded probes
 static func match_best_job_slot_for_resident(
 	candidate: Dictionary,
 	open_slots: Array,
@@ -137,10 +137,11 @@ static func match_best_job_slot_for_resident(
 	estab_positions: Dictionary,
 	enable_commute: bool,
 	rng: RandomNumberGenerator,
-	slot_spatial_index: SpatialRadiusIndex = null,
-	max_search_radius_m: float = 15000.0
+	_slot_spatial_index: SpatialRadiusIndex = null,
+	_max_search_radius_m: float = 15000.0
 ) -> int:
-	if open_slots.is_empty():
+	var total_slots: int = open_slots.size()
+	if total_slots == 0:
 		return -1
 
 	assert(ocean_rules.has("job_matching_weights"), "FATAL: ocean_rules missing 'job_matching_weights'!")
@@ -158,48 +159,27 @@ static func match_best_job_slot_for_resident(
 	var best_idx: int = -1
 	var best_score: float = -1.0
 
-	# When spatial index + commute distances are active, query all open slots within the candidate's moving circle
-	if enable_commute and slot_spatial_index != null:
-		var nearby_slots: Array = slot_spatial_index.query_radius(cand_home_pos, max_search_radius_m, "")
-		var candidate_count: int = nearby_slots.size()
-		if candidate_count > 0:
-			var stride: int = maxi(1, ceili(float(candidate_count) / 96.0))
-			var offset: int = rng.randi_range(0, stride - 1) if stride > 1 else 0
-			var idx_cursor: int = offset
-			while idx_cursor < candidate_count:
-				var slot: Dictionary = nearby_slots[idx_cursor]
-				idx_cursor += stride
-				if bool(slot.get("_claimed", false)):
-					continue
-				var slot_idx: int = int(slot.get("_index", -1))
-				if slot_idx < 0 or slot_idx >= open_slots.size():
-					continue
-				var score: float = _score_job_slot(
-					slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
-					edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
-					exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
-				)
-				if score > best_score:
-					best_score = score
-					best_idx = slot_idx
-			return best_idx
+	# Bounded strided probe directly over shuffled, swap-and-popped open_slots (O(1) per resident)
+	var max_probes: int = mini(total_slots, 128)
+	var stride: int = maxi(1, floori(float(total_slots) / float(max_probes)))
+	var start_offset: int = rng.randi() % total_slots
+	var scored_count: int = 0
 
-	# Fallback bounded scan when commute distances are disabled or no spatial index is supplied
-	var total_slots: int = open_slots.size()
-	var sample_count: int = mini(total_slots, 64)
-	var start_offset: int = rng.randi_range(0, total_slots - 1) if total_slots > 1 else 0
-
-	for s_i in range(sample_count):
-		var slot_idx: int = (start_offset + s_i) % total_slots
+	for probe in range(max_probes):
+		var slot_idx: int = (start_offset + probe * stride) % total_slots
 		var slot: Dictionary = open_slots[slot_idx]
 		var score: float = _score_job_slot(
 			slot, cand_age, cand_edu_rank, cand_home_pos, cand_traits,
 			edu_rank_map, job_roles_cfg, estab_positions, enable_commute,
 			exact_edu_bonus, one_over_mult, two_over_mult, ocean_rules, rng
 		)
-		if score > best_score:
-			best_score = score
-			best_idx = slot_idx
+		if score > 0.0:
+			scored_count += 1
+			if score > best_score:
+				best_score = score
+				best_idx = slot_idx
+			if scored_count >= 24:
+				break
 
 	return best_idx
 

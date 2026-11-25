@@ -1,0 +1,10 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "INTIMIDATE",
+		"version": "1.0.0"
+	},
+	"delta": 4.5,
+	"metric_id": "NOTORIETY",
+	"target_role": "ACTOR"
+}

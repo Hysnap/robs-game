@@ -1,0 +1,30 @@
+{
+	"_meta": {
+		"description": "Crime flavour overlay extending INVESTIGATE form layout with STAKEOUT and CASE_JOINT modes.",
+		"flavour_overlay": "crime",
+		"verb_token": "INVESTIGATE",
+		"version": 1.0
+	},
+	"form_layout": {
+		"mode_section": {
+			"options": [
+				{
+					"id": "STAKEOUT",
+					"label_token": "UI_MODE_STAKEOUT"
+				},
+				{
+					"id": "CASE_JOINT",
+					"label_token": "UI_MODE_CASE_JOINT"
+				},
+				{
+					"id": "TAIL_TARGET",
+					"label_token": "UI_MODE_TAIL_TARGET"
+				}
+			]
+		}
+	},
+	"target_scopes": [
+		"RESIDENT",
+		"DISTRICT"
+	]
+}

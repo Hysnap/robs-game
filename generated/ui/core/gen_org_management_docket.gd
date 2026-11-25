@@ -132,42 +132,21 @@ func build_ui() -> void:
 	sec_active_mandates_section.add_child(sep_active_mandates_section)
 	add_child(sec_active_mandates_section)
 
+	var alloc_script_mandate_cohort_allocator := preload("res://scenes/ui/components/mandate_allocator_panel.gd")
+	var alloc_mandate_cohort_allocator := alloc_script_mandate_cohort_allocator.new()
+	alloc_mandate_cohort_allocator.name = "mandate_cohort_allocator"
+	alloc_mandate_cohort_allocator.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if has_signal("action_clicked"):
+		alloc_mandate_cohort_allocator.action_clicked.connect(func(code: String, payload: Dictionary) -> void: emit_signal("action_clicked", code, payload))
+	_value_labels["mandate_cohort_allocator"] = alloc_mandate_cohort_allocator
+	add_child(alloc_mandate_cohort_allocator)
+
 	var civic_box_mandate_cards := VBoxContainer.new()
 	civic_box_mandate_cards.name = "mandate_cards"
 	civic_box_mandate_cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	civic_box_mandate_cards.add_theme_constant_override("separation", 2)
 	_value_labels["mandate_cards"] = civic_box_mandate_cards
 	add_child(civic_box_mandate_cards)
-
-	var btn_btn_create_mandate := Button.new()
-	btn_btn_create_mandate.name = "btn_create_mandate"
-	btn_btn_create_mandate.text = tr("UI_BTN_CREATE_MANDATE")
-	btn_btn_create_mandate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_create_mandate.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_create_mandate.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_create_mandate.pressed.connect(func(): self.action_clicked.emit("create_org_mandate", {}))
-	_value_labels["btn_create_mandate"] = btn_btn_create_mandate
-	add_child(btn_btn_create_mandate)
-
-	var btn_btn_grant_assistance := Button.new()
-	btn_btn_grant_assistance.name = "btn_grant_assistance"
-	btn_btn_grant_assistance.text = tr("UI_BTN_GRANT_ASSISTANCE")
-	btn_btn_grant_assistance.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_grant_assistance.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_grant_assistance.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_grant_assistance.pressed.connect(func(): self.action_clicked.emit("grant_mandate_assistance", {}))
-	_value_labels["btn_grant_assistance"] = btn_btn_grant_assistance
-	add_child(btn_btn_grant_assistance)
-
-	var btn_btn_revoke_mandate := Button.new()
-	btn_btn_revoke_mandate.name = "btn_revoke_mandate"
-	btn_btn_revoke_mandate.text = tr("UI_BTN_REVOKE_MANDATE")
-	btn_btn_revoke_mandate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_btn_revoke_mandate.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	btn_btn_revoke_mandate.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	btn_btn_revoke_mandate.pressed.connect(func(): self.action_clicked.emit("revoke_org_mandate", {}))
-	_value_labels["btn_revoke_mandate"] = btn_btn_revoke_mandate
-	add_child(btn_btn_revoke_mandate)
 
 	# --- Section: collisions_and_reports_section ---
 	var sec_collisions_and_reports_section := VBoxContainer.new()
@@ -260,6 +239,15 @@ func bind_data(data: Dictionary) -> void:
 					btn.add_theme_color_override("font_color", clr_b)
 					btn.pressed.connect(func(): item_selected.emit("ORG_NODE_SELECTED", key_val))
 					ctrl.add_child(btn)
+	if _value_labels.has("mandate_cohort_allocator"):
+		var ctrl = _value_labels["mandate_cohort_allocator"]
+		if ctrl != null:
+			if ctrl.has_method("set_allocator_catalog"):
+				var cat_data = data.get("allocator_catalog", {})
+				ctrl.set_allocator_catalog(cat_data if cat_data is Dictionary else {})
+			if ctrl.has_method("set_selected_mandate_review"):
+				var rev_data = data.get("selected_mandate_review", {})
+				ctrl.set_selected_mandate_review(rev_data if rev_data is Dictionary else {})
 	if _value_labels.has("mandate_cards"):
 		var ctrl = _value_labels["mandate_cards"]
 		if ctrl is Container:

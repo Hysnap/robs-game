@@ -13,15 +13,19 @@ const ShellRegistryScript = preload("res://scenes/ui/shell_host/shell_registry.g
 const OperationsControllerScript = preload("res://systems/operations_controller.gd")
 const DesktopSlipStackScene = preload("res://scenes/ui/feedback/desktop_slip_stack.tscn")
 const IndicatorScene: PackedScene = preload("res://scenes/3d_scenes/indicators/district_indicator.tscn")
+const DistrictOverlayRendererScript = preload("res://scripts/world/district_overlay_renderer.gd")
+const MapOverlayProjectorScript = preload("res://systems/multilayer_info_loop/map_overlay_projector.gd")
 
 var view_host: ViewHost = null
 var shell_customizer: Control = null
 var feedback_inbox: Control = null
 var directive_modal: Control = null
 
-# Spatial indicators state
+# Spatial indicators & map overlay state
 var _district_ground_nodes: Dictionary = {} # block_id -> MeshInstance3D
 var _district_indicators: Dictionary = {}   # block_id -> Node3D (holder)
+var _overlay_renderer: Node3D = null
+var _active_map_overlay_id: String = "NONE"
 
 func _ready() -> void:
 	SystemLogger.log_info("[CityView] Initializing city view.")
@@ -52,6 +56,8 @@ func _ready() -> void:
 		game_hud.toggle_filofax_requested.connect(_toggle_workspace_visibility)
 		if game_hud.has_signal("toggle_messages_inbox_requested"):
 			game_hud.toggle_messages_inbox_requested.connect(_toggle_feedback_inbox_visibility)
+		if game_hud.has_signal("map_overlay_selected"):
+			game_hud.map_overlay_selected.connect(_on_map_overlay_selected)
 
 	# 4. Synchronize Seed & Visual Layout
 	var gs = ScenarioManifestManager.get_game_state()
@@ -60,6 +66,9 @@ func _ready() -> void:
 	if gs != null and "world_state" in gs:
 		active_seed = str(gs.world_state.get("metadata", {}).get("active_seed", "default-city"))
 		saved_layout = gs.world_state.get("city_layout", {})
+		var ui_state: Dictionary = gs.world_state.get("ui_state", {})
+		if ui_state.has("active_map_overlay"):
+			_active_map_overlay_id = str(ui_state["active_map_overlay"]).strip_edges().to_upper()
 
 		if gs.has_signal("turn_advanced"):
 			gs.turn_advanced.connect(func(_current_tick: int):
@@ -73,7 +82,7 @@ func _ready() -> void:
 	if not saved_layout.is_empty() and city_crafter.has_method("load_visual_layout"):
 		city_crafter.load_visual_layout(saved_layout)
 
-	# 5. Index District Nodes and Mount Visual Indicators
+	# 5. Index District Nodes and Mount Visual Indicators & Overlay Renderer
 	call_deferred("_initialize_spatial_ground_indicators")
 
 func _exit_tree() -> void:
@@ -83,6 +92,9 @@ func _exit_tree() -> void:
 		if is_instance_valid(indicator):
 			indicator.queue_free()
 	_district_indicators.clear()
+	if is_instance_valid(_overlay_renderer):
+		_overlay_renderer.queue_free()
+	_overlay_renderer = null
 	_district_ground_nodes.clear()
 
 func _validate_spatial_indicator_rules() -> void:
@@ -100,22 +112,48 @@ func _initialize_spatial_ground_indicators() -> void:
 			var b_id: String = child.get_meta("block_id")
 			_district_ground_nodes[b_id] = child
 
+	if _overlay_renderer == null or not is_instance_valid(_overlay_renderer):
+		_overlay_renderer = DistrictOverlayRendererScript.new()
+		_overlay_renderer.name = "DistrictOverlayRenderer"
+		city_crafter.add_child(_overlay_renderer)
+
+	if _overlay_renderer.has_method("bind_district_ground_nodes"):
+		_overlay_renderer.bind_district_ground_nodes(_district_ground_nodes)
+
+	if game_hud != null and game_hud.has_method("set_selected_map_overlay"):
+		game_hud.set_selected_map_overlay(_active_map_overlay_id)
+
 	refresh_all_district_indicators()
 
 func refresh_all_district_indicators() -> void:
+	var perceived_views: Dictionary = {}
+	var gs = ScenarioManifestManager.get_game_state()
+
 	for b_id in _district_ground_nodes.keys():
-		refresh_district_indicator(b_id)
+		var view_data: Dictionary = {}
+		if gs != null and gs.has_method("get_district_view"):
+			view_data = gs.get_district_view(b_id)
+		perceived_views[b_id] = view_data
+		_apply_district_indicator_view(b_id, view_data)
+
+	_refresh_map_overlay(perceived_views)
 
 func refresh_district_indicator(block_id: String) -> void:
 	if not _district_ground_nodes.has(block_id):
 		return
 
-	var ground_mesh: MeshInstance3D = _district_ground_nodes[block_id]
 	var gs = ScenarioManifestManager.get_game_state()
 	var view_data: Dictionary = {}
 	if gs != null and gs.has_method("get_district_view"):
 		view_data = gs.get_district_view(block_id)
 
+	_apply_district_indicator_view(block_id, view_data)
+
+func _apply_district_indicator_view(block_id: String, view_data: Dictionary) -> void:
+	if not _district_ground_nodes.has(block_id):
+		return
+
+	var ground_mesh: MeshInstance3D = _district_ground_nodes[block_id]
 	var indicator: DistrictIndicator = _district_indicators.get(block_id, null)
 	if indicator == null or not is_instance_valid(indicator):
 		indicator = IndicatorScene.instantiate() as DistrictIndicator
@@ -124,6 +162,37 @@ func refresh_district_indicator(block_id: String) -> void:
 		_district_indicators[block_id] = indicator
 
 	indicator.update_from_view_data(view_data)
+
+func _on_map_overlay_selected(overlay_id: String) -> void:
+	_active_map_overlay_id = overlay_id.strip_edges().to_upper()
+	if _active_map_overlay_id.is_empty():
+		_active_map_overlay_id = "NONE"
+
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs != null and "world_state" in gs:
+		if not gs.world_state.has("ui_state") or not (gs.world_state["ui_state"] is Dictionary):
+			gs.world_state["ui_state"] = {}
+		gs.world_state["ui_state"]["active_map_overlay"] = _active_map_overlay_id
+
+	refresh_all_district_indicators()
+
+func _refresh_map_overlay(perceived_views: Dictionary) -> void:
+	if _overlay_renderer == null or not is_instance_valid(_overlay_renderer):
+		return
+
+	var gs = ScenarioManifestManager.get_game_state()
+	var ws: Dictionary = gs.world_state if (gs != null and "world_state" in gs) else {}
+	var projection: Dictionary = MapOverlayProjectorScript.project_city_overlay(
+		_active_map_overlay_id,
+		perceived_views,
+		ws
+	)
+
+	if _overlay_renderer.has_method("apply_projection"):
+		_overlay_renderer.apply_projection(projection)
+
+	if game_hud != null and game_hud.has_method("set_overlay_legend"):
+		game_hud.set_overlay_legend(projection.get("legend", []))
 
 func _get_active_calendar_year() -> int:
 	var gs = ScenarioManifestManager.get_game_state()
@@ -168,6 +237,7 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 	
 	# Sub-Docket Inspection Views
 	view_host.register_view("ESTABLISHMENT_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_establishment_docket.gd", current_year))
+	view_host.register_view("STREET_RESIDENCES", ShellRegistryScript.instantiate_generated_view("gen_street_residences_docket.gd", current_year))
 	view_host.register_view("RESIDENTIAL_DOCKET", ShellRegistryScript.instantiate_generated_view("gen_residential_docket.gd", current_year))
 	view_host.register_view("OPERATIVE_DOSSIER", ShellRegistryScript.instantiate_generated_view("gen_operative_dossier.gd", current_year))
 	

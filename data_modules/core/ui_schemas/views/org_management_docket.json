@@ -2,7 +2,7 @@
   "_meta": {
     "target_class": "GenOrgManagementDocket",
     "extends": "VBoxContainer",
-    "description": "Organization hierarchy, active 4-axis delegated mandates, managerial reports, and dyadic scope collisions."
+    "description": "Organization hierarchy, active 4-axis delegated mandates, cohort allocation composer, managerial reports, and dyadic scope collisions."
   },
   "sections": [
     {
@@ -55,6 +55,13 @@
       "header_token": "UI_ORG_MANDATES_HDR",
       "rows": [
         {
+          "id": "mandate_cohort_allocator",
+          "type": "MANDATE_ALLOCATOR",
+          "catalog_field": "allocator_catalog",
+          "review_field": "selected_mandate_review",
+          "action_signal": "action_clicked"
+        },
+        {
           "id": "mandate_cards",
           "type": "LINKED_LIST",
           "field": "active_mandates",
@@ -64,27 +71,6 @@
           "sublabel_field": "scope_summary",
           "action_signal": "item_selected",
           "autowrap": true
-        },
-        {
-          "id": "btn_create_mandate",
-          "type": "BUTTON",
-          "token": "UI_BTN_CREATE_MANDATE",
-          "action_signal": "action_clicked",
-          "emit_args": "\"create_org_mandate\", {}"
-        },
-        {
-          "id": "btn_grant_assistance",
-          "type": "BUTTON",
-          "token": "UI_BTN_GRANT_ASSISTANCE",
-          "action_signal": "action_clicked",
-          "emit_args": "\"grant_mandate_assistance\", {}"
-        },
-        {
-          "id": "btn_revoke_mandate",
-          "type": "BUTTON",
-          "token": "UI_BTN_REVOKE_MANDATE",
-          "action_signal": "action_clicked",
-          "emit_args": "\"revoke_org_mandate\", {}"
         }
       ]
     },

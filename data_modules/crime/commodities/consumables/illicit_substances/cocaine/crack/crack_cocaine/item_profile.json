@@ -1,0 +1,24 @@
+{
+	"_meta": {
+		"module": "crime",
+		"scope": "COMMODITY_PROFILE",
+		"version": "1.0.0"
+	},
+	"base_cost": 15.0,
+	"category": "CONSUMABLES",
+	"decay_properties": {
+		"shelf_life_ticks": 18
+	},
+	"demand_profile": {
+		"base_per_capita_daily": 0.012,
+		"legality": "ILLEGAL",
+		"primary_driver": "HABIT_LED"
+	},
+	"display_name": "UI_ITEM_CRACK_COCAINE",
+	"id": "CRACK_COCAINE",
+	"tags": [
+		"ILLICIT",
+		"STIMULANT",
+		"COCAINE"
+	]
+}

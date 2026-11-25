@@ -5,7 +5,7 @@ extends RefCounted
 const CONDITION_EVALUATOR = preload("res://systems/condition_evaluator.gd")
 const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_manager.gd")
-const FOG_OF_WAR_PATH := "res://data_modules/core/spatial/districts/fog_of_war_rules.json"
+const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 
 static var _rules_cache: Dictionary = {}
 static var _metric_profiles_cache: Array = []
@@ -15,23 +15,17 @@ static func reset_cache() -> void:
 	_rules_cache.clear()
 	_metric_profiles_cache.clear()
 
-## Loads rules dynamically from manifest ("fog_of_war") or fog_of_war_rules.json
+## Loads rules strictly from the active scenario manifest ("fog_of_war")
 static func _get_rules() -> Dictionary:
 	if not _rules_cache.is_empty():
 		return _rules_cache
 
-	var parsed: Dictionary = {}
-	if ScenarioManifestManagerScript.has_module("fog_of_war"):
-		parsed = ScenarioManifestManagerScript.load_module("fog_of_war")
-	else:
-		assert(FileAccess.file_exists(FOG_OF_WAR_PATH),
-			"FATAL: [DistrictPerceptionFilter] fog_of_war_rules.json not found at: %s" % FOG_OF_WAR_PATH)
-		var f := FileAccess.open(FOG_OF_WAR_PATH, FileAccess.READ)
-		assert(f != null, "FATAL: [DistrictPerceptionFilter] Failed to open: %s" % FOG_OF_WAR_PATH)
-		var raw = JSON.parse_string(f.get_as_text())
-		assert(raw is Dictionary, "FATAL: [DistrictPerceptionFilter] Root must be a Dictionary in: %s" % FOG_OF_WAR_PATH)
-		parsed = raw
+	assert(ScenarioManifestManagerScript.has_module("fog_of_war"),
+		"FATAL: [DistrictPerceptionFilter] Active scenario manifest missing required 'fog_of_war' module registration.")
 
+	var parsed: Dictionary = ScenarioManifestManagerScript.load_module("fog_of_war")
+	assert(not parsed.is_empty(),
+		"FATAL: [DistrictPerceptionFilter] Loaded empty 'fog_of_war' module from scenario manifest.")
 	assert(parsed.has("general"), "FATAL: [DistrictPerceptionFilter] Missing 'general' section in fog_of_war rules.")
 	assert(parsed.has("field_access"), "FATAL: [DistrictPerceptionFilter] Missing 'field_access' section in fog_of_war rules.")
 
@@ -99,27 +93,41 @@ static func _extract_channel_specs(perception_block: Dictionary) -> Array:
 
 	return specs
 
-## Resolves continuous 0-100 score strictly from player_context["intel_scores"] or sparse knowledge_pools (zero fallbacks)
-static func _resolve_entity_score(player_context: Dictionary, target_scope: String, target_id: String) -> float:
+## Resolves continuous 0-100 score and report age_days strictly from player_context or knowledge_pools
+static func _resolve_entity_intel_status(player_context: Dictionary, target_scope: String, target_id: String) -> Dictionary:
 	assert(not target_id.is_empty(), "FATAL: [DistrictPerceptionFilter] target_id cannot be empty.")
-	assert(not player_context.has("known_districts"),
-		"FATAL: [DistrictPerceptionFilter] Legacy binary visibility arrays ('known_districts') are retired. Supply 'intel_scores' or ('world_state' + 'observers').")
+	assert(not player_context.has("known_districts") and not player_context.has("known_establishments"),
+		"FATAL: [DistrictPerceptionFilter] Legacy binary visibility arrays ('known_districts'/'known_establishments') are retired. Supply 'intel_scores' or ('world_state' + 'observers').")
 
 	var explicit_scores = player_context.get("intel_scores", null)
 	if explicit_scores is Dictionary:
 		var compound_key := "%s:%s" % [target_scope.to_upper(), target_id]
+		var score_val: float = 0.0
 		if explicit_scores.has(compound_key):
-			return clampf(float(explicit_scores[compound_key]), 0.0, 100.0)
-		if explicit_scores.has(target_id):
-			return clampf(float(explicit_scores[target_id]), 0.0, 100.0)
-		return 0.0
+			score_val = clampf(float(explicit_scores[compound_key]), 0.0, 100.0)
+		elif explicit_scores.has(target_id):
+			score_val = clampf(float(explicit_scores[target_id]), 0.0, 100.0)
+
+		var age_days: int = -1
+		var explicit_ages = player_context.get("intel_ages", null)
+		if explicit_ages is Dictionary:
+			if explicit_ages.has(compound_key):
+				age_days = int(explicit_ages[compound_key])
+			elif explicit_ages.has(target_id):
+				age_days = int(explicit_ages[target_id])
+
+		return {
+			"score": score_val,
+			"last_updated_day": -1,
+			"age_days": age_days
+		}
 
 	var world_state = player_context.get("world_state", null)
 	var observers = player_context.get("observers", null)
 	assert(world_state is Dictionary and observers is Array,
 		"FATAL: [DistrictPerceptionFilter] player_context must provide either 'intel_scores' Dictionary or ('world_state' Dictionary + 'observers' Array).")
 
-	return IntelManagerScript.get_collective_score(world_state, observers, target_scope, target_id)
+	return IntelManagerScript.get_collective_intel_status(world_state, observers, target_scope, target_id)
 
 ## Builds an attenuated copy of a perception channel spec scaled by the entity's 0-100 intel score
 static func _attenuate_channel_spec(spec: Dictionary, score: float) -> Dictionary:
@@ -148,7 +156,9 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 	var metric_profiles: Array = _get_perceived_metric_profiles()
 
 	var is_landmark: bool = bool(raw_data.get("is_public_landmark", false))
-	var district_score: float = _resolve_entity_score(player_context, "DISTRICT", district_id)
+	var intel_status_info: Dictionary = _resolve_entity_intel_status(player_context, "DISTRICT", district_id)
+	var district_score: float = float(intel_status_info.get("score", 0.0))
+	var intel_age_days: int = int(intel_status_info.get("age_days", -1))
 	if is_landmark and district_score < 20.0:
 		district_score = 20.0
 
@@ -161,6 +171,7 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 	view_data["is_known"] = is_known
 	view_data["is_home_turf"] = is_home_turf
 	view_data["intel_score"] = district_score
+	view_data["intel_age_days"] = intel_age_days
 
 	# 1. Masked / Fog-of-War District (Below existence threshold)
 	if not is_known:
@@ -185,9 +196,13 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 
 		return view_data
 
-	# 2. Discovered District Intel Status
+	# 2. Discovered District Intel Status (Low-confidence OR aged past stale_decay_threshold_days)
 	var status_tok: String = str(general_cfg.get("verified_intel_token", "INTEL_STATUS_VERIFIED"))
-	if district_score < 40.0:
+	var stale_days_limit: int = int(general_cfg.get("stale_decay_threshold_days", 28))
+	var temporal_decay_enabled: bool = bool(general_cfg.get("enable_temporal_decay", true))
+	var is_aged_stale: bool = (temporal_decay_enabled and intel_age_days > stale_days_limit)
+
+	if district_score < 40.0 or is_aged_stale:
 		status_tok = str(general_cfg.get("stale_intel_token", "INTEL_STATUS_STALE"))
 
 	view_data["intel_status"] = status_tok
@@ -252,20 +267,24 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 			var k_str := str(k)
 			if k_str in universally_known or k_str in engine_metadata or k_str in perceived_output_fields:
 				continue
-			if k_str in ["is_known", "is_home_turf", "is_surveyed", "intel_score", "intel_status", "intel_status_token"]:
+			if k_str in ["is_known", "is_home_turf", "is_surveyed", "intel_score", "intel_age_days", "intel_status", "intel_status_token"]:
 				continue
 			if not exposed_district_fields.has(k_str):
 				view_data.erase(k_str)
 
-	# 6. Filter & Project Sub-Entity Establishment Records by Individual 0-100 Score
+	# 6. Filter & Project Sub-Entity Establishment Records by Individual 0-100 Score & Freshness
 	var raw_estabs: Array = view_data.get("establishments_summary", [])
 	var perceived_estabs: Array = []
 
 	for estab in raw_estabs:
 		if not (estab is Dictionary):
 			continue
+		if str(estab.get("category_code", "")) == "RESIDENTIAL_UNIT":
+			continue
 		var estab_id: String = str(estab.get("establishment_id", ""))
-		var estab_score: float = _resolve_entity_score(player_context, "ESTABLISHMENT", estab_id)
+		var estab_intel: Dictionary = _resolve_entity_intel_status(player_context, "ESTABLISHMENT", estab_id)
+		var estab_score: float = float(estab_intel.get("score", 0.0))
+		var estab_age: int = int(estab_intel.get("age_days", -1))
 		if bool(estab.get("is_public_landmark", false)) and estab_score < 20.0:
 			estab_score = 20.0
 		if not IntelManagerScript.is_entity_known(estab_score, "ESTABLISHMENT"):
@@ -283,8 +302,26 @@ static func filter_district_view(raw_data: Dictionary, player_context: Dictionar
 
 		var projected_estab := IntelManagerScript.project_record(e_copy, estab_score, "ESTABLISHMENT")
 		projected_estab["intel_score"] = estab_score
+		projected_estab["intel_age_days"] = estab_age
+		projected_estab["is_stale"] = (estab_score < 40.0 or (temporal_decay_enabled and estab_age > stale_days_limit))
 		perceived_estabs.append(projected_estab)
 
 	if view_data.has("establishments_summary"):
 		view_data["establishments_summary"] = perceived_estabs
+
+	# 7. Group Residential Addresses by Road Name / Building Name (with drill-down to house/flat numbers)
+	var street_groups: Array[Dictionary] = SocietyQueriesScript.get_district_residential_streets(district_id, player_context)
+	var residential_streets_summary: Array[Dictionary] = []
+	var units_lbl: String = str(TranslationServer.translate("UI_LBL_RESIDENTIAL_UNITS"))
+	for grp in street_groups:
+		var s_name: String = str(grp.get("street_name", ""))
+		var u_count: int = int(grp.get("known_unit_count", 0))
+		if s_name.is_empty() or u_count <= 0:
+			continue
+		residential_streets_summary.append({
+			"street_key": "%s::%s" % [district_id, s_name],
+			"street_name": s_name,
+			"summary_line": "%d %s" % [u_count, units_lbl]
+		})
+	view_data["residential_streets_summary"] = residential_streets_summary
 	return view_data

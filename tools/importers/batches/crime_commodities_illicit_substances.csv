@@ -1,0 +1,11 @@
+id,module,category,subpath,display_name_token,base_cost,label_en,legality,primary_driver,base_per_capita_daily,shelf_life_ticks,tags,impact_verb,impact_metric,impact_model,impact_factor
+AMPHETAMINE_SULPHATE,crime,consumables,illicit_substances/amphetamine/sulphate,UI_ITEM_AMPHETAMINE_SULPHATE,8.00,Amphetamine Sulphate,ILLEGAL,HABIT_LED,0.015,24,ILLICIT|STIMULANT|AMPHETAMINE,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.25
+CRYSTAL_METH,crime,consumables,illicit_substances/amphetamine/methamphetamine,UI_ITEM_CRYSTAL_METH,25.00,Crystal Methamphetamine,ILLEGAL,HABIT_LED,0.005,48,ILLICIT|STIMULANT|AMPHETAMINE,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.65
+CANNABIS_RESIN,crime,consumables,illicit_substances/cannabis/resin,UI_ITEM_CANNABIS_RESIN,5.00,Cannabis Resin,ILLEGAL,HABIT_LED,0.045,36,ILLICIT|CANNABIS|RESIN,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.10
+CANNABIS_HERBAL,crime,consumables,illicit_substances/cannabis/herbal,UI_ITEM_CANNABIS_HERBAL,6.50,Herbal Cannabis,ILLEGAL,HABIT_LED,0.035,16,ILLICIT|CANNABIS|HERBAL,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.12
+CANNABIS_SKUNK,crime,consumables,illicit_substances/cannabis/skunk,UI_ITEM_CANNABIS_SKUNK,10.00,Sinsemilla Skunk,ILLEGAL,HABIT_LED,0.025,16,ILLICIT|CANNABIS|SKUNK,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.20
+COCAINE_HYDROCHLORIDE,crime,consumables,illicit_substances/cocaine/powder,UI_ITEM_COCAINE_HYDROCHLORIDE,45.00,Cocaine Powder,ILLEGAL,STATUS_LED,0.010,30,ILLICIT|STIMULANT|COCAINE,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.50
+CRACK_COCAINE,crime,consumables,illicit_substances/cocaine/crack,UI_ITEM_CRACK_COCAINE,15.00,Crack Cocaine,ILLEGAL,HABIT_LED,0.012,18,ILLICIT|STIMULANT|COCAINE,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.75
+HEROIN_BROWN,crime,consumables,illicit_substances/opiates/heroin,UI_ITEM_HEROIN_BROWN,20.00,Brown Heroin (No. 3),ILLEGAL,HABIT_LED,0.012,30,ILLICIT|OPIATE|HEROIN,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.70
+HEROIN_WHITE,crime,consumables,illicit_substances/opiates/heroin,UI_ITEM_HEROIN_WHITE,35.00,White Heroin (No. 4),ILLEGAL,HABIT_LED,0.006,36,ILLICIT|OPIATE|HEROIN,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.85
+DIVERTED_MORPHINE,crime,consumables,illicit_substances/opiates/pharmaceutical,UI_ITEM_DIVERTED_MORPHINE,18.00,Diverted Morphine Ampoules,ILLEGAL,HABIT_LED,0.004,52,ILLICIT|OPIATE|PHARMACEUTICAL,sell,POLICE_HEAT,LINEAR_PER_UNIT,0.40

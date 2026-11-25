@@ -190,11 +190,14 @@ func _mutate_path(world_state: Dictionary, template: String, tokens: Dictionary,
 		var key := _expand_segment(raw_segments[i], tokens)
 		if key.is_empty() or not (cur_node is Dictionary):
 			return false
-		if not cur_node.has(key) or not (cur_node[key] is Dictionary):
+		var resolved_key: Variant = key
+		if not cur_node.has(resolved_key) and key.is_valid_int() and cur_node.has(int(key)):
+			resolved_key = int(key)
+		if not cur_node.has(resolved_key) or not (cur_node[resolved_key] is Dictionary):
 			if not allow_create:
 				return false
-			cur_node[key] = {}
-		cur_node = cur_node[key]
+			cur_node[resolved_key] = {}
+		cur_node = cur_node[resolved_key]
 
 	if not (cur_node is Dictionary):
 		return false

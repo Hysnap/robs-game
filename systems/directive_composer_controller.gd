@@ -8,8 +8,23 @@ const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_man
 const DBManagerScript = preload("res://systems/db_manager.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
+static var _variant_synced: bool = false
+
+## Synchronizes VerbRouter and TargetDomainRegistry with the active scenario flavour/variant
+static func sync_active_variant(explicit_variant: String = "") -> String:
+	var variant: String = explicit_variant.strip_edges()
+	if variant.is_empty():
+		var manifest: Dictionary = ScenarioManifestManager.get_manifest()
+		variant = str(manifest.get("active_variant", manifest.get("flavour", ""))).strip_edges()
+	VerbRouterScript.initialize(variant)
+	TargetDomainRegistryScript.initialize(variant)
+	_variant_synced = true
+	return variant
+
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:
+	if not _variant_synced:
+		sync_active_variant()
 	var raw_verbs: Array[String] = VerbRouterScript.get_registered_verbs()
 	var visible_verbs: Array[String] = []
 	for verb_token in raw_verbs:
@@ -90,6 +105,70 @@ static func get_form_layout(verb_token: String) -> Dictionary:
 	assert(layout is Dictionary and not layout.is_empty(), "FATAL: [DirectiveComposerController] Verb '%s' scope file missing 'form_layout' dictionary." % clean_verb)
 
 	return layout
+
+## Evaluates cascading section defaults and 'visible_when' predicates to produce a resolved form layout snapshot
+static func resolve_effective_form_layout(verb_token: String, selected_params: Dictionary = {}) -> Dictionary:
+	var base_layout: Dictionary = get_form_layout(verb_token)
+	var effective: Dictionary = base_layout.duplicate(true)
+
+	# 1. Seed default cascading values (intent_section / mode_section) then overlay user selections
+	var eval_params: Dictionary = {}
+	for cascade_key in ["intent_section", "mode_section"]:
+		var sec: Dictionary = effective.get(cascade_key, {})
+		if sec is Dictionary and bool(sec.get("visible", false)):
+			var mapped: String = str(sec.get("mapped_field", "")).strip_edges().to_lower()
+			var def_val: String = str(sec.get("default_value", "")).strip_edges()
+			if def_val.is_empty() and sec.get("options") is Array and not sec["options"].is_empty():
+				var first_opt = sec["options"][0]
+				if first_opt is Dictionary:
+					def_val = str(first_opt.get("id", first_opt.get("value", ""))).strip_edges()
+			if not mapped.is_empty() and not def_val.is_empty():
+				eval_params[mapped] = def_val
+
+	for k in selected_params.keys():
+		var clean_k: String = str(k).strip_edges().to_lower()
+		var clean_v: String = str(selected_params[k]).strip_edges()
+		if not clean_k.is_empty() and not clean_v.is_empty():
+			eval_params[clean_k] = clean_v
+
+	# 2. Evaluate 'visible_when' rules on every layout section
+	for sec_key in effective.keys():
+		var sec_val = effective[sec_key]
+		if not (sec_val is Dictionary):
+			continue
+		var sec: Dictionary = sec_val
+		var is_vis: bool = bool(sec.get("visible", true))
+		var visible_when = sec.get("visible_when", null)
+		if is_vis and visible_when is Dictionary:
+			for cond_field in visible_when.keys():
+				var active_val: String = str(eval_params.get(str(cond_field).strip_edges().to_lower(), "")).strip_edges().to_upper()
+				var expected = visible_when[cond_field]
+				if expected is Array:
+					var matched: bool = false
+					for allowed in expected:
+						if active_val == str(allowed).strip_edges().to_upper():
+							matched = true
+							break
+					if not matched:
+						is_vis = false
+						break
+				else:
+					if active_val != str(expected).strip_edges().to_upper():
+						is_vis = false
+						break
+		sec["visible"] = is_vis
+		sec["effective_required"] = bool(sec.get("required", false)) and is_vis
+
+	return effective
+
+## Returns the active cascading section dictionary (intent_section or mode_section) if visible, else {}
+static func get_cascading_section(layout: Dictionary) -> Dictionary:
+	for cascade_key in ["intent_section", "mode_section"]:
+		if layout.has(cascade_key) and layout[cascade_key] is Dictionary:
+			var sec: Dictionary = layout[cascade_key]
+			if bool(sec.get("visible", false)):
+				return sec
+	return {}
 
 ## Returns true if the verb's composer form should display financial cost telemetry
 static func should_show_telemetry(verb_token: String) -> bool:
@@ -238,7 +317,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		push_error("[DirectiveComposerController REJECTED] Verb cannot be empty.")
 		return {}
 
-	var layout := get_form_layout(verb)
+	var layout := resolve_effective_form_layout(verb, form_data)
 	var initiator_val: Variant = _normalize_entity_id(form_data.get("initiator_id", "PLAYER"))
 	if initiator_val is String and str(initiator_val).is_empty():
 		initiator_val = "PLAYER"
@@ -257,11 +336,22 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 		}
 	}
 
+	# 0. Cascading Intent / Mode Section (Optional)
+	var cascade_cfg: Dictionary = get_cascading_section(layout)
+	if not cascade_cfg.is_empty():
+		var cascade_field: String = str(cascade_cfg.get("mapped_field", "intent")).strip_edges()
+		var cascade_val: String = str(form_data.get(cascade_field, cascade_cfg.get("default_value", ""))).strip_edges().to_upper()
+		if bool(cascade_cfg.get("effective_required", false)) and cascade_val.is_empty():
+			push_error("[DirectiveComposerController REJECTED] Cascading field '%s' is required for verb '%s'." % [cascade_field, verb])
+			return {}
+		if not cascade_field.is_empty() and not cascade_val.is_empty():
+			directive[cascade_field] = cascade_val
+
 	# 1. Target Section (Item / Entity)
 	var target_cfg: Dictionary = layout.get("target_section", {})
 	var target_field: String = str(target_cfg.get("mapped_field", "item_id"))
 	var target_val: String = str(form_data.get("target_item", form_data.get("item_id", ""))).strip_edges()
-	if bool(target_cfg.get("required", false)) and target_val.is_empty():
+	if bool(target_cfg.get("effective_required", target_cfg.get("required", false))) and target_val.is_empty():
 		push_error("[DirectiveComposerController REJECTED] Target is required for verb '%s'." % verb)
 		return {}
 	if not target_val.is_empty():
@@ -273,7 +363,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var amount_cfg: Dictionary = layout.get("amount_section", {})
 	var amount_field: String = str(amount_cfg.get("mapped_field", "amount"))
 	var raw_amount: float = float(form_data.get("amount", amount_cfg.get("default_value", 1.0)))
-	if bool(amount_cfg.get("required", false)) and raw_amount <= 0.0:
+	if bool(amount_cfg.get("effective_required", amount_cfg.get("required", false))) and raw_amount <= 0.0:
 		push_error("[DirectiveComposerController REJECTED] Amount/Duration must be > 0.0 for verb '%s'." % verb)
 		return {}
 	directive["amount"] = raw_amount
@@ -285,7 +375,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	if not rail_cfg.is_empty():
 		var rail_field: String = str(rail_cfg.get("mapped_field", "rail_code"))
 		var rail_val: String = str(form_data.get("rail_code", form_data.get("settlement_rail", ""))).strip_edges().to_upper()
-		if bool(rail_cfg.get("required", false)) and rail_val.is_empty():
+		if bool(rail_cfg.get("effective_required", rail_cfg.get("required", false))) and rail_val.is_empty():
 			push_error("[DirectiveComposerController REJECTED] Settlement rail is required for verb '%s'." % verb)
 			return {}
 		if not rail_val.is_empty():
@@ -305,7 +395,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var loc_id: Variant = _normalize_entity_id(form_data.get("target_node_id", ""))
 	var loc_empty: bool = (loc_id is int and loc_id <= 0) or (loc_id is String and str(loc_id).is_empty())
 	var loc_name: String = str(form_data.get("target_node_name", str(loc_id))).strip_edges()
-	if bool(loc_cfg.get("required", false)) and loc_empty:
+	if bool(loc_cfg.get("effective_required", loc_cfg.get("required", false))) and loc_empty:
 		push_error("[DirectiveComposerController REJECTED] Target location is required for verb '%s'." % verb)
 		return {}
 	if not loc_empty:
@@ -321,7 +411,7 @@ static func build_and_validate_directive(form_data: Dictionary) -> Dictionary:
 	var raw_contact: Variant = form_data.get("counterparty_id", form_data.get("target_resident_id", ""))
 	var contact_id: Variant = _normalize_entity_id(raw_contact)
 	var contact_empty: bool = (contact_id is int and contact_id <= 0) or (contact_id is String and str(contact_id).is_empty())
-	if bool(contact_cfg.get("required", false)) and contact_empty:
+	if bool(contact_cfg.get("effective_required", contact_cfg.get("required", false))) and contact_empty:
 		push_error("[DirectiveComposerController REJECTED] Contact/Counterparty is required for verb '%s'." % verb)
 		return {}
 	if not contact_empty:

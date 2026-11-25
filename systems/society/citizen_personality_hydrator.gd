@@ -2,8 +2,6 @@
 class_name CitizenPersonalityHydrator
 extends RefCounted
 
-const CONDITION_EVAL = preload("res://systems/condition_evaluator.gd")
-
 ## Resolves the canonical OCEAN trait list strictly from ocean_personality_rules.json
 static func _resolve_trait_keys(ocean_rules: Dictionary) -> Array:
 	assert(ocean_rules.has("traits") and ocean_rules["traits"] is Array and not ocean_rules["traits"].is_empty(), "FATAL: ocean_rules missing non-empty 'traits' array!")
@@ -35,6 +33,17 @@ static func _apply_polarity_exponent(val: float, baseline: float, exponent: floa
 	var sign_dir: float = -1.0 if offset < 0.0 else 1.0
 	var mag: float = clampf(absf(offset) * 2.0, 0.0, 1.0)
 	return baseline + (sign_dir * pow(mag, exponent) * 0.5)
+
+## Resolves a direct or inverted ('inverse_<axis>') trait score from the resident's trait dictionary
+static func _resolve_propensity_axis_value(traits: Dictionary, axis_key: String, neutral_base: float) -> float:
+	if axis_key.begins_with("inverse_"):
+		var base_key: String = axis_key.trim_prefix("inverse_")
+		if traits.has(base_key):
+			return 1.0 - float(traits[base_key])
+		return neutral_base
+	if traits.has(axis_key):
+		return float(traits[axis_key])
+	return neutral_base
 
 ## Resolves the district archetype's ocean_nudges dictionary from archetypes.json
 static func get_archetype_nudges(archetypes_cfg: Dictionary, archetype_id: String) -> Dictionary:
@@ -160,7 +169,7 @@ static func roll_child_traits(
 
 	return traits
 
-## Hydrates cognitive (iq_score, mental_agility), dark/empathy axes, and sparse neurodivergent/clinical tags onto a trait dictionary
+## Hydrates cognitive (iq_score, mental_agility), dark/empathy axes, and Single Normalized Propensity Curve tags onto a trait dictionary
 static func populate_cognitive_and_clinical_profile(
 	traits: Dictionary,
 	ocean_rules: Dictionary,
@@ -173,7 +182,7 @@ static func populate_cognitive_and_clinical_profile(
 	assert(ocean_rules.has("baseline_distribution"), "FATAL: ocean_rules missing 'baseline_distribution'!")
 	assert(ocean_rules.has("cognitive_model"), "FATAL: ocean_rules missing 'cognitive_model'!")
 	assert(ocean_rules.has("dark_and_empathy_axes"), "FATAL: ocean_rules missing 'dark_and_empathy_axes'!")
-	assert(ocean_rules.has("tag_roll_parameters"), "FATAL: ocean_rules missing 'tag_roll_parameters'!")
+	assert(ocean_rules.has("propensity_curve_defaults"), "FATAL: ocean_rules missing 'propensity_curve_defaults'!")
 	assert(ocean_rules.has("neurodivergence_and_clinical_profiles"), "FATAL: ocean_rules missing 'neurodivergence_and_clinical_profiles'!")
 
 	var dist: Dictionary = ocean_rules["baseline_distribution"]
@@ -181,8 +190,7 @@ static func populate_cognitive_and_clinical_profile(
 	var preset: Dictionary = _resolve_active_preset(ocean_rules, preset_override)
 	var tail_mult: float = float(preset["iq_tail_weight_multiplier"])
 	var dark_spread_mult: float = float(preset["dark_trait_spread_multiplier"])
-	var prev_mult: float = float(preset["profile_prevalence_multiplier"])
-	var trig_boost_mult: float = float(preset["profile_trigger_boost_multiplier"])
+	var prop_sd_mult: float = float(preset.get("propensity_std_dev_multiplier", 1.0))
 
 	var cog: Dictionary = ocean_rules["cognitive_model"]
 	var iq_ref_mean: float = float(cog["iq_reference_mean"])
@@ -258,13 +266,14 @@ static func populate_cognitive_and_clinical_profile(
 	var power_entitlement: float = snappedf(clampf(ent_raw, d_min, d_max), 0.001)
 	traits["power_entitlement"] = power_entitlement
 
-	# 3. Sparse Neurodivergence & Clinical Behavioral Tags (Declarative ConditionEvaluator Rules)
-	var tag_roll_cfg: Dictionary = ocean_rules["tag_roll_parameters"]
-	var max_tag_prob: float = float(tag_roll_cfg["max_tag_probability"])
-	var sev_mean: float = float(tag_roll_cfg["severity_mean"])
-	var sev_sd: float = float(tag_roll_cfg["severity_std_dev"])
-	var sev_min: float = float(tag_roll_cfg["severity_min"])
-	var sev_max: float = float(tag_roll_cfg["severity_max"])
+	# 3. Single Normalized Propensity Curve Tag Evaluation (uniform >= cutoff right-tail rule)
+	var curve_cfg: Dictionary = ocean_rules["propensity_curve_defaults"]
+	var curve_min: float = float(curve_cfg["curve_min"])
+	var curve_max: float = float(curve_cfg["curve_max"])
+	var def_mean: float = float(curve_cfg["default_mean"])
+	var def_sd: float = float(curve_cfg["default_std_dev"])
+	var sev_min: float = float(curve_cfg["severity_min"])
+	var sev_max: float = float(curve_cfg["severity_max"])
 
 	var profiles_cfg: Dictionary = ocean_rules["neurodivergence_and_clinical_profiles"]
 	var tags: Array[Dictionary] = []
@@ -276,23 +285,24 @@ static func populate_cognitive_and_clinical_profile(
 		if age_years < float(p_def["min_age"]) or age_years > float(p_def["max_age"]):
 			continue
 
-		var prob: float = float(p_def["base_prevalence"]) * prev_mult
-		var trigger_rules: Array = p_def.get("triggers", [])
-		var triggered: bool = false
-		for rule in trigger_rules:
-			var t_name: String = str(rule["trait"])
-			if traits.has(t_name):
-				if CONDITION_EVAL.evaluate(float(traits[t_name]), rule["value"], str(rule["op"])):
-					triggered = true
-					break
+		var p_mean: float = float(p_def.get("propensity_mean", def_mean))
+		var p_sd: float = float(p_def.get("propensity_std_dev", def_sd)) * prop_sd_mult
+		var cutoff: float = float(p_def["cutoff"])
+		var axis_weights: Dictionary = p_def.get("axis_weights", {})
 
-		if triggered:
-			prob *= float(p_def.get("trigger_multiplier", 1.0)) * trig_boost_mult
+		var axis_shift: float = 0.0
+		for axis_key in axis_weights.keys():
+			var a_val: float = _resolve_propensity_axis_value(traits, str(axis_key), neutral_base)
+			axis_shift += (a_val - neutral_base) * float(axis_weights[axis_key])
 
-		if rng.randf() < clampf(prob, 0.0, max_tag_prob):
-			var severity: float = snappedf(clampf(rng.randfn(sev_mean, sev_sd), sev_min, sev_max), 0.01)
+		var propensity: float = clampf(rng.randfn(p_mean, p_sd) + axis_shift, curve_min, curve_max)
+		if propensity >= cutoff:
+			var span: float = maxf(0.0001, curve_max - cutoff)
+			var tail_ratio: float = clampf((propensity - cutoff) / span, 0.0, 1.0)
+			var severity: float = snappedf(lerpf(sev_min, sev_max, tail_ratio), 0.01)
 			tags.append({
 				"code": str(tag_code),
+				"propensity": snappedf(propensity, 0.001),
 				"severity": severity
 			})
 			var effects: Dictionary = p_def.get("effects", {})

@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COMMUNICATE",
+    "description": "Offering bribes raises personal criminal suspicion on the acting operative."
+  },
+  "metric_id": "CRIMINAL_SUSPICION",
+  "when": {
+    "intent": "BRIBE"
+  },
+  "target_role": "ACTOR",
+  "delta": 5.0
+}

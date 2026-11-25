@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "DEMAND_RULES",
+    "description": "Canonical commodity demand drivers, legality classes, and district retail fulfillment / substitution spillover parameters."
+  },
+  "demand_drivers": {
+    "NEED_LED": { "label_token": "UI_DRIVER_NEED_LED", "generates_unmet_desperation": true },
+    "DEMAND_LED": { "label_token": "UI_DRIVER_DEMAND_LED", "generates_unmet_desperation": false },
+    "SUPPLIER_LED": { "label_token": "UI_DRIVER_SUPPLIER_LED", "generates_unmet_desperation": false },
+    "FOMO_LED": { "label_token": "UI_DRIVER_FOMO_LED", "generates_unmet_desperation": false },
+    "HABIT_LED": { "label_token": "UI_DRIVER_HABIT_LED", "generates_unmet_desperation": true },
+    "STATUS_LED": { "label_token": "UI_DRIVER_STATUS_LED", "generates_unmet_desperation": false },
+    "EVENT_LED": { "label_token": "UI_DRIVER_EVENT_LED", "generates_unmet_desperation": false },
+    "SUBSTITUTION_LED": { "label_token": "UI_DRIVER_SUBSTITUTION_LED", "generates_unmet_desperation": false },
+    "DERIVED_B2B": { "label_token": "UI_DRIVER_DERIVED_B2B", "generates_unmet_desperation": false },
+    "CREDIT_TICK_LED": { "label_token": "UI_DRIVER_CREDIT_TICK_LED", "generates_unmet_desperation": false }
+  },
+  "legality_classes": [
+    "LEGAL",
+    "GREY",
+    "ILLEGAL"
+  ],
+  "retail_fulfillment_parameters": {
+    "reference_weekly_disposable_per_capita": 35.0,
+    "min_price_demand_multiplier": 0.15,
+    "max_price_demand_multiplier": 2.25,
+    "substitution_spillover_ratio": 0.75,
+    "over_taxed_grey_spillover_threshold": 0.35,
+    "need_shortfall_desperation_per_unit": 0.0004,
+    "need_shortfall_zone_health_per_unit": -0.00025
+  }
+}

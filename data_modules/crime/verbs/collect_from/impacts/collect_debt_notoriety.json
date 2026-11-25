@@ -1,0 +1,13 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "COLLECT_FROM",
+		"version": "1.0.0"
+	},
+	"delta": 3.0,
+	"metric_id": "NOTORIETY",
+	"target_role": "ACTOR",
+	"when": {
+		"mode": "COLLECT_DEBT"
+	}
+}

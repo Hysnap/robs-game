@@ -1,0 +1,41 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "FENCE_GOODS",
+		"version": "1.0.0"
+	},
+	"steps": [
+		{
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "COMMODITY",
+				"metric": "PARAM.item_id",
+				"operator": ">=",
+				"value": "PARAM.amount"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_goods"
+		},
+		{
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "LOCATION",
+				"metric": "current_district_id",
+				"operator": "==",
+				"value": "TARGET_NODE"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_presence"
+		},
+		{
+			"params": {
+				"from": "ORDER_ACTOR",
+				"item_id": "PARAM.item_id",
+				"quantity": "PARAM.amount",
+				"to": "PARAM.counterparty_id"
+			},
+			"primitive": "TRANSFER_ITEM",
+			"step_id": "handover_goods"
+		}
+	]
+}

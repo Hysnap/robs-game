@@ -1,0 +1,20 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "INTIMIDATE",
+		"version": "1.0.0"
+	},
+	"steps": [
+		{
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "LOCATION",
+				"metric": "current_district_id",
+				"operator": "==",
+				"value": "TARGET_NODE"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_presence"
+		}
+	]
+}

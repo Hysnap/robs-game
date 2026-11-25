@@ -10,6 +10,7 @@ const FILE_CRAWLER = preload("res://systems/file_system_crawler.gd")
 static var _db = null
 static var active_db_path: String = ""
 static var _label_cache: Dictionary = {} # "DOMAIN:CODE" -> label_id
+static var _deferred_index_entries: Array[Dictionary] = [] # [{ "table": String, "sql": String, "source": String, "applied": bool }]
 
 ## Resolves the default database path strictly from business_rules.cfg [society] default_db_path
 static func _resolve_default_db_path() -> String:
@@ -19,6 +20,20 @@ static func _resolve_default_db_path() -> String:
 	var path: String = str(cfg.get_value("society", "default_db_path", "")).strip_edges()
 	assert(not path.is_empty(), "FATAL: [DBManager] Missing '[society] default_db_path' in %s" % MANIFEST_MANAGER.BUSINESS_RULES_PATH)
 	return path
+
+## Reads [city_generation] settings from business_rules.cfg
+static func get_city_generation_config() -> Dictionary:
+	var cfg := ConfigFile.new()
+	var err: int = cfg.load(MANIFEST_MANAGER.BUSINESS_RULES_PATH)
+	assert(err == OK, "FATAL: [DBManager] Failed to load business_rules.cfg at %s" % MANIFEST_MANAGER.BUSINESS_RULES_PATH)
+	assert(cfg.has_section("city_generation"), "FATAL: [DBManager] Missing '[city_generation]' section in %s" % MANIFEST_MANAGER.BUSINESS_RULES_PATH)
+	return {
+		"pipeline_mode": str(cfg.get_value("city_generation", "pipeline_mode", "REWORKED_DEFERRED_INDEX")).strip_edges().to_upper(),
+		"defer_secondary_indexes": bool(cfg.get_value("city_generation", "defer_secondary_indexes", true)),
+		"district_batch_size": maxi(1, int(cfg.get_value("city_generation", "district_batch_size", 25))),
+		"sql_flush_batch_size": maxi(50, int(cfg.get_value("city_generation", "sql_flush_batch_size", 1000))),
+		"stage_order": cfg.get_value("city_generation", "stage_order", [])
+	}
 
 ## Resolves active SQL schema directories from the scenario manifest ('db_schema' and optional 'extra_schema_dir')
 static func _resolve_schema_directories() -> Array[String]:
@@ -111,6 +126,7 @@ static func _drop_society_schema() -> void:
 		if not table_name.is_empty():
 			_db.query("DROP TABLE IF EXISTS %s;" % table_name)
 
+	_deferred_index_entries.clear()
 	_db.query("PRAGMA foreign_keys = ON;")
 
 ## Crawls configured schema directories and executes modular .sql DDL files sorted by numeric tier prefix
@@ -137,6 +153,12 @@ static func _create_society_schema() -> void:
 		return a < b
 	)
 
+	var gen_cfg: Dictionary = get_city_generation_config()
+	var defer_indexes: bool = bool(gen_cfg["defer_secondary_indexes"]) and str(gen_cfg["pipeline_mode"]) != "LEGACY_ORDER"
+	_deferred_index_entries.clear()
+	var executed_count: int = 0
+	var deferred_file_count: int = 0
+
 	for path in sql_paths:
 		var file := FileAccess.open(path, FileAccess.READ)
 		assert(file != null, "FATAL: [DBManager] Cannot read SQL schema file: %s" % path)
@@ -145,14 +167,102 @@ static func _create_society_schema() -> void:
 		if sql_text.is_empty():
 			continue
 
+		if defer_indexes and _is_deferred_index_file(path):
+			_queue_deferred_index_sql(sql_text, path)
+			deferred_file_count += 1
+			continue
+
 		var ok: bool = _db.query(sql_text)
 		if not ok:
 			var err_msg: String = _db.error_message if "error_message" in _db else "Unknown SQLite error"
 			SystemLogger.log_critical("[DBManager CRITICAL] Failed executing schema file %s: %s" % [path, err_msg])
 			push_error("[DBManager CRITICAL] Failed executing schema file %s: %s" % [path, err_msg])
 			assert(false, "FATAL: [DBManager] Schema execution failed in %s: %s" % [path, err_msg])
+		executed_count += 1
 
-	SystemLogger.log_info("[DBManager] Executed %d modular SQL schema files across %s." % [sql_paths.size(), str(schema_dirs)])
+	SystemLogger.log_info("[DBManager] Executed %d modular SQL schema files across %s (deferred %d index file(s), %d index statements)." % [
+		executed_count, str(schema_dirs), deferred_file_count, _deferred_index_entries.size()
+	])
+
+static func _is_deferred_index_file(path: String) -> bool:
+	var norm_path: String = path.replace("\\", "/").to_lower()
+	return norm_path.contains("/indexes/") or _extract_schema_tier(path) >= 200
+
+static func _queue_deferred_index_sql(sql_text: String, source_path: String) -> void:
+	var cleaned_lines: PackedStringArray = PackedStringArray()
+	for raw_line in sql_text.split("\n"):
+		var stripped: String = raw_line.strip_edges()
+		if stripped.is_empty() or stripped.begins_with("--"):
+			continue
+		cleaned_lines.append(raw_line)
+
+	var combined: String = "\n".join(cleaned_lines)
+	var table_regex := RegEx.new()
+	table_regex.compile("(?i)\\bON\\s+([a-zA-Z0-9_]+)\\s*\\(")
+
+	for raw_stmt in combined.split(";"):
+		var stmt: String = raw_stmt.strip_edges()
+		if stmt.is_empty():
+			continue
+		var target_table: String = ""
+		var m: RegExMatch = table_regex.search(stmt)
+		if m != null:
+			target_table = m.get_string(1).to_lower()
+		_deferred_index_entries.append({
+			"table": target_table,
+			"sql": stmt + ";",
+			"source": source_path,
+			"applied": false
+		})
+
+## Applies deferred secondary SQLite indexes for a named generation wave
+static func apply_index_wave(wave_name: String) -> int:
+	if _db == null or _deferred_index_entries.is_empty():
+		return 0
+
+	var norm_wave: String = wave_name.strip_edges().to_upper()
+	var target_tables: Array[String] = []
+	var apply_all_remaining: bool = false
+
+	match norm_wave:
+		"INDEX_WAVE_HOUSEHOLDS_RESIDENTS":
+			target_tables = ["households", "residents"]
+		"INDEX_WAVE_ESTABS_SLOTS":
+			target_tables = ["districts", "boroughs", "establishments", "workplace_job_slots"]
+		"INDEX_WAVE_REMAINING":
+			apply_all_remaining = true
+		_:
+			assert(false, "FATAL: [DBManager] Unknown index wave '%s'." % wave_name)
+			return 0
+
+	var to_run: Array[String] = []
+	var applied_indices: Array[int] = []
+	for i in range(_deferred_index_entries.size()):
+		var entry: Dictionary = _deferred_index_entries[i]
+		if bool(entry["applied"]):
+			continue
+		var tbl: String = str(entry["table"])
+		if apply_all_remaining or target_tables.has(tbl):
+			to_run.append(str(entry["sql"]))
+			applied_indices.append(i)
+
+	if to_run.is_empty():
+		if apply_all_remaining:
+			_db.query("ANALYZE;")
+		return 0
+
+	var t0: int = Time.get_ticks_msec()
+	var ok: bool = execute_batch(to_run)
+	assert(ok, "FATAL: [DBManager] Failed applying index wave '%s'." % norm_wave)
+	for idx in applied_indices:
+		_deferred_index_entries[idx]["applied"] = true
+
+	if apply_all_remaining:
+		_db.query("ANALYZE;")
+
+	var elapsed: int = Time.get_ticks_msec() - t0
+	SystemLogger.log_info("[DBManager] Applied %s (%d indexes) in %d ms." % [norm_wave, to_run.size(), elapsed])
+	return to_run.size()
 
 ## Extracts leading numeric tier prefix (e.g., 21 from '21_households_and_residents.sql') for dependency sorting
 static func _extract_schema_tier(path: String) -> int:
@@ -361,6 +471,7 @@ static func close_database() -> void:
 		_db.close_db()
 		_db = null
 		_label_cache.clear()
+		_deferred_index_entries.clear()
 		SystemLogger.log_info("[DBManager] Database connection closed.")
 
 ## Returns true if the internal SQLite instance exists and has an open connection

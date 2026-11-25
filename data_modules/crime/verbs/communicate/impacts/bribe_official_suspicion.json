@@ -1,0 +1,13 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "COMMUNICATE",
+		"version": "1.0.0"
+	},
+	"delta": 5.0,
+	"metric_id": "CRIMINAL_SUSPICION",
+	"target_role": "ACTOR",
+	"when": {
+		"intent": "BRIBE_OFFICIAL"
+	}
+}

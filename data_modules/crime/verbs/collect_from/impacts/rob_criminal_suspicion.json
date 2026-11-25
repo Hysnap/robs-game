@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COLLECT_FROM",
+    "description": "Robbery elevates actors criminal suspicion."
+  },
+  "metric_id": "CRIMINAL_SUSPICION",
+  "when": {
+    "mode": "ROB"
+  },
+  "delta": 10.0
+}

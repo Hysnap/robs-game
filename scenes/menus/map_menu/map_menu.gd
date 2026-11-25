@@ -5,12 +5,15 @@ signal generate_city_requested(settings: Dictionary)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const SHELL_REGISTRY = preload("res://scenes/ui/shell_host/shell_registry.gd")
+const GAME_STATE_SCRIPT = preload("res://systems/game_state.gd")
 
 @onready var radius_slider: HSlider = $BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/HSlider
 @onready var radius_label: Label = $BackGround/CenterMargin/CardPanel/VBoxControlsContainer/VBoxCitySize/HBoxCityGrid/RadiusValueLabel
 
 var _density_profiles: Array[Dictionary] = []
 var _default_density_index: int = 0
+var _selected_flavours: Array[String] = []
+var _flavour_warning_label: Label = null
 
 const DEFAULT_SETTINGS := {
 	"city_name": "New City",
@@ -75,6 +78,7 @@ func _ready() -> void:
 	if card_panel:
 		card_panel.add_theme_stylebox_override("panel", RETRO_THEME.create_page_style())
 
+	_build_flavour_pack_selector()
 	_apply_localized_labels()
 	_load_density_profiles_from_archetypes()
 	apply_default_settings()
@@ -104,6 +108,68 @@ func _apply_localized_labels() -> void:
 	v.get_node("Vbox2/HBoxResidentialDensity/Label").text = tr("UI_LBL_RESIDENTIAL_DENSITY")
 	v.get_node("Generate_Reload/HBoxContainer/ButtonGenerateCity").text = tr("UI_BTN_GENERATE_CITY")
 	v.get_node("Generate_Reload/HBoxContainer/ButtonBack").text = tr("MENU_BACK")
+	var flavour_box := v.get_node_or_null("VBoxFlavourPacks")
+	if flavour_box:
+		var hdr := flavour_box.get_node_or_null("FlavourHeaderLabel") as Label
+		if hdr:
+			hdr.text = tr("UI_HDR_FLAVOUR_PACKS")
+		var sub := flavour_box.get_node_or_null("FlavourPromptLabel") as Label
+		if sub:
+			sub.text = tr("UI_LBL_FLAVOUR_PACKS")
+	if _flavour_warning_label:
+		_flavour_warning_label.text = tr("UI_WARN_MULTI_FLAVOUR_UNVERIFIED")
+
+func _build_flavour_pack_selector() -> void:
+	var v := $BackGround/CenterMargin/CardPanel/VBoxControlsContainer
+	if v.has_node("VBoxFlavourPacks"):
+		return
+	var installed: Array[String] = GAME_STATE_SCRIPT.discover_installed_flavours()
+	if installed.is_empty():
+		return
+
+	var box := VBoxContainer.new()
+	box.name = "VBoxFlavourPacks"
+
+	var hdr := Label.new()
+	hdr.name = "FlavourHeaderLabel"
+	box.add_child(hdr)
+
+	var prompt := Label.new()
+	prompt.name = "FlavourPromptLabel"
+	box.add_child(prompt)
+
+	var checks_flow := HFlowContainer.new()
+	checks_flow.name = "FlavourCheckFlow"
+	for slug in installed:
+		var cb := CheckBox.new()
+		cb.name = "FlavourCheck_%s" % slug
+		var token := "UI_FLAVOUR_%s" % slug.to_upper()
+		var translated := tr(token)
+		cb.text = translated if translated != token else slug.capitalize().replace("_", " ")
+		cb.toggled.connect(_on_flavour_toggled.bind(slug))
+		checks_flow.add_child(cb)
+	box.add_child(checks_flow)
+
+	_flavour_warning_label = Label.new()
+	_flavour_warning_label.name = "FlavourWarningLabel"
+	_flavour_warning_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_flavour_warning_label.add_theme_color_override("font_color", RETRO_THEME.color_ink_warning)
+	_flavour_warning_label.visible = false
+	box.add_child(_flavour_warning_label)
+
+	var gen_row := v.get_node_or_null("Generate_Reload")
+	v.add_child(box)
+	if gen_row != null:
+		v.move_child(box, gen_row.get_index())
+
+func _on_flavour_toggled(pressed: bool, slug: String) -> void:
+	if pressed:
+		if not _selected_flavours.has(slug):
+			_selected_flavours.append(slug)
+	else:
+		_selected_flavours.erase(slug)
+	if _flavour_warning_label:
+		_flavour_warning_label.visible = _selected_flavours.size() > 1
 
 func _on_radius_slider_changed(val: float) -> void:
 	if radius_label:
@@ -282,6 +348,7 @@ func build_settings_from_form() -> Dictionary:
 		if meta != null:
 			profile_id = str(meta)
 	settings["residential_density_profile"] = profile_id
+	settings["active_flavours"] = _selected_flavours.duplicate()
 	return settings
 
 func _load_density_profiles_from_archetypes() -> void:

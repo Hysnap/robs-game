@@ -137,6 +137,12 @@ func _build_ui_hierarchy() -> void:
 	refresh_btn.pressed.connect(refresh_catalogs)
 	header_hbox.add_child(refresh_btn)
 
+	var main_menu_btn := Button.new()
+	main_menu_btn.name = "ReturnToMainMenuButton"
+	main_menu_btn.text = "Return to Main Menu"
+	main_menu_btn.pressed.connect(_on_return_to_main_menu_pressed)
+	header_hbox.add_child(main_menu_btn)
+
 	# Main TabContainer
 	_tabs = TabContainer.new()
 	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -156,6 +162,17 @@ func _build_ui_hierarchy() -> void:
 	_status_label.bbcode_enabled = true
 	_status_label.scroll_following = true
 	console_panel.add_child(_status_label)
+
+func _on_return_to_main_menu_pressed() -> void:
+	var main_scene_path: String = str(ProjectSettings.get_setting("application/run/main_scene", ""))
+	if main_scene_path.is_empty():
+		push_error("[DevWorkbenchView] FAIL_LOUD: ProjectSettings 'application/run/main_scene' is not configured.")
+		_log_status("[color=red][NAVIGATION ERROR][/color] application/run/main_scene is not configured in ProjectSettings.")
+		return
+	var err: Error = get_tree().change_scene_to_file(main_scene_path)
+	if err != OK:
+		push_error("[DevWorkbenchView] FAIL_LOUD: Failed to change scene to '%s' (err=%d)." % [main_scene_path, err])
+		_log_status("[color=red][NAVIGATION ERROR][/color] Failed to load main menu scene '%s' (code %d)." % [main_scene_path, err])
 
 # =====================================================================
 # 2. TAB 1: COMMODITY SETUP

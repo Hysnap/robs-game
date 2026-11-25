@@ -197,6 +197,28 @@ func build_ui() -> void:
 	_value_labels["civic_features"] = civic_box_civic_features
 	add_child(civic_box_civic_features)
 
+	# --- Section: residential_directory ---
+	var sec_residential_directory := VBoxContainer.new()
+	sec_residential_directory.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sec_residential_directory.add_theme_constant_override("separation", 2)
+	var hdr_residential_directory := Label.new()
+	hdr_residential_directory.text = "[ " + tr("UI_HDR_RESIDENTIAL_STREETS").to_upper() + " ]"
+	hdr_residential_directory.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_residential_directory.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_residential_directory.add_theme_font_override("font", mono_font)
+	hdr_residential_directory.add_theme_color_override("font_color", clr_blue)
+	sec_residential_directory.add_child(hdr_residential_directory)
+	var sep_residential_directory := HSeparator.new()
+	sec_residential_directory.add_child(sep_residential_directory)
+	add_child(sec_residential_directory)
+
+	var civic_box_residential_streets := VBoxContainer.new()
+	civic_box_residential_streets.name = "residential_streets"
+	civic_box_residential_streets.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	civic_box_residential_streets.add_theme_constant_override("separation", 2)
+	_value_labels["residential_streets"] = civic_box_residential_streets
+	add_child(civic_box_residential_streets)
+
 	# --- Section: security_environment ---
 	var sec_security_environment := VBoxContainer.new()
 	sec_security_environment.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -343,6 +365,37 @@ func bind_data(data: Dictionary) -> void:
 					if dest_route.is_empty():
 						dest_route = "OPEN_ESTABLISHMENT_DOCKET"
 					btn.pressed.connect(func(): item_selected.emit(dest_route, key_val))
+					ctrl.add_child(btn)
+	if _value_labels.has("residential_streets"):
+		var ctrl = _value_labels["residential_streets"]
+		if ctrl is Container:
+			for c in ctrl.get_children():
+				c.free()
+			var clr_m: Color = RETRO_THEME.get_ink_color("muted")
+			var clr_b: Color = RETRO_THEME.get_ink_color("body")
+			var mono_f: Font = RETRO_THEME.get_monospace_font()
+			var items: Array = data.get("residential_streets_summary", [])
+			if items.is_empty():
+				pass
+			else:
+				for item in items:
+					assert(item is Dictionary, "[UI CONTRACT ERROR] Expected Dictionary in list payload for: residential_streets_summary")
+					assert(item.has("street_key"), "[UI CONTRACT ERROR] Missing required key 'street_key' in item: " + str(item))
+					var key_val = item["street_key"]
+					var main_txt: String = str(item.get("street_name", "Unnamed"))
+					var sub_txt: String = str(item.get("summary_line", ""))
+					var display_txt: String = "• " + main_txt
+					if not sub_txt.is_empty():
+						display_txt += " (" + sub_txt + ")"
+					var btn := Button.new()
+					btn.text = display_txt
+					btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+					btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+					btn.add_theme_font_override("font", mono_f)
+					btn.add_theme_font_size_override("font_size", 11)
+					btn.add_theme_color_override("font_color", clr_b)
+					btn.pressed.connect(func(): item_selected.emit("OPEN_STREET_RESIDENCES", key_val))
 					ctrl.add_child(btn)
 	if _value_labels.has("zhi"):
 		var ctrl = _value_labels["zhi"]

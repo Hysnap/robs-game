@@ -1,0 +1,51 @@
+{
+	"_meta": {
+		"description": "Crime flavour overlay extending INVESTIGATE with STAKEOUT and CASE_JOINT surveillance branches.",
+		"flavour_overlay": "crime",
+		"verb_token": "INVESTIGATE",
+		"version": 1.0
+	},
+	"steps": [
+		{
+			"on_false": "branch_crime_stakeout",
+			"step_id": "branch_mode_dispatch"
+		},
+		{
+			"on_false": "branch_crime_case_joint",
+			"on_true": "COMPLETE",
+			"params": {
+				"domain": "PARAM",
+				"metric": "PARAM.mode",
+				"operator": "==",
+				"value": "STAKEOUT"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "branch_crime_stakeout"
+		},
+		{
+			"on_failure": {
+				"error_code": "INVALID_PARAMETER"
+			},
+			"on_true": "COMPLETE",
+			"params": {
+				"domain": "PARAM",
+				"metric": "PARAM.mode",
+				"operator": "==",
+				"value": "CASE_JOINT"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "branch_crime_case_joint"
+		},
+		{
+			"params": {
+				"actor": "ORDER_ACTOR",
+				"domain": "LOCATION",
+				"metric": "current_district_id",
+				"operator": "==",
+				"value": "TARGET_NODE"
+			},
+			"primitive": "REQUIRE",
+			"step_id": "gate_presence"
+		}
+	]
+}

@@ -4,14 +4,31 @@
     "tier_level": 3,
     "scope_id": "CORE_CONSUMABLES_ALCOHOL",
     "display_scope": "Core -> Consumables -> Alcohol",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Alcohol commodity scope."
+    "description": "Establishes baseline properties, standard VAT + excise duty classes, and DEMAND_LED social demand curves for the Alcohol commodity scope."
   },
-  "tags": [
-    "AGE_RESTRICTED",
-    "EXCISE_DUTY",
-    "CRIME_ECONOMY"
-  ],
+  "tags": ["AGE_RESTRICTED", "EXCISE_DUTY", "CRIME_ECONOMY"],
   "unit_type": "BOTTLE",
+  "tax_class": "STANDARD",
+  "duty_class": "EXCISE_ALCOHOL_BEER",
+  "unit_volume_litres": 0.568,
+  "abv": 0.042,
+  "demand_profile": {
+    "primary_driver": "DEMAND_LED",
+    "base_per_capita_daily": 0.3,
+    "income_elasticity": 0.85,
+    "price_elasticity": -0.8,
+    "compulsion_floor": 0.08,
+    "fomo_sensitivity": 0.45,
+    "status_multiplier": 0.15,
+    "legality": "LEGAL",
+    "credit_tick_allowed": true,
+    "substitution_group": "ALCOHOL_RETAIL",
+    "substitution_priority": 1,
+    "event_multipliers": {
+      "WEEKLY_PAYDAY": 1.35,
+      "MATCH_DAY": 1.5
+    }
+  },
   "decay_properties": {
     "shelf_life_ticks": 8,
     "degrades_to": "SPOILED_ALCOHOL",

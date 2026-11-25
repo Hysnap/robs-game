@@ -1281,3 +1281,169 @@ static func get_crew_family_bible(player_context: Dictionary, current_sim_day: i
 		"crew_lineages": crew_lineages,
 		"vital_records": vital_records
 	}
+
+## Extracts the road name or building block name from a residential establishment's (name, unit_door_number) pair
+static func extract_residential_group_name(full_address: String, unit_door_number: String) -> String:
+	var clean_addr := full_address.strip_edges()
+	var clean_door := unit_door_number.strip_edges()
+	var comma_idx := clean_addr.find(", ")
+	if comma_idx != -1:
+		return clean_addr.substr(comma_idx + 2).strip_edges()
+	if not clean_door.is_empty():
+		var prefix := clean_door + " "
+		if clean_addr.begins_with(prefix):
+			return clean_addr.substr(prefix.length()).strip_edges()
+		var suffix := " " + clean_door
+		if clean_addr.ends_with(suffix):
+			return clean_addr.substr(0, clean_addr.length() - suffix.length()).strip_edges()
+	return clean_addr
+
+## Returns residential addresses in a district grouped by road name or building name (Fog-of-War filtered)
+static func get_district_residential_streets(district_id: String, player_context: Dictionary = {}) -> Array[Dictionary]:
+	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
+	var escaped_dist := district_id.replace("'", "''")
+	var rows: Array = DBManager.query_rows("""
+		SELECT
+			e.establishment_id,
+			e.name,
+			e.unit_door_number,
+			e.is_vacant,
+			(SELECT COUNT(*)
+			 FROM households h
+			 JOIN residents r ON r.household_id = h.household_id
+			 WHERE h.establishment_id = e.establishment_id
+			   AND h.valid_to IS NULL
+			   AND r.dod IS NULL) AS occupant_count
+		FROM establishments e
+		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+		WHERE e.district_id = '%s'
+		  AND l_cat.code = 'RESIDENTIAL_UNIT'
+		ORDER BY e.establishment_id ASC;
+	""" % escaped_dist)
+
+	var apply_fow: bool = not player_context.is_empty()
+	var own_estabs: Dictionary = {}
+	var ws_ref = player_context.get("world_state", null)
+	var observers_ref = player_context.get("observers", null)
+	if apply_fow:
+		own_estabs = _resolve_crew_intel_sets(player_context).get("own_establishments", {})
+
+	var groups: Dictionary = {}
+	for row in rows:
+		var est_id: int = int(row.get("establishment_id", 0))
+		if est_id <= 0:
+			continue
+		if apply_fow and not own_estabs.has(est_id):
+			var score: float = 0.0
+			if ws_ref is Dictionary and observers_ref is Array:
+				score = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "ESTABLISHMENT", str(est_id))
+			if not IntelManagerScript.is_entity_known(score, "ESTABLISHMENT"):
+				continue
+
+		var full_addr: String = str(row.get("name", ""))
+		var door_str: String = str(row.get("unit_door_number", ""))
+		var group_name: String = extract_residential_group_name(full_addr, door_str)
+		if group_name.is_empty():
+			group_name = full_addr
+
+		if not groups.has(group_name):
+			groups[group_name] = {
+				"street_name": group_name,
+				"district_id": district_id,
+				"known_unit_count": 0,
+				"occupied_count": 0,
+				"vacant_count": 0,
+				"sample_estab_id": est_id
+			}
+		var entry: Dictionary = groups[group_name]
+		entry["known_unit_count"] = int(entry["known_unit_count"]) + 1
+		if int(row.get("is_vacant", 0)) != 0:
+			entry["vacant_count"] = int(entry["vacant_count"]) + 1
+		else:
+			entry["occupied_count"] = int(entry["occupied_count"]) + 1
+
+	var result: Array[Dictionary] = []
+	for g_key in groups.keys():
+		result.append(groups[g_key])
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a["street_name"]) < str(b["street_name"])
+	)
+	return result
+
+## Returns individual house/flat residential establishments along a specific road or building in a district (Fog-of-War filtered)
+static func get_street_residential_units(district_id: String, street_name: String, player_context: Dictionary = {}) -> Array[Dictionary]:
+	assert(not district_id.is_empty(), "FATAL: [SocietyQueries] district_id cannot be empty.")
+	var target_group := street_name.strip_edges()
+	if target_group.is_empty():
+		return []
+
+	var escaped_dist := district_id.replace("'", "''")
+	var rows: Array = DBManager.query_rows("""
+		SELECT
+			e.establishment_id,
+			e.name,
+			e.unit_door_number,
+			e.is_vacant,
+			(SELECT COUNT(*)
+			 FROM households h
+			 JOIN residents r ON r.household_id = h.household_id
+			 WHERE h.establishment_id = e.establishment_id
+			   AND h.valid_to IS NULL
+			   AND r.dod IS NULL) AS occupant_count
+		FROM establishments e
+		JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+		WHERE e.district_id = '%s'
+		  AND l_cat.code = 'RESIDENTIAL_UNIT'
+		ORDER BY e.establishment_id ASC;
+	""" % escaped_dist)
+
+	var apply_fow: bool = not player_context.is_empty()
+	var own_estabs: Dictionary = {}
+	var ws_ref = player_context.get("world_state", null)
+	var observers_ref = player_context.get("observers", null)
+	if apply_fow:
+		own_estabs = _resolve_crew_intel_sets(player_context).get("own_establishments", {})
+
+	var units: Array[Dictionary] = []
+	for row in rows:
+		var est_id: int = int(row.get("establishment_id", 0))
+		if est_id <= 0:
+			continue
+		var full_addr: String = str(row.get("name", ""))
+		var door_str: String = str(row.get("unit_door_number", ""))
+		if extract_residential_group_name(full_addr, door_str) != target_group:
+			continue
+
+		if apply_fow and not own_estabs.has(est_id):
+			var score: float = 0.0
+			if ws_ref is Dictionary and observers_ref is Array:
+				score = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "ESTABLISHMENT", str(est_id))
+			if not IntelManagerScript.is_entity_known(score, "ESTABLISHMENT"):
+				continue
+
+		var digits := ""
+		for i in range(door_str.length()):
+			var ch := door_str.unicode_at(i)
+			if ch >= 48 and ch <= 57:
+				digits += door_str[i]
+		var door_sort_num: int = int(digits) if not digits.is_empty() else 999999
+
+		units.append({
+			"establishment_id": est_id,
+			"district_id": district_id,
+			"street_name": target_group,
+			"unit_door_number": door_str,
+			"name": full_addr,
+			"is_vacant": int(row.get("is_vacant", 0)),
+			"occupant_count": int(row.get("occupant_count", 0)),
+			"_door_sort": door_sort_num
+		})
+
+	units.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var da := int(a["_door_sort"])
+		var db := int(b["_door_sort"])
+		if da != db:
+			return da < db
+		return str(a["unit_door_number"]) < str(b["unit_door_number"])
+	)
+	return units

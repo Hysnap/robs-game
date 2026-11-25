@@ -8,41 +8,35 @@ const RESOLVERS_BASE_DIR := "res://systems/target_resolvers/"
 
 static var _cached_scopes: Dictionary = {} # "VERB_CODE" -> Dictionary
 static var _cached_resolvers: Dictionary = {} # "DOMAIN_TOKEN" -> GDScript
+static var _active_variant: String = ""
 static var _initialized: bool = false
 
 ## Clears in-memory cached scopes and resolvers (useful during testing or live-reloading)
 static func clear_cache() -> void:
 	_cached_scopes.clear()
 	_cached_resolvers.clear()
+	_active_variant = ""
 	_initialized = false
 
-## Eagerly scans and indexes all target_scope.json definitions and pluggable target domain resolvers
+## Initializes scopes from core and optional active flavour overlay (mirrors VerbRouter.initialize)
+static func initialize(active_variant: String = "") -> void:
+	clear_cache()
+	_active_variant = active_variant.strip_edges()
+	_ensure_initialized()
+
+## Eagerly scans and indexes all target_scope.json definitions (core + active flavour overlay) and pluggable resolvers
 static func _ensure_initialized() -> void:
 	if _initialized:
 		return
 
-	var scope_files := FileSystemCrawlerScript.find_files_recursive(VERBS_BASE_DIR, "target_scope.json")
-	for file_path in scope_files:
-		var file := FileAccess.open(file_path, FileAccess.READ)
-		if file == null:
-			push_warning("[TargetDomainRegistry] Unable to open target_scope.json at: %s" % file_path)
-			continue
+	# 1. Mount baseline canonical verb scopes from core
+	_scan_and_mount_scopes(VERBS_BASE_DIR)
 
-		var parsed = JSON.parse_string(file.get_as_text())
-		file.close()
-
-		if not (parsed is Dictionary):
-			push_error("[TargetDomainRegistry FATAL] Malformed JSON in target_scope.json at: %s" % file_path)
-			continue
-
-		var verb_token: String = ""
-		if parsed.has("_meta") and parsed["_meta"] is Dictionary:
-			verb_token = str(parsed["_meta"].get("verb_token", "")).strip_edges().to_upper()
-
-		if verb_token.is_empty():
-			verb_token = file_path.get_base_dir().get_file().strip_edges().to_upper()
-
-		_cached_scopes[verb_token] = parsed
+	# 2. Merge flavour pack target_scope.json overlays if active
+	if not _active_variant.is_empty() and _active_variant != "core":
+		var variant_verbs: String = "res://data_modules/%s/verbs/" % _active_variant
+		if DirAccess.dir_exists_absolute(variant_verbs):
+			_scan_and_mount_scopes(variant_verbs)
 
 	var resolver_files := FileSystemCrawlerScript.find_files_recursive(RESOLVERS_BASE_DIR, "", ".gd")
 	for res_path in resolver_files:
@@ -62,6 +56,113 @@ static func _ensure_initialized() -> void:
 					_cached_resolvers[clean_alias] = res_script
 
 	_initialized = true
+
+## Scans a verbs directory recursively and mounts or deep-merges discovered target_scope.json files
+static func _scan_and_mount_scopes(verbs_root_dir: String) -> void:
+	if not DirAccess.dir_exists_absolute(verbs_root_dir):
+		return
+
+	var scope_files := FileSystemCrawlerScript.find_files_recursive(verbs_root_dir, "target_scope.json")
+	for file_path in scope_files:
+		var file := FileAccess.open(file_path, FileAccess.READ)
+		if file == null:
+			push_warning("[TargetDomainRegistry] Unable to open target_scope.json at: %s" % file_path)
+			continue
+
+		var parsed = JSON.parse_string(file.get_as_text())
+		file.close()
+
+		if not (parsed is Dictionary):
+			push_error("[TargetDomainRegistry FATAL] Malformed JSON in target_scope.json at: %s" % file_path)
+			continue
+
+		var meta: Dictionary = parsed.get("_meta", {}) if parsed.get("_meta") is Dictionary else {}
+		var verb_token: String = str(meta.get("verb_token", "")).strip_edges().to_upper()
+		if verb_token.is_empty():
+			verb_token = file_path.get_base_dir().get_file().strip_edges().to_upper()
+
+		if not _cached_scopes.has(verb_token) or bool(meta.get("replace_core", false)):
+			_cached_scopes[verb_token] = parsed.duplicate(true)
+		else:
+			_cached_scopes[verb_token] = _merge_scope_overlay(_cached_scopes[verb_token], parsed)
+
+## Deep-merges a flavour pack target_scope.json overlay onto an existing core scope definition
+static func _merge_scope_overlay(base_scope: Dictionary, overlay_scope: Dictionary) -> Dictionary:
+	var merged: Dictionary = base_scope.duplicate(true)
+
+	# 1. Merge allowed_scopes (unique union)
+	if overlay_scope.has("allowed_scopes") and overlay_scope["allowed_scopes"] is Array:
+		var base_scopes: Array = merged.get("allowed_scopes", [])
+		merged["allowed_scopes"] = _merge_unique_array(base_scopes, overlay_scope["allowed_scopes"])
+
+	# 2. Merge target_categories (keyed by id)
+	if overlay_scope.has("target_categories") and overlay_scope["target_categories"] is Array:
+		var base_cats: Array = merged.get("target_categories", [])
+		merged["target_categories"] = _merge_unique_array(base_cats, overlay_scope["target_categories"])
+
+	# 3. Deep-merge form_layout sections (preserving core fields and appending cascading options/rules)
+	if overlay_scope.has("form_layout") and overlay_scope["form_layout"] is Dictionary:
+		var merged_layout: Dictionary = merged.get("form_layout", {}).duplicate(true)
+		var overlay_layout: Dictionary = overlay_scope["form_layout"]
+		for sec_key in overlay_layout.keys():
+			var overlay_sec = overlay_layout[sec_key]
+			if overlay_sec is Dictionary and merged_layout.has(sec_key) and merged_layout[sec_key] is Dictionary:
+				merged_layout[sec_key] = _merge_section_dict(merged_layout[sec_key], overlay_sec)
+			else:
+				merged_layout[sec_key] = overlay_sec.duplicate(true) if overlay_sec is Dictionary or overlay_sec is Array else overlay_sec
+		merged["form_layout"] = merged_layout
+
+	# 4. Merge any remaining top-level keys (excluding _meta and already-merged keys)
+	for top_key in overlay_scope.keys():
+		if top_key in ["_meta", "allowed_scopes", "target_categories", "form_layout"]:
+			continue
+		var val = overlay_scope[top_key]
+		if val is Dictionary and merged.has(top_key) and merged[top_key] is Dictionary:
+			merged[top_key] = _merge_section_dict(merged[top_key], val)
+		elif val is Array and merged.has(top_key) and merged[top_key] is Array:
+			merged[top_key] = _merge_unique_array(merged[top_key], val)
+		else:
+			merged[top_key] = val.duplicate(true) if val is Dictionary or val is Array else val
+
+	return merged
+
+## Recursively merges two form_layout section dictionaries, deduplicating option/rule arrays
+static func _merge_section_dict(base_sec: Dictionary, overlay_sec: Dictionary) -> Dictionary:
+	var result: Dictionary = base_sec.duplicate(true)
+	for k in overlay_sec.keys():
+		var val = overlay_sec[k]
+		if val is Dictionary and result.has(k) and result[k] is Dictionary:
+			result[k] = _merge_section_dict(result[k], val)
+		elif val is Array and result.has(k) and result[k] is Array:
+			result[k] = _merge_unique_array(result[k], val)
+		else:
+			result[k] = val.duplicate(true) if val is Dictionary or val is Array else val
+	return result
+
+## Merges two arrays without duplicates (matching Dictionary elements by 'id' or 'value')
+static func _merge_unique_array(base_arr: Array, overlay_arr: Array) -> Array:
+	var result: Array = base_arr.duplicate(true)
+	var index_by_key: Dictionary = {}
+	for i in range(result.size()):
+		if result[i] is Dictionary:
+			var item_key: String = str(result[i].get("id", result[i].get("value", ""))).strip_edges().to_upper()
+			if not item_key.is_empty():
+				index_by_key[item_key] = i
+
+	for raw_item in overlay_arr:
+		if raw_item is Dictionary:
+			var item_key: String = str(raw_item.get("id", raw_item.get("value", ""))).strip_edges().to_upper()
+			if not item_key.is_empty() and index_by_key.has(item_key):
+				var idx: int = int(index_by_key[item_key])
+				result[idx] = _merge_section_dict(result[idx], raw_item)
+			else:
+				if not item_key.is_empty():
+					index_by_key[item_key] = result.size()
+				result.append(raw_item.duplicate(true))
+		else:
+			if not result.has(raw_item):
+				result.append(raw_item)
+	return result
 
 ## Allows runtime registration of dynamic or player-created macro verb scopes
 static func register_scope_definition(verb_token: String, scope_def: Dictionary) -> void:

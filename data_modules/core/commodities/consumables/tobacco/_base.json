@@ -2,12 +2,32 @@
   "_meta": {
     "tier": 3,
     "scope_id": "CAT_TOBACCO",
-    "description": "Baseline prototype for all cured and commercial tobacco products."
+    "description": "Baseline prototype, VAT + tobacco excise duty classes, and HABIT_LED demand curves for all cured and commercial tobacco products."
   },
   "category": "CONSUMABLE",
   "tags": ["AGE_RESTRICTED", "EXCISE_DUTY", "NICOTINE"],
   "unit_type": "GRAM",
   "storage_footprint_per_unit": 0.002,
+  "tax_class": "STANDARD",
+  "duty_class": "EXCISE_TOBACCO_CIGARETTES",
+  "units_per_pack": 20.0,
+  "demand_profile": {
+    "primary_driver": "HABIT_LED",
+    "base_per_capita_daily": 0.40,
+    "income_elasticity": 0.25,
+    "price_elasticity": -0.35,
+    "compulsion_floor": 0.65,
+    "fomo_sensitivity": 0.75,
+    "status_multiplier": 0.05,
+    "legality": "LEGAL",
+    "credit_tick_allowed": true,
+    "substitution_group": "TOBACCO_RETAIL",
+    "substitution_priority": 1,
+    "event_multipliers": {
+      "WEEKLY_PAYDAY": 1.30,
+      "MATCH_DAY": 1.35
+    }
+  },
   "decay_properties": {
     "shelf_life_ticks": 12,
     "rot_rate_per_tick": 0.05,

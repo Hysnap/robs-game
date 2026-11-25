@@ -1,13 +1,14 @@
 {
   "_meta": {
     "verb_token": "COMMUNICATE",
-    "version": 2,
+    "version": 3,
     "user_creatable": true,
-    "description": "Direct interpersonal conversation and intelligence exchange between co-located residents"
+    "description": "Direct interpersonal conversation and intelligence exchange between co-located residents, extensible via flavour intent overlays."
   },
   "parameters": {
     "target_resident_id": { "type": "STRING", "required": true },
     "target_node_id": { "type": "STRING", "required": true },
+    "intent": { "type": "STRING", "required": false, "default": "FRIENDLY" },
     "duration_ticks": { "type": "FLOAT", "default": 1.0 }
   },
   "steps": [
@@ -39,7 +40,19 @@
       "on_failure": {
         "error_code": "INVALID_TARGET"
       },
-      "next_step": null
+      "next_step": "branch_intent_dispatch"
+    },
+    {
+      "step_id": "branch_intent_dispatch",
+      "primitive": "REQUIRE",
+      "params": {
+        "domain": "PARAM",
+        "metric": "PARAM.intent",
+        "operator": "==",
+        "value": "QUESTION"
+      },
+      "on_true": "COMPLETE",
+      "on_false": "COMPLETE"
     }
   ]
 }

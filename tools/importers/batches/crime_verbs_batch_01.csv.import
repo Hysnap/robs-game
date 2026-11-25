@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://da4msenovr8e8"
+
+[deps]
+
+files=["res://tools/importers/batches/crime_verbs_batch_01.module.translation", "res://tools/importers/batches/crime_verbs_batch_01.label.translation", "res://tools/importers/batches/crime_verbs_batch_01.allowed.translation", "res://tools/importers/batches/crime_verbs_batch_01.label.translation", "res://tools/importers/batches/crime_verbs_batch_01.mode.translation", "res://tools/importers/batches/crime_verbs_batch_01.intent.translation", "res://tools/importers/batches/crime_verbs_batch_01.steps.translation", "res://tools/importers/batches/crime_verbs_batch_01.form.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation"]
+
+source_file="res://tools/importers/batches/crime_verbs_batch_01.csv"
+dest_files=["res://tools/importers/batches/crime_verbs_batch_01.module.translation", "res://tools/importers/batches/crime_verbs_batch_01.label.translation", "res://tools/importers/batches/crime_verbs_batch_01.allowed.translation", "res://tools/importers/batches/crime_verbs_batch_01.label.translation", "res://tools/importers/batches/crime_verbs_batch_01.mode.translation", "res://tools/importers/batches/crime_verbs_batch_01.intent.translation", "res://tools/importers/batches/crime_verbs_batch_01.steps.translation", "res://tools/importers/batches/crime_verbs_batch_01.form.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation", "res://tools/importers/batches/crime_verbs_batch_01.impact.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

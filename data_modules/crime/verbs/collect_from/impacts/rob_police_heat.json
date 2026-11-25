@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "COLLECT_FROM",
+    "description": "Robbery elevates district police heat."
+  },
+  "metric_id": "POLICE_HEAT",
+  "when": {
+    "mode": "ROB"
+  },
+  "delta": 14.0
+}

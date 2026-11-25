@@ -1,0 +1,6 @@
+{
+	"factor": 0.4,
+	"metric": "POLICE_HEAT",
+	"model": "LINEAR_PER_UNIT",
+	"params": {}
+}

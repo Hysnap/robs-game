@@ -55,6 +55,39 @@ static func get_discovered_categories(root_path: String = COMMODITIES_ROOT) -> A
 
 	return categories
 
+## Resolves canonical demand_drivers and legality_classes from the registered 'demand_rules' module
+static func _get_valid_demand_rules() -> Dictionary:
+	assert(MANIFEST_MGR.has_module("demand_rules"),
+		"FATAL: [CatalogValidator] Active scenario manifest missing mandatory 'demand_rules' module.")
+	var cfg: Dictionary = MANIFEST_MGR.load_module("demand_rules")
+	var drivers_dict: Dictionary = cfg.get("demand_drivers", {})
+	var legalities: Array = cfg.get("legality_classes", [])
+	assert(not drivers_dict.is_empty() and not legalities.is_empty(),
+		"FATAL: [CatalogValidator] 'demand_rules' module missing 'demand_drivers' or 'legality_classes'.")
+	var driver_keys: Array[String] = []
+	for k in drivers_dict.keys():
+		driver_keys.append(str(k).strip_edges().to_upper())
+	var legality_keys: Array[String] = []
+	for l in legalities:
+		legality_keys.append(str(l).strip_edges().to_upper())
+	return {
+		"drivers": driver_keys,
+		"legalities": legality_keys
+	}
+
+## Resolves canonical VAT tax_class keys from the registered 'fiscal_regimes' module
+static func _get_valid_tax_classes() -> Array[String]:
+	assert(MANIFEST_MGR.has_module("fiscal_regimes"),
+		"FATAL: [CatalogValidator] Active scenario manifest missing mandatory 'fiscal_regimes' module.")
+	var cfg: Dictionary = MANIFEST_MGR.load_module("fiscal_regimes")
+	var rates: Dictionary = cfg.get("defaults", {}).get("vat", {}).get("rates", {})
+	assert(not rates.is_empty(),
+		"FATAL: [CatalogValidator] 'fiscal_regimes' module missing 'defaults.vat.rates'.")
+	var tax_keys: Array[String] = []
+	for k in rates.keys():
+		tax_keys.append(str(k).strip_edges().to_upper())
+	return tax_keys
+
 # =============================================================================
 # 1. COMMODITY & RECIPE VALIDATOR
 # =============================================================================
@@ -65,6 +98,10 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 	var recipes: Dictionary = world_state.get("recipe_registry", {})
 	var valid_categories: Array = get_discovered_categories()
 	var valid_models: Array = get_discovered_models()
+	var demand_rules_meta: Dictionary = _get_valid_demand_rules()
+	var valid_drivers: Array[String] = demand_rules_meta["drivers"]
+	var valid_legalities: Array[String] = demand_rules_meta["legalities"]
+	var valid_tax_classes: Array[String] = _get_valid_tax_classes()
 
 	var report: Dictionary = {
 		"timestamp": Time.get_datetime_string_from_system(),
@@ -96,6 +133,25 @@ static func validate_catalogs(world_state: Dictionary, write_to_disk: bool = tru
 		if not valid_categories.has(cat):
 			report["errors"].append("Commodity '%s' has unrecognised category '%s' (not found on disk)" % [item_id, cat])
 			report["is_clean"] = false
+
+		# Fiscal tax_class check against fiscal_regimes defaults.vat.rates
+		if item.has("tax_class"):
+			var tax_cls: String = str(item["tax_class"]).strip_edges().to_upper()
+			if not valid_tax_classes.has(tax_cls):
+				report["errors"].append("Commodity '%s' has invalid tax_class '%s' (allowed: %s)." % [item_id, tax_cls, str(valid_tax_classes)])
+				report["is_clean"] = false
+
+		# Demand profile integrity check against demand_rules module
+		if item.has("demand_profile") and item["demand_profile"] is Dictionary:
+			var dp: Dictionary = item["demand_profile"]
+			var driver: String = str(dp.get("primary_driver", "")).strip_edges().to_upper()
+			if not valid_drivers.has(driver):
+				report["errors"].append("Commodity '%s' has unrecognised demand_profile.primary_driver '%s' (allowed: %s)." % [item_id, driver, str(valid_drivers)])
+				report["is_clean"] = false
+			var leg: String = str(dp.get("legality", "LEGAL")).strip_edges().to_upper()
+			if not valid_legalities.has(leg):
+				report["errors"].append("Commodity '%s' has invalid demand_profile.legality '%s' (allowed: %s)." % [item_id, leg, str(valid_legalities)])
+				report["is_clean"] = false
 
 		# Base cost check (warning only if present and non-positive)
 		if item.has("base_cost") and float(item["base_cost"]) <= 0.0:
@@ -160,6 +216,10 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 	var raw_recipes: Dictionary = world_state.get("recipe_registry", {})
 	var valid_categories: Array = get_discovered_categories()
 	var valid_models: Array = get_discovered_models()
+	var demand_rules_meta: Dictionary = _get_valid_demand_rules()
+	var valid_drivers: Array[String] = demand_rules_meta["drivers"]
+	var valid_legalities: Array[String] = demand_rules_meta["legalities"]
+	var valid_tax_classes: Array[String] = _get_valid_tax_classes()
 
 	var valid_commodities: Dictionary = {}
 	var valid_recipes: Dictionary = {}
@@ -188,6 +248,23 @@ static func sanitize_and_audit(world_state: Dictionary, write_to_disk: bool = tr
 		if not valid_categories.has(cat):
 			report["errors"].append("Commodity '%s' omitted: category '%s' not found on disk." % [item_id, cat])
 			is_valid = false
+
+		if item.has("tax_class"):
+			var tax_cls: String = str(item["tax_class"]).strip_edges().to_upper()
+			if not valid_tax_classes.has(tax_cls):
+				report["errors"].append("Commodity '%s' omitted: invalid tax_class '%s'." % [item_id, tax_cls])
+				is_valid = false
+
+		if item.has("demand_profile") and item["demand_profile"] is Dictionary:
+			var dp: Dictionary = item["demand_profile"]
+			var driver: String = str(dp.get("primary_driver", "")).strip_edges().to_upper()
+			if not valid_drivers.has(driver):
+				report["errors"].append("Commodity '%s' omitted: invalid demand_profile.primary_driver '%s'." % [item_id, driver])
+				is_valid = false
+			var leg: String = str(dp.get("legality", "LEGAL")).strip_edges().to_upper()
+			if not valid_legalities.has(leg):
+				report["errors"].append("Commodity '%s' omitted: invalid demand_profile.legality '%s'." % [item_id, leg])
+				is_valid = false
 
 		var activations = item.get("impact_activations", {})
 		if activations is Dictionary:

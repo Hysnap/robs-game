@@ -32,12 +32,39 @@ static func dispatch(primitive_token: String, world_state: Dictionary, directive
 # Micro-Verb Primitives (Pure Mechanical Execution)
 # -----------------------------------------------------------------------------
 
-## Primitive 1: REQUIRE (Explicit Gate - COMMODITY, LOCATION, or ATTRIBUTE)
+## Primitive 1: REQUIRE (Explicit Gate - Single or Compound Logic Gate across COMMODITY, LOCATION, ATTRIBUTE, or PARAM)
 static func execute_require(world_state: Dictionary, directive: Dictionary, params: Dictionary, step_id: String) -> Dictionary:
-	var raw_actor: Variant = ActionPipelineHelpersScript.resolve_param_value(params.get("actor", ""), directive, world_state)
-	var actor_key: Variant = ActionPipelineHelpersScript.normalize_entity_key(raw_actor)
+	if params.has("conditions") and params["conditions"] is Array:
+		var logic_gate: String = str(params.get("logic_gate", "AND"))
+		var resolved_gates: Array = []
+		for cond in params["conditions"]:
+			if cond is Dictionary:
+				var gate_res: Dictionary = _evaluate_single_require(world_state, directive, cond, step_id)
+				resolved_gates.append({
+					"current": 1.0 if bool(gate_res.get("success", false)) else 0.0,
+					"target": 1.0,
+					"operator": "=="
+				})
+		return { "success": ConditionEvaluatorScript.evaluate_logic_block(logic_gate, resolved_gates) }
+
+	return _evaluate_single_require(world_state, directive, params, step_id)
+
+static func _evaluate_single_require(world_state: Dictionary, directive: Dictionary, params: Dictionary, step_id: String) -> Dictionary:
 	var op: String = str(params.get("operator", "=="))
 	var domain: String = str(params.get("domain", "COMMODITY")).to_upper().strip_edges()
+
+	if domain == "PARAM":
+		var current_param: Variant = ActionPipelineHelpersScript.resolve_param_value(params.get("metric", ""), directive, world_state)
+		var expected_param: Variant = ActionPipelineHelpersScript.resolve_param_value(params.get("value", ""), directive, world_state)
+		var passed: bool = ConditionEvaluatorScript.evaluate_gate({
+			"current": current_param,
+			"target": expected_param,
+			"operator": op
+		})
+		return { "success": passed }
+
+	var raw_actor: Variant = ActionPipelineHelpersScript.resolve_param_value(params.get("actor", ""), directive, world_state)
+	var actor_key: Variant = ActionPipelineHelpersScript.normalize_entity_key(raw_actor)
 
 	match domain:
 		"COMMODITY":
@@ -55,7 +82,7 @@ static func execute_require(world_state: Dictionary, directive: Dictionary, para
 				return { "success": false }
 				
 			var current_loc: String = str(residents_dict[actor_key].get("current_district_id", "")).strip_edges()
-			var passed: bool = (current_loc == expected_loc) if op == "==" else (current_loc != expected_loc)
+			var passed: bool = ConditionEvaluatorScript.evaluate_string(current_loc, expected_loc, op)
 			return { "success": passed }
 
 		"ATTRIBUTE":

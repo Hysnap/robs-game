@@ -106,6 +106,24 @@
       ]
     },
     {
+      "id": "residential_directory",
+      "header_token": "UI_HDR_RESIDENTIAL_STREETS",
+      "rows": [
+        {
+          "id": "residential_streets",
+          "type": "LINKED_LIST",
+          "field": "residential_streets_summary",
+          "key_field": "street_key",
+          "label_field": "street_name",
+          "sublabel_field": "summary_line",
+          "token": "UI_LBL_RESIDENTIAL_STREETS",
+          "action_signal": "item_selected",
+          "target_route": "OPEN_STREET_RESIDENCES",
+          "autowrap": true
+        }
+      ]
+    },
+    {
       "id": "security_environment",
       "header_token": "UI_HDR_SECURITY_ENVIRONMENT",
       "color": "body",
@@ -139,9 +157,7 @@
     {
       "id": "district_docket_signals",
       "type": "SIGNALS",
-      "signals": [
-      "action_clicked(action_code: String, payload: Dictionary)"
-    ]
+      "signals": ["action_clicked(action_code: String, payload: Dictionary)"]
     }
   ]
 }

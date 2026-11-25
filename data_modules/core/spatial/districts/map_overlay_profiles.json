@@ -1,0 +1,259 @@
+{
+  "_meta": {
+    "entity_type": "MAP_OVERLAY_PROFILES",
+    "schema_version": "1.0.0",
+    "description": "Declarative 3D map choropleth/heatmap overlay definitions, perception bindings, and Fog-of-War visual treatments."
+  },
+  "default_overlay_id": "NONE",
+  "visual_states": {
+    "UNEXPLORED": {
+      "fill_color": "#2b303a",
+      "fill_alpha": 0.58,
+      "pattern_mode": "FOG_HATCH",
+      "legend_token": "UI_OVERLAY_LEGEND_UNEXPLORED"
+    },
+    "MASKED_TIER": {
+      "fill_color": "#4b5563",
+      "fill_alpha": 0.45,
+      "pattern_mode": "FOG_HATCH",
+      "legend_token": "UI_OVERLAY_LEGEND_INSUFFICIENT_INTEL"
+    },
+    "STALE_MODIFIER": {
+      "desaturate_ratio": 0.45,
+      "fill_alpha": 0.42,
+      "pattern_mode": "STALE_STRIPE",
+      "legend_token": "UI_OVERLAY_LEGEND_STALE_DATA"
+    },
+    "VERIFIED_MODIFIER": {
+      "fill_alpha": 0.52,
+      "pattern_mode": "NONE"
+    },
+    "OVERLAP_MODIFIER": {
+      "pattern_mode": "CONFLICT_STRIPE",
+      "legend_token": "UI_OVERLAY_LEGEND_TURF_OVERLAP"
+    }
+  },
+  "jurisdiction_palette": [
+    "#2563eb",
+    "#059669",
+    "#d97706",
+    "#7c3aed",
+    "#db2777",
+    "#0891b2"
+  ],
+  "overlays": [
+    {
+      "id": "NONE",
+      "label_token": "UI_OVERLAY_NONE",
+      "mode": "NONE",
+      "legend": []
+    },
+    {
+      "id": "INTEL_COVERAGE",
+      "label_token": "UI_OVERLAY_INTEL_COVERAGE",
+      "mode": "INTEL_STATUS",
+      "status_colors": {
+        "INTEL_STATUS_UNEXPLORED": "#2b303a",
+        "INTEL_STATUS_STALE": "#e67e22",
+        "INTEL_STATUS_VERIFIED": "#2ecc71"
+      },
+      "legend": [
+        {
+          "color": "#2ecc71",
+          "pattern_mode": "NONE",
+          "label_token": "UI_OVERLAY_LEGEND_VERIFIED"
+        },
+        {
+          "color": "#e67e22",
+          "pattern_mode": "STALE_STRIPE",
+          "label_token": "UI_OVERLAY_LEGEND_STALE"
+        },
+        {
+          "color": "#2b303a",
+          "pattern_mode": "FOG_HATCH",
+          "label_token": "UI_OVERLAY_LEGEND_UNEXPLORED"
+        }
+      ]
+    },
+    {
+      "id": "POLICE_HEAT",
+      "label_token": "UI_OVERLAY_POLICE_HEAT",
+      "mode": "PERCEIVED_BUCKET",
+      "source_field": "heat_bucket_token",
+      "min_intel_score": 20.0,
+      "default_color": "#38bdf8",
+      "bucket_colors": {
+        "UI_HEAT_COLD": "#38bdf8",
+        "UI_HEAT_LOW": "#2ecc71",
+        "UI_HEAT_MODERATE": "#facc15",
+        "UI_HEAT_HIGH": "#f97316",
+        "UI_HEAT_CRITICAL": "#dc2626"
+      },
+      "legend": [
+        {
+          "color": "#38bdf8",
+          "pattern_mode": "NONE",
+          "label_token": "UI_HEAT_COLD"
+        },
+        {
+          "color": "#2ecc71",
+          "pattern_mode": "NONE",
+          "label_token": "UI_HEAT_LOW"
+        },
+        {
+          "color": "#facc15",
+          "pattern_mode": "NONE",
+          "label_token": "UI_HEAT_MODERATE"
+        },
+        {
+          "color": "#f97316",
+          "pattern_mode": "NONE",
+          "label_token": "UI_HEAT_HIGH"
+        },
+        {
+          "color": "#dc2626",
+          "pattern_mode": "NONE",
+          "label_token": "UI_HEAT_CRITICAL"
+        }
+      ]
+    },
+    {
+      "id": "ZONE_HEALTH",
+      "label_token": "UI_OVERLAY_ZONE_HEALTH",
+      "mode": "PERCEIVED_BUCKET",
+      "source_field": "zone_health_bucket_token",
+      "min_intel_score": 20.0,
+      "default_color": "#eab308",
+      "bucket_colors": {
+        "UI_ZHI_CRITICAL": "#dc2626",
+        "UI_ZHI_DEPRESSED": "#f97316",
+        "UI_ZHI_STABLE": "#eab308",
+        "UI_ZHI_PROSPEROUS": "#22c55e",
+        "UI_ZHI_THRIVING": "#10b981"
+      },
+      "legend": [
+        {
+          "color": "#dc2626",
+          "pattern_mode": "NONE",
+          "label_token": "UI_ZHI_CRITICAL"
+        },
+        {
+          "color": "#f97316",
+          "pattern_mode": "NONE",
+          "label_token": "UI_ZHI_DEPRESSED"
+        },
+        {
+          "color": "#eab308",
+          "pattern_mode": "NONE",
+          "label_token": "UI_ZHI_STABLE"
+        },
+        {
+          "color": "#22c55e",
+          "pattern_mode": "NONE",
+          "label_token": "UI_ZHI_PROSPEROUS"
+        },
+        {
+          "color": "#10b981",
+          "pattern_mode": "NONE",
+          "label_token": "UI_ZHI_THRIVING"
+        }
+      ]
+    },
+    {
+      "id": "DISPOSABLE_INCOME",
+      "label_token": "UI_OVERLAY_DISPOSABLE_INCOME",
+      "mode": "PERCEIVED_BUCKET",
+      "source_field": "income_bucket_token",
+      "min_intel_score": 40.0,
+      "default_color": "#94a3b8",
+      "bucket_colors": {
+        "UI_INCOME_IMPOVERISHED": "#991b1b",
+        "UI_INCOME_WORKING_CLASS": "#d97706",
+        "UI_INCOME_COMFORTABLE": "#0284c7",
+        "UI_INCOME_AFFLUENT": "#16a34a"
+      },
+      "legend": [
+        {
+          "color": "#991b1b",
+          "pattern_mode": "NONE",
+          "label_token": "UI_INCOME_IMPOVERISHED"
+        },
+        {
+          "color": "#d97706",
+          "pattern_mode": "NONE",
+          "label_token": "UI_INCOME_WORKING_CLASS"
+        },
+        {
+          "color": "#0284c7",
+          "pattern_mode": "NONE",
+          "label_token": "UI_INCOME_COMFORTABLE"
+        },
+        {
+          "color": "#16a34a",
+          "pattern_mode": "NONE",
+          "label_token": "UI_INCOME_AFFLUENT"
+        }
+      ]
+    },
+    {
+      "id": "UNEMPLOYMENT",
+      "label_token": "UI_OVERLAY_UNEMPLOYMENT",
+      "mode": "PERCEIVED_BUCKET",
+      "source_field": "unemployment_bucket_token",
+      "min_intel_score": 40.0,
+      "default_color": "#94a3b8",
+      "bucket_colors": {
+        "UI_UNEMP_FULL_EMPLOYMENT": "#16a34a",
+        "UI_UNEMP_LOW": "#0284c7",
+        "UI_UNEMP_ELEVATED": "#f59e0b",
+        "UI_UNEMP_SEVERE": "#dc2626"
+      },
+      "legend": [
+        {
+          "color": "#16a34a",
+          "pattern_mode": "NONE",
+          "label_token": "UI_UNEMP_FULL_EMPLOYMENT"
+        },
+        {
+          "color": "#0284c7",
+          "pattern_mode": "NONE",
+          "label_token": "UI_UNEMP_LOW"
+        },
+        {
+          "color": "#f59e0b",
+          "pattern_mode": "NONE",
+          "label_token": "UI_UNEMP_ELEVATED"
+        },
+        {
+          "color": "#dc2626",
+          "pattern_mode": "NONE",
+          "label_token": "UI_UNEMP_SEVERE"
+        }
+      ]
+    },
+    {
+      "id": "ORG_JURISDICTION",
+      "label_token": "UI_OVERLAY_ORG_JURISDICTION",
+      "mode": "ORG_MANDATE_COVERAGE",
+      "unassigned_color": "#64748b",
+      "unassigned_alpha": 0.22,
+      "legend": [
+        {
+          "color": "#2563eb",
+          "pattern_mode": "NONE",
+          "label_token": "UI_OVERLAY_LEGEND_ASSIGNED_TURF"
+        },
+        {
+          "color": "#d97706",
+          "pattern_mode": "CONFLICT_STRIPE",
+          "label_token": "UI_OVERLAY_LEGEND_TURF_OVERLAP"
+        },
+        {
+          "color": "#64748b",
+          "pattern_mode": "NONE",
+          "label_token": "UI_OVERLAY_LEGEND_UNASSIGNED_TURF"
+        }
+      ]
+    }
+  ]
+}

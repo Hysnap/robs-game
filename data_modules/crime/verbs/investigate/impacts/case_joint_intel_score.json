@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "flavour_overlay": "crime",
+    "verb_token": "INVESTIGATE",
+    "description": "Targeted joint-casing reconnaissance generates high-intensity establishment dossier intelligence."
+  },
+  "metric_id": "INTEL_SCORE",
+  "rules_module": "intel_exposure",
+  "model": "HYPERBOLIC_EFFORT_PER_TICK",
+  "target_scope": "ESTABLISHMENT",
+  "when": {
+    "mode": "CASE_JOINT"
+  },
+  "base_effort_per_tick": 32.0
+}

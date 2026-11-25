@@ -1,9 +1,39 @@
 {
   "_meta": {
     "schema_version": "1.0.0",
-    "tier_level": 4,
-    "scope_id": "CRIME_CONSUMABLES_FOODS_PREMIUM_PRODUCTS",
-    "display_scope": "Crime -> Consumables -> Foods -> Premium Products",
-    "description": "Establishes baseline properties for the Crime -> Consumables -> Foods -> Premium Products commodity scope."
+    "tier_level": 3,
+    "scope_id": "CORE_CONSUMABLES_FOODS_PREMIUM_PRODUCTS",
+    "display_scope": "CORE -> Consumables -> Foods -> Premium Products",
+    "description": "Establishes baseline properties, standard VAT status, and DEMAND_LED household demand curves for the CORE -> Consumables -> Foods commodity scope."
+  },
+  "tags": [
+    "CORE_ECONOMY"
+  ],
+  "tax_class": "STANDARD",
+  "duty_class": "NONE",
+  "demand_profile": {
+    "primary_driver": "DEMAND_LED",
+    "base_per_capita_daily": 0.45,
+    "income_elasticity": 0.12,
+    "price_elasticity": -0.22,
+    "compulsion_floor": 0.0,
+    "fomo_sensitivity": 0.30,
+    "status_multiplier": 0.0,
+    "legality": "LEGAL",
+    "credit_tick_allowed": true,
+    "substitution_group": "HOUSEHOLD_FOOD_STAPLES",
+    "substitution_priority": 1,
+    "event_multipliers": {
+      "WEEKLY_PAYDAY": 1.15
+    }
+  },
+  "decay_properties": {
+    "degrades_to": "SPOILED_FOOD",
+    "shelf_life_ticks": 5,
+    "impact": {
+      "model": "LINEAR_PER_UNIT",
+      "factor": -0.03,
+      "params": {}
+    }
   }
 }

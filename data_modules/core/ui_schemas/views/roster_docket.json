@@ -2,7 +2,7 @@
   "_meta": {
     "target_class": "GenRosterDocket",
     "extends": "VBoxContainer",
-    "description": "Dossier and personnel register of recruited crew operatives and street confederates."
+    "description": "Dossier, organizational hierarchy roll-up, and personnel register of recruited crew operatives and street confederates."
   },
   "sections": [
     {
@@ -19,6 +19,20 @@
           "subtitle_field": "home_district_name",
           "show_separator": true,
           "autowrap": true
+        }
+      ]
+    },
+    {
+      "id": "org_hierarchy_section",
+      "header_token": "UI_ORG_HIERARCHY_HDR",
+      "color": "body",
+      "rows": [
+        {
+          "id": "personnel_hierarchy_nav",
+          "type": "HIERARCHY_NAVIGATOR",
+          "field": "org_hierarchy_tree",
+          "item_signal": "item_selected",
+          "action_signal": "action_clicked"
         }
       ]
     },

@@ -2,7 +2,7 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Master dictionary of standardized work schedules, rotating shift splits, unsocial hours uplifts, wage brackets, and occupational roles."
   },
   "shift_uplifts": {
@@ -292,6 +292,26 @@
     },
     "SCHOOL_MEALS_STAFF": {
       "display_name": "School Meals Assistant / Dinner Lady",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
+      "education_required": "NO_FORMAL",
+      "work_schedule": "PART_TIME_DAYTIME_15",
+      "wage_bracket": "BRACKET_UNSKILLED",
+      "age_min": 16,
+      "age_max": 62,
+      "is_field_worker": false,
+      "intel_clearance": 0.3,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "agreeableness": 0.35,
+        "extraversion": 0.2,
+        "conscientiousness": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.1
+      }
+    },
+    "CANTEEN_STAFF": {
+      "display_name": "Canteen Staff",
       "contract_class": "FORMAL_LEGAL",
       "contract_type": "PART_TIME",
       "education_required": "NO_FORMAL",
@@ -905,6 +925,27 @@
       "max_commute": 5000,
       "work_schedule": "DAYTIME_STANDARD_37_5",
       "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 16,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.35,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "agreeableness": 0.3,
+        "conscientiousness": 0.2,
+        "openness": 0.05,
+        "neuroticism": -0.1
+      }
+    },
+    "COMMERCIAL_SUPERVISOR": {
+      "display_name": "Shop Supervisor",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SUPERVISORY",
       "age_min": 16,
       "age_max": 65,
       "is_field_worker": false,
@@ -1819,6 +1860,237 @@
         "agreeableness": 0.1,
         "extraversion": 0.05,
         "neuroticism": -0.2
+      }
+    },
+    "CHARTERED_ACCOUNTANT": {
+      "display_name": "Chartered Accountant & Auditor",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 15000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
+      "age_min": 24,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.9,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.55,
+        "openness": 0.15,
+        "extraversion": 0.1,
+        "agreeableness": 0.05,
+        "neuroticism": -0.25
+      }
+    },
+    "INSURANCE_BROKER": {
+      "display_name": "Insurance Broker & Underwriter",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "A_LEVELS",
+      "max_commute": 10000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
+      "age_min": 22,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.8,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.35,
+        "openness": 0.15,
+        "agreeableness": 0.05,
+        "neuroticism": -0.2
+      }
+    },
+    "ARCHITECT_SURVEYOR": {
+      "display_name": "Architect / Chartered Surveyor",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 15000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
+      "age_min": 24,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.85,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.45,
+        "conscientiousness": 0.45,
+        "extraversion": 0.15,
+        "agreeableness": 0.1,
+        "neuroticism": -0.2
+      }
+    },
+    "OPHTHALMIC_OPTICIAN": {
+      "display_name": "Ophthalmic Optician",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "DEGREE_OR_HIGHER",
+      "max_commute": 12000,
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_SENIOR_MANAGEMENT",
+      "age_min": 23,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.75,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.5,
+        "agreeableness": 0.3,
+        "openness": 0.2,
+        "extraversion": 0.15,
+        "neuroticism": -0.2
+      }
+    },
+    "JOURNALIST_EDITOR": {
+      "display_name": "Local Reporter & Sub-Editor",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "A_LEVELS",
+      "max_commute": 10000,
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_PROFESSIONAL",
+      "age_min": 20,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.85,
+      "social_tier": "PROFESSIONAL",
+      "ocean_affinities": {
+        "openness": 0.5,
+        "extraversion": 0.4,
+        "conscientiousness": 0.3,
+        "agreeableness": 0.05,
+        "neuroticism": -0.15
+      }
+    },
+    "TRAVEL_CLERK": {
+      "display_name": "Travel Agent & Booking Clerk",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 6000,
+      "work_schedule": "DAYTIME_STANDARD_37_5",
+      "wage_bracket": "BRACKET_CLERICAL",
+      "age_min": 18,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.55,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "agreeableness": 0.3,
+        "conscientiousness": 0.3,
+        "openness": 0.25,
+        "neuroticism": -0.15
+      }
+    },
+    "ELECTRONICS_ENGINEER": {
+      "display_name": "TV & Wireless Service Engineer",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 6000,
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
+      "age_min": 19,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.45,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.25,
+        "agreeableness": 0.1,
+        "extraversion": 0.0,
+        "neuroticism": -0.2
+      }
+    },
+    "TAILOR_DRESSMAKER": {
+      "display_name": "Bespoke Tailor & Dressmaker",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 5000,
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_SKILLED_TRADE",
+      "age_min": 19,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.45,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "openness": 0.3,
+        "agreeableness": 0.2,
+        "extraversion": 0.1,
+        "neuroticism": -0.15
+      }
+    },
+    "INSURANCE_AGENT_COLLECTOR": {
+      "display_name": "Home-Service Insurance Agent & Collector",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 6000,
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_CLERICAL",
+      "age_min": 21,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.75,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.4,
+        "agreeableness": 0.25,
+        "openness": 0.1,
+        "neuroticism": -0.2
+      }
+    },
+    "ROUNDSMAN_DELIVERY": {
+      "display_name": "Door-to-Door Roundsman (Milk / Pop / Coal)",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "EARLY_MORNING_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 18,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.5,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "extraversion": 0.3,
+        "agreeableness": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.15
+      }
+    },
+    "RENT_COLLECTOR_AGENT": {
+      "display_name": "Rent & Weekly Check Collector",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "O_LEVELS_CSE",
+      "max_commute": 6000,
+      "work_schedule": "DAYTIME_STANDARD_38",
+      "wage_bracket": "BRACKET_CLERICAL",
+      "age_min": 21,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.8,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "conscientiousness": 0.45,
+        "extraversion": 0.25,
+        "agreeableness": -0.1,
+        "openness": 0.05,
+        "neuroticism": -0.25
       }
     },
     "HIGHER_ED_STUDENT": {

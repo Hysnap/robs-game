@@ -1,2164 +1,2707 @@
 {
   "_meta": {
-	"era": "1980s",
-	"region": "United Kingdom",
-	"version": "1.3.0",
-	"description": "Establishment classes, tenancy types, catchment thresholds, and job_definition staffing rosters."
+    "era": "1980s",
+    "region": "United Kingdom",
+    "version": "1.6.0",
+    "description": "Establishment classes, tenancy types, catchment thresholds, Dunbar social weaving rules, and job_definition staffing rosters."
+  },
+  "default_footprint_sqm": 250.0,
+  "default_dunbar_weaving": {
+    "relationship_type": "CIVIC_PEER",
+    "affinity_score": 0.5,
+    "link_probability": 1.0,
+    "pairs_per_member": 1.0,
+    "max_pairs_per_venue": 80,
+    "reciprocal": true
   },
   "commercial_tenants": {
-	"CORNER_SHOP": {
-	  "display_name": "Corner Shop & Newsagent",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"victorian_low_density",
-		"local_government",
-		"hospital_site",
-		"university_campus",
+    "CORNER_SHOP": {
+      "display_name": "Corner Shop & Newsagent",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "victorian_low_density",
+        "local_government",
+        "hospital_site",
+        "university_campus",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 4,
-	  "customer_travel_distance_m": 900.0,
-	  "required_customer_threshold": 800,
-	  "weight": 25,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 10
-		}
-	  ]
-	},
-	"OFF_LICENCE": {
-	  "display_name": "Off-Licence & Wine Merchant",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"victorian_low_density",
-		"local_government",
-		"hospital_site",
+      ],
+      "default_capacity": 4,
+      "customer_travel_distance_m": 900.0,
+      "required_customer_threshold": 800,
+      "weight": 25,
+      "staffing_roster": [
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 10
+        }
+      ]
+    },
+    "OFF_LICENCE": {
+      "display_name": "Off-Licence & Wine Merchant",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "victorian_low_density",
+        "local_government",
+        "hospital_site",
         "university_campus"
-	  ],
-	  "default_capacity": 6,
-	  "customer_travel_distance_m": 1200.0,
-	  "required_customer_threshold": 120,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			2,
-			3
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 10
-		}
-	  ]
-	},
-	"LOCAL_PUB": {
-	  "display_name": "Public House & Taproom",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"local_government",
-		"hospital_site",
-		"university_campus",
+      ],
+      "default_capacity": 6,
+      "customer_travel_distance_m": 1200.0,
+      "required_customer_threshold": 120,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 10
+        }
+      ]
+    },
+    "LOCAL_PUB": {
+      "display_name": "Public House & Taproom",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "local_government",
+        "hospital_site",
+        "university_campus",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 60,
-	  "customer_travel_distance_m": 1500.0,
-	  "required_customer_threshold": 250,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "hourly_rate": 4.1,
-		  "weekly_hours": 42.0
-		},
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			2,
-			5
-		  ],
-		  "weekly_hours": 24.0
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 12.0
-		}
-	  ]
-	},
-	"MINICAB_FIRM": {
-	  "display_name": "Private Hire & Minicab Office",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 60,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 250,
+      "weight": 20,
+      "dunbar_weaving": {
+        "relationship_type": "DRINKING_MATE",
+        "affinity_score": 0.55,
+        "link_probability": 0.65,
+        "pairs_per_member": 0.5,
+        "max_pairs_per_venue": 25,
+        "reciprocal": true
+      },
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [1, 2],
+          "hourly_rate": 4.1,
+          "weekly_hours": 42.0
+        },
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [1, 2],
+          "hourly_rate": 4.1,
+          "weekly_hours": 42.0
+        },
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [2, 5],
+          "weekly_hours": 24.0
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 12.0
+        }
+      ]
+    },
+    "MINICAB_FIRM": {
+      "display_name": "Private Hire & Minicab Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "victorian_low_density"
-	  ],
-	  "default_capacity": 10,
-	  "customer_travel_distance_m": 5000.0,
-	  "required_customer_threshold": 200,
-	  "weight": 14,
-	  "staffing_roster": [
-		{
-		  "job_id": "DISPATCHER_OR_CONTROLLER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 12
-		},
-		{
-		  "job_id": "CAB_DRIVER",
-		  "target_count": [
-			12,
-			35
-		  ]
-		}
-	  ]
-	},
-	"CLEANING_CONTRACTOR": {
-	  "display_name": "Commercial Cleaning & Maintenance Services",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 10,
+      "customer_travel_distance_m": 5000.0,
+      "required_customer_threshold": 200,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "DISPATCHER_OR_CONTROLLER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 12
+        },
+        {
+          "job_id": "CAB_DRIVER",
+          "target_count": [12, 35]
+        }
+      ]
+    },
+    "CLEANING_CONTRACTOR": {
+      "display_name": "Commercial Cleaning & Maintenance Services",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 6000.0,
-	  "required_customer_threshold": 350,
-	  "weight": 10,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			2,
-			3
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			15,
-			40
-		  ]
-		}
-	  ]
-	},
-	"FISH_AND_CHIP_SHOP": {
-	  "display_name": "Fish and Chip Shop",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 6000.0,
+      "required_customer_threshold": 350,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [15, 40]
+        }
+      ]
+    },
+    "FISH_AND_CHIP_SHOP": {
+      "display_name": "Fish and Chip Shop",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 60,
-	  "customer_travel_distance_m": 1500.0,
-	  "required_customer_threshold": 250,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "KITCHEN_STAFF",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ],
-		  "weekly_hours": 24
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 12
-		}
-	  ]
-	},
-	"CHINESE_TAKEAWAY": {
-	  "display_name": "Chinese Take Away",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 60,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 250,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [2, 4],
+          "weekly_hours": 24
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 12
+        }
+      ]
+    },
+    "CHINESE_TAKEAWAY": {
+      "display_name": "Chinese Take Away",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "proproetor_ethnicity": "CHINESE",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "university_campus"
-	  ],
-	  "default_capacity": 60,
-	  "customer_travel_distance_m": 1500.0,
-	  "required_customer_threshold": 250,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "RESTAURANT_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "KITCHEN_STAFF",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 40
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 12
-		}
-	  ]
-	},
-	"INDIAN_TAKEAWAY": {
-	  "display_name": "Indian Take Away",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 60,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 250,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "RESTAURANT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [1, 1],
+          "weekly_hours": 40
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 12
+        }
+      ]
+    },
+    "INDIAN_TAKEAWAY": {
+      "display_name": "Indian Take Away",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "proproetor_ethnicity": "SOUTH_ASIAN",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 60,
-	  "customer_travel_distance_m": 1500.0,
-	  "required_customer_threshold": 250,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "RESTAURANT_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "KITCHEN_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"INDIAN_RESTAURANT": {
-	  "display_name": "Indian Restaurant",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 60,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 250,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "RESTAURANT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "INDIAN_RESTAURANT": {
+      "display_name": "Indian Restaurant",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "proproetor_ethnicity": "SOUTH_ASIAN",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 60,
-	  "customer_travel_distance_m": 3000.0,
-	  "required_customer_threshold": 550,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "RESTAURANT_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "KITCHEN_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "SERVING_STAFF",
-		  "target_count": [
-			3,
-			7
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"BETTING_SHOP": {
-	  "display_name": "Turf Accountant & Bookmakers",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 60,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 550,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "RESTAURANT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "SERVING_STAFF",
+          "target_count": [3, 7]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "CHINESE_RESTAURANT": {
+      "display_name": "Chinese Restaurant",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "proproetor_ethnicity": "CHINESE",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 15,
-	  "customer_travel_distance_m": 1800.0,
-	  "required_customer_threshold": 180,
-	  "weight": 12,
-	  "staffing_roster": [
-		{
-		  "job_id": "BOOKMAKER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			3,
-			5
-		  ],
-		  "weekly_hours": 40
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 12
-		}
-	  ]
-	},
-	"BUTCHER": {
-	  "display_name": "Family Butcher",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 60,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 550,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "RESTAURANT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "SERVING_STAFF",
+          "target_count": [3, 7]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "RESTAURANT": {
+      "display_name": "Restaurant",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 1000.0,
-	  "required_customer_threshold": 3750,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "SHOP_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "BUTCHER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "APPRENTICE_BUTCHER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"BAKERY": {
-	  "display_name": "Family Bakery",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 60,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 550,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "RESTAURANT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "KITCHEN_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "SERVING_STAFF",
+          "target_count": [3, 7]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "BETTING_SHOP": {
+      "display_name": "Turf Accountant & Bookmakers",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 1000.0,
-	  "required_customer_threshold": 100,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "SHOP_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "BAKER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "APPRENTICE_BAKER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			3,
-			4
-		  ]
-		}
-	  ]
-	},
-	"GROCER": {
-	  "display_name": "Green Grocers",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 15,
+      "customer_travel_distance_m": 1800.0,
+      "required_customer_threshold": 180,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "BOOKMAKER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [3, 5],
+          "weekly_hours": 40
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 12
+        }
+      ]
+    },
+    "BUTCHER": {
+      "display_name": "Family Butcher",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 1000.0,
-	  "required_customer_threshold": 5100,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "SHOP_MANAGER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "BAKER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"PET_SHOP": {
-	  "display_name": "Pet Shop",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 3750,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "BUTCHER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "APPRENTICE_BUTCHER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "BAKERY": {
+      "display_name": "Family Bakery",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 2000.0,
-	  "required_customer_threshold": 400,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			1,
-			2
-		  ]
-		}
-	  ]
-	},
-	"TOY_SHOP": {
-	  "display_name": "Toy Shop",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 100,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "BAKER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "APPRENTICE_BAKER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [3, 4]
+        }
+      ]
+    },
+    "GROCER": {
+      "display_name": "Green Grocers",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 2000.0,
-	  "required_customer_threshold": 400,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			1,
-			3
-		  ]
-		}
-	  ]
-	},
-	"RETAIL_BANK": {
-	  "display_name": "High Steet Bank Branch",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 5100,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "BAKER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "SUPERMARKET": {
+      "display_name": "Supermarket",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 2000.0,
-	  "required_customer_threshold": 4500,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "BANK_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "LOANS_OFFICER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "BUSINESS_ADVISOR",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "INVESTMENT_ADVISOR",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "BANK_TELLER",
-		  "target_count": [
-			3,
-			6
-		  ]
-		}
-	  ]
-	},
-	"HARDWARE_STORE": {
-	  "display_name": "Ironmonger & DIY Supplies",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 200,
+      "footprint_sqm": 800.0,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 26500,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_SUPERVISOR",
+          "target_count": [5, 8]
+        },
+        {
+          "job_id": "BAKER",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "BUTCHER",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [35, 60]
+        },
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [30, 50]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [2, 5]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [4, 5]
+        },
+        {
+          "job_id": "CANTEEN_STAFF",
+          "target_count": [6, 10]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [5, 8]
+        }
+      ]
+    },
+    "HYPERMARKET": {
+      "display_name": "Large Supermarket",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 10,
-	  "customer_travel_distance_m": 2400.0,
-	  "required_customer_threshold": 5000,
-	  "weight": 10,
-	  "staffing_roster": [
-		{
-		  "job_id": "COMMERCIAL_SERVICE",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"CHEMIST_PHARMACY": {
-	  "display_name": "Dispensing Chemist & Pharmacy",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "6430",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 8,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 140500,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [5, 8]
+        },
+        {
+          "job_id": "COMMERCIAL_SUPERVISOR",
+          "target_count": [10, 16]
+        },
+        {
+          "job_id": "BAKER",
+          "target_count": [3, 5]
+        },
+        {
+          "job_id": "BUTCHER",
+          "target_count": [3, 5]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [70, 120]
+        },
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [60, 105]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [4, 10]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [4, 10]
+        },
+        {
+          "job_id": "CANTEEN_STAFF",
+          "target_count": [12, 20]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [10, 15]
+        }
+      ]
+    },
+    "PET_SHOP": {
+      "display_name": "Pet Shop",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 2000.0,
+      "required_customer_threshold": 400,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "TOY_SHOP": {
+      "display_name": "Toy Shop",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 2000.0,
+      "required_customer_threshold": 400,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [1, 3]
+        }
+      ]
+    },
+    "RETAIL_BANK": {
+      "display_name": "High Steet Bank Branch",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 8,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 2000.0,
+      "required_customer_threshold": 4500,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "BANK_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "LOANS_OFFICER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "BUSINESS_ADVISOR",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "INVESTMENT_ADVISOR",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "BANK_TELLER",
+          "target_count": [3, 6]
+        }
+      ]
+    },
+    "HARDWARE_STORE": {
+      "display_name": "Ironmonger & DIY Supplies",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 10,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 2400.0,
+      "required_customer_threshold": 5000,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "COMMERCIAL_SERVICE",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "CHEMIST_PHARMACY": {
+      "display_name": "Dispensing Chemist & Pharmacy",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "6430",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "hospital_site"
-	  ],
-	  "default_capacity": 10,
-	  "customer_travel_distance_m": 1200.0,
-	  "required_customer_threshold": 4500,
-	  "weight": 14,
-	  "staffing_roster": [
-		{
-		  "job_id": "PHARMACIST",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 10.0
-		}
-	  ]
-	},
-	"LAUNDERETTE_DRY_CLEANERS": {
-	  "display_name": "Coin-Op Launderette & Dry Cleaners",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "9811",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 10,
+      "customer_travel_distance_m": 1200.0,
+      "required_customer_threshold": 4500,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "PHARMACIST",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 10.0
+        }
+      ]
+    },
+    "LAUNDERETTE_DRY_CLEANERS": {
+      "display_name": "Coin-Op Launderette & Dry Cleaners",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "9811",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 12,
-	  "customer_travel_distance_m": 1000.0,
-	  "required_customer_threshold": 3200,
-	  "weight": 12,
-	  "staffing_roster": [
-		{
-		  "job_id": "LAUNDRY_WORKER",
-		  "target_count": [
-			1,
-			3
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 10.0
-		}
-	  ]
-	},
-	"HAIRDRESSER_BARBER": {
-	  "display_name": "Hairdressing Salon & Barbers",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "9820",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 12,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 3200,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "LAUNDRY_WORKER",
+          "target_count": [1, 3]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 10.0
+        }
+      ]
+    },
+    "HAIRDRESSER_BARBER": {
+      "display_name": "Hairdressing Salon & Barbers",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "9820",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 1200.0,
-	  "required_customer_threshold": 1800,
-	  "weight": 15,
-	  "staffing_roster": [
-		{
-		  "job_id": "HAIRDRESSER_OR_BARBER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "APPRENTICE_HAIRDRESSER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		}
-	  ]
-	},
-	"ESTATE_AGENT_AND_VALUER": {
-	  "display_name": "Estate Agents & Surveyors Office",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "8340",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"medium_density_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 1200.0,
+      "required_customer_threshold": 1800,
+      "weight": 15,
+      "staffing_roster": [
+        {
+          "job_id": "HAIRDRESSER_OR_BARBER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "APPRENTICE_HAIRDRESSER",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "ESTATE_AGENT_AND_VALUER": {
+      "display_name": "Estate Agents & Surveyors Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8340",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 8,
-	  "customer_travel_distance_m": 3500.0,
-	  "required_customer_threshold": 8000,
-	  "weight": 10,
-	  "staffing_roster": [
-		{
-		  "job_id": "ESTATE_AGENT",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 8.0
-		}
-	  ]
-	},
-	"SOLICITORS_PRACTICE": {
-	  "display_name": "Solicitors & Legal Practice",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "8350",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 3500.0,
+      "required_customer_threshold": 8000,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "ESTATE_AGENT",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 8.0
+        }
+      ]
+    },
+    "SOLICITORS_PRACTICE": {
+      "display_name": "Solicitors & Legal Practice",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8350",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_victorian_residential",
         "local_government"
-	  ],
-	  "default_capacity": 10,
-	  "customer_travel_distance_m": 4000.0,
-	  "required_customer_threshold": 9500,
-	  "weight": 10,
-	  "staffing_roster": [
-		{
-		  "job_id": "SOLICITOR",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "LEGAL_EXECUTIVE",
-		  "target_count": [
-			1,
-			3
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 10.0
-		}
-	  ]
-	},
-	"FILLING_STATION_GARAGE": {
-	  "display_name": "Petrol Filling Station & Forecourt",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "6520",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"suburban_low_density",
+      ],
+      "default_capacity": 10,
+      "customer_travel_distance_m": 4000.0,
+      "required_customer_threshold": 9500,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "SOLICITOR",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "LEGAL_EXECUTIVE",
+          "target_count": [1, 3]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 10.0
+        }
+      ]
+    },
+    "FILLING_STATION_GARAGE": {
+      "display_name": "Petrol Filling Station & Forecourt",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "6520",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "suburban_low_density",
         "medium_density_residential"
-	  ],
-	  "default_capacity": 12,
-	  "customer_travel_distance_m": 2500.0,
-	  "required_customer_threshold": 3500,
-	  "weight": 14,
-	  "staffing_roster": [
-		{
-		  "job_id": "PETROL_PUMP_ATTENDANT",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "VEHICLE_MECHANIC",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "RETAIL_COUNTER_STAFF",
-		  "target_count": [
-			1,
-			2
-		  ]
-		}
-	  ]
-	},
-	"WHOLESALE_CASH_AND_CARRY": {
-	  "display_name": "Wholesale Cash & Carry Warehouse",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "6170",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
+      ],
+      "default_capacity": 12,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 3500,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "PETROL_PUMP_ATTENDANT",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "VEHICLE_MECHANIC",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "WHOLESALE_CASH_AND_CARRY": {
+      "display_name": "Wholesale Cash & Carry Warehouse",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "6170",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
         "railway_sidings_and_scrap"
-	  ],
-	  "default_capacity": 30,
-	  "customer_travel_distance_m": 7000.0,
-	  "required_customer_threshold": 22000,
-	  "weight": 8,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "WAREHOUSE_OPERATIVE",
-		  "target_count": [
-			8,
-			16
-		  ]
-		},
-		{
-		  "job_id": "FORKLIFT_DRIVER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	}
+      ],
+      "default_capacity": 30,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 7000.0,
+      "required_customer_threshold": 22000,
+      "weight": 8,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [8, 16]
+        },
+        {
+          "job_id": "FORKLIFT_DRIVER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "ACCOUNTANTS_PRACTICE": {
+      "display_name": "Chartered Accountants & Auditors",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8360",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "local_government"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 4500.0,
+      "required_customer_threshold": 6000,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "CHARTERED_ACCOUNTANT",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "INSURANCE_BROKERAGE": {
+      "display_name": "Insurance Brokers & Assurance Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8200",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_residential",
+        "suburban_low_density",
+        "local_government"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 3500.0,
+      "required_customer_threshold": 4500,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "INSURANCE_BROKER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "INSURANCE_DISTRICT_OFFICE": {
+      "display_name": "District Assurance & Home-Service Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "8200",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 12,
+      "customer_travel_distance_m": 4000.0,
+      "required_customer_threshold": 3500,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "INSURANCE_AGENT_COLLECTOR",
+          "target_count": [4, 8]
+        }
+      ]
+    },
+    "PRIVATE_LANDLORDS_OFFICE": {
+      "display_name": "Private Landlord & Rent Collection Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8340",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_victorian_residential",
+        "medium_density_residential"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 3500.0,
+      "required_customer_threshold": 2800,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "RENT_COLLECTOR_AGENT",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "CLUB_CHECK_CREDIT_OFFICE": {
+      "display_name": "Provident & Weekly Check Credit Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "8150",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential"
+      ],
+      "default_capacity": 10,
+      "customer_travel_distance_m": 3500.0,
+      "required_customer_threshold": 3200,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "RENT_COLLECTOR_AGENT",
+          "target_count": [3, 6]
+        }
+      ]
+    },
+    "SOFT_DRINKS_DEPOT": {
+      "display_name": "Mineral Water & Pop Delivery Depot",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "6170",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 16,
+      "footprint_sqm": 800.0,
+      "customer_travel_distance_m": 4500.0,
+      "required_customer_threshold": 3500,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "ROUNDSMAN_DELIVERY",
+          "target_count": [4, 9]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "DAIRY_DEPOT": {
+      "display_name": "Retail Dairy & Milk Rounds Depot",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "6170",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 18,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 4000.0,
+      "required_customer_threshold": 3000,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "ROUNDSMAN_DELIVERY",
+          "target_count": [6, 12]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "COAL_MERCHANT_YARD": {
+      "display_name": "Coal & Solid Fuel Merchant Yard",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "6120",
+      "spawns_in_archetypes": [
+        "industrial",
+        "railway_sidings_and_scrap",
+        "high_density_low_rise",
+        "medium_density_victorian_residential"
+      ],
+      "default_capacity": 14,
+      "footprint_sqm": 800.0,
+      "customer_travel_distance_m": 4500.0,
+      "required_customer_threshold": 3200,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "ROUNDSMAN_DELIVERY",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "ARCHITECT_AND_SURVEYOR": {
+      "display_name": "Architects & Chartered Surveyors",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "8370",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_victorian_residential",
+        "victorian_low_density",
+        "local_government"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 5000.0,
+      "required_customer_threshold": 7500,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "ARCHITECT_SURVEYOR",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "OPHTHALMIC_OPTICIANS": {
+      "display_name": "Ophthalmic Opticians",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "9540",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 3500,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "OPHTHALMIC_OPTICIAN",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "PRACTICE_STAFF",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "LOCAL_NEWSPAPER_OFFICE": {
+      "display_name": "Borough Gazette & Editorial Office",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "4751",
+      "spawns_in_archetypes": ["commercial", "local_government"],
+      "default_capacity": 12,
+      "footprint_sqm": 800.0,
+      "customer_travel_distance_m": 6000.0,
+      "required_customer_threshold": 9000,
+      "weight": 8,
+      "staffing_roster": [
+        {
+          "job_id": "JOURNALIST_EDITOR",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "TRAVEL_AGENCY": {
+      "display_name": "High Street Travel Bureau",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "7700",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 8,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 3000,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "TRAVEL_CLERK",
+          "target_count": [2, 3]
+        }
+      ]
+    },
+    "TV_AND_WIRELESS_REPAIR": {
+      "display_name": "Television & Wireless Rental & Repair",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "6730",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 6,
+      "customer_travel_distance_m": 2000.0,
+      "required_customer_threshold": 2200,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "ELECTRONICS_ENGINEER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "BESPOKE_TAILOR_OUTFITTER": {
+      "display_name": "Bespoke Tailor & Gentlemen's Outfitter",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "6450",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_victorian_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 6,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 3200,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "TAILOR_DRESSMAKER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "JEWELLER_AND_WATCHMAKER": {
+      "display_name": "Jeweller & Horologist",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "6540",
+      "spawns_in_archetypes": [
+        "commercial",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 6,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 4000,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "SHOP_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "RETAIL_COUNTER_STAFF",
+          "target_count": [1, 2]
+        }
+      ]
+    },
+    "DRIVING_SCHOOL": {
+      "display_name": "Motor School & Driving Tuition",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "9360",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "suburban_low_density"
+      ],
+      "default_capacity": 6,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 2800,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "CAB_DRIVER",
+          "target_count": [2, 3]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 1],
+          "weekly_hours": 20.0
+        }
+      ]
+    }
   },
   "industrial_tenants": {
-	"COACH_AND_HAULAGE_DEPOT": {
-	  "display_name": "Charter Coach & Road Haulage Depot",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+    "COACH_AND_HAULAGE_DEPOT": {
+      "display_name": "Charter Coach & Road Haulage Depot",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 15,
-	  "customer_travel_distance_m": 8000.0,
-	  "required_customer_threshold": 4000,
-	  "weight": 12,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "VEHICLE_MECHANIC",
-		  "target_count": [
-			3,
-			6
-		  ]
-		},
-		{
-		  "job_id": "COACH_OR_LORRY_DRIVER",
-		  "target_count": [
-			15,
-			30
-		  ]
-		}
-	  ]
-	},
-	"BUILDING_CONTRACTORS": {
-	  "display_name": "Builders Yard & Civil Contracting",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 15,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 8000.0,
+      "required_customer_threshold": 4000,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "VEHICLE_MECHANIC",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "COACH_OR_LORRY_DRIVER",
+          "target_count": [15, 30]
+        }
+      ]
+    },
+    "BUILDING_CONTRACTORS": {
+      "display_name": "Builders Yard & Civil Contracting",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 20,
-	  "customer_travel_distance_m": 7000.0,
-	  "required_customer_threshold": 20000,
-	  "weight": 16,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "BUILDING_TRADESMAN",
-		  "target_count": [
-			8,
-			20
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			6,
-			15
-		  ]
-		}
-	  ]
-	},
-	"FOUNDRY_CASTINGS": {
-	  "display_name": "Metal Foundry & Heavy Engineering",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 20,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 7000.0,
+      "required_customer_threshold": 20000,
+      "weight": 16,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "BUILDING_TRADESMAN",
+          "target_count": [8, 20]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [6, 15]
+        }
+      ]
+    },
+    "FOUNDRY_CASTINGS": {
+      "display_name": "Metal Foundry & Heavy Engineering",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 50,
-	  "weight": 20,
-	  "wage_multiplier": 1.05,
-	  "required_customer_threshold": 150000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			15,
-			35
-		  ]
-		}
-	  ]
-	},
-	"AUTO_REPAIR_DEPOT": {
-	  "display_name": "Motor Repair Works & Body Shop",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 50,
+      "weight": 20,
+      "footprint_sqm": 1600.0,
+      "wage_multiplier": 1.05,
+      "required_customer_threshold": 150000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [15, 35]
+        }
+      ]
+    },
+    "AUTO_REPAIR_DEPOT": {
+      "display_name": "Motor Repair Works & Body Shop",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 12,
-	  "customer_travel_distance_m": 3000.0,
-	  "required_customer_threshold": 2000,
-	  "weight": 25,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "VEHICLE_MECHANIC",
-		  "target_count": [
-			2,
-			5
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			1,
-			3
-		  ]
-		}
-	  ]
-	},
-	"SCRAP_MERCHANT": {
-	  "display_name": "Scrap & Metal Reclamation",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 12,
+      "footprint_sqm": 800.0,
+      "customer_travel_distance_m": 3000.0,
+      "required_customer_threshold": 2000,
+      "weight": 25,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "VEHICLE_MECHANIC",
+          "target_count": [2, 5]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [1, 3]
+        }
+      ]
+    },
+    "SCRAP_MERCHANT": {
+      "display_name": "Scrap & Metal Reclamation",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 10,
-	  "weight": 15,
-	  "required_customer_threshold": 12000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			2,
-			6
-		  ]
-		}
-	  ]
-	},
-	"JOINERY": {
-	  "display_name": "Joinery Works & Timber Yard",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 10,
+      "weight": 15,
+      "footprint_sqm": 1600.0,
+      "required_customer_threshold": 12000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [2, 6]
+        }
+      ]
+    },
+    "JOINERY": {
+      "display_name": "Joinery Works & Timber Yard",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 20000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "BUILDING_TRADESMAN",
-		  "target_count": [
-			4,
-			10
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			2,
-			6
-		  ]
-		}
-	  ]
-	},
-	"TEXTILES": {
-	  "display_name": "Textiles and Cloth",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 25,
+      "weight": 20,
+      "footprint_sqm": 600.0,
+      "required_customer_threshold": 20000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "BUILDING_TRADESMAN",
+          "target_count": [4, 10]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [2, 6]
+        }
+      ]
+    },
+    "TEXTILES": {
+      "display_name": "Textiles and Cloth",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 20000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			6,
-			18
-		  ]
-		}
-	  ]
-	},
-	"CLOTHS_MANUFACTURER": {
-	  "display_name": "Clothes Manufacturers",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 25,
+      "weight": 20,
+      "footprint_sqm": 1600.0,
+      "required_customer_threshold": 20000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [6, 18]
+        }
+      ]
+    },
+    "CLOTHS_MANUFACTURER": {
+      "display_name": "Clothes Manufacturers",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 150000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			16,
-			32
-		  ]
-		}
-	  ]
-	},
-	"INDURSTRIAL_PRINTERS": {
-	  "display_name": "Printers",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 25,
+      "weight": 20,
+      "footprint_sqm": 1600.0,
+      "required_customer_threshold": 150000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [16, 32]
+        }
+      ]
+    },
+    "INDURSTRIAL_PRINTERS": {
+      "display_name": "Printers",
+      "use_proprietor_name": true,
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			6,
-			12
-		  ]
-		}
-	  ]
-	},
-	"MAILHOUSE": {
-	  "display_name": "Mail house",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 25,
+      "footprint_sqm": 800.0,
+      "weight": 20,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [6, 12]
+        }
+      ]
+    },
+    "MAILHOUSE": {
+      "display_name": "Mail house",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 150000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			6,
-			18
-		  ]
-		}
-	  ]
-	},
-	"FURNITURE_MANUFACTURER": {
-	  "display_name": "Furniture Manufacturer",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"industrial",
-		"high_density_low_rise",
+      ],
+      "default_capacity": 25,
+      "footprint_sqm": 1600.0,
+      "weight": 20,
+      "required_customer_threshold": 150000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [6, 18]
+        }
+      ]
+    },
+    "FURNITURE_MANUFACTURER": {
+      "display_name": "Furniture Manufacturer",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "industrial",
+        "high_density_low_rise",
         "medium_density_victorian_residential"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 150000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "BUILDING_TRADESMAN",
-		  "target_count": [
-			4,
-			10
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			2,
-			6
-		  ]
-		}
-	  ]
-	},
-	"BREWERY": {
-	  "display_name": "Brewery",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
+      ],
+      "default_capacity": 25,
+      "footprint_sqm": 1600.0,
+      "weight": 20,
+      "required_customer_threshold": 150000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "BUILDING_TRADESMAN",
+          "target_count": [4, 10]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [2, 6]
+        }
+      ]
+    },
+    "BREWERY": {
+      "display_name": "Brewery",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 20,
-	  "required_customer_threshold": 150000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			3,
-			5
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			5,
-			10
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			4,
-			6
-		  ],
-		  "weekly_hours": 15
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			16,
-			50
-		  ]
-		},
-		{
-		  "job_id": "COACH_OR_LORRY_DRIVER",
-		  "target_count": [
-			4,
-			8
-		  ]
-		}
-	  ]
-	},
-	"COMMERCIAL_BAKERY_PLANT": {
-	  "display_name": "Wholesale Plant Bakery",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "4196",
-	  "spawns_in_archetypes": [
-		"industrial",
-        "commercial"
-	  ],
-	  "default_capacity": 40,
-	  "weight": 15,
-	  "required_customer_threshold": 35000,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "BAKER",
-		  "target_count": [
-			4,
-			8
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			10,
-			25
-		  ]
-		},
-		{
-		  "job_id": "COACH_OR_LORRY_DRIVER",
-		  "target_count": [
-			3,
-			6
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			2,
-			4
-		  ],
-		  "weekly_hours": 20.0
-		}
-	  ]
-	},
-	"SHEET_METAL_FABRICATION": {
-	  "display_name": "Sheet Metal Works & Light Engineering",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "3169",
-	  "spawns_in_archetypes": [
-		"industrial",
-        "industrial_automotive_works"
-	  ],
-	  "default_capacity": 30,
-	  "weight": 18,
-	  "required_customer_threshold": 25000,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "WELDER_FABRICATOR",
-		  "target_count": [
-			6,
-			14
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			4,
-			10
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"PLASTICS_AND_MOULDING_WORKS": {
-	  "display_name": "Plastics Injection & Moulding Works",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "4836",
-	  "spawns_in_archetypes": [
-		"industrial",
-        "industrial_automotive_works"
-	  ],
-	  "default_capacity": 25,
-	  "weight": 16,
-	  "required_customer_threshold": 30000,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "TOOLMAKER_FITTER",
-		  "target_count": [
-			2,
-			5
-		  ]
-		},
-		{
-		  "job_id": "MANUAL_WORKS",
-		  "target_count": [
-			12,
-			28
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"WAREHOUSING_AND_STORAGE_DEPOT": {
-	  "display_name": "Freight Warehousing & Distribution Depot",
-	  "sector": "INDUSTRIAL",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "7700",
-	  "spawns_in_archetypes": [
-		"industrial",
-        "railway_sidings_and_scrap"
-	  ],
-	  "default_capacity": 20,
-	  "customer_travel_distance_m": 10000.0,
-	  "required_customer_threshold": 25000,
-	  "weight": 14,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "WAREHOUSE_OPERATIVE",
-		  "target_count": [
-			10,
-			22
-		  ]
-		},
-		{
-		  "job_id": "FORKLIFT_DRIVER",
-		  "target_count": [
-			3,
-			6
-		  ]
-		},
-		{
-		  "job_id": "COACH_OR_LORRY_DRIVER",
-		  "target_count": [
-			6,
-			14
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	}
+      ],
+      "default_capacity": 25,
+      "footprint_sqm": 1600.0,
+      "weight": 20,
+      "required_customer_threshold": 150000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [3, 5]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [5, 10]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [4, 6],
+          "weekly_hours": 15
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [16, 50]
+        },
+        {
+          "job_id": "COACH_OR_LORRY_DRIVER",
+          "target_count": [4, 8]
+        }
+      ]
+    },
+    "COMMERCIAL_BAKERY_PLANT": {
+      "display_name": "Wholesale Plant Bakery",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "4196",
+      "spawns_in_archetypes": ["industrial", "commercial"],
+      "default_capacity": 40,
+      "footprint_sqm": 1600.0,
+      "weight": 15,
+      "required_customer_threshold": 35000,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "BAKER",
+          "target_count": [4, 8]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [10, 25]
+        },
+        {
+          "job_id": "COACH_OR_LORRY_DRIVER",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [2, 4],
+          "weekly_hours": 20.0
+        }
+      ]
+    },
+    "SHEET_METAL_FABRICATION": {
+      "display_name": "Sheet Metal Works & Light Engineering",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "3169",
+      "spawns_in_archetypes": ["industrial", "industrial_automotive_works"],
+      "default_capacity": 30,
+      "footprint_sqm": 1600.0,
+      "weight": 18,
+      "required_customer_threshold": 25000,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "WELDER_FABRICATOR",
+          "target_count": [6, 14]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [4, 10]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "PLASTICS_AND_MOULDING_WORKS": {
+      "display_name": "Plastics Injection & Moulding Works",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "4836",
+      "spawns_in_archetypes": ["industrial", "industrial_automotive_works"],
+      "default_capacity": 25,
+      "footprint_sqm": 1600.0,
+      "weight": 16,
+      "required_customer_threshold": 30000,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "TOOLMAKER_FITTER",
+          "target_count": [2, 5]
+        },
+        {
+          "job_id": "MANUAL_WORKS",
+          "target_count": [12, 28]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "WAREHOUSING_AND_STORAGE_DEPOT": {
+      "display_name": "Freight Warehousing & Distribution Depot",
+      "sector": "INDUSTRIAL",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "sic_1980_code": "7700",
+      "spawns_in_archetypes": ["industrial", "railway_sidings_and_scrap"],
+      "default_capacity": 20,
+      "footprint_sqm": 1600.0,
+      "customer_travel_distance_m": 10000.0,
+      "required_customer_threshold": 25000,
+      "weight": 14,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "WAREHOUSE_OPERATIVE",
+          "target_count": [10, 22]
+        },
+        {
+          "job_id": "FORKLIFT_DRIVER",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "COACH_OR_LORRY_DRIVER",
+          "target_count": [6, 14]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [2, 4]
+        }
+      ]
+    }
   },
   "civic_tenants": {
-	"GP_SURGERY": {
-	  "display_name": "Medical Practice & Surgery",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"university_campus",
+    "GP_SURGERY": {
+      "display_name": "Medical Practice & Surgery",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "university_campus",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 20,
-	  "customer_travel_distance_m": 1300.0,
-	  "required_customer_threshold": 400,
-	  "weight": 8,
-	  "wage_multiplier": 1.1,
-	  "staffing_roster": [
-		{
-		  "job_id": "HOSPITAL_DOCTOR",
-		  "target_count": [
-			1,
-			3
-		  ]
-		},
-		{
-		  "job_id": "PRACTICE_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"DENTAL_PRACTICE": {
-	  "display_name": "Dental Surgery",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 20,
+      "footprint_sqm": 500.0,
+      "customer_travel_distance_m": 1300.0,
+      "required_customer_threshold": 400,
+      "weight": 8,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        {
+          "job_id": "HOSPITAL_DOCTOR",
+          "target_count": [1, 3]
+        },
+        {
+          "job_id": "PRACTICE_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "DENTAL_PRACTICE": {
+      "display_name": "Dental Surgery",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "university_campus"
-	  ],
-	  "default_capacity": 15,
-	  "customer_travel_distance_m": 1800.0,
-	  "required_customer_threshold": 600,
-	  "weight": 5,
-	  "staffing_roster": [
-		{
-		  "job_id": "HOSPITAL_DOCTOR",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "PRACTICE_STAFF",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"CHIROPODIST": {
-	  "display_name": "Chiropodist Surgery",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
+      ],
+      "default_capacity": 15,
+      "customer_travel_distance_m": 1800.0,
+      "required_customer_threshold": 600,
+      "weight": 5,
+      "staffing_roster": [
+        {
+          "job_id": "HOSPITAL_DOCTOR",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "PRACTICE_STAFF",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "CHIROPODIST": {
+      "display_name": "Chiropodist Surgery",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
+      "use_proprietor_name": true,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
         "university_campus"
-	  ],
-	  "default_capacity": 15,
-	  "customer_travel_distance_m": 1800.0,
-	  "required_customer_threshold": 600,
-	  "weight": 5,
-	  "staffing_roster": [
-		{
-		  "job_id": "HOSPITAL_DOCTOR",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "PRACTICE_STAFF",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"SUB_POST_OFFICE": {
-	  "display_name": "Sub-Post Office & Newsagent",
-	  "sector": "COMMERCIAL",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"victorian_low_density",
-		"local_government",
-		"hospital_site",
-		"university_campus",
+      ],
+      "default_capacity": 15,
+      "customer_travel_distance_m": 1800.0,
+      "required_customer_threshold": 600,
+      "weight": 5,
+      "staffing_roster": [
+        {
+          "job_id": "HOSPITAL_DOCTOR",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "PRACTICE_STAFF",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "SUB_POST_OFFICE": {
+      "display_name": "Sub-Post Office & Newsagent",
+      "sector": "COMMERCIAL",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "victorian_low_density",
+        "local_government",
+        "hospital_site",
+        "university_campus",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 12,
-	  "customer_travel_distance_m": 1000.0,
-	  "required_customer_threshold": 300,
-	  "weight": 10,
-	  "staffing_roster": [
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "POSTAL_CLERK",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			1
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"LOCAL_POLICE_POST": {
-	  "display_name": "Section Police Station",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"high_density_low_rise",
-		"high_density_high_rise",
-		"medium_density_residential",
-		"medium_density_victorian_residential",
-		"suburban_low_density",
-		"victorian_low_density",
-		"local_government",
+      ],
+      "default_capacity": 12,
+      "footprint_sqm": 250.0,
+      "customer_travel_distance_m": 1000.0,
+      "required_customer_threshold": 300,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "POSTAL_CLERK",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 1],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "LOCAL_POLICE_POST": {
+      "display_name": "Section Police Station",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential",
+        "medium_density_victorian_residential",
+        "suburban_low_density",
+        "victorian_low_density",
+        "local_government",
         "industrial_automotive_works"
-	  ],
-	  "default_capacity": 25,
-	  "customer_travel_distance_m": 2400.0,
-	  "required_customer_threshold": 800,
-	  "weight": 4,
-	  "wage_multiplier": 1.15,
-	  "staffing_roster": [
-		{
-		  "job_id": "PRISON_OFFICER",
-		  "target_count": [
-			6,
-			12
-		  ]
-		},
-		{
-		  "job_id": "OFFICE_MANAGER",
-		  "target_count": [
-			1,
-			1
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			6,
-			12
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"FIRE_STATION": {
-	  "display_name": "Borough Fire Station",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": true,
-	  "sic_1980_code": "9140",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"industrial",
-		"local_government",
-		"high_density_low_rise",
+      ],
+      "default_capacity": 25,
+      "customer_travel_distance_m": 2400.0,
+      "required_customer_threshold": 800,
+      "weight": 4,
+      "wage_multiplier": 1.15,
+      "staffing_roster": [
+        {
+          "job_id": "PRISON_OFFICER",
+          "target_count": [6, 12]
+        },
+        {
+          "job_id": "OFFICE_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [6, 12]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "FIRE_STATION": {
+      "display_name": "Borough Fire Station",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "sic_1980_code": "9140",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "local_government",
+        "high_density_low_rise",
         "suburban_low_density"
-	  ],
-	  "default_capacity": 30,
-	  "customer_travel_distance_m": 5000.0,
-	  "required_customer_threshold": 30000,
-	  "weight": 6,
-	  "wage_multiplier": 1.15,
-	  "staffing_roster": [
-		{
-		  "job_id": "FIRE_OFFICER",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "FIREFIGHTER",
-		  "target_count": [
-			16,
-			28
-		  ]
-		},
-		{
-		  "job_id": "VEHICLE_MECHANIC",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"PUBLIC_LIBRARY": {
-	  "display_name": "Borough Public Library",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": true,
-	  "sic_1980_code": "9770",
-	  "spawns_in_archetypes": [
-		"commercial",
-		"high_density_low_rise",
-		"medium_density_residential",
+      ],
+      "default_capacity": 30,
+      "customer_travel_distance_m": 5000.0,
+      "required_customer_threshold": 30000,
+      "weight": 6,
+      "wage_multiplier": 1.15,
+      "staffing_roster": [
+        {
+          "job_id": "FIRE_OFFICER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "FIREFIGHTER",
+          "target_count": [16, 28]
+        },
+        {
+          "job_id": "VEHICLE_MECHANIC",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "PUBLIC_LIBRARY": {
+      "display_name": "Borough Public Library",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "sic_1980_code": "9770",
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
         "local_government"
-	  ],
-	  "default_capacity": 40,
-	  "customer_travel_distance_m": 2500.0,
-	  "required_customer_threshold": 15000,
-	  "weight": 6,
-	  "staffing_roster": [
-		{
-		  "job_id": "LIBRARIAN",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "LIBRARY_ASSISTANT",
-		  "target_count": [
-			4,
-			8
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			1,
-			2
-		  ],
-		  "weekly_hours": 15.0
-		}
-	  ]
-	},
-	"COUNCIL_CLEANSING_DEPOT": {
-	  "display_name": "Council Direct Labour & Cleansing Depot",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": false,
-	  "sic_1980_code": "9112",
-	  "spawns_in_archetypes": [
-		"industrial",
-        "railway_sidings_and_scrap"
-	  ],
-	  "default_capacity": 40,
-	  "customer_travel_distance_m": 8000.0,
-	  "required_customer_threshold": 25000,
-	  "weight": 8,
-	  "staffing_roster": [
-		{
-		  "job_id": "DEPOT_MANAGER",
-		  "target_count": [
-			1,
-			2
-		  ]
-		},
-		{
-		  "job_id": "COUNCIL_MANUAL_LABOUR",
-		  "target_count": [
-			25,
-			60
-		  ]
-		},
-		{
-		  "job_id": "VEHICLE_MECHANIC",
-		  "target_count": [
-			3,
-			6
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			2,
-			4
-		  ]
-		}
-	  ]
-	},
-	"MAGISTRATES_COURT": {
-	  "display_name": "Magistrates' Court & Petty Sessions",
-	  "sector": "CIVIC_SERVICE",
-	  "is_public_landmark": true,
-	  "sic_1980_code": "9120",
-	  "spawns_in_archetypes": [
-		"local_government",
-        "commercial"
-	  ],
-	  "default_capacity": 50,
-	  "customer_travel_distance_m": 8000.0,
-	  "required_customer_threshold": 50000,
-	  "weight": 4,
-	  "wage_multiplier": 1.1,
-	  "staffing_roster": [
-		{
-		  "job_id": "COURT_CLERK_LEGAL",
-		  "target_count": [
-			2,
-			4
-		  ]
-		},
-		{
-		  "job_id": "CLERK",
-		  "target_count": [
-			6,
-			12
-		  ]
-		},
-		{
-		  "job_id": "PRISON_OFFICER",
-		  "target_count": [
-			4,
-			8
-		  ]
-		},
-		{
-		  "job_id": "COMMERCIAL_CLEANER",
-		  "target_count": [
-			2,
-			3
-		  ],
-		  "weekly_hours": 20.0
-		}
-	  ]
-	}
+      ],
+      "default_capacity": 40,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 15000,
+      "weight": 6,
+      "staffing_roster": [
+        {
+          "job_id": "LIBRARIAN",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "LIBRARY_ASSISTANT",
+          "target_count": [4, 8]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [1, 2],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "COUNCIL_CLEANSING_DEPOT": {
+      "display_name": "Council Direct Labour & Cleansing Depot",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "sic_1980_code": "9112",
+      "spawns_in_archetypes": ["industrial", "railway_sidings_and_scrap"],
+      "default_capacity": 40,
+      "customer_travel_distance_m": 8000.0,
+      "required_customer_threshold": 25000,
+      "weight": 8,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "COUNCIL_MANUAL_LABOUR",
+          "target_count": [25, 60]
+        },
+        {
+          "job_id": "VEHICLE_MECHANIC",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [2, 4]
+        }
+      ]
+    },
+    "MAGISTRATES_COURT": {
+      "display_name": "Magistrates' Court & Petty Sessions",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "sic_1980_code": "9120",
+      "spawns_in_archetypes": ["local_government", "commercial"],
+      "default_capacity": 50,
+      "customer_travel_distance_m": 8000.0,
+      "required_customer_threshold": 50000,
+      "weight": 4,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        {
+          "job_id": "COURT_CLERK_LEGAL",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "CLERK",
+          "target_count": [6, 12]
+        },
+        {
+          "job_id": "PRISON_OFFICER",
+          "target_count": [4, 8]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [2, 3],
+          "weekly_hours": 20.0
+        }
+      ]
+    },
+    "PLACE_OF_WORSHIP": {
+      "display_name": "Parish Church & Grounds",
+      "sector": "CIVIC",
+      "footprint_sqm": 1600.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "COMMUNITY_PARISH",
+      "default_capacity": 300,
+      "dunbar_weaving": {
+        "relationship_type": "CONGREGATIONAL",
+        "affinity_score": 0.65,
+        "link_probability": 0.5,
+        "pairs_per_member": 0.6,
+        "max_pairs_per_venue": 40,
+        "reciprocal": true
+      },
+      "staffing_roster": [
+        {
+          "job_id": "CLERGY",
+          "tied_accomodation": "RECTORY",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "CARETAKER",
+          "tied_accomodation": "CHURCH_CARETAKER_LODGE",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "tied_accomodation": "CHURCH_CARETAKER_LODGE",
+          "target_count": [1, 1]
+        }
+      ]
+    },
+    "PRIMARY_SCHOOL": {
+      "display_name": "Junior & Infant School",
+      "sector": "CIVIC",
+      "footprint_sqm": 1600.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "CHILD",
+      "default_capacity": 250,
+      "client_to_staff_ratio": 18.0,
+      "client_profile": {
+        "role_title": "PUPIL",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 30,
+        "compensation_rate": 0.0,
+        "age_min": 4,
+        "age_max": 11
+      },
+      "staffing_roster": [
+        { "job_id": "PRIMARY_TEACHER", "target_count": [8, 14] },
+        {
+          "job_id": "SCHOOL_CARETAKER",
+          "tied_accomodation": "CARETAKER_LODGE",
+          "target_count": [1, 1]
+        },
+        { "job_id": "SCHOOL_MEALS_STAFF", "target_count": [3, 6] }
+      ]
+    },
+    "SECONDARY_SCHOOL": {
+      "display_name": "Comprehensive School",
+      "sector": "CIVIC",
+      "footprint_sqm": 6400.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "STUDENT",
+      "default_capacity": 800,
+      "client_to_staff_ratio": 16.0,
+      "client_profile": {
+        "role_title": "STUDENT",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "DAYTIME_SCHOOL",
+        "weekly_hours": 30,
+        "compensation_rate": 0.0,
+        "age_min": 11,
+        "age_max": 18
+      },
+      "staffing_roster": [
+        { "job_id": "TEACHER_OR_STAFF", "target_count": [35, 55] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [3, 6] },
+        {
+          "job_id": "SCHOOL_CARETAKER",
+          "tied_accomodation": "CARETAKER_LODGE",
+          "target_count": [1, 2]
+        },
+        { "job_id": "SCHOOL_MEALS_STAFF", "target_count": [8, 16] }
+      ]
+    },
+    "JOBCENTRE": {
+      "display_name": "Borough Jobcentre & DHSS Office",
+      "sector": "CIVIC",
+      "footprint_sqm": 1600.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "UNEMPLOYED",
+      "default_capacity": 25000,
+      "staffing_roster": [
+        { "job_id": "DHSS_OFFICER", "target_count": [15, 30] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [2, 4] }
+      ]
+    },
+    "LOCAL_GOVERNMENT": {
+      "display_name": "Municipal Administrative Hub & Town Hall",
+      "sector": "CIVIC",
+      "footprint_sqm": 40000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 1200,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [8, 15] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [150, 300] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [300, 600] },
+        { "job_id": "MUNICIPAL_BUS_DRIVER", "target_count": [200, 480] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [15, 40] }
+      ]
+    },
+    "HOSPITAL": {
+      "display_name": "Regional Infirmary & Medical Center",
+      "sector": "CIVIC",
+      "footprint_sqm": 40000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "EMERGENCY_HEALTH",
+      "default_capacity": 650,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        { "job_id": "CONSULTANT", "target_count": [15, 25] },
+        { "job_id": "HOSPITAL_DOCTOR", "target_count": [25, 60] },
+        {
+          "job_id": "HOSPITAL_RESIDENT_DOCTOR",
+          "tied_accomodation": "DOCTORS_QUARTERS",
+          "target_count": [40, 75]
+        },
+        { "job_id": "HOSPITAL_NURSE", "target_count": [200, 400] },
+        {
+          "job_id": "STUDENT_NURSE",
+          "tied_accomodation": "NURSES_QUARTERS",
+          "target_count": [50, 100]
+        },
+        { "job_id": "HOSPITAL_SUPPORT_STAFF", "target_count": [250, 500] },
+        { "job_id": "AMBULANCE_CREW", "target_count": [40, 100] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [50, 100] },
+        { "job_id": "CLERK", "target_count": [40, 60] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [5, 20] }
+      ]
+    },
+    "UNIVERSITY_OR_POLYTECHNIC": {
+      "display_name": "Polytechnic & Higher Education Campus",
+      "sector": "CIVIC",
+      "footprint_sqm": 40000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "HIGHER_ED_STUDENT",
+      "default_capacity": 1200,
+      "client_to_staff_ratio": 12.0,
+      "client_profile": {
+        "role_title": "HIGHER_ED_STUDENT",
+        "tied_accomodation": "STUDENT_HALLS",
+        "contract_class": "ENCLAVE_STUDENT",
+        "schedule_window": "FLEXIBLE_DAYTIME",
+        "weekly_hours": 20.0,
+        "compensation_rate": 18.5,
+        "age_min": 18,
+        "age_max": 24
+      },
+      "staffing_roster": [
+        { "job_id": "LECTURER_OR_ADMIN", "target_count": [40, 80] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [15, 30] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [2, 3] },
+        { "job_id": "GROUNDSMAN_OR_STEWARD", "target_count": [1, 3] }
+      ]
+    },
+    "SPORTS_ARENA": {
+      "display_name": "Borough Football Ground",
+      "sector": "CIVIC",
+      "footprint_sqm": 27000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "COMMUNITY_RECREATION",
+      "default_capacity": 15000,
+      "staffing_roster": [
+        { "job_id": "GROUNDSMAN_OR_STEWARD", "target_count": [6, 12] },
+        { "job_id": "SPORTSMAN", "target_count": [18, 36] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [6, 10] },
+        { "job_id": "CLERK", "target_count": [3, 10] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 3] }
+      ]
+    },
+    "MUNICIPAL_PARK": {
+      "display_name": "Victorian Public Park & Rec Ground",
+      "sector": "CIVIC",
+      "footprint_sqm": 40000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "COMMUNITY_RECREATION",
+      "default_capacity": 500,
+      "staffing_roster": [{ "job_id": "PARK_KEEPER", "target_count": [1, 3] }]
+    },
+    "PRISON": {
+      "display_name": "HM Prison & Remand Gaol",
+      "sector": "CIVIC",
+      "footprint_sqm": 25000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "PRISON_INMATE",
+      "default_capacity": 650,
+      "client_to_staff_ratio": 4.0,
+      "client_profile": {
+        "role_title": "PRISON_INMATE",
+        "tied_accomodation": "CELL_BLOCK",
+        "contract_class": "CUSTODIAL_INMATE",
+        "schedule_window": "REGULATED_FULL_TIME",
+        "weekly_hours": 30.0,
+        "compensation_rate": 2.5,
+        "age_min": 17,
+        "age_max": 65
+      },
+      "staffing_roster": [
+        { "job_id": "PRISON_OFFICER", "target_count": [40, 75] },
+        { "job_id": "CLERK", "target_count": [2, 5] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 2] }
+      ]
+    },
+    "POLICE_HQ": {
+      "display_name": "Police Headquarters",
+      "sector": "CIVIC",
+      "footprint_sqm": 40000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 600,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [1, 3] },
+        { "job_id": "POLICE_OFFICER", "target_count": [25, 100] },
+        {
+          "job_id": "POLICE_CONSTABLE",
+          "tied_accomodation": "STATION_HOUSE",
+          "target_count": [25, 50]
+        },
+        { "job_id": "DETECTIVE", "target_count": [5, 15] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [25, 45] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [2, 5] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [6, 12] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [4, 8] }
+      ]
+    },
+    "POLICE_STATION": {
+      "display_name": "Section Police Station",
+      "sector": "CIVIC",
+      "footprint_sqm": 20000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "serves_role": "CIVIC_OFFICIAL",
+      "default_capacity": 600,
+      "wage_multiplier": 1.1,
+      "staffing_roster": [
+        { "job_id": "CIVIC_OFFICIAL", "target_count": [1, 1] },
+        { "job_id": "POLICE_OFFICER", "target_count": [15, 50] },
+        {
+          "job_id": "POLICE_CONSTABLE",
+          "tied_accomodation": "STATION_HOUSE",
+          "target_count": [10, 35]
+        },
+        { "job_id": "DETECTIVE", "target_count": [2, 10] },
+        { "job_id": "CIVIC_CLERK_OR_OFFICIAL", "target_count": [5, 9] },
+        { "job_id": "COUNCIL_MANUAL_LABOUR", "target_count": [2, 4] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [1, 2] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [2, 4] }
+      ]
+    },
+    "INDUSTRIAL_AUTOMOTIVE_WORKS": {
+      "display_name": "Rover Works Car Assembly Plant",
+      "sector": "INDUSTRIAL",
+      "footprint_sqm": 160000.0,
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [],
+      "default_capacity": 3000,
+      "wage_multiplier": 1.05,
+      "staffing_roster": [
+        { "job_id": "WORKS_CONVENOR", "target_count": [2, 4] },
+        { "job_id": "OFFICE_MANAGER", "target_count": [10, 25] },
+        { "job_id": "DEPOT_MANAGER", "target_count": [15, 30] },
+        { "job_id": "CLERK", "target_count": [50, 120] },
+        { "job_id": "VEHICLE_MECHANIC", "target_count": [100, 250] },
+        { "job_id": "COACH_OR_LORRY_DRIVER", "target_count": [80, 180] },
+        { "job_id": "COMMERCIAL_CLEANER", "target_count": [40, 90] },
+        { "job_id": "MANUAL_WORKS", "target_count": [200, 2200] }
+      ]
+    }
   }
 }

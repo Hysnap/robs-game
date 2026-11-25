@@ -1,0 +1,24 @@
+{
+	"_meta": {
+		"module": "crime",
+		"scope": "COMMODITY_PROFILE",
+		"version": "1.0.0"
+	},
+	"base_cost": 6.5,
+	"category": "CONSUMABLES",
+	"decay_properties": {
+		"shelf_life_ticks": 16
+	},
+	"demand_profile": {
+		"base_per_capita_daily": 0.035,
+		"legality": "ILLEGAL",
+		"primary_driver": "HABIT_LED"
+	},
+	"display_name": "UI_ITEM_CANNABIS_HERBAL",
+	"id": "CANNABIS_HERBAL",
+	"tags": [
+		"ILLICIT",
+		"CANNABIS",
+		"HERBAL"
+	]
+}

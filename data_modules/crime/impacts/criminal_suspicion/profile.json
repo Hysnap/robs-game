@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "METRIC_PROFILE",
+    "flavour_overlay": "crime",
+    "description": "Continuous 0-100 personal criminal suspicion score per resident routed via the RESIDENT path template."
+  },
+  "metric_id": "CRIMINAL_SUSPICION",
+  "target_scope": "RESIDENT",
+  "state_container": "residents",
+  "state_field": "criminal_suspicion",
+  "tuning": {
+    "minimum_floor": 0.0,
+    "maximum_ceiling": 100.0,
+    "default_baseline": 0.0,
+    "passive_cooling_per_week": 3.0
+  }
+}

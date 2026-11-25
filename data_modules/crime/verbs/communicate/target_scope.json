@@ -1,0 +1,44 @@
+{
+	"_meta": {
+		"description": "Crime flavour overlay extending COMMUNICATE form layout with THREATEN/BRIBE intents and conditional bribe amount.",
+		"flavour_overlay": "crime",
+		"verb_token": "COMMUNICATE",
+		"version": 1.0
+	},
+	"form_layout": {
+		"amount_section": {
+			"default_value": 10.0,
+			"label_token": "UI_LBL_BRIBE_AMOUNT",
+			"mapped_field": "amount",
+			"min_value": 1.0,
+			"required": false,
+			"step": 5.0,
+			"visible": true,
+			"visible_when": {
+				"intent": [
+					"BRIBE"
+				]
+			}
+		},
+		"intent_section": {
+			"options": [
+				{
+					"id": "THREATEN",
+					"label_token": "UI_INTENT_THREATEN"
+				},
+				{
+					"id": "BRIBE",
+					"label_token": "UI_INTENT_BRIBE"
+				},
+				{
+					"id": "BRIBE_OFFICIAL",
+					"label_token": "UI_INTENT_BRIBE_OFFICIAL"
+				}
+			]
+		}
+	},
+	"target_scopes": [
+		"RESIDENT",
+		"ESTABLISHMENT"
+	]
+}

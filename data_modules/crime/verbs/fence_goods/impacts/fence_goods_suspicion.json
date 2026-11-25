@@ -1,0 +1,10 @@
+{
+	"_meta": {
+		"module": "crime",
+		"verb_token": "FENCE_GOODS",
+		"version": "1.0.0"
+	},
+	"delta": 4.0,
+	"metric_id": "CRIMINAL_SUSPICION",
+	"target_role": "ACTOR"
+}

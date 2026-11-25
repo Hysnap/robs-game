@@ -1,0 +1,630 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "scope": "FISCAL_REGIMES",
+    "jurisdiction": "UK_ENG_WALES",
+    "description": "Time-indexed UK fiscal regimes using shared defaults plus era-bounded overrides across 1970-1978, 1979-1990, 1991-2009, and 2010-present."
+  },
+  "defaults": {
+    "wage_index_multiplier": 1.0,
+    "price_index_multiplier": 1.0,
+    "paye_income_tax": {
+      "pay_period_weeks_per_year": 52.0,
+      "personal_allowance_annual": 2005.0,
+      "married_couple_allowance_annual": 0.0,
+      "bands": [
+        { "band_id": "BASIC", "up_to_taxable_annual": -1.0, "rate": 0.2 }
+      ]
+    },
+    "national_insurance": {
+      "lower_earnings_limit_weekly": 34.0,
+      "upper_earnings_limit_weekly": 250.0,
+      "employee_rate": 0.09,
+      "employer_rate": 0.1045,
+      "contracted_out_rebate": 0.0
+    },
+    "vat": {
+      "registration_threshold_annual": 18700.0,
+      "rates": {
+        "STANDARD": 0.15,
+        "REDUCED": 0.0,
+        "ZERO_RATED": 0.0,
+        "EXEMPT": 0.0
+      }
+    },
+    "excise_duties": {
+      "EXCISE_ALCOHOL_BEER": {
+        "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+        "rate": 24.0
+      },
+      "EXCISE_ALCOHOL_SPIRITS": {
+        "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+        "rate": 15.48
+      },
+      "EXCISE_TOBACCO_CIGARETTES": {
+        "calc_mode": "SPECIFIC_PLUS_AD_VALOREM",
+        "specific_per_unit": 0.0249,
+        "ad_valorem_rate": 0.21
+      },
+      "EXCISE_FUEL_HYDROCARBON": {
+        "calc_mode": "PER_UNIT_VOLUME",
+        "rate": 0.1716
+      }
+    },
+    "state_pension": {
+      "pension_age_male": 65,
+      "pension_age_female": 60,
+      "single_weekly_rate": 35.8,
+      "couple_weekly_rate": 57.3,
+      "default_rail_code": "BEARER_VOUCHER",
+      "encash_location_category": "POST_OFFICE"
+    },
+    "welfare_benefits": {
+      "primary_means_tested_obligation": "INCOME_SUPPORT",
+      "unemployment_obligation": "UNEMPLOYMENT_BENEFIT",
+      "child_benefit_obligation": "CHILD_BENEFIT",
+      "disability_obligation": "DISABILITY_SUPPORT",
+      "applicable_amounts_weekly": {
+        "SINGLE_PERSON": 28.05,
+        "COUPLE_NO_DEP": 45.55,
+        "COUPLE_WITH_DEP": 45.55,
+        "LONE_PARENT": 28.05,
+        "MULTI_ADULT": 45.55
+      },
+      "dependent_child_addition_weekly": 9.6,
+      "child_benefit_per_child_weekly": 6.85,
+      "lone_parent_premium_weekly": 0.0,
+      "earnings_disregard_weekly": 4.0,
+      "taper_rate": 1.0,
+      "unemployment_benefit_flat_weekly": 28.45,
+      "default_rail_code": "BEARER_VOUCHER"
+    },
+    "housing_and_local_tax": {
+      "local_tax_mode": "DOMESTIC_RATES",
+      "council_rent_weekly_base": 14.5,
+      "private_rent_weekly_base": 24.0,
+      "domestic_rates_weekly_base": 5.8,
+      "mortgage_base_interest_rate_annual": 0.125,
+      "housing_benefit_social_coverage_ratio": 1.0,
+      "housing_benefit_private_cap_ratio": 0.85,
+      "housing_benefit_income_taper": 0.65,
+      "direct_to_landlord_social_housing": true
+    },
+    "socioeconomic_liquidity_profiles": {
+      "BENEFIT_DEPENDENT": {
+        "unbanked_probability": 0.92,
+        "pocket_cash_target_ratio_of_weekly_net": 0.18,
+        "home_cash_target_ratio_of_weekly_net": 0.72,
+        "bank_retention_ratio": 0.1,
+        "contents_insured_probability": 0.12,
+        "crime_reporting_probability": 0.42
+      },
+      "WORKING_CLASS_MANUAL": {
+        "unbanked_probability": 0.58,
+        "pocket_cash_target_ratio_of_weekly_net": 0.24,
+        "home_cash_target_ratio_of_weekly_net": 0.46,
+        "bank_retention_ratio": 0.3,
+        "contents_insured_probability": 0.34,
+        "crime_reporting_probability": 0.58
+      },
+      "MIDDLE_INCOME_SUBURBAN": {
+        "unbanked_probability": 0.12,
+        "pocket_cash_target_ratio_of_weekly_net": 0.16,
+        "home_cash_target_ratio_of_weekly_net": 0.14,
+        "bank_retention_ratio": 0.7,
+        "contents_insured_probability": 0.84,
+        "crime_reporting_probability": 0.86
+      },
+      "AFFLUENT_UPPER": {
+        "unbanked_probability": 0.02,
+        "pocket_cash_target_ratio_of_weekly_net": 0.12,
+        "home_cash_target_ratio_of_weekly_net": 0.1,
+        "bank_retention_ratio": 0.78,
+        "contents_insured_probability": 0.96,
+        "crime_reporting_probability": 0.97
+      },
+      "INFORMAL_ILLICIT_OPERATOR": {
+        "unbanked_probability": 0.95,
+        "pocket_cash_target_ratio_of_weekly_net": 0.25,
+        "home_cash_target_ratio_of_weekly_net": 0.7,
+        "bank_retention_ratio": 0.05,
+        "contents_insured_probability": 0.05,
+        "crime_reporting_probability": 0.08
+      }
+    },
+    "crime_victimization_ripples": {
+      "insured_recovery_delay_days": 21,
+      "insured_excess_ratio": 0.1,
+      "insured_security_upgrade_delta": 0.12,
+      "uninsured_distress_strain_delta": 0.35,
+      "uninsured_desperation_delta": 0.12,
+      "reported_crime_district_heat_delta": 0.04,
+      "affluent_reporting_heat_multiplier": 1.75,
+      "retail_demand_contraction_per_pound_lost": 0.0025,
+      "zone_health_erosion_per_uninsured_loss": 0.0015
+    },
+    "macro_cohort_model": {
+      "avg_persons_per_household": 3,
+      "baseline_employment_rate": 0.72,
+      "fallback_base_weekly_wage": 85.0,
+      "disposable_to_retail_spending_ratio": 0.65,
+      "default_wealth_bracket": "WORKING_CLASS",
+      "wealth_bracket_profiles": {
+        "DESTITUTE": {
+          "socioeconomic_tier": "BENEFIT_DEPENDENT",
+          "wealth_multiplier": 0.7,
+          "default_tenure": "SOCIAL_COUNCIL"
+        },
+        "DEPRIVED": {
+          "socioeconomic_tier": "BENEFIT_DEPENDENT",
+          "wealth_multiplier": 0.7,
+          "default_tenure": "SOCIAL_COUNCIL"
+        },
+        "LOW_INCOME": {
+          "socioeconomic_tier": "BENEFIT_DEPENDENT",
+          "wealth_multiplier": 0.7,
+          "default_tenure": "SOCIAL_COUNCIL"
+        },
+        "WORKING_CLASS": {
+          "socioeconomic_tier": "WORKING_CLASS_MANUAL",
+          "wealth_multiplier": 1.0,
+          "default_tenure": "SOCIAL_COUNCIL"
+        },
+        "LOWER_MIDDLE": {
+          "socioeconomic_tier": "WORKING_CLASS_MANUAL",
+          "wealth_multiplier": 1.0,
+          "default_tenure": "PRIVATE_RENT"
+        },
+        "MIDDLE_CLASS": {
+          "socioeconomic_tier": "MIDDLE_INCOME_SUBURBAN",
+          "wealth_multiplier": 1.55,
+          "default_tenure": "MORTGAGED"
+        },
+        "SUBURBAN": {
+          "socioeconomic_tier": "MIDDLE_INCOME_SUBURBAN",
+          "wealth_multiplier": 1.55,
+          "default_tenure": "MORTGAGED"
+        },
+        "AFFLUENT": {
+          "socioeconomic_tier": "AFFLUENT_UPPER",
+          "wealth_multiplier": 2.6,
+          "default_tenure": "OWNER_OCCUPIED"
+        },
+        "UPPER_CLASS": {
+          "socioeconomic_tier": "AFFLUENT_UPPER",
+          "wealth_multiplier": 2.6,
+          "default_tenure": "OWNER_OCCUPIED"
+        },
+        "WEALTHY": {
+          "socioeconomic_tier": "AFFLUENT_UPPER",
+          "wealth_multiplier": 2.6,
+          "default_tenure": "OWNER_OCCUPIED"
+        }
+      },
+      "idiosyncratic_shortfall_defaults": {
+        "shortfall_trigger_threshold": 15.0,
+        "base_shortfall_debt": 25.0,
+        "shortfall_interest_rate": 0.15,
+        "shortfall_recurrence_days": 7,
+        "shortfall_due_offset_days": 14,
+        "default_desperation_delta": 0.05
+      }
+    }
+  },
+  "regimes": [
+    {
+      "regime_id": "UK_1970_1978",
+      "label_token": "UI_FISCAL_REGIME_UK_1970_1978",
+      "valid_from_year": 1970,
+      "valid_to_year": 1978,
+      "wage_index_multiplier": 0.55,
+      "price_index_multiplier": 0.52,
+      "paye_income_tax": {
+        "personal_allowance_annual": 985.0,
+        "married_couple_allowance_annual": 550.0,
+        "bands": [
+          {
+            "band_id": "LOWER_25",
+            "up_to_taxable_annual": 750.0,
+            "rate": 0.25
+          },
+          {
+            "band_id": "BASIC_33",
+            "up_to_taxable_annual": 8000.0,
+            "rate": 0.33
+          },
+          {
+            "band_id": "HIGHER_40",
+            "up_to_taxable_annual": 9000.0,
+            "rate": 0.4
+          },
+          {
+            "band_id": "HIGHER_50",
+            "up_to_taxable_annual": 11000.0,
+            "rate": 0.5
+          },
+          {
+            "band_id": "HIGHER_65",
+            "up_to_taxable_annual": 16000.0,
+            "rate": 0.65
+          },
+          { "band_id": "TOP_83", "up_to_taxable_annual": -1.0, "rate": 0.83 }
+        ]
+      },
+      "national_insurance": {
+        "lower_earnings_limit_weekly": 17.5,
+        "upper_earnings_limit_weekly": 120.0,
+        "employee_rate": 0.065,
+        "employer_rate": 0.1,
+        "contracted_out_rebate": 0.025
+      },
+      "vat": {
+        "registration_threshold_annual": 10000.0,
+        "rates": {
+          "STANDARD": 0.08,
+          "REDUCED": 0.0
+        }
+      },
+      "excise_duties": {
+        "EXCISE_ALCOHOL_BEER": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 11.4
+        },
+        "EXCISE_ALCOHOL_SPIRITS": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 10.44
+        },
+        "EXCISE_TOBACCO_CIGARETTES": {
+          "calc_mode": "SPECIFIC_PLUS_AD_VALOREM",
+          "specific_per_unit": 0.009,
+          "ad_valorem_rate": 0.3
+        },
+        "EXCISE_FUEL_HYDROCARBON": {
+          "calc_mode": "PER_UNIT_VOLUME",
+          "rate": 0.066
+        }
+      },
+      "state_pension": {
+        "single_weekly_rate": 19.5,
+        "couple_weekly_rate": 31.2
+      },
+      "welfare_benefits": {
+        "applicable_amounts_weekly": {
+          "SINGLE_PERSON": 15.55,
+          "COUPLE_NO_DEP": 25.25,
+          "COUPLE_WITH_DEP": 25.25,
+          "LONE_PARENT": 15.55,
+          "MULTI_ADULT": 25.25
+        },
+        "dependent_child_addition_weekly": 5.3,
+        "child_benefit_per_child_weekly": 3.0,
+        "lone_parent_premium_weekly": 2.0,
+        "earnings_disregard_weekly": 2.0,
+        "unemployment_benefit_flat_weekly": 15.75
+      },
+      "housing_and_local_tax": {
+        "council_rent_weekly_base": 6.4,
+        "private_rent_weekly_base": 11.0,
+        "domestic_rates_weekly_base": 2.6,
+        "mortgage_base_interest_rate_annual": 0.11
+      },
+      "socioeconomic_liquidity_profiles": {
+        "BENEFIT_DEPENDENT": {
+          "unbanked_probability": 0.96,
+          "pocket_cash_target_ratio_of_weekly_net": 0.2,
+          "home_cash_target_ratio_of_weekly_net": 0.75,
+          "bank_retention_ratio": 0.05,
+          "contents_insured_probability": 0.08,
+          "crime_reporting_probability": 0.38
+        },
+        "WORKING_CLASS_MANUAL": {
+          "unbanked_probability": 0.78,
+          "pocket_cash_target_ratio_of_weekly_net": 0.26,
+          "home_cash_target_ratio_of_weekly_net": 0.56,
+          "bank_retention_ratio": 0.18,
+          "contents_insured_probability": 0.25,
+          "crime_reporting_probability": 0.52
+        },
+        "MIDDLE_INCOME_SUBURBAN": {
+          "unbanked_probability": 0.22,
+          "pocket_cash_target_ratio_of_weekly_net": 0.2,
+          "home_cash_target_ratio_of_weekly_net": 0.18,
+          "bank_retention_ratio": 0.62,
+          "contents_insured_probability": 0.78,
+          "crime_reporting_probability": 0.84
+        },
+        "AFFLUENT_UPPER": {
+          "unbanked_probability": 0.04,
+          "pocket_cash_target_ratio_of_weekly_net": 0.15,
+          "home_cash_target_ratio_of_weekly_net": 0.12,
+          "bank_retention_ratio": 0.73,
+          "contents_insured_probability": 0.95,
+          "crime_reporting_probability": 0.96
+        }
+      }
+    },
+    {
+      "regime_id": "UK_1979_1990",
+      "label_token": "UI_FISCAL_REGIME_UK_1979_1990",
+      "valid_from_year": 1979,
+      "valid_to_year": 1990,
+      "paye_income_tax": {
+        "married_couple_allowance_annual": 1150.0,
+        "bands": [
+          { "band_id": "BASIC", "up_to_taxable_annual": 15400.0, "rate": 0.3 },
+          {
+            "band_id": "HIGHER_40",
+            "up_to_taxable_annual": 18200.0,
+            "rate": 0.4
+          },
+          {
+            "band_id": "HIGHER_45",
+            "up_to_taxable_annual": 23100.0,
+            "rate": 0.45
+          },
+          {
+            "band_id": "HIGHER_50",
+            "up_to_taxable_annual": 30600.0,
+            "rate": 0.5
+          },
+          {
+            "band_id": "HIGHER_55",
+            "up_to_taxable_annual": 38100.0,
+            "rate": 0.55
+          },
+          { "band_id": "TOP_60", "up_to_taxable_annual": -1.0, "rate": 0.6 }
+        ]
+      },
+      "national_insurance": {
+        "contracted_out_rebate": 0.0215
+      },
+      "welfare_benefits": {
+        "lone_parent_premium_weekly": 4.25
+      }
+    },
+    {
+      "regime_id": "UK_1991_2009",
+      "label_token": "UI_FISCAL_REGIME_UK_1991_2009",
+      "valid_from_year": 1991,
+      "valid_to_year": 2009,
+      "wage_index_multiplier": 2.35,
+      "price_index_multiplier": 2.1,
+      "paye_income_tax": {
+        "personal_allowance_annual": 4535.0,
+        "bands": [
+          {
+            "band_id": "STARTING_10",
+            "up_to_taxable_annual": 1880.0,
+            "rate": 0.1
+          },
+          {
+            "band_id": "BASIC_22",
+            "up_to_taxable_annual": 29400.0,
+            "rate": 0.22
+          },
+          { "band_id": "HIGHER_40", "up_to_taxable_annual": -1.0, "rate": 0.4 }
+        ]
+      },
+      "national_insurance": {
+        "lower_earnings_limit_weekly": 87.0,
+        "upper_earnings_limit_weekly": 585.0,
+        "employee_rate": 0.1,
+        "employer_rate": 0.118,
+        "contracted_out_rebate": 0.016
+      },
+      "vat": {
+        "registration_threshold_annual": 55000.0,
+        "rates": {
+          "STANDARD": 0.175,
+          "REDUCED": 0.05
+        }
+      },
+      "excise_duties": {
+        "EXCISE_ALCOHOL_BEER": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 11.89
+        },
+        "EXCISE_ALCOHOL_SPIRITS": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 19.56
+        },
+        "EXCISE_TOBACCO_CIGARETTES": {
+          "calc_mode": "SPECIFIC_PLUS_AD_VALOREM",
+          "specific_per_unit": 0.0928,
+          "ad_valorem_rate": 0.22
+        },
+        "EXCISE_FUEL_HYDROCARBON": {
+          "calc_mode": "PER_UNIT_VOLUME",
+          "rate": 0.4582
+        }
+      },
+      "state_pension": {
+        "single_weekly_rate": 75.5,
+        "couple_weekly_rate": 120.7,
+        "default_rail_code": "BATCH_BANK_TRANSFER"
+      },
+      "welfare_benefits": {
+        "applicable_amounts_weekly": {
+          "SINGLE_PERSON": 53.95,
+          "COUPLE_NO_DEP": 84.65,
+          "COUPLE_WITH_DEP": 84.65,
+          "LONE_PARENT": 53.95,
+          "MULTI_ADULT": 84.65
+        },
+        "dependent_child_addition_weekly": 33.5,
+        "child_benefit_per_child_weekly": 15.75,
+        "earnings_disregard_weekly": 5.0,
+        "unemployment_benefit_flat_weekly": 53.95,
+        "default_rail_code": "BATCH_BANK_TRANSFER"
+      },
+      "housing_and_local_tax": {
+        "local_tax_mode": "COUNCIL_TAX",
+        "council_rent_weekly_base": 46.0,
+        "private_rent_weekly_base": 78.0,
+        "domestic_rates_weekly_base": 14.5,
+        "mortgage_base_interest_rate_annual": 0.06,
+        "housing_benefit_private_cap_ratio": 0.8
+      },
+      "socioeconomic_liquidity_profiles": {
+        "BENEFIT_DEPENDENT": {
+          "unbanked_probability": 0.35,
+          "pocket_cash_target_ratio_of_weekly_net": 0.22,
+          "home_cash_target_ratio_of_weekly_net": 0.38,
+          "bank_retention_ratio": 0.4,
+          "contents_insured_probability": 0.22,
+          "crime_reporting_probability": 0.5
+        },
+        "WORKING_CLASS_MANUAL": {
+          "unbanked_probability": 0.14,
+          "pocket_cash_target_ratio_of_weekly_net": 0.18,
+          "home_cash_target_ratio_of_weekly_net": 0.18,
+          "bank_retention_ratio": 0.64,
+          "contents_insured_probability": 0.52,
+          "crime_reporting_probability": 0.68
+        },
+        "MIDDLE_INCOME_SUBURBAN": {
+          "unbanked_probability": 0.02,
+          "pocket_cash_target_ratio_of_weekly_net": 0.1,
+          "home_cash_target_ratio_of_weekly_net": 0.07,
+          "bank_retention_ratio": 0.83,
+          "contents_insured_probability": 0.9,
+          "crime_reporting_probability": 0.9
+        },
+        "AFFLUENT_UPPER": {
+          "unbanked_probability": 0.005,
+          "pocket_cash_target_ratio_of_weekly_net": 0.08,
+          "home_cash_target_ratio_of_weekly_net": 0.05,
+          "bank_retention_ratio": 0.87,
+          "contents_insured_probability": 0.98,
+          "crime_reporting_probability": 0.98
+        }
+      }
+    },
+    {
+      "regime_id": "UK_2010_PRESENT",
+      "label_token": "UI_FISCAL_REGIME_UK_2010_PRESENT",
+      "valid_from_year": 2010,
+      "valid_to_year": 2099,
+      "wage_index_multiplier": 3.85,
+      "price_index_multiplier": 3.3,
+      "paye_income_tax": {
+        "personal_allowance_annual": 12570.0,
+        "bands": [
+          {
+            "band_id": "BASIC_20",
+            "up_to_taxable_annual": 37700.0,
+            "rate": 0.2
+          },
+          {
+            "band_id": "HIGHER_40",
+            "up_to_taxable_annual": 125140.0,
+            "rate": 0.4
+          },
+          {
+            "band_id": "ADDITIONAL_45",
+            "up_to_taxable_annual": -1.0,
+            "rate": 0.45
+          }
+        ]
+      },
+      "national_insurance": {
+        "lower_earnings_limit_weekly": 242.0,
+        "upper_earnings_limit_weekly": 967.0,
+        "employee_rate": 0.08,
+        "employer_rate": 0.138
+      },
+      "vat": {
+        "registration_threshold_annual": 90000.0,
+        "rates": {
+          "STANDARD": 0.2,
+          "REDUCED": 0.05
+        }
+      },
+      "excise_duties": {
+        "EXCISE_ALCOHOL_BEER": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 21.01
+        },
+        "EXCISE_ALCOHOL_SPIRITS": {
+          "calc_mode": "PER_LITRE_PURE_ALCOHOL",
+          "rate": 31.64
+        },
+        "EXCISE_TOBACCO_CIGARETTES": {
+          "calc_mode": "SPECIFIC_PLUS_AD_VALOREM",
+          "specific_per_unit": 0.3168,
+          "ad_valorem_rate": 0.165
+        },
+        "EXCISE_FUEL_HYDROCARBON": {
+          "calc_mode": "PER_UNIT_VOLUME",
+          "rate": 0.5295
+        }
+      },
+      "state_pension": {
+        "pension_age_male": 66,
+        "pension_age_female": 66,
+        "single_weekly_rate": 221.2,
+        "couple_weekly_rate": 337.9,
+        "default_rail_code": "INSTANT_BANK_TRANSFER"
+      },
+      "welfare_benefits": {
+        "applicable_amounts_weekly": {
+          "SINGLE_PERSON": 90.5,
+          "COUPLE_NO_DEP": 142.25,
+          "COUPLE_WITH_DEP": 142.25,
+          "LONE_PARENT": 90.5,
+          "MULTI_ADULT": 142.25
+        },
+        "dependent_child_addition_weekly": 66.4,
+        "child_benefit_per_child_weekly": 25.6,
+        "earnings_disregard_weekly": 15.0,
+        "taper_rate": 0.55,
+        "unemployment_benefit_flat_weekly": 90.5,
+        "default_rail_code": "INSTANT_BANK_TRANSFER"
+      },
+      "housing_and_local_tax": {
+        "local_tax_mode": "COUNCIL_TAX",
+        "council_rent_weekly_base": 115.0,
+        "private_rent_weekly_base": 195.0,
+        "domestic_rates_weekly_base": 32.0,
+        "mortgage_base_interest_rate_annual": 0.045,
+        "housing_benefit_social_coverage_ratio": 0.92,
+        "housing_benefit_private_cap_ratio": 0.72,
+        "direct_to_landlord_social_housing": false
+      },
+      "socioeconomic_liquidity_profiles": {
+        "BENEFIT_DEPENDENT": {
+          "unbanked_probability": 0.06,
+          "pocket_cash_target_ratio_of_weekly_net": 0.08,
+          "home_cash_target_ratio_of_weekly_net": 0.07,
+          "bank_retention_ratio": 0.85,
+          "contents_insured_probability": 0.28,
+          "crime_reporting_probability": 0.55
+        },
+        "WORKING_CLASS_MANUAL": {
+          "unbanked_probability": 0.02,
+          "pocket_cash_target_ratio_of_weekly_net": 0.05,
+          "home_cash_target_ratio_of_weekly_net": 0.04,
+          "bank_retention_ratio": 0.91,
+          "contents_insured_probability": 0.58,
+          "crime_reporting_probability": 0.72
+        },
+        "MIDDLE_INCOME_SUBURBAN": {
+          "unbanked_probability": 0.005,
+          "pocket_cash_target_ratio_of_weekly_net": 0.03,
+          "home_cash_target_ratio_of_weekly_net": 0.02,
+          "bank_retention_ratio": 0.95,
+          "contents_insured_probability": 0.92,
+          "crime_reporting_probability": 0.92
+        },
+        "AFFLUENT_UPPER": {
+          "unbanked_probability": 0.001,
+          "pocket_cash_target_ratio_of_weekly_net": 0.02,
+          "home_cash_target_ratio_of_weekly_net": 0.02,
+          "bank_retention_ratio": 0.96,
+          "contents_insured_probability": 0.98,
+          "crime_reporting_probability": 0.99
+        }
+      }
+    }
+  ]
+}

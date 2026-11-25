@@ -60,6 +60,30 @@ static func get_role_clearance(role_code: String, clearance_field: String = "int
 		_job_clearances_cache[clearance_field] = role_map
 	return float(_job_clearances_cache[clearance_field].get(role_code, fallback))
 
+## Returns direct stored entry { "score": float, "last_updated_day": int } for a single observer -> target pair
+static func get_direct_entry(
+	world_state: Dictionary,
+	observer_scope: String,
+	observer_id: String,
+	target_scope: String,
+	target_id: String,
+	pool_container: String = DEFAULT_POOL_CONTAINER
+) -> Dictionary:
+	var pools = world_state.get(pool_container, null)
+	if not (pools is Dictionary):
+		return {}
+	var scope_pool = pools.get(observer_scope.to_upper(), null)
+	if not (scope_pool is Dictionary):
+		return {}
+	var dossier = scope_pool.get(observer_id, null)
+	if not (dossier is Dictionary):
+		return {}
+	var target_key := "%s:%s" % [target_scope.to_upper(), target_id]
+	var entry = dossier.get(target_key, null)
+	if entry is Dictionary:
+		return entry
+	return {}
+
 ## Returns direct stored score (0.0 - 100.0) for a single observer -> target pair
 static func get_direct_score(
 	world_state: Dictionary,
@@ -69,18 +93,8 @@ static func get_direct_score(
 	target_id: String,
 	pool_container: String = DEFAULT_POOL_CONTAINER
 ) -> float:
-	var pools = world_state.get(pool_container, null)
-	if not (pools is Dictionary):
-		return 0.0
-	var scope_pool = pools.get(observer_scope.to_upper(), null)
-	if not (scope_pool is Dictionary):
-		return 0.0
-	var dossier = scope_pool.get(observer_id, null)
-	if not (dossier is Dictionary):
-		return 0.0
-	var target_key := "%s:%s" % [target_scope.to_upper(), target_id]
-	var entry = dossier.get(target_key, null)
-	if entry is Dictionary:
+	var entry: Dictionary = get_direct_entry(world_state, observer_scope, observer_id, target_scope, target_id, pool_container)
+	if not entry.is_empty():
 		return clampf(float(entry.get("score", 0.0)), 0.0, 100.0)
 	return 0.0
 
@@ -139,6 +153,64 @@ static func get_collective_score(
 		if s > best:
 			best = s
 	return best
+
+## Computes collective best score AND freshest last_updated_day / age_days across observers & org affiliations
+static func get_collective_intel_status(
+	world_state: Dictionary,
+	observers: Array,
+	target_scope: String,
+	target_id: String,
+	pool_container: String = DEFAULT_POOL_CONTAINER,
+	clearance_field: String = "intel_clearance"
+) -> Dictionary:
+	var best_score: float = 0.0
+	var freshest_day: int = -1
+	var current_day: int = CalendarHelperScript.get_current_sim_day(world_state)
+
+	for obs in observers:
+		if not (obs is Dictionary):
+			continue
+		var o_scope: String = str(obs.get("observer_scope", "RESIDENT")).to_upper()
+		var o_id: String = str(obs.get("observer_id", ""))
+		if o_id.is_empty():
+			continue
+
+		var direct_entry: Dictionary = get_direct_entry(world_state, o_scope, o_id, target_scope, target_id, pool_container)
+		if not direct_entry.is_empty():
+			var d_score: float = clampf(float(direct_entry.get("score", 0.0)), 0.0, 100.0)
+			if d_score > best_score:
+				best_score = d_score
+			if d_score > 0.0 and direct_entry.has("last_updated_day"):
+				freshest_day = maxi(freshest_day, int(direct_entry["last_updated_day"]))
+
+		var affs: Array = obs.get("affiliations", [])
+		for aff in affs:
+			if not (aff is Dictionary):
+				continue
+			var org_scope: String = str(aff.get("org_scope", "ESTABLISHMENT")).to_upper()
+			var org_id: String = str(aff.get("org_id", ""))
+			if org_id.is_empty():
+				continue
+			var clearance: float = float(aff.get("clearance", -1.0))
+			if clearance < 0.0:
+				clearance = get_role_clearance(str(aff.get("role_code", "")), clearance_field)
+			if clearance <= 0.0:
+				continue
+			var org_entry: Dictionary = get_direct_entry(world_state, org_scope, org_id, target_scope, target_id, pool_container)
+			if not org_entry.is_empty():
+				var org_raw: float = clampf(float(org_entry.get("score", 0.0)), 0.0, 100.0)
+				var inherited: float = org_raw * clampf(clearance, 0.0, 1.0)
+				if inherited > best_score:
+					best_score = inherited
+				if inherited > 0.0 and org_entry.has("last_updated_day"):
+					freshest_day = maxi(freshest_day, int(org_entry["last_updated_day"]))
+
+	var age_days: int = maxi(0, current_day - freshest_day) if freshest_day >= 0 else -1
+	return {
+		"score": clampf(best_score, 0.0, 100.0),
+		"last_updated_day": freshest_day,
+		"age_days": age_days
+	}
 
 ## Applies an effort impulse using spatial distance decay, access permeability, and hyperbolic saturation
 ## Returns the resulting updated score (0.0 - 100.0)
@@ -717,11 +789,12 @@ static func resolve_known_contacts_for_location(location_meta: Dictionary, ws: D
 			continue
 		var res_id: int = int(res.get("resident_id", 0))
 		var res_name: String = str(res.get("full_name", ""))
+		var res_role: String = "OCCUPANT"
 		if res_id > 0 and not res_name.is_empty():
 			contacts.append({
 				"id": res_id,
 				"name": res_name,
-				"role": "OCCUPANT",
+				"role": res_role,
 				"type": "RESIDENTIAL"
 			})
 
