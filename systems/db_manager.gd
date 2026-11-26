@@ -4,7 +4,6 @@ extends RefCounted
 
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
-const TAXONOMY_HARVESTER = preload("res://systems/taxonomy_harvester.gd")
 const FILE_CRAWLER = preload("res://systems/file_system_crawler.gd")
 
 static var _db = null
@@ -98,7 +97,7 @@ static func initialize_database(reset_existing: bool = false, custom_path: Strin
 	# -------------------------------------------------------------
 	# 2. Harvest Scenario Content Labels (RESIDENCE_TYPE, ETHNICITY, RELIGION, EDUCATION, ROLES)
 	# -------------------------------------------------------------
-	harvest_scenario_taxonomies()
+	
 
 	# -------------------------------------------------------------
 	# 3. Seed Temporal and Demographic Metadata (Epoch Date, Sim Start Date, Working & Pension Ages)
@@ -309,43 +308,17 @@ static func populate_core_system_labels(custom_labels_path: String = "") -> void
 			var dom: String = str(item.get("domain", "")).to_upper().strip_edges()
 			var code: String = str(item.get("code", "")).to_upper().strip_edges()
 			var title: String = str(item.get("title", "")).replace("'", "''")
-			var desc: String = str(item.get("description", "")).replace("'", "''")
 			if dom.is_empty() or code.is_empty():
 				continue
 			inserts.append("""
-				INSERT INTO system_labels (domain, code, title, description)
-				VALUES ('%s', '%s', '%s', '%s')
-				ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title, description = excluded.description;
-			""" % [dom, code, title, desc])
-
-	execute_batch(inserts)
-
-## 2. Ingests scenario-specific taxonomies extracted by TaxonomyHarvester
-static func harvest_scenario_taxonomies() -> void:
-	var raw_taxonomies: Array[Dictionary] = TAXONOMY_HARVESTER.harvest_all_taxonomies()
-	var inserts: Array[String] = []
-
-	for item in raw_taxonomies:
-		inserts.append("""
-			INSERT INTO system_labels (domain, code, title, description)
-			VALUES ('%s', '%s', '%s', '')
-			ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title;
-		""" % [
-			item["domain"], 
-			item["code"], 
-			item["title"].replace("'", "''")
-		])
+				INSERT INTO system_labels (domain, code, title)
+				VALUES ('%s', '%s', '%s')
+				ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title;
+			""" % [dom, code, title])
 
 	execute_batch(inserts)
 	_rebuild_label_cache()
-	SystemLogger.log_info("[DBManager] Synchronized %d total labels (Core JSON + Scenario Harvested)." % _label_cache.size())
-
-static func _append_label_sql(out_array: Array[String], domain: String, code: String, title: String) -> void:
-	out_array.append("""
-		INSERT INTO system_labels (domain, code, title, description)
-		VALUES ('%s', '%s', '%s', '')
-		ON CONFLICT(domain, code) DO UPDATE SET title = excluded.title;
-	""" % [domain.to_upper(), code.to_upper(), title.replace("'", "''")])
+	SystemLogger.log_info("[DBManager] Synchronized %d total labels from db_labels dictionaries." % _label_cache.size())
 
 ## Follows the Single Source of Truth Chain to seed epoch, temporal, and demographic metadata
 static func _init_temporal_metadata() -> void:

@@ -4,204 +4,171 @@ extends RefCounted
 
 const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
-## Harvests all domain taxonomies from active scenario files into a normalized array of dictionaries:
-## Returns: Array[Dictionary] where each element is:
-##   { "domain": String, "code": String, "title": String }
+## Manifest module keys that are non-taxonomy or pure localization/routing metadata
+const EXCLUDED_MODULES: Array[String] = [
+	"db_schema",
+	"extra_schema_dir",
+	"db_labels",
+	"ui_strings",
+	"lexicon",
+	"spatial_lexicon",
+	"dialects",
+	"startpoint",
+	"impact_routing",
+	"intel_exposure",
+	"ocean_personality",
+	"transport_modes",
+	"fiscal_regimes",
+	"city_configuration"
+]
+
+## Harvests all domain taxonomies dynamically from every JSON module registered in the active manifest.
+## Returns: Array[Dictionary] where each element is { "domain": String, "code": String, "title": String }
 static func harvest_all_taxonomies() -> Array[Dictionary]:
 	var harvested: Array[Dictionary] = []
-	var seen_keys: Dictionary = {} # "DOMAIN:CODE" -> true to deduplicate
+	var seen_keys: Dictionary = {} # "DOMAIN:CODE" -> true
 
-	_harvest_archetypes(harvested, seen_keys)
-	_harvest_cultural_demographics(harvested, seen_keys)
-	_harvest_civic_hierarchy(harvested, seen_keys)
-	_harvest_demographics(harvested, seen_keys)
-	_harvest_building_classes(harvested, seen_keys)
-	_harvest_job_definitions(harvested, seen_keys)
+	var manifest: Dictionary = MANIFEST_MANAGER.get_manifest()
+	var modules: Dictionary = manifest.get("modules", {})
+
+	for mod_key_raw in modules.keys():
+		var mod_key: String = str(mod_key_raw).strip_edges()
+		if mod_key.is_empty() or EXCLUDED_MODULES.has(mod_key):
+			continue
+
+		var mod_path: String = str(modules[mod_key]).strip_edges()
+		if not mod_path.to_lower().ends_with(".json"):
+			continue
+
+		var mod_data: Dictionary = MANIFEST_MANAGER.load_module(mod_key)
+		_harvest_module_node(mod_data, "", harvested, seen_keys)
 
 	return harvested
 
-static func _harvest_archetypes(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	var archetypes: Dictionary = {}
-	if MANIFEST_MANAGER.has_module("archetypes"):
-		archetypes = MANIFEST_MANAGER.load_module("archetypes")
-	elif MANIFEST_MANAGER.has_module("spatial_archetypes"):
-		archetypes = MANIFEST_MANAGER.load_module("spatial_archetypes")
+static func _harvest_module_node(node: Variant, parent_key: String, out_list: Array[Dictionary], seen: Dictionary) -> void:
+	if node is Dictionary:
+		var dict: Dictionary = node
+		var norm_parent: String = parent_key.strip_edges().to_lower()
 
-	for arch_key in archetypes.keys():
-		if arch_key in ["_meta", "setup"]:
-			continue
-		var arch: Dictionary = archetypes[arch_key]
+		# 1. Establishment Category maps (building_classes tenants & civic_placement_quotas)
+		if norm_parent in ["commercial_tenants", "industrial_tenants", "civic_placement_quotas", "civic_institutions", "establishment_templates"]:
+			for k in dict.keys():
+				var code_str: String = str(k).strip_edges()
+				if code_str.is_empty() or code_str.begins_with("_"):
+					continue
+				var entry = dict[k]
+				var title_str: String = code_str.capitalize().replace("_", " ")
+				if entry is Dictionary and entry.has("display_name"):
+					title_str = str(entry["display_name"]).strip_edges()
+				_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", code_str, title_str)
 
-		# 1. Residence Type from housing_profile (Supports either Dictionary or Array[Dictionary])
-		var housing_profiles: Array = []
-		if arch.has("housing_profile"):
-			var raw_hp = arch["housing_profile"]
-			if raw_hp is Array:
-				housing_profiles = raw_hp
-			elif raw_hp is Dictionary and not raw_hp.is_empty():
-				housing_profiles.append(raw_hp)
+		# 2. Job Definitions ("roles" map)
+		if norm_parent == "roles":
+			for role_key in dict.keys():
+				var r_code: String = str(role_key).strip_edges()
+				if r_code.is_empty() or r_code.begins_with("_"):
+					continue
+				var r_entry = dict[role_key]
+				var r_title: String = r_code.capitalize().replace("_", " ")
+				if r_entry is Dictionary and r_entry.has("display_name"):
+					r_title = str(r_entry["display_name"]).strip_edges()
+				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_title)
 
-		for h_prof in housing_profiles:
-			if h_prof is Dictionary and h_prof.has("residence_type"):
-				var res_code: String = str(h_prof["residence_type"]).to_upper()
-				if res_code != "NONE":
-					_add_token(out_list, seen, "RESIDENCE_TYPE", res_code, res_code.capitalize().replace("_", " "))
+		# 3. Cultural Demographics ("ethnicities" & "religion_distribution")
+		if norm_parent == "ethnicities":
+			for eth_key in dict.keys():
+				var eth_code: String = str(eth_key).strip_edges()
+				if eth_code.is_empty() or eth_code.begins_with("_"):
+					continue
+				var eth_entry = dict[eth_key]
+				var eth_title: String = eth_code.capitalize().replace("_", " ")
+				if eth_entry is Dictionary and eth_entry.has("display_name"):
+					eth_title = str(eth_entry["display_name"]).strip_edges()
+				_add_token(out_list, seen, "ETHNICITY", eth_code, eth_title)
 
-		# 2. Establishment Category from archetype root
-		if arch.has("establishment_category"):
-			var cat_code: String = str(arch["establishment_category"]).to_upper()
-			var cat_title: String = str(arch.get("display_name", cat_code.capitalize().replace("_", " ")))
+		if norm_parent == "religion_distribution":
+			for rel_key in dict.keys():
+				var rel_code: String = str(rel_key).strip_edges()
+				if not rel_code.is_empty() and not rel_code.begins_with("_"):
+					_add_token(out_list, seen, "RELIGION", rel_code, rel_code.capitalize().replace("_", " "))
+
+		# 4. Education Tiers ("ocean_tier_nudges", "male_probabilities", "female_probabilities")
+		if norm_parent in ["ocean_tier_nudges", "male_probabilities", "female_probabilities"]:
+			for edu_key in dict.keys():
+				var edu_code: String = str(edu_key).strip_edges()
+				if not edu_code.is_empty() and not edu_code.begins_with("_"):
+					_add_token(out_list, seen, "EDUCATION_LEVEL", edu_code, edu_code.capitalize().replace("_", " "))
+
+		# 5. Kinship Weaving Bonds ("kinship_weaving_rules.bonds")
+		if norm_parent == "bonds":
+			for bond_key in dict.keys():
+				var bond_def = dict[bond_key]
+				if bond_def is Dictionary:
+					for sub_key in bond_def.keys():
+						if str(sub_key).to_lower() == "affinity":
+							continue
+						var rel_code: String = str(bond_def[sub_key]).strip_edges()
+						if not rel_code.is_empty():
+							_add_token(out_list, seen, "RELATIONSHIP_TYPE", rel_code, rel_code.capitalize().replace("_", " "))
+
+		# 6. Service & Crime Route Rounds ("rounds")
+		if norm_parent == "rounds":
+			for rnd_key in dict.keys():
+				var rnd_def = dict[rnd_key]
+				if not (rnd_def is Dictionary):
+					continue
+				var svc_code: String = str(rnd_def.get("service_code", rnd_key)).strip_edges()
+				if not svc_code.is_empty():
+					_add_token(out_list, seen, "SERVICE_CODE", svc_code, svc_code.capitalize().replace("_", " "))
+				var t_mode: String = str(rnd_def.get("territory_mode", "")).strip_edges()
+				if not t_mode.is_empty():
+					_add_token(out_list, seen, "TERRITORY_MODE", t_mode, t_mode.capitalize().replace("_", " "))
+
+		# 7. Scalar field extraction on any nested object
+		if dict.has("establishment_category") and dict["establishment_category"] is String:
+			var cat_code: String = str(dict["establishment_category"]).strip_edges()
+			var cat_title: String = str(dict.get("display_name", cat_code.capitalize().replace("_", " "))).strip_edges()
 			_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", cat_code, cat_title)
 
-		# 3. Roles and Categories from institution_profile
-		if arch.has("institution_profile"):
-			var inst: Dictionary = arch["institution_profile"]
-			if inst.has("client_profile") and inst["client_profile"].has("role_title"):
-				var r_code: String = str(inst["client_profile"]["role_title"]).to_upper()
-				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_code.capitalize().replace("_", " "))
+		if dict.has("residence_type") and dict["residence_type"] is String:
+			var res_code: String = str(dict["residence_type"]).strip_edges().to_upper()
+			if not res_code.is_empty() and res_code != "NONE":
+				_add_token(out_list, seen, "RESIDENCE_TYPE", res_code, res_code.capitalize().replace("_", " "))
 
-			if inst.has("staff_profile") and inst["staff_profile"].has("role_title"):
-				var s_code: String = str(inst["staff_profile"]["role_title"]).to_upper()
-				_add_token(out_list, seen, "ROLE_TITLE", s_code, s_code.capitalize().replace("_", " "))
+		for role_field in ["role_title", "role", "unemployed_role", "commercial_role", "industrial_role", "job_id"]:
+			if dict.has(role_field) and dict[role_field] is String:
+				var r_val: String = str(dict[role_field]).strip_edges()
+				if not r_val.is_empty():
+					_add_token(out_list, seen, "ROLE_TITLE", r_val, r_val.capitalize().replace("_", " "))
 
-			if inst.has("staffing_roster"):
-				for roster_entry in inst["staffing_roster"]:
-					if roster_entry is Dictionary and roster_entry.has("job_id"):
-						var job_code: String = str(roster_entry["job_id"]).to_upper()
-						_add_token(out_list, seen, "ROLE_TITLE", job_code, job_code.capitalize().replace("_", " "))
+		if dict.has("staff_roles") and dict["staff_roles"] is Array:
+			for sr in dict["staff_roles"]:
+				var sr_code: String = str(sr).strip_edges()
+				if not sr_code.is_empty():
+					_add_token(out_list, seen, "ROLE_TITLE", sr_code, sr_code.capitalize().replace("_", " "))
 
-static func _harvest_cultural_demographics(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	var cult_data: Dictionary = MANIFEST_MANAGER.load_module("cultural_demographics")
-	var ethnicities: Dictionary = cult_data.get("ethnicities", {})
-	
-	for eth_code in ethnicities.keys():
-		var eth: Dictionary = ethnicities[eth_code]
-		var eth_title: String = str(eth.get("display_name", eth_code.capitalize()))
-		_add_token(out_list, seen, "ETHNICITY", eth_code, eth_title)
+		if norm_parent == "education_attainment_model":
+			if dict.has("default_code") and dict["default_code"] is String:
+				var def_edu: String = str(dict["default_code"]).strip_edges()
+				if not def_edu.is_empty():
+					_add_token(out_list, seen, "EDUCATION_LEVEL", def_edu, def_edu.capitalize().replace("_", " "))
+			if dict.has("tiers") and dict["tiers"] is Array:
+				for t_item in dict["tiers"]:
+					if t_item is Dictionary and t_item.has("code"):
+						var t_code: String = str(t_item["code"]).strip_edges()
+						if not t_code.is_empty():
+							_add_token(out_list, seen, "EDUCATION_LEVEL", t_code, t_code.capitalize().replace("_", " "))
 
-		var rel_dist: Dictionary = eth.get("religion_distribution", {})
-		for rel_code in rel_dist.keys():
-			_add_token(out_list, seen, "RELIGION", rel_code, str(rel_code).capitalize().replace("_", " "))
+		# Recurse into child keys (skipping _meta)
+		for child_key in dict.keys():
+			var ck_str: String = str(child_key)
+			if ck_str.begins_with("_"):
+				continue
+			_harvest_module_node(dict[child_key], ck_str, out_list, seen)
 
-static func _harvest_civic_hierarchy(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	var civic_data: Dictionary = MANIFEST_MANAGER.load_module("civic_hierarchy")
-	var insts: Dictionary = civic_data.get("civic_institutions", {})
-	
-	for inst_key in insts.keys():
-		var inst: Dictionary = insts[inst_key]
-		var inst_title: String = str(inst.get("display_name", inst_key.capitalize()))
-		_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", inst_key, inst_title)
-
-		if inst.has("client_profile") and inst["client_profile"].has("role_title"):
-			var r_title: String = str(inst["client_profile"]["role_title"]).to_upper()
-			_add_token(out_list, seen, "ROLE_TITLE", r_title, r_title.capitalize().replace("_", " "))
-
-		if inst.has("staff_profile") and inst["staff_profile"].has("role_title"):
-			var s_title: String = str(inst["staff_profile"]["role_title"]).to_upper()
-			_add_token(out_list, seen, "ROLE_TITLE", s_title, s_title.capitalize().replace("_", " "))
-
-	var est_templates: Dictionary = civic_data.get("establishment_templates", {})
-	for tmpl_key in est_templates.keys():
-		_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", tmpl_key, tmpl_key.capitalize() + " Sector")
-
-static func _harvest_demographics(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	var demo_data: Dictionary = MANIFEST_MANAGER.load_module("demographics")
-	
-	# 1. Education Tiers (from default_code, ocean_tier_nudges, cohort_attainment_rates, and optional tiers list)
-	var edu_model: Dictionary = demo_data.get("education_attainment_model", {})
-	var def_edu: String = str(edu_model.get("default_code", "NO_FORMAL")).to_upper()
-	_add_token(out_list, seen, "EDUCATION_LEVEL", def_edu, def_edu.capitalize().replace("_", " "))
-
-	var ocean_nudges: Dictionary = edu_model.get("ocean_tier_nudges", {})
-	for edu_code in ocean_nudges.keys():
-		var c_str: String = str(edu_code).to_upper()
-		_add_token(out_list, seen, "EDUCATION_LEVEL", c_str, c_str.capitalize().replace("_", " "))
-
-	for cohort_rate in edu_model.get("cohort_attainment_rates", []):
-		if cohort_rate is Dictionary:
-			for prob_key in ["male_probabilities", "female_probabilities"]:
-				var probs: Dictionary = cohort_rate.get(prob_key, {})
-				for edu_code in probs.keys():
-					var c_str: String = str(edu_code).to_upper()
-					_add_token(out_list, seen, "EDUCATION_LEVEL", c_str, c_str.capitalize().replace("_", " "))
-
-	for tier in edu_model.get("tiers", []):
-		var t_code: String = str(tier.get("code", "")).to_upper()
-		if not t_code.is_empty():
-			_add_token(out_list, seen, "EDUCATION_LEVEL", t_code, t_code.capitalize().replace("_", " "))
-
-	# 2. Kinship & Household Relationship Types from fertility_and_family_model.kinship_weaving_rules.bonds
-	var family_model: Dictionary = demo_data.get("fertility_and_family_model", {})
-	var kinship_rules: Dictionary = family_model.get("kinship_weaving_rules", {})
-	var bonds: Dictionary = kinship_rules.get("bonds", {})
-	for bond_key in bonds.keys():
-		var bond_def = bonds[bond_key]
-		if bond_def is Dictionary:
-			for sub_key in bond_def.keys():
-				if sub_key == "affinity":
-					continue
-				var rel_code: String = str(bond_def[sub_key]).strip_edges().to_upper()
-				if not rel_code.is_empty():
-					_add_token(out_list, seen, "RELATIONSHIP_TYPE", rel_code, rel_code.capitalize().replace("_", " "))
-
-	# 3. Deep Cohort Profile Roles (Fixed, Labor Market, and Probabilistic Branches)
-	for c in demo_data.get("cohort_profiles", []):
-		for role_field in ["role", "unemployed_role", "commercial_role", "industrial_role"]:
-			if c.has(role_field):
-				var r_code: String = str(c[role_field]).to_upper()
-				_add_token(out_list, seen, "ROLE_TITLE", r_code, r_code.capitalize().replace("_", " "))
-
-		for branch_key in ["if_true", "if_false", "unemployed_branch"]:
-			if c.has(branch_key) and c[branch_key] is Dictionary:
-				var branch: Dictionary = c[branch_key]
-				if branch.has("role"):
-					var b_code: String = str(branch["role"]).to_upper()
-					_add_token(out_list, seen, "ROLE_TITLE", b_code, b_code.capitalize().replace("_", " "))
-
-static func _harvest_building_classes(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	if not MANIFEST_MANAGER.has_module("building_classes"):
-		return
-
-	var bldg_classes: Dictionary = MANIFEST_MANAGER.load_module("building_classes")
-
-	for section_key in bldg_classes.keys():
-		var sec_name: String = str(section_key).strip_edges()
-		if sec_name.is_empty() or sec_name.begins_with("_") or sec_name.begins_with("default_") or sec_name == "setup":
-			continue
-		var sec_val = bldg_classes[section_key]
-		if sec_val is Dictionary:
-			_harvest_tenant_map(out_list, seen, sec_val)
-
-static func _harvest_tenant_map(out_list: Array[Dictionary], seen: Dictionary, tenants: Dictionary) -> void:
-	for t_code in tenants.keys():
-		var t_data = tenants[t_code]
-		if not (t_data is Dictionary):
-			continue
-		var t_title: String = str(t_data.get("display_name", str(t_code).capitalize().replace("_", " ")))
-
-		# 1. Harvest establishment category
-		_add_token(out_list, seen, "ESTABLISHMENT_CATEGORY", str(t_code), t_title)
-
-		# 2. Harvest staff role titles if defined
-		if t_data.has("staff_roles"):
-			for r_code in t_data["staff_roles"]:
-				_add_token(out_list, seen, "ROLE_TITLE", str(r_code), str(r_code).capitalize().replace("_", " "))
-		if t_data.has("staffing_roster"):
-			for roster_entry in t_data["staffing_roster"]:
-				if roster_entry is Dictionary and roster_entry.has("job_id"):
-					var j_code: String = str(roster_entry["job_id"]).to_upper()
-					_add_token(out_list, seen, "ROLE_TITLE", j_code, j_code.capitalize().replace("_", " "))
-
-static func _harvest_job_definitions(out_list: Array[Dictionary], seen: Dictionary) -> void:
-	if not MANIFEST_MANAGER.has_module("job_definitions"):
-		return
-
-	var job_defs: Dictionary = MANIFEST_MANAGER.load_module("job_definitions")
-	var roles: Dictionary = job_defs.get("roles", {})
-	for role_code in roles.keys():
-		var r_data: Dictionary = roles[role_code]
-		var r_title: String = str(r_data.get("display_name", str(role_code).capitalize().replace("_", " ")))
-		_add_token(out_list, seen, "ROLE_TITLE", str(role_code), r_title)
+	elif node is Array:
+		for elem in node:
+			_harvest_module_node(elem, parent_key, out_list, seen)
 
 static func _add_token(out_list: Array[Dictionary], seen: Dictionary, domain: String, code: String, title: String) -> void:
 	var d_clean := domain.strip_edges().to_upper()

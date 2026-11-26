@@ -2,7 +2,7 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "description": "Master dictionary of standardized work schedules, rotating shift splits, unsocial hours uplifts, wage brackets, and occupational roles."
   },
   "shift_uplifts": {
@@ -128,6 +128,11 @@
     "PART_TIME_EVENING_20": {
       "schedule_window": "EVENING",
       "weekly_hours": 20.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "WEEKEND_PART_TIME_8": {
+      "schedule_window": "WEEKEND",
+      "weekly_hours": 8.0,
       "pay_cadence": "WEEKLY"
     },
     "WEEKEND_PART_TIME_18": {
@@ -1167,6 +1172,90 @@
         "extraversion": 0.15,
         "openness": 0.0,
         "neuroticism": -0.15
+      }
+    },
+    "POSTAL_DELIVERY_WORKER": {
+      "display_name": "Postman / Postwoman",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 6000,
+      "work_schedule": "EARLY_MORNING_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 18,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.55,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "agreeableness": 0.25,
+        "extraversion": 0.25,
+        "openness": 0.05,
+        "neuroticism": -0.15
+      }
+    },
+    "POSTAL_COLLECTION_DRIVER": {
+      "display_name": "Royal Mail Collection Van Driver",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 8000,
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 21,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.45,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.4,
+        "agreeableness": 0.15,
+        "extraversion": 0.1,
+        "openness": 0.0,
+        "neuroticism": -0.2
+      }
+    },
+    "PARCELFORCE_DRIVER": {
+      "display_name": "Royal Mail Parcels / Parcelforce Driver",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "STANDARD",
+      "education_required": "NO_FORMAL",
+      "max_commute": 8000,
+      "work_schedule": "DAYTIME_STANDARD_40",
+      "wage_bracket": "BRACKET_SEMI_SKILLED",
+      "age_min": 21,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.45,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.15,
+        "extraversion": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.15
+      }
+    },
+    "SATURDAY_SHOP_HELPER": {
+      "display_name": "Saturday Shop Helper",
+      "contract_class": "FORMAL_LEGAL",
+      "contract_type": "PART_TIME",
+      "education_required": "NO_FORMAL",
+      "max_commute": 1500,
+      "work_schedule": "WEEKEND_PART_TIME_8",
+      "wage_bracket": "BRACKET_APPRENTICE",
+      "age_min": 13,
+      "age_max": 16,
+      "is_field_worker": false,
+      "intel_clearance": 0.25,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.3,
+        "agreeableness": 0.25,
+        "conscientiousness": 0.2,
+        "openness": 0.1,
+        "neuroticism": -0.05
       }
     },
     "SPORTSMAN": {

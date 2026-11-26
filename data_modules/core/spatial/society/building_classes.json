@@ -2,7 +2,7 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "description": "Establishment classes, tenancy types, catchment thresholds, Dunbar social weaving rules, and job_definition staffing rosters."
   },
   "default_footprint_sqm": 250.0,
@@ -42,6 +42,10 @@
         {
           "job_id": "COMMERCIAL_SERVICE",
           "target_count": [1, 2]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         },
         {
           "job_id": "COMMERCIAL_CLEANER",
@@ -234,6 +238,10 @@
           "job_id": "RETAIL_COUNTER_STAFF",
           "target_count": [2, 4],
           "weekly_hours": 24
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         },
         {
           "job_id": "COMMERCIAL_CLEANER",
@@ -493,6 +501,10 @@
           "target_count": [1, 1]
         },
         {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
+        },
+        {
           "job_id": "APPRENTICE_BUTCHER",
           "target_count": [1, 2]
         },
@@ -523,6 +535,10 @@
       "staffing_roster": [
         {
           "job_id": "SHOP_MANAGER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
           "target_count": [1, 1]
         },
         {
@@ -565,6 +581,10 @@
         {
           "job_id": "BAKER",
           "target_count": [2, 4]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         },
         {
           "job_id": "RETAIL_COUNTER_STAFF",
@@ -718,6 +738,10 @@
         {
           "job_id": "COMMERCIAL_SERVICE",
           "target_count": [1, 2]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         }
       ]
     },
@@ -811,6 +835,10 @@
         {
           "job_id": "COMMERCIAL_SERVICE",
           "target_count": [2, 4]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         }
       ]
     },
@@ -902,6 +930,10 @@
         {
           "job_id": "HAIRDRESSER_OR_BARBER",
           "target_count": [2, 4]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         },
         {
           "job_id": "APPRENTICE_HAIRDRESSER",
@@ -1251,6 +1283,10 @@
           "target_count": [6, 12]
         },
         {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
+        },
+        {
           "job_id": "WAREHOUSE_OPERATIVE",
           "target_count": [2, 4]
         }
@@ -1411,6 +1447,10 @@
           "target_count": [1, 2]
         },
         {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
+        },
+        {
           "job_id": "RETAIL_COUNTER_STAFF",
           "target_count": [1, 1]
         }
@@ -1435,6 +1475,10 @@
         {
           "job_id": "TAILOR_DRESSMAKER",
           "target_count": [1, 2]
+        },
+        {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
         },
         {
           "job_id": "RETAIL_COUNTER_STAFF",
@@ -2216,8 +2260,57 @@
           "target_count": [2, 4]
         },
         {
+          "job_id": "SATURDAY_SHOP_HELPER",
+          "target_count": [1, 1]
+        },
+        {
           "job_id": "COMMERCIAL_CLEANER",
           "target_count": [1, 1],
+          "weekly_hours": 15.0
+        }
+      ]
+    },
+    "POSTAL_SORTING_OFFICE": {
+      "display_name": "Royal Mail Sorting & Delivery Office",
+      "sector": "CIVIC_SERVICE",
+      "is_public_landmark": true,
+      "use_proprietor_name": false,
+      "sic_1980_code": "7901",
+      "spawns_in_archetypes": [
+        "commercial",
+        "industrial",
+        "railway_sidings_and_scrap",
+        "local_government"
+      ],
+      "default_capacity": 60,
+      "footprint_sqm": 2400.0,
+      "customer_travel_distance_m": 8000.0,
+      "required_customer_threshold": 12000,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "DEPOT_MANAGER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "POSTAL_CLERK",
+          "target_count": [4, 8]
+        },
+        {
+          "job_id": "POSTAL_DELIVERY_WORKER",
+          "target_count": [18, 30]
+        },
+        {
+          "job_id": "POSTAL_COLLECTION_DRIVER",
+          "target_count": [2, 4]
+        },
+        {
+          "job_id": "PARCELFORCE_DRIVER",
+          "target_count": [3, 6]
+        },
+        {
+          "job_id": "COMMERCIAL_CLEANER",
+          "target_count": [2, 3],
           "weekly_hours": 15.0
         }
       ]

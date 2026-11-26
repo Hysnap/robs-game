@@ -9,7 +9,6 @@ CREATE TABLE
         domain TEXT NOT NULL,
         code TEXT NOT NULL,
         title TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
         UNIQUE (domain, code)
     );
 

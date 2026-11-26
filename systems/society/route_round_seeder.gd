@@ -97,6 +97,33 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 	if residential_district_ids.is_empty():
 		return 0
 
+	var district_households: Dictionary = {}
+	var district_addresses: Dictionary = {}
+	var hh_rows: Array = DB_MANAGER.query_rows("""
+		SELECT e.district_id, COUNT(h.household_id) AS hh_cnt
+		FROM households h
+		JOIN establishments e ON h.establishment_id = e.establishment_id
+		WHERE h.valid_to IS NULL
+		GROUP BY e.district_id;
+	""")
+	for hr in hh_rows:
+		var d_id_h: String = str(hr.get("district_id", ""))
+		var cnt_h: int = int(hr.get("hh_cnt", 0))
+		district_households[d_id_h] = cnt_h
+		district_addresses[d_id_h] = int(district_addresses.get(d_id_h, 0)) + cnt_h
+
+	var est_rows: Array = DB_MANAGER.query_rows("""
+		SELECT district_id, COUNT(establishment_id) AS est_cnt
+		FROM establishments
+		WHERE valid_to IS NULL
+		GROUP BY district_id;
+	""")
+	for er in est_rows:
+		var d_id_e: String = str(er.get("district_id", ""))
+		district_addresses[d_id_e] = int(district_addresses.get(d_id_e, 0)) + int(er.get("est_cnt", 0))
+
+	var worker_window_busy: Dictionary = {}
+
 	# Discover all staff_role_ids and depot_building_classes dynamically from route_rounds
 	var role_to_services: Dictionary = {}
 	var depot_to_services: Dictionary = {}
@@ -167,11 +194,9 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 			var depot_svcs: Array = depot_to_services[depot_cat]
 			for cand_svc in depot_svcs:
 				var r_roles: Array = rounds_def.get(cand_svc, {}).get("staff_role_ids", [])
-				if r_roles.is_empty() or r_roles.has(role_code):
+				if not r_roles.is_empty() and r_roles.has(role_code):
 					matched_service = str(cand_svc)
 					break
-			if matched_service.is_empty() and not depot_svcs.is_empty():
-				matched_service = str(depot_svcs[0])
 
 		if matched_service.is_empty() and role_to_services.has(role_code):
 			var role_svcs: Array = role_to_services[role_code]
@@ -221,9 +246,13 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 		var coll_action: String = str(coll_cfg.get("action_mode", "COLLECT_CASH"))
 
 		var group_workers: Array = depot_service_workers[key]
-		var candidate_pool: Array[String] = all_active_district_ids if not r_cfg.get("fulfillment_config", {}).is_empty() else residential_district_ids
+		var use_all_districts: bool = (not r_cfg.get("fulfillment_config", {}).is_empty()) or r_cfg.has("address_capacity_per_worker") or (not r_cfg.get("collects_from_building_classes", []).is_empty())
+		var candidate_pool: Array[String] = all_active_district_ids if use_all_districts else residential_district_ids
 		if candidate_pool.is_empty():
 			candidate_pool = residential_district_ids
+
+		var addr_cap: int = int(r_cfg.get("address_capacity_per_worker", 0))
+		var addr_cursor: int = 0
 
 		for w_idx in range(group_workers.size()):
 			var w_row: Dictionary = group_workers[w_idx]
@@ -243,6 +272,17 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 			var worker_patch: Array[String] = []
 			if territory_mode == "SHARED_MARKETPLACE" and not worker_base_dist.is_empty() and sorted_districts.has(worker_base_dist):
 				worker_patch.append(worker_base_dist)
+			elif addr_cap > 0 and not sorted_districts.is_empty():
+				var acc_addr: int = 0
+				var safety: int = 0
+				while safety < sorted_districts.size():
+					var cand_d: String = sorted_districts[addr_cursor % sorted_districts.size()]
+					addr_cursor += 1
+					safety += 1
+					worker_patch.append(cand_d)
+					acc_addr += maxi(50, int(district_addresses.get(cand_d, 200)))
+					if acc_addr >= addr_cap:
+						break
 			else:
 				var start_slice: int = (w_idx * districts_per_worker) % maxi(1, sorted_districts.size())
 				for s_i in range(mini(districts_per_worker, sorted_districts.size())):
@@ -252,20 +292,22 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 
 			if patch_mode == "FIXED_TERRITORY":
 				var anchor_dist: String = worker_patch[0]
-				for d_raw in deliv_days:
-					var dow: int = int(d_raw)
-					route_inserts.append("""
-						INSERT INTO service_routes (
-							establishment_id, worker_resident_id, service_code, day_of_week,
-							time_window, target_district_id, action_mode, is_part_time,
-							valid_from, valid_to, change_reason_id
-						) VALUES (%s, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
-					""" % [
-						est_sql, res_id, service_code, dow, deliv_window,
-						anchor_dist.replace("'", "''"), deliv_action, is_pt, sim_start_day, reason_id
-					])
-					inserted_count += 1
-					_bump_load(district_day_load, service_district_day_load, worker_day_assigned, anchor_dist, service_code, dow, res_id, 1.0)
+				for p_dist in worker_patch:
+					for d_raw in deliv_days:
+						var dow: int = int(d_raw)
+						route_inserts.append("""
+							INSERT INTO service_routes (
+								establishment_id, worker_resident_id, service_code, day_of_week,
+								time_window, target_district_id, action_mode, is_part_time,
+								valid_from, valid_to, change_reason_id
+							) VALUES (%s, %d, '%s', %d, '%s', '%s', '%s', %d, %d, NULL, %d);
+						""" % [
+							est_sql, res_id, service_code, dow, deliv_window,
+							p_dist.replace("'", "''"), deliv_action, is_pt, sim_start_day, reason_id
+						])
+						inserted_count += 1
+						worker_window_busy["%d:%d:%s" % [res_id, dow, deliv_window]] = true
+						_bump_load(district_day_load, service_district_day_load, worker_day_assigned, p_dist, service_code, dow, res_id, 1.0)
 
 				if coll_enabled:
 					for c_raw in coll_days:
@@ -318,12 +360,29 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 					inserted_count += 1
 					_bump_load(district_day_load, service_district_day_load, worker_day_assigned, chosen_dist, service_code, dow, res_id, 1.0)
 
-	# Seed un-premised sole-proprietor route operators (where depot_building_classes is empty) up to district demand capacity
+	# Seed depot-backed secondary/catchment rounds (e.g. PAPER_ROUND anchored to CORNER_SHOP & SUB_POST_OFFICE)
+	inserted_count += _seed_depot_catchment_secondary_routes(
+		route_inserts,
+		rounds_def,
+		residential_district_ids,
+		district_positions,
+		district_households,
+		worker_window_busy,
+		district_day_load,
+		service_district_day_load,
+		worker_day_assigned,
+		sim_start_day,
+		reason_id
+	)
+
+	# Seed un-premised sole-proprietor & secondary rounds (Avon, Catalogue, Pools + Concessionaires, Street Vice)
 	inserted_count += _seed_unpremised_sole_routes(
 		route_inserts,
 		rounds_def,
 		all_active_district_ids,
 		district_populations,
+		district_households,
+		worker_window_busy,
 		district_day_load,
 		service_district_day_load,
 		worker_day_assigned,
@@ -337,12 +396,182 @@ static func seed_service_routes(physical_state: Dictionary, sim_start_day: int) 
 
 	return inserted_count
 
-## Seeds un-premised sole-proprietor routes (e.g. paper rounds, Avon reps, solo street vice) driven by operator_eligibility
+## Helper: queries eligible resident_ids grouped by district using cascading operator_eligibility rules
+static func _query_eligible_residents_by_district(elig: Dictionary, sim_start_day: int) -> Dictionary:
+	var age_min: int = int(elig.get("age_min", 18))
+	var age_max: int = int(elig.get("age_max", 55))
+	var raw_roles: Array = elig.get("eligible_role_codes", [])
+	var max_weekly_hrs: float = float(elig.get("max_primary_weekly_hours", -1.0))
+
+	var role_clause: String = ""
+	if not raw_roles.is_empty():
+		var quoted_roles: Array[String] = []
+		for rc in raw_roles:
+			var clean_rc: String = str(rc).strip_edges().to_upper()
+			if not clean_rc.is_empty():
+				quoted_roles.append("'%s'" % clean_rc.replace("'", "''"))
+		if not quoted_roles.is_empty():
+			if max_weekly_hrs > 0.0:
+				role_clause = "AND (l_role.code IN (%s) OR c.weekly_hours <= %.1f)" % [", ".join(quoted_roles), max_weekly_hrs]
+			else:
+				role_clause = "AND l_role.code IN (%s)" % ", ".join(quoted_roles)
+	elif max_weekly_hrs > 0.0:
+		role_clause = "AND c.weekly_hours <= %.1f" % max_weekly_hrs
+
+	var gender_clause: String = ""
+	var raw_genders: Array = elig.get("gender_codes", [])
+	if not raw_genders.is_empty():
+		var quoted_genders: Array[String] = []
+		for gc in raw_genders:
+			var clean_gc: String = str(gc).strip_edges().to_upper()
+			if not clean_gc.is_empty():
+				quoted_genders.append("'%s'" % clean_gc.replace("'", "''"))
+		if not quoted_genders.is_empty():
+			gender_clause = "AND l_gen.code IN (%s)" % ", ".join(quoted_genders)
+
+	var min_dob: int = sim_start_day - int(round(float(age_max) * 365.25))
+	var max_dob: int = sim_start_day - int(round(float(age_min) * 365.25))
+
+	var rows: Array = DB_MANAGER.query_rows("""
+		SELECT DISTINCT r.resident_id, e.district_id
+		FROM residents r
+		JOIN households h ON r.household_id = h.household_id
+		JOIN establishments e ON h.establishment_id = e.establishment_id
+		JOIN system_labels l_gen ON r.gender_id = l_gen.label_id
+		JOIN livelihood_contracts c ON c.resident_id = r.resident_id AND c.valid_to IS NULL
+		JOIN system_labels l_role ON c.role_title_id = l_role.label_id
+		WHERE r.dod IS NULL
+		  AND r.dob BETWEEN %d AND %d
+		  %s
+		  %s
+		ORDER BY r.resident_id ASC;
+	""" % [min_dob, max_dob, role_clause, gender_clause])
+
+	var by_dist: Dictionary = {}
+	for row in rows:
+		var res_id: int = int(row.get("resident_id", 0))
+		if res_id <= 0:
+			continue
+		var d_id: String = str(row.get("district_id", ""))
+		if not by_dist.has(d_id):
+			by_dist[d_id] = []
+		by_dist[d_id].append(res_id)
+	return by_dist
+
+static func _is_worker_free_for_schedule(worker_window_busy: Dictionary, res_id: int, days: Array, time_window: String) -> bool:
+	for d_raw in days:
+		if worker_window_busy.has("%d:%d:%s" % [res_id, int(d_raw), time_window]):
+			return false
+	return true
+
+static func _mark_worker_busy_for_schedule(worker_window_busy: Dictionary, res_id: int, days: Array, time_window: String) -> void:
+	for d_raw in days:
+		worker_window_busy["%d:%d:%s" % [res_id, int(d_raw), time_window]] = true
+
+## Seeds depot-backed secondary catchment rounds (e.g. PAPER_ROUND anchored to CORNER_SHOP & SUB_POST_OFFICE)
+static func _seed_depot_catchment_secondary_routes(
+	route_inserts: Array[String],
+	rounds_def: Dictionary,
+	residential_district_ids: Array[String],
+	district_positions: Dictionary,
+	district_households: Dictionary,
+	worker_window_busy: Dictionary,
+	district_day_load: Dictionary,
+	service_district_day_load: Dictionary,
+	worker_day_assigned: Dictionary,
+	sim_start_day: int,
+	reason_id: int
+) -> int:
+	var added: int = 0
+	for svc_key in rounds_def.keys():
+		var r_cfg = rounds_def[svc_key]
+		if not (r_cfg is Dictionary):
+			continue
+		var depots: Array = r_cfg.get("depot_building_classes", [])
+		var staff_roles: Array = r_cfg.get("staff_role_ids", [])
+		var elig: Dictionary = r_cfg.get("operator_eligibility", {})
+		if depots.is_empty() or not staff_roles.is_empty() or elig.is_empty():
+			continue
+
+		var svc_code: String = str(r_cfg.get("service_code", svc_key)).strip_edges()
+		var quoted_cats: Array[String] = []
+		for dc in depots:
+			quoted_cats.append("'%s'" % str(dc).strip_edges().replace("'", "''"))
+
+		var depot_rows: Array = DB_MANAGER.query_rows("""
+			SELECT e.establishment_id, e.district_id
+			FROM establishments e
+			JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+			WHERE e.valid_to IS NULL
+			  AND l_cat.code IN (%s)
+			ORDER BY e.establishment_id ASC;
+		""" % ", ".join(quoted_cats))
+		if depot_rows.is_empty():
+			continue
+
+		var residents_by_dist: Dictionary = _query_eligible_residents_by_district(elig, sim_start_day)
+		var deliv_cfg: Dictionary = r_cfg.get("delivery_schedule", {})
+		var deliv_days: Array = deliv_cfg.get("days_of_week", [1, 2, 3, 4, 5, 6, 7])
+		var deliv_window: String = str(deliv_cfg.get("time_window", "EARLY_MORNING"))
+		var deliv_action: String = str(deliv_cfg.get("action_mode", "DELIVER_NEWSPAPERS"))
+		var ops_range: Array = r_cfg.get("operators_per_depot", [3, 7])
+		var min_ops: int = maxi(1, int(ops_range[0])) if ops_range.size() >= 1 else 3
+		var max_ops: int = maxi(min_ops, int(ops_range[1])) if ops_range.size() >= 2 else 7
+		var res_per_worker: float = maxf(50.0, float(r_cfg.get("residencies_per_worker", 250.0)))
+
+		for d_row in depot_rows:
+			var est_id: int = int(d_row.get("establishment_id", 0))
+			var shop_dist: String = str(d_row.get("district_id", ""))
+			var shop_pos: Vector2 = district_positions.get(shop_dist, Vector2.ZERO)
+
+			var nearby_dists: Array[String] = residential_district_ids.duplicate()
+			nearby_dists.sort_custom(func(a: String, b: String) -> bool:
+				return shop_pos.distance_squared_to(district_positions.get(a, Vector2.ZERO)) < shop_pos.distance_squared_to(district_positions.get(b, Vector2.ZERO))
+			)
+			var catchment_dists: Array[String] = nearby_dists.slice(0, mini(3, nearby_dists.size()))
+			var catchment_hh: int = 0
+			for cd in catchment_dists:
+				catchment_hh += int(district_households.get(cd, 0))
+			var desired_ops: int = clampi(int(ceil(float(catchment_hh) / res_per_worker)), min_ops, max_ops)
+
+			var assigned_here: int = 0
+			for cd in catchment_dists:
+				if assigned_here >= desired_ops:
+					break
+				var pool: Array = residents_by_dist.get(cd, [])
+				var i: int = 0
+				while i < pool.size() and assigned_here < desired_ops:
+					var res_id: int = int(pool[i])
+					if not _is_worker_free_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window):
+						i += 1
+						continue
+					pool.remove_at(i)
+					_mark_worker_busy_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window)
+					assigned_here += 1
+					for d_raw in deliv_days:
+						var dow: int = int(d_raw)
+						route_inserts.append("""
+							INSERT INTO service_routes (
+								establishment_id, worker_resident_id, service_code, day_of_week,
+								time_window, target_district_id, action_mode, is_part_time,
+								valid_from, valid_to, change_reason_id
+							) VALUES (%d, %d, '%s', %d, '%s', '%s', '%s', 1, %d, NULL, %d);
+						""" % [
+							est_id, res_id, svc_code, dow, deliv_window,
+							cd.replace("'", "''"), deliv_action, sim_start_day, reason_id
+						])
+						added += 1
+						_bump_load(district_day_load, service_district_day_load, worker_day_assigned, cd, svc_code, dow, res_id, 1.0)
+	return added
+
+## Seeds un-premised sole-proprietor & secondary rounds (Avon, Catalogue, Pools + Concessionaires, Street Vice)
 static func _seed_unpremised_sole_routes(
 	route_inserts: Array[String],
 	rounds_def: Dictionary,
 	district_ids: Array[String],
 	district_populations: Dictionary,
+	district_households: Dictionary,
+	worker_window_busy: Dictionary,
 	district_day_load: Dictionary,
 	service_district_day_load: Dictionary,
 	worker_day_assigned: Dictionary,
@@ -363,88 +592,58 @@ static func _seed_unpremised_sole_routes(
 	if unpremised_rounds.is_empty() or district_ids.is_empty():
 		return 0
 
-	var claimed_residents: Dictionary = {}
 	var added: int = 0
+	var total_city_pop: int = 0
+	for d_id in district_ids:
+		total_city_pop += int(district_populations.get(d_id, 250))
 
 	for r_cfg in unpremised_rounds:
 		var svc_code: String = str(r_cfg.get("service_code", "")).strip_edges()
 		var elig: Dictionary = r_cfg.get("operator_eligibility", {})
 		assert(not elig.is_empty(), "FATAL: [RouteRoundSeeder] Un-premised round '%s' missing 'operator_eligibility' config!" % svc_code)
 
-		var age_min: int = int(elig.get("age_min", 18))
-		var age_max: int = int(elig.get("age_max", 55))
-		var max_ops: int = maxi(1, int(elig.get("max_operators_per_district", 3)))
-		var raw_roles: Array = elig.get("eligible_role_codes", [])
-		assert(not raw_roles.is_empty(), "FATAL: [RouteRoundSeeder] Un-premised round '%s' missing 'eligible_role_codes'!" % svc_code)
-
-		var quoted_roles: Array[String] = []
-		for rc in raw_roles:
-			var clean_rc: String = str(rc).strip_edges().to_upper()
-			if not clean_rc.is_empty():
-				quoted_roles.append("'%s'" % clean_rc.replace("'", "''"))
-
-		var gender_clause: String = ""
-		var raw_genders: Array = elig.get("gender_codes", [])
-		if not raw_genders.is_empty():
-			var quoted_genders: Array[String] = []
-			for gc in raw_genders:
-				var clean_gc: String = str(gc).strip_edges().to_upper()
-				if not clean_gc.is_empty():
-					quoted_genders.append("'%s'" % clean_gc.replace("'", "''"))
-			if not quoted_genders.is_empty():
-				gender_clause = "AND l_gen.code IN (%s)" % ", ".join(quoted_genders)
-
-		var min_dob: int = sim_start_day - int(round(float(age_max) * 365.25))
-		var max_dob: int = sim_start_day - int(round(float(age_min) * 365.25))
-
-		var candidate_residents: Array = DB_MANAGER.query_rows("""
-			SELECT DISTINCT r.resident_id, e.district_id
-			FROM residents r
-			JOIN households h ON r.household_id = h.household_id
-			JOIN establishments e ON h.establishment_id = e.establishment_id
-			JOIN system_labels l_gen ON r.gender_id = l_gen.label_id
-			JOIN livelihood_contracts c ON c.resident_id = r.resident_id AND c.valid_to IS NULL
-			JOIN system_labels l_role ON c.role_title_id = l_role.label_id
-			WHERE r.dod IS NULL
-			  AND r.dob BETWEEN %d AND %d
-			  AND l_role.code IN (%s)
-			  %s
-			ORDER BY r.resident_id ASC;
-		""" % [min_dob, max_dob, ", ".join(quoted_roles), gender_clause])
-
-		if candidate_residents.is_empty():
+		var residents_by_dist: Dictionary = _query_eligible_residents_by_district(elig, sim_start_day)
+		if residents_by_dist.is_empty():
 			continue
 
-		var residents_by_dist: Dictionary = {}
-		for row in candidate_residents:
-			var res_id: int = int(row.get("resident_id", 0))
-			if res_id <= 0 or claimed_residents.has(res_id):
-				continue
-			var d_id: String = str(row.get("district_id", ""))
-			if not residents_by_dist.has(d_id):
-				residents_by_dist[d_id] = []
-			residents_by_dist[d_id].append(res_id)
-
-		var cap_per_worker: float = maxf(100.0, float(r_cfg.get("demand_capacity_per_worker", 400.0)))
 		var deliv_cfg: Dictionary = r_cfg.get("delivery_schedule", {})
 		var deliv_days: Array = deliv_cfg.get("days_of_week", [5, 6])
 		var deliv_window: String = str(deliv_cfg.get("time_window", "EVENING"))
 		var deliv_action: String = str(deliv_cfg.get("action_mode", "SOLE_ROUTE"))
 
+		var max_ops: int = maxi(1, int(elig.get("max_operators_per_district", 3)))
+		var res_per_worker: float = float(r_cfg.get("residencies_per_worker", 0.0))
+		var cap_per_worker: float = maxf(100.0, float(r_cfg.get("demand_capacity_per_worker", 400.0)))
+		var cov_scopes: Dictionary = r_cfg.get("coverage_scopes", {})
+
+		# 1. District-level un-premised coverage
 		for d_id in district_ids:
 			var pool: Array = residents_by_dist.get(d_id, [])
 			if pool.is_empty():
 				continue
-			var pop: float = float(district_populations.get(d_id, 250))
-			var desired_operators: int = mini(max_ops, int(floor(pop / cap_per_worker)))
+			var desired_operators: int = 0
+			if not cov_scopes.is_empty():
+				desired_operators = int(cov_scopes.get("per_district", 1))
+			elif res_per_worker > 0.0:
+				var hh_cnt: float = float(district_households.get(d_id, 0))
+				desired_operators = mini(max_ops, int(ceil(hh_cnt / res_per_worker))) if hh_cnt > 0.0 else 0
+			else:
+				var pop: float = float(district_populations.get(d_id, 250))
+				desired_operators = mini(max_ops, int(floor(pop / cap_per_worker)))
+
 			if desired_operators <= 0:
 				continue
 
-			for _op_i in range(desired_operators):
-				if pool.is_empty():
-					break
-				var res_id: int = int(pool.pop_front())
-				claimed_residents[res_id] = true
+			var picked: int = 0
+			var idx: int = 0
+			while idx < pool.size() and picked < desired_operators:
+				var res_id: int = int(pool[idx])
+				if not _is_worker_free_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window):
+					idx += 1
+					continue
+				pool.remove_at(idx)
+				_mark_worker_busy_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window)
+				picked += 1
 				for d_raw in deliv_days:
 					var dow: int = int(d_raw)
 					route_inserts.append("""
@@ -459,6 +658,67 @@ static func _seed_unpremised_sole_routes(
 					])
 					added += 1
 					_bump_load(district_day_load, service_district_day_load, worker_day_assigned, d_id, svc_code, dow, res_id, 1.0)
+
+		# 2. Optional pub / workplace pools reps + home-based town-level Concessionaire (no route)
+		if int(cov_scopes.get("per_pub", 0)) > 0:
+			var pub_rows: Array = DB_MANAGER.query_rows("""
+				SELECT e.establishment_id, e.district_id
+				FROM establishments e
+				JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+				WHERE e.valid_to IS NULL AND l_cat.code = 'LOCAL_PUB'
+				ORDER BY e.establishment_id ASC;
+			""")
+			for pr in pub_rows:
+				var pub_id: int = int(pr.get("establishment_id", 0))
+				var p_dist: String = str(pr.get("district_id", ""))
+				var p_pool: Array = residents_by_dist.get(p_dist, [])
+				for pi in range(p_pool.size()):
+					var res_id: int = int(p_pool[pi])
+					if not _is_worker_free_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window):
+						continue
+					p_pool.remove_at(pi)
+					_mark_worker_busy_for_schedule(worker_window_busy, res_id, deliv_days, deliv_window)
+					for d_raw in deliv_days:
+						var dow: int = int(d_raw)
+						route_inserts.append("""
+							INSERT INTO service_routes (
+								establishment_id, worker_resident_id, service_code, day_of_week,
+								time_window, target_district_id, action_mode, is_part_time,
+								valid_from, valid_to, change_reason_id
+							) VALUES (%d, %d, '%s', %d, '%s', '%s', '%s', 1, %d, NULL, %d);
+						""" % [
+							pub_id, res_id, svc_code, dow, deliv_window,
+							p_dist.replace("'", "''"), deliv_action, sim_start_day, reason_id
+						])
+						added += 1
+					break
+
+		var conc_cfg: Dictionary = r_cfg.get("town_tier_concessionaire", {})
+		var brand_orgs: Array = r_cfg.get("brand_org_ids", [])
+		if not conc_cfg.is_empty() and not brand_orgs.is_empty():
+			var conc_role: String = str(conc_cfg.get("role_code", "POOLS_CONCESSIONAIRE")).replace("'", "''")
+			var pop_per_op: float = maxf(1000.0, float(conc_cfg.get("population_per_operator", 50000.0)))
+			var desired_conc: int = maxi(1, int(round(float(total_city_pop) / pop_per_op)))
+			var conc_inserts: Array[String] = []
+			for b_org in brand_orgs:
+				var org_id_str: String = str(b_org).strip_edges().replace("'", "''")
+				if org_id_str.is_empty():
+					continue
+				var assigned_c: int = 0
+				for d_id in district_ids:
+					if assigned_c >= desired_conc:
+						break
+					var c_pool: Array = residents_by_dist.get(d_id, [])
+					if not c_pool.is_empty():
+						var conc_res_id: int = int(c_pool.pop_front())
+						conc_inserts.append("""
+							INSERT OR IGNORE INTO organization_members (
+								org_id, resident_id, role_code, authority_mask, valid_from, valid_to, change_reason_id
+							) VALUES ('%s', %d, '%s', 1, %d, NULL, %d);
+						""" % [org_id_str, conc_res_id, conc_role, sim_start_day, reason_id])
+						assigned_c += 1
+			if not conc_inserts.is_empty():
+				DB_MANAGER.execute_batch(conc_inserts)
 
 	return added
 
