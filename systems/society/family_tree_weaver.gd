@@ -93,6 +93,18 @@ static func _build_bond_cache(bonds_cfg: Dictionary) -> Dictionary:
 		cache[str(bond_key)] = entry
 	return cache
 
+static var _valid_resident_ids_cache: Dictionary = {}
+
+static func _refresh_valid_resident_ids_cache() -> void:
+	_valid_resident_ids_cache.clear()
+	if not DB_MANAGER.is_database_open():
+		return
+	var rows: Array = DB_MANAGER.query_rows("SELECT resident_id FROM residents;")
+	for r in rows:
+		var rid: int = int(r.get("resident_id", 0))
+		if rid > 0:
+			_valid_resident_ids_cache[rid] = true
+
 ## Multi-row tuple packer for high-volume extended kinship weaving using pre-resolved bond_cache
 static func _append_bond_pair_tuples(
 	tuples_out: PackedStringArray,
@@ -110,6 +122,9 @@ static func _append_bond_pair_tuples(
 	var id_b: int = int(res_b["resident_id"])
 	if id_a == id_b or id_a <= 0 or id_b <= 0:
 		return 0
+	if not _valid_resident_ids_cache.is_empty():
+		if not _valid_resident_ids_cache.has(id_a) or not _valid_resident_ids_cache.has(id_b):
+			return 0
 
 	var def_a_to_b: Dictionary = bond_cache[bond_key_a_to_b]
 	var def_b_to_a: Dictionary = bond_cache[bond_key_b_to_a]
@@ -262,6 +277,7 @@ static func weave_extended_family_trees(
 	var clan_radius_m: float = float(spatial_cfg["kinship_clan_radius_m"])
 	var spatial_index := SPATIAL_RADIUS_INDEX.new(clan_radius_m)
 
+	_refresh_valid_resident_ids_cache()
 	var value_tuples: PackedStringArray = PackedStringArray()
 	var total_edges_emitted: int = 0
 	var is_headless: bool = (DisplayServer.get_name() == "headless")

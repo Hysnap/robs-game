@@ -1,0 +1,252 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "flavour_id": "crime",
+    "version": "1.0.0",
+    "description": "Crime flavour overlay extending job_definitions with informal illicit schedules, street-cut brackets, and underworld occupational roles."
+  },
+  "work_schedules": {
+    "ILLICIT_NIGHT_BEAT_24": {
+      "schedule_window": "NIGHT",
+      "weekly_hours": 24.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ILLICIT_EVENING_PATCH_20": {
+      "schedule_window": "EVENING",
+      "weekly_hours": 20.0,
+      "pay_cadence": "WEEKLY"
+    },
+    "ILLICIT_PAYDAY_ROUNDS_16": {
+      "schedule_window": "EVENING",
+      "weekly_hours": 16.0,
+      "pay_cadence": "WEEKLY"
+    }
+  },
+  "wage_brackets": {
+    "BRACKET_ILLICIT_STREET_CUT": {
+      "pay_basis": "COMMISSION_CUT",
+      "min_rate": 2.5,
+      "midpoint_rate": 4.5,
+      "max_rate": 8.0
+    },
+    "BRACKET_SYNDICATE_ENFORCER": {
+      "pay_basis": "WEEKLY_RETAINER",
+      "min_rate": 3.5,
+      "midpoint_rate": 5.5,
+      "max_rate": 9.0
+    }
+  },
+  "roles": {
+    "STREET_DEALER_RUNNER": {
+      "display_name": "Street Runner & Corner Dealer",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 3000,
+      "work_schedule": "ILLICIT_EVENING_PATCH_20",
+      "wage_bracket": "BRACKET_ILLICIT_STREET_CUT",
+      "age_min": 16,
+      "age_max": 45,
+      "is_field_worker": true,
+      "intel_clearance": 0.45,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "openness": 0.25,
+        "extraversion": 0.25,
+        "conscientiousness": -0.25,
+        "agreeableness": -0.2,
+        "neuroticism": 0.1
+      }
+    },
+    "CUTTING_HOUSE_CHEMIST": {
+      "display_name": "Cutting & Bagging Operative",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 4000,
+      "work_schedule": "ILLICIT_EVENING_PATCH_20",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 18,
+      "age_max": 55,
+      "is_field_worker": false,
+      "intel_clearance": 0.7,
+      "social_tier": "SKILLED_TRADE",
+      "ocean_affinities": {
+        "conscientiousness": 0.3,
+        "openness": 0.2,
+        "agreeableness": -0.25,
+        "extraversion": -0.15,
+        "neuroticism": -0.15
+      }
+    },
+    "PROTECTION_ENFORCER": {
+      "display_name": "Patch Enforcer & Heavy",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "ILLICIT_PAYDAY_ROUNDS_16",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 20,
+      "age_max": 55,
+      "is_field_worker": true,
+      "intel_clearance": 0.65,
+      "social_tier": "PROTECTIVE",
+      "ocean_affinities": {
+        "agreeableness": -0.5,
+        "extraversion": 0.3,
+        "conscientiousness": 0.1,
+        "openness": -0.1,
+        "neuroticism": -0.35
+      }
+    },
+    "STREET_VICE_WORKER": {
+      "display_name": "Street Beat Working Girl",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 3000,
+      "work_schedule": "ILLICIT_NIGHT_BEAT_24",
+      "wage_bracket": "BRACKET_ILLICIT_STREET_CUT",
+      "age_min": 18,
+      "age_max": 48,
+      "is_field_worker": true,
+      "intel_clearance": 0.4,
+      "social_tier": "STAFF",
+      "ocean_affinities": {
+        "extraversion": 0.2,
+        "openness": 0.2,
+        "neuroticism": 0.25,
+        "conscientiousness": -0.2,
+        "agreeableness": 0.1
+      }
+    },
+    "VICE_MINDER_PONCE": {
+      "display_name": "Vice Beat Minder & Collector",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 4000,
+      "work_schedule": "ILLICIT_NIGHT_BEAT_24",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 21,
+      "age_max": 58,
+      "is_field_worker": true,
+      "intel_clearance": 0.65,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "agreeableness": -0.5,
+        "extraversion": 0.35,
+        "conscientiousness": 0.15,
+        "openness": 0.05,
+        "neuroticism": -0.25
+      }
+    },
+    "BROTHEL_MADAM_KEEPER": {
+      "display_name": "Knock-Shop & Disorderly House Keeper",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 3000,
+      "work_schedule": "ILLICIT_NIGHT_BEAT_24",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 26,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.85,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.4,
+        "conscientiousness": 0.3,
+        "agreeableness": -0.25,
+        "openness": 0.15,
+        "neuroticism": -0.2
+      }
+    },
+    "SPIELER_DEALER_CROUPIER": {
+      "display_name": "Back-Room Spieler Banker & Dealer",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 4000,
+      "work_schedule": "ILLICIT_NIGHT_BEAT_24",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 21,
+      "age_max": 62,
+      "is_field_worker": false,
+      "intel_clearance": 0.75,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "conscientiousness": 0.25,
+        "openness": 0.2,
+        "agreeableness": -0.2,
+        "neuroticism": -0.25
+      }
+    },
+    "SHEBEEN_BARKEEPER": {
+      "display_name": "Shebeen & After-Hours Den Keeper",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 3000,
+      "work_schedule": "ILLICIT_NIGHT_BEAT_24",
+      "wage_bracket": "BRACKET_ILLICIT_STREET_CUT",
+      "age_min": 22,
+      "age_max": 65,
+      "is_field_worker": false,
+      "intel_clearance": 0.7,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "extraversion": 0.45,
+        "openness": 0.2,
+        "agreeableness": -0.1,
+        "conscientiousness": 0.15,
+        "neuroticism": -0.2
+      }
+    },
+    "ILLEGAL_BOOKIE_RUNNER": {
+      "display_name": "Street Bookmaker's Slip Runner",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "ILLICIT_PAYDAY_ROUNDS_16",
+      "wage_bracket": "BRACKET_ILLICIT_STREET_CUT",
+      "age_min": 18,
+      "age_max": 65,
+      "is_field_worker": true,
+      "intel_clearance": 0.65,
+      "social_tier": "CLERICAL",
+      "ocean_affinities": {
+        "extraversion": 0.35,
+        "conscientiousness": 0.25,
+        "openness": 0.1,
+        "agreeableness": -0.1,
+        "neuroticism": -0.2
+      }
+    },
+    "LOAN_SHARK_COLLECTOR": {
+      "display_name": "Unlicensed Moneylender & Debt Collector",
+      "contract_class": "INFORMAL_ILLICIT",
+      "contract_type": "INFORMAL",
+      "education_required": "NO_FORMAL",
+      "max_commute": 5000,
+      "work_schedule": "ILLICIT_PAYDAY_ROUNDS_16",
+      "wage_bracket": "BRACKET_SYNDICATE_ENFORCER",
+      "age_min": 22,
+      "age_max": 60,
+      "is_field_worker": true,
+      "intel_clearance": 0.8,
+      "social_tier": "MANAGEMENT",
+      "ocean_affinities": {
+        "agreeableness": -0.45,
+        "conscientiousness": 0.35,
+        "extraversion": 0.2,
+        "openness": 0.0,
+        "neuroticism": -0.3
+      }
+    }
+  }
+}

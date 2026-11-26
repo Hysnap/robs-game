@@ -5,6 +5,7 @@ extends RefCounted
 const MEMO_GEN = preload("res://systems/memo_generator.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
+const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
 ## Returns true if the operative's recurring orders are paused for exact sim_day
 static func is_paused_for_day(world_state: Dictionary, resident_id: Variant, sim_day: int) -> bool:
@@ -204,7 +205,173 @@ static func hydrate_for_day(
 			task["priority"] = int(task.get("priority", order_prio))
 			hydrated.append(task)
 
+	var route_tasks: Array[Dictionary] = _load_active_service_route_tasks(world_state, sim_day, task_cloner, resident_filter)
+	for rt in route_tasks:
+		hydrated.append(rt)
+
 	return hydrated
+
+## Hydrates due service_routes rows (cooperative, contested, and shared marketplace) into standard verb directives
+static func _load_active_service_route_tasks(
+	world_state: Dictionary,
+	sim_day: int,
+	task_cloner: Callable,
+	resident_filter: Variant = null
+) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if not DB_MANAGER.is_database_open():
+		return out
+	if not MANIFEST_MANAGER.has_module("route_rounds"):
+		return out
+
+	var tbl_rows: Array = DB_MANAGER.query_rows(
+		"SELECT COUNT(*) AS cnt FROM sqlite_master WHERE type='table' AND name='service_routes';"
+	)
+	if tbl_rows.is_empty() or int(tbl_rows[0].get("cnt", 0)) == 0:
+		return out
+
+	var route_cfg: Dictionary = MANIFEST_MANAGER.load_module("route_rounds")
+	var rounds_def: Dictionary = route_cfg.get("rounds", {})
+	var templated_services: Dictionary = {}
+	for svc_key in rounds_def.keys():
+		var r_def = rounds_def[svc_key]
+		if r_def is Dictionary and r_def.has("directive_template") and r_def["directive_template"] is Dictionary:
+			var tmpl: Dictionary = r_def["directive_template"]
+			if not tmpl.is_empty():
+				templated_services[str(r_def.get("service_code", svc_key))] = r_def
+
+	if templated_services.is_empty():
+		return out
+
+	var dow: int = CALENDAR_HELPER.day_of_week(sim_day)
+	var filter_active: bool = (resident_filter != null and str(resident_filter).strip_edges() != "")
+	var filter_str: String = str(resident_filter).strip_edges()
+
+	var svc_tokens: Array[String] = []
+	for sk in templated_services.keys():
+		svc_tokens.append("'%s'" % sk.replace("'", "''"))
+
+	var where_clauses: PackedStringArray = [
+		"valid_from <= %d" % sim_day,
+		"(valid_to IS NULL OR valid_to >= %d)" % sim_day,
+		"day_of_week = %d" % dow,
+		"service_code IN (%s)" % ", ".join(svc_tokens)
+	]
+
+	if filter_active:
+		if not filter_str.is_valid_int():
+			return out
+		where_clauses.append("worker_resident_id = %d" % int(filter_str))
+	else:
+		var active_dists: Array[String] = _collect_active_route_districts(world_state)
+		if active_dists.is_empty():
+			return out
+		var d_tokens: Array[String] = []
+		for d_id in active_dists:
+			d_tokens.append("'%s'" % d_id.replace("'", "''"))
+		where_clauses.append("target_district_id IN (%s)" % ", ".join(d_tokens))
+
+	var rows: Array = DB_MANAGER.query_rows("""
+		SELECT route_id, establishment_id, worker_resident_id, service_code,
+		       time_window, target_district_id, action_mode
+		FROM service_routes
+		WHERE %s
+		ORDER BY time_window ASC, route_id ASC;
+	""" % " AND ".join(where_clauses))
+
+	for row in rows:
+		if not (row is Dictionary):
+			continue
+		var worker_id: int = int(row.get("worker_resident_id", 0))
+		if worker_id <= 0 or is_paused_for_day(world_state, worker_id, sim_day):
+			continue
+
+		var svc_code: String = str(row.get("service_code", "")).strip_edges()
+		if not templated_services.has(svc_code):
+			continue
+
+		var r_def: Dictionary = templated_services[svc_code]
+		var tmpl: Dictionary = r_def["directive_template"]
+		var target_dist: String = str(row.get("target_district_id", "")).strip_edges()
+		var resolved_item: String = _resolve_route_item_id(world_state, target_dist, r_def, tmpl)
+		if resolved_item.is_empty():
+			continue
+
+		var task: Dictionary = task_cloner.call(tmpl)
+		task["assigned_to"] = str(worker_id)
+		task["target_node_id"] = target_dist
+		task["location_id"] = target_dist
+		task["item_id"] = resolved_item
+		task["service_code"] = svc_code
+		task["route_id"] = int(row.get("route_id", 0))
+		task["depot_establishment_id"] = int(row.get("establishment_id", 0))
+		task["time_window"] = str(row.get("time_window", "DAYTIME"))
+		task["is_standing_order"] = true
+		task["is_service_route"] = true
+		task["standing_order_title"] = "%s (%s)" % [svc_code, str(row.get("action_mode", ""))]
+		task["estimated_hours"] = float(task.get("estimated_hours", 2.0))
+		task["priority"] = int(task.get("priority", 40))
+		out.append(task)
+
+	return out
+
+static func _collect_active_route_districts(world_state: Dictionary) -> Array[String]:
+	var active: Array[String] = []
+	var pk: Dictionary = world_state.get("player_knowledge", {})
+	var home_d: String = str(pk.get("home_district_id", "")).strip_edges()
+	if not home_d.is_empty():
+		active.append(home_d)
+	var sel_d: String = str(world_state.get("selected_district_id", "")).strip_edges()
+	if not sel_d.is_empty() and not active.has(sel_d):
+		active.append(sel_d)
+	var residents: Dictionary = world_state.get("residents", {})
+	for r_key in residents.keys():
+		var rec = residents[r_key]
+		if rec is Dictionary and bool(rec.get("is_crew", false)):
+			var cur_d: String = str(rec.get("current_district_id", "")).strip_edges()
+			if not cur_d.is_empty() and not active.has(cur_d):
+				active.append(cur_d)
+	return active
+
+static func _resolve_route_item_id(
+	world_state: Dictionary,
+	district_id: String,
+	round_def: Dictionary,
+	tmpl: Dictionary
+) -> String:
+	var selector: String = str(tmpl.get("item_selector", "")).strip_edges().to_upper()
+	if selector != "UNFULFILLED_CHANNEL_MATCH":
+		return str(tmpl.get("item_id", "")).strip_edges()
+
+	var dist: Dictionary = world_state.get("districts", {}).get(district_id, {})
+	var unfulfilled: Dictionary = dist.get("unfulfilled_demand", {})
+	if unfulfilled.is_empty():
+		return ""
+
+	var fulf_cfg: Dictionary = round_def.get("fulfillment_config", {})
+	var channels: Array = fulf_cfg.get("demand_siphon_channels", [])
+	var commodities: Dictionary = world_state.get("commodity_registry", {})
+
+	var best_item: String = ""
+	var best_unmet: float = 0.0
+	for item_key in unfulfilled.keys():
+		var entry = unfulfilled[item_key]
+		if not (entry is Dictionary):
+			continue
+		var unmet: float = float(entry.get("unmet_units", 0.0))
+		if unmet <= best_unmet:
+			continue
+		var item_id: String = str(item_key)
+		var item_def: Dictionary = commodities.get(item_id, {})
+		var item_path: String = str(item_def.get("catalog_path", item_def.get("subpath", ""))).to_lower()
+		for pref_raw in channels:
+			var pref: String = str(pref_raw).to_lower()
+			if item_path.contains(pref) or item_id.to_lower().contains(pref.trim_suffix("/")):
+				best_unmet = unmet
+				best_item = item_id
+				break
+
+	return best_item
 
 ## Resolves an operative's shift queue when manual ad-hoc orders and due standing orders coexist,
 ## factoring in organization "planning fat" (available shift hours) and OCEAN/cognitive traits.

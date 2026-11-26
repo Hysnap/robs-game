@@ -90,6 +90,7 @@ static func create_build_context(
 		"comm_classes": building_classes.get("commercial_tenants", {}),
 		"ind_classes": building_classes.get("industrial_tenants", {}),
 		"embedded_civic_classes": building_classes.get("civic_tenants", {}),
+		"clandestine_classes": building_classes.get("clandestine_tenants", {}),
 		"street_roots": street_roots,
 		"street_suffixes": street_suffixes,
 		"street_cap_min": street_cap_min,
@@ -720,6 +721,7 @@ static func build_commercial_industrial_and_slots(state: Dictionary, on_progress
 	var comm_classes: Dictionary = state["comm_classes"]
 	var ind_classes: Dictionary = state["ind_classes"]
 	var embedded_civic_classes: Dictionary = state["embedded_civic_classes"]
+	var clandestine_classes: Dictionary = state["clandestine_classes"]
 	var comm_naming: Dictionary = state["comm_naming"]
 	var civic_naming_formats: Array = state["civic_naming_formats"]
 	var default_civic_org_id: String = str(state["default_civic_org_id"])
@@ -889,6 +891,60 @@ static func build_commercial_industrial_and_slots(state: Dictionary, on_progress
 					est_id += 1
 					district_estab_counts[dist_id] = int(district_estab_counts[dist_id]) + 1
 
+		# Sparse Clandestine Establishments (only when crime flavour overlay provides clandestine_tenants)
+		if not clandestine_classes.is_empty() and rng.randf() < 0.25:
+			var clan_pool: Array[Dictionary] = []
+			for c_code in clandestine_classes.keys():
+				var c_def: Dictionary = clandestine_classes[c_code]
+				var c_spawns: Array = c_def.get("spawns_in_archetypes", [])
+				if c_spawns.has(district_type) or c_spawns.is_empty():
+					clan_pool.append({"code": c_code, "weight": int(c_def.get("weight", 8)), "data": c_def})
+			if not clan_pool.is_empty():
+				var total_cw := 0
+				for ce in clan_pool:
+					total_cw += int(ce["weight"])
+				var cr: int = rng.randi() % maxi(1, total_cw)
+				var cacc := 0
+				var chosen_clan: Dictionary = clan_pool[0]
+				for ce in clan_pool:
+					cacc += int(ce["weight"])
+					if cr < cacc:
+						chosen_clan = ce
+						break
+				var clan_code: String = str(chosen_clan["code"])
+				var clan_def: Dictionary = chosen_clan["data"]
+				var clan_name_res: Dictionary = _generate_business_name(
+					clan_code, clan_def, false, district_type,
+					street_root, district_prefix, district_display, borough_name, sim_start_year,
+					comm_naming, civic_naming_formats, cultural, lexicon, used_names_in_district, rng
+				)
+				var clan_title: String = str(clan_name_res["title"])
+				used_names_in_district[clan_title] = true
+				if clan_name_res.has("proprietor"):
+					proprietor_hints[est_id] = clan_name_res["proprietor"]
+
+				var clan_cap: int = int(clan_def.get("default_capacity", 6))
+				var clan_cat_id: int = DB_MANAGER.get_label_id("ESTABLISHMENT_CATEGORY", clan_code)
+				estab_inserts.append("""
+					INSERT INTO establishments (
+						establishment_id, district_id, building_index, unit_door_number,
+						owner_org_id, name, category_id, capacity, is_vacant, valid_from, valid_to, change_reason_id
+					) VALUES (%d, '%s', 0, 'CLANDESTINE', NULL, '%s', %d, %d, 0, %d, NULL, %d);
+				""" % [est_id, dist_id, clan_title.replace("'", "''"), clan_cat_id, clan_cap, sim_start_day, reason_world_gen_id])
+
+				_register_est_cat(by_cat, clan_code, est_id, dist_id, clan_cap)
+				_register_est_cat(by_cat, "ILLICIT_CLANDESTINE", est_id, dist_id, clan_cap)
+
+				var clan_sector: String = str(clan_def.get("sector", "ILLICIT_CLANDESTINE")).to_upper()
+				var clan_bias: float = _roll_employer_wage_bias(rng)
+				employer_wage_biases[est_id] = clan_bias
+				current_slot_id = expand_staffing_slots(
+					available_job_slots, job_slot_inserts, current_slot_id, est_id, dist_id,
+					clan_sector, clan_def, job_definitions, clan_bias, sim_start_day, reason_world_gen_id, rng
+				)
+				est_id += 1
+				district_estab_counts[dist_id] = int(district_estab_counts[dist_id]) + 1
+
 		# Single-Entity District Canonical Establishment Guarantee (backed by building_classes)
 		if int(district_estab_counts[dist_id]) == 0:
 			var building_classes_ref: Dictionary = state["building_classes"]
@@ -964,15 +1020,17 @@ static func finalize_physical_state(state: Dictionary) -> Dictionary:
 		"org_pay_cadences": state["org_pay_cadences"]
 	}
 
-## Looks up a class definition across civic_tenants, commercial_tenants, and industrial_tenants in building_classes.json
+## Looks up a class definition across any tenant group dictionary in building_classes (and flavour overlays)
 static func _lookup_building_class(building_classes: Dictionary, cat_name: String) -> Dictionary:
 	var key: String = cat_name.strip_edges().to_upper()
-	for group_key in ["civic_tenants", "commercial_tenants", "industrial_tenants"]:
-		var group = building_classes.get(group_key, {})
-		if group is Dictionary and group.has(key) and group[key] is Dictionary:
-			return group[key]
 	if building_classes.has(key) and building_classes[key] is Dictionary:
 		return building_classes[key]
+	for top_key in building_classes.keys():
+		if str(top_key).begins_with("_") or str(top_key).begins_with("default_"):
+			continue
+		var group = building_classes[top_key]
+		if group is Dictionary and group.has(key) and group[key] is Dictionary:
+			return group[key]
 	return {}
 
 ## Updates district built_sqm and vacant_sqm when an establishment with a specific footprint_sqm spawns
@@ -1056,28 +1114,11 @@ static func _generate_business_name(
 	var allow_proprietor: bool = bool(tenancy.get("use_proprietor_name", true))
 	var forced_ethnicity: String = str(tenancy.get("proprietor_ethnicity", "")).strip_edges()
 
-	# 1. Dedicated Pub Name Pool
-	if cat_code == "LOCAL_PUB":
-		var pub_names: Array = comm_naming.get("pub_names", [])
-		assert(not pub_names.is_empty(), "FATAL: [PremisesWorkplaceBuilder] Missing 'pub_names' in commercial_naming.")
-		var candidate_pub: String = str(pub_names[rng.randi() % pub_names.size()])
-		if used_names.has(candidate_pub):
-			candidate_pub = "%s (%s)" % [candidate_pub, street_root]
-		return { "title": candidate_pub }
-
-	# 2. Era-Windowed Corporate / High-Street Chains (mapped to era_brands keys)
-	var brand_lookup_key: String = cat_code
-	if cat_code == "RETAIL_BANK":
-		brand_lookup_key = "BANK_BRANCH"
-	elif cat_code == "CHEMIST_PHARMACY":
-		brand_lookup_key = "CHEMIST"
-	elif cat_code == "SUB_POST_OFFICE":
-		brand_lookup_key = "POST_OFFICE"
-
+	# 1. Era-Windowed Corporate / High-Street Chains (keyed directly by building_classes code)
 	var era_brands: Dictionary = comm_naming.get("era_brands", {})
-	if era_brands.has(brand_lookup_key):
+	if era_brands.has(cat_code):
 		var active_brands: Array[String] = []
-		for entry in era_brands[brand_lookup_key]:
+		for entry in era_brands[cat_code]:
 			if entry is Dictionary:
 				var from_yr: int = int(entry.get("valid_from_year", 1900))
 				var to_yr: int = int(entry.get("valid_to_year", 2100))
@@ -1089,6 +1130,16 @@ static func _generate_business_name(
 			if used_names.has(resolved_brand) and not raw_brand.contains("{"):
 				resolved_brand = "%s (%s)" % [resolved_brand, street_root]
 			return { "title": resolved_brand }
+
+	# 2. Data-Driven Proper Venue Name Pools (keyed directly by building_classes code, e.g. LOCAL_PUB)
+	var named_pools: Dictionary = comm_naming.get("named_pools", {})
+	if named_pools.has(cat_code) and named_pools[cat_code] is Array:
+		var pool_names: Array = named_pools[cat_code]
+		if not pool_names.is_empty():
+			var candidate_title: String = str(pool_names[rng.randi() % pool_names.size()])
+			if used_names.has(candidate_title):
+				candidate_title = "%s (%s)" % [candidate_title, street_root]
+			return { "title": candidate_title }
 
 	# 3. Non-Proprietor / Civic Establishments (Police, Clinics, Courts, Libraries, Depots)
 	if not allow_proprietor:

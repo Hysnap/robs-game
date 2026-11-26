@@ -2,7 +2,7 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Municipal clustering scales, public/banking holiday calendar, hierarchical public organizations with autonomy modes, physical wing sub-establishments, civic disbursement schedules, and postal delivery rules."
   },
   "hierarchy_scales": {
@@ -583,6 +583,46 @@
         "legal_status": "FORMAL",
         "institution_rail_class": "POSTAL_AGENT",
         "matched_categories": ["POST_OFFICE"],
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:VERNONS_POOLS",
+        "parent_org_id": null,
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Vernons Football Pools",
+        "org_type": "COMPANY",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:LITTLEWOODS_POOLS",
+        "parent_org_id": null,
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Littlewoods Football Pools",
+        "org_type": "COMPANY",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:LITTLEWOODS_CATALOGUE",
+        "parent_org_id": null,
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Littlewoods Home Shopping Catalogue",
+        "org_type": "COMPANY",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
+        "default_pay_cadence": "WEEKLY_FRIDAY"
+      },
+      {
+        "org_id": "ORG:AVON_COSMETICS",
+        "parent_org_id": null,
+        "autonomy_mode": "ARMS_LENGTH",
+        "display_name": "Avon Cosmetics",
+        "org_type": "COMPANY",
+        "legal_status": "FORMAL",
+        "institution_rail_class": "STANDARD",
         "default_pay_cadence": "WEEKLY_FRIDAY"
       }
     ],

@@ -510,15 +510,24 @@ func _on_run_demographics_audit_pressed() -> void:
 	var total_hh: int = int(report.get("total_households", 0))
 	var act_hh_sz: float = float(report.get("mean_household_size", 0.0))
 	var exp_hh_sz: float = float(report.get("expected_household_size", 2.6))
+	var total_fam: int = int(report.get("total_family_units", 0))
+	var act_fam_sz: float = float(report.get("mean_family_size", 0.0))
+	var exp_fam_sz: float = float(report.get("expected_family_size", 0.0))
+	var multi_fam: int = int(report.get("multi_family_residents", 0))
+	var multi_hh_err: int = int(report.get("multi_household_violations", 0))
 	var mode_str: String = str(report.get("population_mode", "REALISTIC"))
 	var seed_str: String = str(report.get("active_seed", "UNKNOWN"))
 
 	_audit_summary_lbl.text = (
 		"[b][color=cyan]CITY DEMOGRAPHICS & PSYCHOLOGY AUDIT[/color][/b]  |  " +
 		"DB: [color=white]%s[/color]  |  Seed: [color=yellow]%s[/color]  |  Mode: [color=lime]%s[/color]\n" +
-		"Living Population: [b]%d[/b]  |  Active Households: [b]%d[/b]  |  " +
-		"Mean Household Size: [b]%.2f[/b] (JSON Target: %.2f)"
-	) % [str(report.get("db_path", "")), seed_str, mode_str, total_pop, total_hh, act_hh_sz, exp_hh_sz]
+		"Living Population: [b]%d[/b]  |  Active Households: [b]%d[/b] (Mean Size: [b]%.2f[/b] vs Target %.2f, Multi-HH Errors: [b]%d[/b])\n" +
+		"Nuclear Family Units: [b]%d[/b] (Mean Family Size: [b]%.2f[/b] vs Model %.2f  |  2-Generation Multi-Family Residents: [b]%d[/b])"
+	) % [
+		str(report.get("db_path", "")), seed_str, mode_str,
+		total_pop, total_hh, act_hh_sz, exp_hh_sz, multi_hh_err,
+		total_fam, act_fam_sz, exp_fam_sz, multi_fam
+	]
 
 	# 1. Age & Sex Population Pyramid
 	var pyramid_chart := ChartControlScript.new()
@@ -530,61 +539,188 @@ func _on_run_demographics_audit_pressed() -> void:
 		report.get("pyramid", [])
 	)
 
-	# 2. OCEAN, IQ (GMM), Mental Agility & Dark-Trait Means
-	var traits_chart := ChartControlScript.new()
-	traits_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_audit_charts_box.add_child(traits_chart)
-	traits_chart.configure_paired_bars(
-		"2. OCEAN Personality, IQ (GMM), Mental Agility & Dark-Trait Distributions",
-		"Actual city SQLite mean (with [min..max] range) vs. ocean_personality_rules.json expected baseline (%s mode)." % mode_str,
-		report.get("continuous_traits", []),
-		true
+	# 1B. Physical Household Size vs. Nuclear Family Unit Size (Side-by-Side 2-Curve Distributions)
+	var hh_fam_row := HBoxContainer.new()
+	hh_fam_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hh_fam_row.add_theme_constant_override("separation", 10)
+	_audit_charts_box.add_child(hh_fam_row)
+
+	var hh_size_chart := ChartControlScript.new()
+	hh_size_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hh_fam_row.add_child(hh_size_chart)
+	hh_size_chart.configure_dual_curve(
+		"1A. Physical Household Size Distribution (Occupants per Dwelling)",
+		"Each living resident belongs to strictly 1 household; Expected vs. Actual share by size (1 to 6+).",
+		report.get("household_size", {})
 	)
 
-	# 3. Neurodivergence & Clinical Behavioral Profiles
-	var tags_chart := ChartControlScript.new()
-	tags_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_audit_charts_box.add_child(tags_chart)
-	tags_chart.configure_paired_bars(
-		"3. Sparse Neurodivergence & Clinical Behavioral Profiles (resident_behavioral_tags)",
-		"Actual % of age-eligible citizens carrying each tag (plus mean severity) vs. base prevalence in ocean_personality_rules.json.",
-		report.get("behavioral_tags", []),
-		false
+	var fam_size_chart := ChartControlScript.new()
+	fam_size_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hh_fam_row.add_child(fam_size_chart)
+	fam_size_chart.configure_dual_curve(
+		"1B. Nuclear Family Unit Size Distribution (Parents + Linked Children)",
+		"Includes dispersed adult children; adults with parents & own family appear in 2 units.",
+		report.get("family_size", {})
 	)
 
-	# 4. Educational Attainment
+	# 2. Psychological Continuous Traits: 2-Curve Distribution + Age x Sex Breakdown per Trait
+	_audit_charts_box.add_child(_make_section_banner(
+		"2. Psychological & Cognitive Distributions (Expected vs. Actual Curves + Age × Sex Breakdowns — %s Mode)" % mode_str
+	))
+	var continuous_traits: Array = report.get("continuous_traits", [])
+	for t_item in continuous_traits:
+		if not (t_item is Dictionary):
+			continue
+		var pair_row := HBoxContainer.new()
+		pair_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pair_row.add_theme_constant_override("separation", 10)
+		_audit_charts_box.add_child(pair_row)
+
+		var dist_chart := ChartControlScript.new()
+		dist_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pair_row.add_child(dist_chart)
+		var badge_str: String = "Exp:%s | Act:%s %s (%+.1f%%)" % [
+			str(t_item.get("expected_mean_display", "")),
+			str(t_item.get("actual_mean_display", "")),
+			str(t_item.get("range_display", "")),
+			float(t_item.get("delta_pct", 0.0))
+		]
+		var curve_payload: Dictionary = {
+			"expected_curve": t_item.get("expected_curve", []),
+			"actual_curve": t_item.get("actual_curve", []),
+			"expected_mean_norm": float(t_item.get("expected_mean_norm", 0.5)),
+			"actual_mean_norm": float(t_item.get("actual_mean_norm", 0.5)),
+			"x_min_label": str(t_item.get("x_min_label", "0.00")),
+			"x_max_label": str(t_item.get("x_max_label", "1.00")),
+			"delta_pct": float(t_item.get("delta_pct", 0.0)),
+			"badge_text": badge_str
+		}
+		dist_chart.configure_dual_curve(
+			"%s — Population Distribution" % str(t_item.get("label", "")),
+			"Expected PDF curve vs. Actual SQLite density histogram (vertical lines = expected & actual means).",
+			curve_payload
+		)
+
+		var age_sex_chart := ChartControlScript.new()
+		age_sex_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pair_row.add_child(age_sex_chart)
+		age_sex_chart.configure_age_sex_breakdown(
+			"%s — Age × Sex Profile" % str(t_item.get("label", "")),
+			"Mean trait score by age cohort split by Male vs. Female in SQLite.",
+			t_item.get("age_sex_breakdown", []),
+			float(t_item.get("y_max_scale", 1.0))
+		)
+
+	# 3. Neurodivergence & Clinical Behavioral Profiles: 2-Curve Propensity + Age x Sex Prevalence
+	_audit_charts_box.add_child(_make_section_banner(
+		"3. Sparse Neurodivergence & Clinical Behavioral Profiles (Propensity Curves with Cutoff τ + Age × Sex Prevalence)"
+	))
+	var behavioral_tags: Array = report.get("behavioral_tags", [])
+	for tag_item in behavioral_tags:
+		if not (tag_item is Dictionary):
+			continue
+		var tag_pair_row := HBoxContainer.new()
+		tag_pair_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tag_pair_row.add_theme_constant_override("separation", 10)
+		_audit_charts_box.add_child(tag_pair_row)
+
+		var prop_chart := ChartControlScript.new()
+		prop_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tag_pair_row.add_child(prop_chart)
+		var tag_badge: String = "Exp:%.2f%% | Act:%.2f%% (%+.2f%%) [sev %.2f]" % [
+			float(tag_item.get("expected_pct", 0.0)),
+			float(tag_item.get("actual_pct", 0.0)),
+			float(tag_item.get("delta_pct", 0.0)),
+			float(tag_item.get("avg_severity", 0.0))
+		]
+		var tag_curve_payload: Dictionary = {
+			"expected_curve": tag_item.get("expected_curve", []),
+			"actual_curve": tag_item.get("actual_curve", []),
+			"cutoff_norm": float(tag_item.get("cutoff_norm", 0.85)),
+			"x_min_label": str(tag_item.get("x_min_label", "0.00")),
+			"x_max_label": str(tag_item.get("x_max_label", "1.00")),
+			"delta_pct": float(tag_item.get("delta_pct", 0.0)),
+			"badge_text": tag_badge
+		}
+		prop_chart.configure_dual_curve(
+			"%s — Latent Propensity Curve" % str(tag_item.get("label", "")),
+			"Expected vs. Actual propensity curve; right-tail area >= Cutoff τ activates profile.",
+			tag_curve_payload
+		)
+
+		var tag_age_sex_chart := ChartControlScript.new()
+		tag_age_sex_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tag_pair_row.add_child(tag_age_sex_chart)
+		tag_age_sex_chart.configure_age_sex_breakdown(
+			"%s — Age × Sex Prevalence (%%)" % str(tag_item.get("label", "")),
+			"Percentage of Male vs. Female citizens carrying tag in each age bracket.",
+			tag_item.get("age_sex_breakdown", []),
+			float(tag_item.get("y_max_scale", 5.0))
+		)
+
+	# 4. Educational Attainment (2-Curve Distribution)
 	var edu_chart := ChartControlScript.new()
 	edu_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_audit_charts_box.add_child(edu_chart)
-	edu_chart.configure_paired_bars(
-		"4. Adult Educational Attainment (Age 16+)",
-		"Actual qualification distribution vs. cohort-averaged probabilities in education_attainment_model.",
-		report.get("education", []),
-		false
+	edu_chart.configure_dual_curve(
+		"4. Adult Educational Attainment Curve (Age 16+)",
+		"Expected cohort-averaged qualification % curve vs. Actual SQLite % curve across qualification tiers.",
+		_build_categorical_curve_payload(report.get("education", []))
 	)
 
-	# 5. Cultural & Religious Composition
+	# 5. Cultural & Religious Composition (2-Curve Distributions)
 	var eth_chart := ChartControlScript.new()
 	eth_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_audit_charts_box.add_child(eth_chart)
-	eth_chart.configure_paired_bars(
-		"5. Ethnic Composition",
-		"Actual city ethnicity share vs. unweighted archetype mean in cultural_demographics.",
-		report.get("ethnicity", []),
-		false
+	eth_chart.configure_dual_curve(
+		"5. Ethnic Composition Distribution Curve",
+		"Expected cultural_demographics archetype mean % vs. Actual SQLite city % across ethnic groups.",
+		_build_categorical_curve_payload(report.get("ethnicity", []))
 	)
 
 	var rel_chart := ChartControlScript.new()
 	rel_chart.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_audit_charts_box.add_child(rel_chart)
-	rel_chart.configure_paired_bars(
-		"6. Religious Affiliation Breakdown",
-		"Actual city religious affiliation share vs. unweighted archetype mean in cultural_demographics.",
-		report.get("religion", []),
-		false
+	rel_chart.configure_dual_curve(
+		"6. Religious Affiliation Distribution Curve",
+		"Expected cultural_demographics archetype mean % vs. Actual SQLite city % across religious groups.",
+		_build_categorical_curve_payload(report.get("religion", []))
 	)
 
 	_log_status("[color=green][CITY AUDIT COMPLETE][/color] Audited %d living residents across %d households (%s mode)." % [total_pop, total_hh, mode_str])
+
+func _build_categorical_curve_payload(rows: Array) -> Dictionary:
+	var exp_curve: Array[float] = []
+	var act_curve: Array[float] = []
+	var x_labels: Array[String] = []
+	var max_abs_delta: float = 0.0
+	var signed_max_delta: float = 0.0
+
+	for r in rows:
+		if r is Dictionary:
+			exp_curve.append(float(r.get("expected_pct", 0.0)))
+			act_curve.append(float(r.get("actual_pct", 0.0)))
+			x_labels.append(str(r.get("label", "")))
+			var d: float = float(r.get("delta_pct", 0.0))
+			if absf(d) > max_abs_delta:
+				max_abs_delta = absf(d)
+				signed_max_delta = d
+
+	return {
+		"expected_curve": exp_curve,
+		"actual_curve": act_curve,
+		"x_labels": x_labels,
+		"delta_pct": signed_max_delta,
+		"badge_text": "Max Category Variance: %+.1f%%" % signed_max_delta
+	}
+
+func _make_section_banner(title_txt: String) -> PanelContainer:
+	var p := PanelContainer.new()
+	var lbl := Label.new()
+	lbl.text = "  " + title_txt
+	lbl.add_theme_color_override("font_color", Color(0.55, 0.85, 0.98, 1.0))
+	p.add_child(lbl)
+	return p
 
 # =====================================================================
 # 6. DYNAMIC BINDING & STEP CARD RENDERERS

@@ -1,0 +1,243 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "flavour_id": "crime",
+    "version": "1.0.0",
+    "description": "Crime flavour overlay extending route_rounds with contested patches, shared sole-proprietor vice marketplaces, and demand-siphoning fulfillment configs."
+  },
+  "rounds": {
+    "PROTECTION_RACKET_PATCH": {
+      "service_code": "PROTECTION_RACKET_PATCH",
+      "depot_building_classes": [],
+      "staff_role_ids": ["PROTECTION_ENFORCER"],
+      "territory_mode": "CONTESTED",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 1,
+      "demand_capacity_per_worker": 400,
+      "operator_eligibility": {
+        "age_min": 18,
+        "age_max": 50,
+        "eligible_role_codes": ["UNEMPLOYED", "PROTECTION_ENFORCER"],
+        "max_operators_per_district": 2
+      },
+      "delivery_schedule": {
+        "days_of_week": [5, 6],
+        "time_window": "EVENING",
+        "action_mode": "COLLECT_PROTECTION_LEVY"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "COLLECT_FROM",
+        "target_scope": "DISTRICT",
+        "item_id": "CASH",
+        "amount": 35.0,
+        "exposure_modifier": 1.25
+      },
+      "fulfillment_config": {
+        "mode": "OBLIGATION_LEVY",
+        "target_establishment_categories": [
+          "LOCAL_PUB",
+          "BETTING_SHOP",
+          "CORNER_SHOP",
+          "OFF_LICENCE",
+          "FISH_AND_CHIP_SHOP",
+          "CHINESE_TAKEAWAY",
+          "INDIAN_TAKEAWAY",
+          "MINICAB_FIRM"
+        ],
+        "obligation_type": "PROTECTION_RACKET",
+        "weekly_amount": 35.0,
+        "operator_cut_ratio": 1.0,
+        "heat_per_run": 3.5,
+        "notoriety_per_run": 3.0
+      }
+    },
+    "STREET_DEALER_LINE": {
+      "service_code": "STREET_DEALER_LINE",
+      "depot_building_classes": ["CUTTING_PACKING_HOUSE"],
+      "staff_role_ids": ["STREET_DEALER_RUNNER"],
+      "territory_mode": "CONTESTED",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 1,
+      "demand_capacity_per_worker": 25.0,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "EVENING",
+        "action_mode": "STREET_DEAL_BEAT"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "SELL",
+        "target_scope": "DISTRICT",
+        "item_selector": "UNFULFILLED_CHANNEL_MATCH",
+        "amount": 5.0,
+        "exposure_modifier": 1.35
+      },
+      "fulfillment_config": {
+        "mode": "DEMAND_SIPHON",
+        "demand_siphon_channels": ["consumables/illicit_substances/"],
+        "max_units_per_run": 25.0,
+        "price_multiplier": 1.35,
+        "requires_depot_stock": true,
+        "operator_cut_ratio": 0.25,
+        "heat_per_run": 4.0,
+        "notoriety_per_run": 2.5
+      }
+    },
+    "SOLO_STREET_VICE_BEAT": {
+      "service_code": "SOLO_STREET_VICE_BEAT",
+      "depot_building_classes": [],
+      "staff_role_ids": ["STREET_VICE_WORKER"],
+      "territory_mode": "SHARED_MARKETPLACE",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 1,
+      "demand_capacity_per_worker": 350,
+      "operator_eligibility": {
+        "age_min": 18,
+        "age_max": 45,
+        "eligible_role_codes": [
+          "UNEMPLOYED",
+          "HOME_MAKER",
+          "STREET_VICE_WORKER"
+        ],
+        "max_operators_per_district": 3
+      },
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "time_window": "NIGHT",
+        "action_mode": "SOLO_VICE_BEAT"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "SELL",
+        "target_scope": "DISTRICT",
+        "item_id": "CASH",
+        "amount": 12.0,
+        "exposure_modifier": 1.15
+      },
+      "fulfillment_config": {
+        "mode": "MARKETPLACE_SESSION",
+        "base_session_fee": 12.0,
+        "sessions_per_cycle": 5.0,
+        "operator_cut_ratio": 1.0,
+        "heat_per_run": 2.0,
+        "notoriety_per_run": 1.5
+      }
+    },
+    "MINDED_STREET_VICE_BEAT": {
+      "service_code": "MINDED_STREET_VICE_BEAT",
+      "depot_building_classes": [],
+      "staff_role_ids": ["VICE_MINDER_PONCE"],
+      "territory_mode": "CONTESTED",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 1,
+      "demand_capacity_per_worker": 500,
+      "operator_eligibility": {
+        "age_min": 18,
+        "age_max": 50,
+        "eligible_role_codes": ["UNEMPLOYED", "VICE_MINDER_PONCE"],
+        "max_operators_per_district": 2
+      },
+      "delivery_schedule": {
+        "days_of_week": [4, 5, 6, 7],
+        "time_window": "NIGHT",
+        "action_mode": "MINDED_VICE_BEAT"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "SELL",
+        "target_scope": "DISTRICT",
+        "item_id": "CASH",
+        "amount": 12.0,
+        "exposure_modifier": 1.3
+      },
+      "fulfillment_config": {
+        "mode": "MARKETPLACE_SESSION",
+        "base_session_fee": 12.0,
+        "sessions_per_cycle": 8.0,
+        "operator_cut_ratio": 0.45,
+        "heat_per_run": 3.5,
+        "notoriety_per_run": 2.5
+      }
+    },
+    "ILLEGAL_BOOKIE_RUNNER_ROUND": {
+      "service_code": "ILLEGAL_BOOKIE_RUNNER_ROUND",
+      "depot_building_classes": [],
+      "staff_role_ids": ["ILLEGAL_BOOKIE_RUNNER"],
+      "territory_mode": "CONTESTED",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 3,
+      "demand_capacity_per_worker": 450,
+      "operator_eligibility": {
+        "age_min": 18,
+        "age_max": 60,
+        "eligible_role_codes": ["UNEMPLOYED", "ILLEGAL_BOOKIE_RUNNER"],
+        "max_operators_per_district": 2
+      },
+      "delivery_schedule": {
+        "days_of_week": [3, 5, 6],
+        "time_window": "AFTERNOON",
+        "action_mode": "COLLECT_ILLEGAL_BETS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "COLLECT_FROM",
+        "target_scope": "DISTRICT",
+        "item_id": "CASH",
+        "amount": 18.0,
+        "exposure_modifier": 1.1
+      },
+      "fulfillment_config": {
+        "mode": "MARKETPLACE_SESSION",
+        "base_session_fee": 18.0,
+        "sessions_per_cycle": 6.0,
+        "operator_cut_ratio": 0.2,
+        "heat_per_run": 1.5,
+        "notoriety_per_run": 1.0
+      }
+    },
+    "LOAN_SHARK_COLLECTION_ROUND": {
+      "service_code": "LOAN_SHARK_COLLECTION_ROUND",
+      "depot_building_classes": ["LOAN_SHARK_BACK_OFFICE"],
+      "staff_role_ids": ["LOAN_SHARK_COLLECTOR"],
+      "territory_mode": "CONTESTED",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 3,
+      "demand_capacity_per_worker": 450,
+      "delivery_schedule": {
+        "days_of_week": [4, 5],
+        "time_window": "EVENING",
+        "action_mode": "COLLECT_STREET_LOANS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "directive_template": {
+        "verb": "COLLECT_FROM",
+        "target_scope": "DISTRICT",
+        "item_id": "CASH",
+        "amount": 25.0,
+        "exposure_modifier": 1.2
+      },
+      "fulfillment_config": {
+        "mode": "MARKETPLACE_SESSION",
+        "base_session_fee": 25.0,
+        "sessions_per_cycle": 4.0,
+        "operator_cut_ratio": 0.3,
+        "heat_per_run": 2.0,
+        "notoriety_per_run": 2.5
+      }
+    }
+  }
+}

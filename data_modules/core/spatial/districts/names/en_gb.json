@@ -439,36 +439,38 @@
       "{surname} Precision {trade}"
     ],
     "family_trade_probability": 0.65,
-    "pub_names": [
-      "The Red Lion",
-      "The Crown & Anchor",
-      "The Royal Oak",
-      "The White Hart",
-      "The Plough & Harrow",
-      "The Bull's Head",
-      "The Swan",
-      "The Railway Tavern",
-      "The Fox & Grapes",
-      "The King's Arms",
-      "The Cross Keys",
-      "The Black Horse",
-      "The Duke of York",
-      "The Navigation Inn",
-      "The Moulders Arms",
-      "The Gunmakers Arms",
-      "The Three Horseshoes",
-      "The Rose & Crown",
-      "The Bell Inn",
-      "The Station Hotel",
-      "The Wheatsheaf",
-      "The Barley Mow",
-      "The Coach & Horses",
-      "The Dog & Partridge",
-      "The George & Dragon",
-      "The New Inn",
-      "The Old Crown",
-      "The Vine Inn"
-    ],
+    "named_pools": {
+      "LOCAL_PUB": [
+        "The Red Lion",
+        "The Crown & Anchor",
+        "The Royal Oak",
+        "The White Hart",
+        "The Plough & Harrow",
+        "The Bull's Head",
+        "The Swan",
+        "The Railway Tavern",
+        "The Fox & Grapes",
+        "The King's Arms",
+        "The Cross Keys",
+        "The Black Horse",
+        "The Duke of York",
+        "The Navigation Inn",
+        "The Moulders Arms",
+        "The Gunmakers Arms",
+        "The Three Horseshoes",
+        "The Rose & Crown",
+        "The Bell Inn",
+        "The Station Hotel",
+        "The Wheatsheaf",
+        "The Barley Mow",
+        "The Coach & Horses",
+        "The Dog & Partridge",
+        "The George & Dragon",
+        "The New Inn",
+        "The Old Crown",
+        "The Vine Inn"
+      ]
+    },
     "era_brands": {
       "SUPERMARKET": [
         {
@@ -612,7 +614,7 @@
           "valid_to_year": 2010
         }
       ],
-      "BANK_BRANCH": [
+      "RETAIL_BANK": [
         {
           "org_id": "ORG:MIDLAND_BANK",
           "name": "Midland Bank",
@@ -812,7 +814,7 @@
           "valid_to_year": 2020
         }
       ],
-      "CHEMIST": [
+      "CHEMIST_PHARMACY": [
         {
           "org_id": "ORG:BOOTS",
           "name": "Boots the Chemists",
@@ -863,7 +865,7 @@
           "valid_to_year": 2020
         }
       ],
-      "POST_OFFICE": [
+      "SUB_POST_OFFICE": [
         {
           "org_id": "ORG:POST_OFFICE",
           "name": "{street_root} Post Office",

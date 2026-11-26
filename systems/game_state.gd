@@ -62,6 +62,30 @@ func get_active_module_chain() -> Array[String]:
 
 ## Initializes world_state entirely from external definition files and selected flavour packs
 func initialize_fresh_state(custom_flavours: Array = []) -> void:
+	# 1. Load business_rules.cfg first so scenario flavour stack can mount before manifest modules load
+	var config := ConfigFile.new()
+	var err := config.load(active_rules_path)
+	assert(err == OK, "FATAL: [GAME_STATE] Failed to load active_rules_path '%s' (Error: %d)" % [active_rules_path, err])
+
+	var raw_flavour_list: Array = custom_flavours.duplicate()
+	if raw_flavour_list.is_empty() and config.has_section_key("scenario", "active_flavours"):
+		var cfg_flavours = config.get_value("scenario", "active_flavours", [])
+		if cfg_flavours is Array:
+			raw_flavour_list = cfg_flavours.duplicate()
+
+	var normalized_flavours: Array[String] = []
+	for raw_f in raw_flavour_list:
+		var slug := str(raw_f).strip_edges()
+		if slug.is_empty() or slug == "core" or slug == "shared":
+			continue
+		var mod_dir := "res://data_modules/%s" % slug
+		assert(DirAccess.dir_exists_absolute(mod_dir),
+			"FATAL: [GAME_STATE] Selected flavour pack '%s' does not exist at '%s'." % [slug, mod_dir])
+		if not normalized_flavours.has(slug):
+			normalized_flavours.append(slug)
+
+	ScenarioManifestManager.set_active_flavours(normalized_flavours)
+
 	assert(ScenarioManifestManager.has_module("startpoint"),
 		"FATAL: [GAME_STATE] Active scenario manifest missing 'startpoint' registration.")
 
@@ -71,7 +95,7 @@ func initialize_fresh_state(custom_flavours: Array = []) -> void:
 	# Cache starting inventory to inject into the leader's home establishment once resolved
 	_pending_starting_inventory = scenario.get("starting_inventory", {}).duplicate(true)
 
-	# 1. Establish clean baseline structure from startpoint definition
+	# 2. Establish clean baseline structure from startpoint definition
 	world_state = {
 		"metadata": scenario.get("starting_metadata", {}).duplicate(true),
 		"obligations": scenario.get("starting_obligations", []).duplicate(true),
@@ -94,26 +118,27 @@ func initialize_fresh_state(custom_flavours: Array = []) -> void:
 		"selected_district_id": ""
 	}
 
-	# 2. Ingest starting definitions and catalog paths dynamically from business_rules.cfg
-	var config := ConfigFile.new()
-	var err := config.load(active_rules_path)
-	assert(err == OK, "FATAL: [GAME_STATE] Failed to load active_rules_path '%s' (Error: %d)" % [active_rules_path, err])
-
+	# 3. Overlay starting metadata & operations from business_rules.cfg and persist active_flavours
 	_load_section_into_state(config, "starting_metadata", "metadata")
 	_load_section_into_state(config, "starting_operations", "operations")
 	SystemLogger.log_info("[GAME_STATE] Successfully loaded baseline state from: %s" % active_rules_path)
 
-	# 3. Resolve & persist ordered flavour pack stack for this playthrough
-	var normalized_flavours: Array[String] = []
-	for raw_f in custom_flavours:
-		var slug := str(raw_f).strip_edges()
-		if slug.is_empty() or slug == "core" or slug == "shared":
-			continue
-		var mod_dir := "res://data_modules/%s" % slug
-		assert(DirAccess.dir_exists_absolute(mod_dir),
-			"FATAL: [GAME_STATE] Selected flavour pack '%s' does not exist at '%s'." % [slug, mod_dir])
-		if not normalized_flavours.has(slug):
-			normalized_flavours.append(slug)
+	# Include any additional flavours declared inside startpoint.starting_metadata.active_flavours
+	var sp_flavours = world_state.get("metadata", {}).get("active_flavours", [])
+	if sp_flavours is Array:
+		var added_from_sp := false
+		for raw_spf in sp_flavours:
+			var sp_slug := str(raw_spf).strip_edges()
+			if sp_slug.is_empty() or sp_slug == "core" or sp_slug == "shared":
+				continue
+			var sp_dir := "res://data_modules/%s" % sp_slug
+			assert(DirAccess.dir_exists_absolute(sp_dir),
+				"FATAL: [GAME_STATE] Startpoint flavour pack '%s' does not exist at '%s'." % [sp_slug, sp_dir])
+			if not normalized_flavours.has(sp_slug):
+				normalized_flavours.append(sp_slug)
+				added_from_sp = true
+		if added_from_sp:
+			ScenarioManifestManager.set_active_flavours(normalized_flavours)
 
 	world_state["metadata"]["active_flavours"] = normalized_flavours
 	var module_chain: Array[String] = get_active_module_chain()

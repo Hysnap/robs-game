@@ -3,6 +3,7 @@ class_name SaveManager
 extends RefCounted
 
 const SAVES_BASE_DIR := "user://saves"
+const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
 const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
@@ -132,6 +133,7 @@ static func load_game(slot_id: String) -> bool:
 	_normalize_integer_entity_keys(parsed)
 
 	var module_chain: Array[String] = _resolve_module_chain(parsed)
+	MANIFEST_MANAGER.set_active_flavours(module_chain)
 	VERB_ROUTER.initialize_chain(module_chain)
 	IMPACT_ROUTER.reset()
 	for mod_slug in module_chain:

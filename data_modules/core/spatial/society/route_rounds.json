@@ -2,8 +2,8 @@
   "_meta": {
     "era": "1980s",
     "region": "United Kingdom",
-    "version": "1.0.0",
-    "description": "Service round definitions, absence and part-time coverage rules, Friday afternoon milk cash collection, and anti-collision district/day allocation."
+    "version": "1.1.0",
+    "description": "Service round definitions, secondary/part-time operator eligibility, postal & Parcelforce rounds, overlapping shop catchments, and anti-collision district/day allocation."
   },
   "staffing_coverage": {
     "absence_days_per_year": 30,
@@ -113,6 +113,171 @@
         "enabled": false
       },
       "seasonal_winter_multiplier": 1.0
+    },
+    "PAPER_ROUND": {
+      "service_code": "PAPER_ROUND",
+      "depot_building_classes": ["CORNER_SHOP", "SUB_POST_OFFICE"],
+      "staff_role_ids": [],
+      "era_brand_category": "",
+      "patch_mode": "FIXED_TERRITORY",
+      "catchment_mode": "RADIAL_OVERLAPPING",
+      "residencies_per_worker": 250,
+      "customer_takeup_ratio": 0.1,
+      "operators_per_depot": [3, 7],
+      "operator_eligibility": {
+        "age_min": 13,
+        "age_max": 16,
+        "eligible_role_codes": ["CHILD", "STUDENT"],
+        "allow_alongside_primary_commitment": true
+      },
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6, 7],
+        "time_window": "EARLY_MORNING",
+        "action_mode": "DELIVER_NEWSPAPERS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.0
+    },
+    "AVON_REP_ROUND": {
+      "service_code": "AVON_REP_ROUND",
+      "depot_building_classes": [],
+      "staff_role_ids": [],
+      "era_brand_category": "",
+      "patch_mode": "FIXED_TERRITORY",
+      "residencies_per_worker": 300,
+      "allow_shared_district_overflow": true,
+      "operator_eligibility": {
+        "age_min": 21,
+        "age_max": 60,
+        "gender_codes": ["F"],
+        "eligible_role_codes": ["HOME_MAKER", "UNEMPLOYED"],
+        "allow_alongside_primary_commitment": true,
+        "max_primary_weekly_hours": 25.0
+      },
+      "delivery_schedule": {
+        "days_of_week": [2, 4, 6],
+        "time_window": "DAYTIME",
+        "action_mode": "DELIVER_CATALOGUE_AND_ORDERS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.15
+    },
+    "CATALOGUE_REP_ROUND": {
+      "service_code": "CATALOGUE_REP_ROUND",
+      "depot_building_classes": [],
+      "staff_role_ids": [],
+      "era_brand_category": "",
+      "patch_mode": "FIXED_TERRITORY",
+      "customers_per_worker": [10, 15],
+      "residencies_per_worker": 100,
+      "operator_eligibility": {
+        "age_min": 21,
+        "age_max": 65,
+        "eligible_role_codes": ["HOME_MAKER", "UNEMPLOYED"],
+        "allow_alongside_primary_commitment": true,
+        "max_primary_weekly_hours": 30.0
+      },
+      "delivery_schedule": {
+        "days_of_week": [3, 6],
+        "time_window": "EVENING",
+        "action_mode": "COLLECT_CATALOGUE_ORDERS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.25
+    },
+    "POOLS_REP_ROUND": {
+      "service_code": "POOLS_REP_ROUND",
+      "depot_building_classes": [],
+      "staff_role_ids": [],
+      "era_brand_category": "",
+      "brand_org_ids": ["ORG:VERNONS_POOLS", "ORG:LITTLEWOODS_POOLS"],
+      "patch_mode": "FIXED_TERRITORY",
+      "coverage_scopes": {
+        "per_workplace": 1,
+        "per_pub": 1,
+        "per_district": 1
+      },
+      "town_tier_concessionaire": {
+        "role_code": "POOLS_CONCESSIONAIRE",
+        "has_route": false,
+        "based_at_home": true,
+        "population_per_operator": 50000
+      },
+      "operator_eligibility": {
+        "age_min": 21,
+        "age_max": 70,
+        "allow_alongside_primary_commitment": true
+      },
+      "delivery_schedule": {
+        "days_of_week": [4, 5],
+        "time_window": "EVENING",
+        "action_mode": "COLLECT_POOLS_COUPONS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.0
+    },
+    "POSTAL_DELIVERY_ROUND": {
+      "service_code": "POSTAL_DELIVERY_ROUND",
+      "depot_building_classes": ["POSTAL_SORTING_OFFICE"],
+      "staff_role_ids": ["POSTAL_DELIVERY_WORKER"],
+      "owner_org_id": "ORG:POST_OFFICE",
+      "era_brand_category": "",
+      "patch_mode": "FIXED_TERRITORY",
+      "address_capacity_per_worker": 600,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "EARLY_MORNING",
+        "action_mode": "DELIVER_MAIL"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.3
+    },
+    "POSTAL_COLLECTION_ROUND": {
+      "service_code": "POSTAL_COLLECTION_ROUND",
+      "depot_building_classes": ["POSTAL_SORTING_OFFICE"],
+      "staff_role_ids": ["POSTAL_COLLECTION_DRIVER"],
+      "owner_org_id": "ORG:POST_OFFICE",
+      "era_brand_category": "",
+      "patch_mode": "FIXED_TERRITORY",
+      "districts_per_roundsman": 25,
+      "collects_from_building_classes": ["SUB_POST_OFFICE"],
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "AFTERNOON",
+        "action_mode": "COLLECT_POSTBOXES_AND_BRANCHES"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.25
+    },
+    "PARCELFORCE_ROUND": {
+      "service_code": "PARCELFORCE_ROUND",
+      "depot_building_classes": ["POSTAL_SORTING_OFFICE"],
+      "staff_role_ids": ["PARCELFORCE_DRIVER"],
+      "owner_org_id": "ORG:POST_OFFICE",
+      "era_brand_category": "",
+      "patch_mode": "ROTATING_DAILY",
+      "districts_per_roundsman": 5,
+      "delivery_schedule": {
+        "days_of_week": [1, 2, 3, 4, 5, 6],
+        "time_window": "DAYTIME",
+        "action_mode": "DELIVER_PARCELS"
+      },
+      "collection_schedule": {
+        "enabled": false
+      },
+      "seasonal_winter_multiplier": 1.35
     }
   }
 }

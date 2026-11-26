@@ -1,0 +1,392 @@
+{
+  "_meta": {
+    "era": "1980s",
+    "region": "United Kingdom",
+    "flavour_id": "crime",
+    "version": "1.0.0",
+    "description": "Crime flavour overlay extending building_classes with pure clandestine premises and illegal route/patch enterprises."
+  },
+  "clandestine_tenants": {
+    "CUTTING_PACKING_HOUSE": {
+      "display_name": "Back-Room Cutting & Bagging House",
+      "sector": "ILLICIT_CLANDESTINE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_victorian_residential",
+        "industrial"
+      ],
+      "default_capacity": 4,
+      "footprint_sqm": 80.0,
+      "customer_travel_distance_m": 0.0,
+      "required_customer_threshold": 0,
+      "weight": 8,
+      "staffing_roster": [
+        {
+          "job_id": "CUTTING_HOUSE_CHEMIST",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "STREET_DEALER_RUNNER",
+          "target_count": [1, 2]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "STATIC_DEN",
+        "discovery_intel_threshold": 45.0,
+        "base_weekly_heat": 2.5,
+        "base_weekly_notoriety": 1.5,
+        "supported_commodity_prefixes": ["consumables/illicit_substances/"],
+        "supports_adulteration_recipes": true
+      }
+    },
+    "KNOCK_SHOP_BROTHEL": {
+      "display_name": "Disorderly House & Back-Street Flat",
+      "sector": "ILLICIT_CLANDESTINE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "medium_density_victorian_residential",
+        "commercial"
+      ],
+      "default_capacity": 6,
+      "footprint_sqm": 110.0,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 150,
+      "weight": 7,
+      "staffing_roster": [
+        {
+          "job_id": "BROTHEL_MADAM_KEEPER",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "STREET_VICE_WORKER",
+          "target_count": [2, 4]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "STATIC_DEN",
+        "discovery_intel_threshold": 35.0,
+        "base_weekly_heat": 3.0,
+        "base_weekly_notoriety": 2.5,
+        "revenue_model": "PER_CLIENT_CASH_SPLIT",
+        "house_cut_ratio": 0.5
+      }
+    },
+    "SPIELER_GAMBLING_DEN": {
+      "display_name": "Back-Room Spieler & Card Club",
+      "sector": "ILLICIT_CLANDESTINE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_victorian_residential",
+        "industrial"
+      ],
+      "default_capacity": 20,
+      "footprint_sqm": 140.0,
+      "customer_travel_distance_m": 2200.0,
+      "required_customer_threshold": 200,
+      "weight": 8,
+      "staffing_roster": [
+        {
+          "job_id": "SPIELER_DEALER_CROUPIER",
+          "target_count": [1, 2]
+        },
+        {
+          "job_id": "PROTECTION_ENFORCER",
+          "target_count": [1, 1]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "STATIC_DEN",
+        "discovery_intel_threshold": 40.0,
+        "base_weekly_heat": 2.0,
+        "base_weekly_notoriety": 2.0,
+        "revenue_model": "HOUSE_RAKE_AND_CREDIT",
+        "house_rake_ratio": 0.08,
+        "spawns_street_loan_obligations": true
+      }
+    },
+    "SHEBEEN_DRINKING_DEN": {
+      "display_name": "After-Hours Shebeen & Lock-In Club",
+      "sector": "ILLICIT_CLANDESTINE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_victorian_residential",
+        "industrial"
+      ],
+      "default_capacity": 35,
+      "footprint_sqm": 160.0,
+      "customer_travel_distance_m": 1800.0,
+      "required_customer_threshold": 180,
+      "weight": 9,
+      "staffing_roster": [
+        {
+          "job_id": "SHEBEEN_BARKEEPER",
+          "target_count": [1, 2]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "STATIC_DEN",
+        "discovery_intel_threshold": 30.0,
+        "base_weekly_heat": 2.0,
+        "base_weekly_notoriety": 1.5,
+        "demand_siphon_channels": [
+          "consumables/alcohol/",
+          "consumables/tobacco/"
+        ],
+        "operating_window": "NIGHT"
+      }
+    },
+    "LOAN_SHARK_BACK_OFFICE": {
+      "display_name": "Unlicensed Moneylender's Back Room",
+      "sector": "ILLICIT_CLANDESTINE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_victorian_residential"
+      ],
+      "default_capacity": 4,
+      "footprint_sqm": 60.0,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 250,
+      "weight": 7,
+      "staffing_roster": [
+        {
+          "job_id": "LOAN_SHARK_COLLECTOR",
+          "target_count": [1, 3]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "STATIC_DEN",
+        "discovery_intel_threshold": 45.0,
+        "base_weekly_heat": 1.5,
+        "base_weekly_notoriety": 2.5,
+        "obligation_type": "STREET_LOAN",
+        "weekly_vigorish_rate": 0.25
+      }
+    }
+  },
+  "route_enterprises": {
+    "PROTECTION_RACKET_PATCH": {
+      "display_name": "Protection Racket Patch",
+      "sector": "ILLICIT_ROUTE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_victorian_residential",
+        "industrial"
+      ],
+      "default_capacity": 0,
+      "footprint_sqm": 0.0,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 0,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "PROTECTION_ENFORCER",
+          "target_count": [1, 3]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "ROUTE",
+        "route_config": {
+          "service_code": "PROTECTION_ROUND",
+          "requires_premises": false,
+          "cadence_days": ["FRI", "SAT"],
+          "time_window": "EVENING",
+          "target_establishment_categories": [
+            "LOCAL_PUB",
+            "BETTING_SHOP",
+            "CORNER_SHOP",
+            "OFF_LICENCE",
+            "FISH_AND_CHIP_SHOP",
+            "CHINESE_TAKEAWAY",
+            "INDIAN_TAKEAWAY",
+            "MINICAB_FIRM"
+          ],
+          "obligation_type": "PROTECTION_RACKET",
+          "weekly_levy_range": [15.0, 65.0],
+          "heat_per_run": 3.5,
+          "notoriety_per_run": 3.0
+        }
+      }
+    },
+    "STREET_DEALER_LINE": {
+      "display_name": "Street Drugs Line & Corner Beat",
+      "sector": "ILLICIT_ROUTE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_victorian_residential",
+        "commercial"
+      ],
+      "default_capacity": 0,
+      "footprint_sqm": 0.0,
+      "customer_travel_distance_m": 1500.0,
+      "required_customer_threshold": 0,
+      "weight": 12,
+      "staffing_roster": [
+        {
+          "job_id": "STREET_DEALER_RUNNER",
+          "target_count": [1, 4]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "ROUTE",
+        "route_config": {
+          "service_code": "STREET_DRUG_BEAT",
+          "requires_premises": true,
+          "anchor_building_class": "CUTTING_PACKING_HOUSE",
+          "cadence_days": ["MON", "TUE", "WED", "THU", "FRI", "SAT"],
+          "time_window": "EVENING",
+          "demand_siphon_channels": ["consumables/illicit_substances/"],
+          "max_units_per_run": 25.0,
+          "street_markup_multiplier": 1.35,
+          "heat_per_run": 4.0,
+          "notoriety_per_run": 2.5
+        }
+      }
+    },
+    "STREET_VICE_BEAT": {
+      "display_name": "Street Vice & Red-Light Beat",
+      "sector": "ILLICIT_ROUTE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "medium_density_victorian_residential",
+        "commercial",
+        "railway_sidings_and_scrap"
+      ],
+      "default_capacity": 0,
+      "footprint_sqm": 0.0,
+      "customer_travel_distance_m": 1800.0,
+      "required_customer_threshold": 0,
+      "weight": 9,
+      "staffing_roster": [
+        {
+          "job_id": "VICE_MINDER_PONCE",
+          "target_count": [1, 1]
+        },
+        {
+          "job_id": "STREET_VICE_WORKER",
+          "target_count": [2, 5]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "ROUTE",
+        "route_config": {
+          "service_code": "STREET_VICE_BEAT",
+          "requires_premises": false,
+          "cadence_days": ["THU", "FRI", "SAT", "SUN"],
+          "time_window": "NIGHT",
+          "minder_cut_ratio": 0.45,
+          "base_session_fee": 12.0,
+          "heat_per_run": 3.5,
+          "notoriety_per_run": 2.5
+        }
+      }
+    },
+    "ILLEGAL_BOOKIE_RUNNER_ROUND": {
+      "display_name": "Street Bookmaker's Slip & Cash Round",
+      "sector": "ILLICIT_ROUTE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "commercial",
+        "high_density_low_rise",
+        "medium_density_residential",
+        "industrial"
+      ],
+      "default_capacity": 0,
+      "footprint_sqm": 0.0,
+      "customer_travel_distance_m": 2200.0,
+      "required_customer_threshold": 0,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "ILLEGAL_BOOKIE_RUNNER",
+          "target_count": [1, 3]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "ROUTE",
+        "route_config": {
+          "service_code": "BOOKIE_RUNNER_ROUND",
+          "requires_premises": false,
+          "cadence_days": ["WED", "FRI", "SAT"],
+          "time_window": "PAYDAY_AFTERNOON",
+          "target_establishment_categories": [
+            "LOCAL_PUB",
+            "FOUNDRY_CASTINGS",
+            "INDUSTRIAL_AUTOMOTIVE_WORKS",
+            "BUILDING_CONTRACTORS"
+          ],
+          "commission_cut_ratio": 0.12,
+          "heat_per_run": 1.5,
+          "notoriety_per_run": 1.0
+        }
+      }
+    },
+    "LOAN_SHARK_COLLECTION_ROUND": {
+      "display_name": "Doorstep Tallyman & Loan-Shark Round",
+      "sector": "ILLICIT_ROUTE",
+      "is_public_landmark": false,
+      "use_proprietor_name": false,
+      "spawns_in_archetypes": [
+        "high_density_low_rise",
+        "high_density_high_rise",
+        "medium_density_residential"
+      ],
+      "default_capacity": 0,
+      "footprint_sqm": 0.0,
+      "customer_travel_distance_m": 2500.0,
+      "required_customer_threshold": 0,
+      "weight": 10,
+      "staffing_roster": [
+        {
+          "job_id": "LOAN_SHARK_COLLECTOR",
+          "target_count": [1, 2]
+        }
+      ],
+      "illicit_profile": {
+        "visibility": "CLANDESTINE",
+        "operation_mode": "ROUTE",
+        "route_config": {
+          "service_code": "LOAN_COLLECTION_ROUND",
+          "requires_premises": false,
+          "cadence_days": ["THU", "FRI"],
+          "time_window": "EVENING",
+          "obligation_type": "STREET_LOAN",
+          "weekly_vigorish_rate": 0.25,
+          "heat_per_run": 2.0,
+          "notoriety_per_run": 2.5
+        }
+      }
+    }
+  }
+}

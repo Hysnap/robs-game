@@ -16,11 +16,14 @@ static func create_test_world(
 	radius_a: int = DEFAULT_TEST_RADIUS,
 	radius_b: int = DEFAULT_TEST_RADIUS,
 	seed_id: String = "test-factory-seed",
-	force_rebuild: bool = false
+	force_rebuild: bool = false,
+	active_flavours: Array = []
 ) -> Dictionary:
+	ScenarioManifestManager.set_active_flavours(active_flavours)
+	var flavours_tag: String = _flavours_cache_tag(active_flavours)
 	var radius: int = maxi(2, maxi(radius_a, radius_b))
-	var baseline_slot: String = _get_baseline_slot_id(radius, seed_id, false)
-	var fingerprint: String = _compute_baseline_fingerprint(radius, seed_id, false)
+	var baseline_slot: String = _get_baseline_slot_id(radius, seed_id, false, flavours_tag)
+	var fingerprint: String = _compute_baseline_fingerprint(radius, seed_id, false, flavours_tag)
 
 	if not force_rebuild and _is_baseline_cache_valid(baseline_slot, fingerprint):
 		return _mount_working_copy_from_baseline(baseline_slot)
@@ -34,11 +37,14 @@ static func create_test_world_with_crew(
 	radius_b: int = DEFAULT_TEST_RADIUS,
 	seed_id: String = "test-factory-crew-seed",
 	time_horizon: String = "day",
-	force_rebuild: bool = false
+	force_rebuild: bool = false,
+	active_flavours: Array = []
 ) -> Dictionary:
+	ScenarioManifestManager.set_active_flavours(active_flavours)
+	var flavours_tag: String = _flavours_cache_tag(active_flavours)
 	var radius: int = maxi(2, maxi(radius_a, radius_b))
-	var baseline_slot: String = _get_baseline_slot_id(radius, seed_id, true)
-	var fingerprint: String = _compute_baseline_fingerprint(radius, seed_id, true)
+	var baseline_slot: String = _get_baseline_slot_id(radius, seed_id, true, flavours_tag)
+	var fingerprint: String = _compute_baseline_fingerprint(radius, seed_id, true, flavours_tag)
 
 	var ws: Dictionary
 	if not force_rebuild and _is_baseline_cache_valid(baseline_slot, fingerprint):
@@ -187,16 +193,27 @@ static func _mount_working_copy_from_baseline(baseline_slot: String) -> Dictiona
 	assert(gs != null and "world_state" in gs, "FATAL: [TestSocietyFactory] GameState unavailable after loading working slot.")
 	return gs.world_state
 
-static func _get_baseline_slot_id(radius: int, seed_id: String, with_crew: bool) -> String:
-	var sanitized_seed: String = seed_id.replace(":", "_").replace("/", "_").replace(" ", "_")
-	return "test_baseline_r%d_%s_%s" % [radius, "crew" if with_crew else "world", sanitized_seed]
+static func _flavours_cache_tag(active_flavours: Array) -> String:
+	var clean: PackedStringArray = PackedStringArray()
+	for raw_f in active_flavours:
+		var slug: String = str(raw_f).strip_edges().to_lower()
+		if not slug.is_empty() and slug != "core" and not clean.has(slug):
+			clean.append(slug)
+	if clean.is_empty():
+		return "core"
+	return "_".join(clean)
 
-static func _compute_baseline_fingerprint(radius: int, seed_id: String, with_crew: bool) -> String:
+static func _get_baseline_slot_id(radius: int, seed_id: String, with_crew: bool, flavours_tag: String = "core") -> String:
+	var sanitized_seed: String = seed_id.replace(":", "_").replace("/", "_").replace(" ", "_")
+	return "test_baseline_r%d_%s_%s_%s" % [radius, flavours_tag, "crew" if with_crew else "world", sanitized_seed]
+
+static func _compute_baseline_fingerprint(radius: int, seed_id: String, with_crew: bool, flavours_tag: String = "core") -> String:
 	var parts: PackedStringArray = PackedStringArray([
-		"v1",
+		"v2",
 		"r=%d" % radius,
 		"seed=%s" % seed_id,
 		"crew=%s" % str(with_crew),
+		"flavours=%s" % flavours_tag,
 		"manifest=%s" % ScenarioManifestManager.get_manifest_path()
 	])
 	var watch_paths: Array[String] = [
