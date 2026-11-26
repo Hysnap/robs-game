@@ -7,7 +7,7 @@
   },
   "temporal_anchor": {
     "epoch_date": "1900-01-01",
-    "days_per_tick": 7,
+    "days_per_tick": 1,
     "simulation_start_date": "1975-01-01",
     "simulation_start_tick": 0
   },
@@ -58,8 +58,8 @@
   "household_typology_model": {
     "types_by_head_age": [
       {
-        "age_min": 18,
-        "age_max": 24,
+        "age_min": 16,
+        "age_max": 20,
         "weights": {
           "SINGLE_PERSON": 0.46,
           "FLATSHARE_SHARED": 0.16,
@@ -69,7 +69,7 @@
         }
       },
       {
-        "age_min": 25,
+        "age_min": 21,
         "age_max": 34,
         "weights": {
           "SINGLE_PERSON": 0.18,
@@ -119,11 +119,19 @@
     },
     "marital_status_by_head_age": [
       {
-        "age_min": 18,
-        "age_max": 24,
-        "married": 0.28,
+        "age_min": 16,
+        "age_max": 18,
+        "married": 0.31,
         "never_married": 0.69,
-        "divorced": 0.03,
+        "divorced": 0.0,
+        "widowed": 0.0
+      },
+      {
+        "age_min": 19,
+        "age_max": 24,
+        "married": 0.31,
+        "never_married": 0.69,
+        "divorced": 0.0,
         "widowed": 0.0
       },
       {
@@ -184,14 +192,14 @@
       "maternal_age_first_birth_distribution": [
         { "min_age": 16, "max_age": 19, "weight": 0.1 },
         { "min_age": 20, "max_age": 24, "weight": 0.38 },
-        { "min_age": 25, "max_age": 29, "weight": 0.34 },
-        { "min_age": 30, "max_age": 34, "weight": 0.14 },
+        { "min_age": 25, "max_age": 29, "weight": 0.38 },
+        { "min_age": 30, "max_age": 34, "weight": 0.18 },
         { "min_age": 35, "max_age": 42, "weight": 0.04 }
       ]
     },
     "birth_spacing": {
-      "min_spacing_years": 1,
-      "max_spacing_years": 4,
+      "min_spacing_years": 0.8,
+      "max_spacing_years": 8,
       "mean_spacing_years": 2.3
     },
     "multiple_birth_rates": {
@@ -201,8 +209,8 @@
     "parity_distribution": {
       "base_weights": {
         "1": 0.42,
-        "2": 0.36,
-        "3": 0.14,
+        "2": 0.45,
+        "3": 0.18,
         "4": 0.05
       },
       "continuation_probability_beyond_4": 0.35,
@@ -214,7 +222,7 @@
       "age_26_plus_stay_rate": 0.03
     },
     "female_labor_participation_modifiers": {
-      "base_unmarried_rate": 0.74,
+      "base_unmarried_rate": 0.9,
       "base_married_rate": 0.68,
       "has_infant_under_5_multiplier": 0.44,
       "has_school_child_5_to_15_multiplier": 0.86,

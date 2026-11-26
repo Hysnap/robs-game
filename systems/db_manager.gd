@@ -9,6 +9,7 @@ const FILE_CRAWLER = preload("res://systems/file_system_crawler.gd")
 static var _db = null
 static var active_db_path: String = ""
 static var _label_cache: Dictionary = {} # "DOMAIN:CODE" -> label_id
+static var _loaded_flavour_labels_sig: String = ""
 static var _deferred_index_entries: Array[Dictionary] = [] # [{ "table": String, "sql": String, "source": String, "applied": bool }]
 
 ## Resolves the default database path strictly from business_rules.cfg [society] default_db_path
@@ -57,6 +58,7 @@ static func initialize_database(reset_existing: bool = false, custom_path: Strin
 		target_path = active_db_path if not active_db_path.is_empty() else _resolve_default_db_path()
 
 	if _db != null and active_db_path == target_path and not reset_existing:
+		populate_core_system_labels()
 		return true
 
 	if _db != null:
@@ -295,6 +297,10 @@ static func populate_core_system_labels(custom_labels_path: String = "") -> void
 		if FileAccess.file_exists(flavour_labels_path) and not label_paths.has(flavour_labels_path):
 			label_paths.append(flavour_labels_path)
 
+	var next_sig: String = "|".join(label_paths)
+	if not _label_cache.is_empty() and _loaded_flavour_labels_sig == next_sig:
+		return
+
 	var inserts: Array[String] = []
 	for dict_path in label_paths:
 		assert(FileAccess.file_exists(dict_path), "FATAL: System label dictionary missing: %s" % dict_path)
@@ -318,7 +324,8 @@ static func populate_core_system_labels(custom_labels_path: String = "") -> void
 
 	execute_batch(inserts)
 	_rebuild_label_cache()
-	SystemLogger.log_info("[DBManager] Synchronized %d total labels from db_labels dictionaries." % _label_cache.size())
+	_loaded_flavour_labels_sig = next_sig
+	SystemLogger.log_info("[DBManager] Synchronized %d total labels from %d db_labels dictionary(ies)." % [_label_cache.size(), label_paths.size()])
 
 ## Follows the Single Source of Truth Chain to seed epoch, temporal, and demographic metadata
 static func _init_temporal_metadata() -> void:
@@ -457,11 +464,13 @@ static func record_active_seed(seed_id: String) -> void:
 	set_metadata("active_seed", seed_id)
 
 ## Clean shutdown of the open database channel
+## Clean shutdown of the open database channel
 static func close_database() -> void:
 	if _db != null:
 		_db.close_db()
 		_db = null
 		_label_cache.clear()
+		_loaded_flavour_labels_sig = ""
 		_deferred_index_entries.clear()
 		SystemLogger.log_info("[DBManager] Database connection closed.")
 

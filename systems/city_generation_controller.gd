@@ -20,11 +20,19 @@ static func run_pipeline(
 	var stage_ranges: Dictionary = GENERATION_TELEMETRY.compute_stage_ranges(active_weights)
 	var stage_durations_ms: Dictionary = {}
 
+	# 0. Lock Playthrough Flavours on ScenarioManifestManager before DB & Manifest Resolution
+	var selected_flavours: Array = []
+	var raw_flavours = settings_override.get("active_flavours", [])
+	if raw_flavours is Array:
+		selected_flavours = raw_flavours.duplicate()
+	ScenarioManifestManager.set_active_flavours(selected_flavours)
+
 	# 1. Prepare Storage Slot & Fresh SQLite DB
 	if not SaveManager.prepare_new_slot(target_slot_id):
 		SystemLogger.log_error("[CityGenerationController] Failed to prepare slot: %s" % target_slot_id)
 		push_error("[CityGenerationController] Failed to prepare slot: %s" % target_slot_id)
 		return false
+	DBManager.set_metadata("active_flavours", JSON.stringify(ScenarioManifestManager.get_active_flavours()))
 
 	# 2. Instantiate and Configure CityCrafter Engine
 	var city_crafter := CustomCityCrafter.new()
@@ -58,10 +66,6 @@ static func run_pipeline(
 		on_progress.call(GENERATION_TELEMETRY.map_stage_progress(stage_ranges, "DISTRICTS", 0.1), "DISTRICTS", "Classifying Urban Wards...")
 	var gs := ScenarioManifestManager.get_game_state()
 	assert(gs != null and "world_state" in gs, "FATAL: [CityGenerationController] Active GameState node unavailable.")
-	var selected_flavours: Array = []
-	var raw_flavours = settings_override.get("active_flavours", [])
-	if raw_flavours is Array:
-		selected_flavours = raw_flavours.duplicate()
 	gs.initialize_fresh_state(selected_flavours)
 	gs.world_state["metadata"]["active_seed"] = gen_seed
 	CitySpatialAdapter.ingest_citycrafter_generation(city_crafter, gs.world_state, gen_seed)

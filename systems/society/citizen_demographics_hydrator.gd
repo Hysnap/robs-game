@@ -79,6 +79,7 @@ static func hydrate_households_and_residents(
 	var is_headless: bool = (DisplayServer.get_name() == "headless")
 	var pass3_start_ms: int = Time.get_ticks_msec()
 	var chunk_start_ms: int = pass3_start_ms
+	var cohort_tracker: Dictionary = HOUSEHOLD_COMPOSER.create_cohort_tracker(demographics)
 
 	SystemLogger.log_info("  [Pass 3A] Hydrating %d households (residents, OCEAN/clinical profiles, nuclear kinship)..." % total_hh)
 
@@ -98,7 +99,7 @@ static func hydrate_households_and_residents(
 			home_pos = SPATIAL_RESOLVER._resolve_vector2(districts[hh_dist_id].get("spatial_anchor", Vector2.ZERO))
 
 		var arch_nudges: Dictionary = PERSONALITY_HYDRATOR.get_archetype_nudges(archetypes_cfg, district_type)
-		var planned_members: Array[Dictionary] = HOUSEHOLD_COMPOSER.generate_household_composition(demographics, rng)
+		var planned_members: Array[Dictionary] = HOUSEHOLD_COMPOSER.generate_household_composition(demographics, rng, cohort_tracker)
 
 		var has_child_under_5: bool = false
 		var has_child_5_to_15: bool = false

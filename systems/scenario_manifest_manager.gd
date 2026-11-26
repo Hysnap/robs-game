@@ -24,7 +24,9 @@ static func set_active_flavours(flavours: Array) -> void:
 	_cached_manifest.clear()
 	_cached_modules.clear()
 	_flavour_overlays.clear()
-
+	if DBManager.is_database_open():
+		DBManager.populate_core_system_labels()
+		
 static func get_active_flavours() -> Array[String]:
 	return _active_flavours.duplicate()
 

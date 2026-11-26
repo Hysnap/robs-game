@@ -34,6 +34,18 @@ static func _apply_polarity_exponent(val: float, baseline: float, exponent: floa
 	var mag: float = clampf(absf(offset) * 2.0, 0.0, 1.0)
 	return baseline + (sign_dir * pow(mag, exponent) * 0.5)
 
+## Smoothly tapers tail draws into [min_b, max_b] without piling values onto hard floor/ceiling spikes
+static func _smooth_bound(val: float, min_b: float, max_b: float, margin: float = 0.10) -> float:
+	var low_knee: float = min_b + margin
+	var high_knee: float = max_b - margin
+	if val < low_knee:
+		var excess_low: float = (low_knee - val) / maxf(0.001, margin)
+		return min_b + (margin * exp(-excess_low))
+	if val > high_knee:
+		var excess_high: float = (val - high_knee) / maxf(0.001, margin)
+		return max_b - (margin * exp(-excess_high))
+	return val
+
 ## Resolves a direct or inverted ('inverse_<axis>') trait score from the resident's trait dictionary
 static func _resolve_propensity_axis_value(traits: Dictionary, axis_key: String, neutral_base: float) -> float:
 	if axis_key.begins_with("inverse_"):
@@ -248,14 +260,14 @@ static func populate_cognitive_and_clinical_profile(
 	mach_raw += (neutral_base - agreeableness) * float(mach_cfg["inverse_agreeableness_weight"])
 	mach_raw += (conscientiousness - neutral_base) * float(mach_cfg["conscientiousness_weight"])
 	mach_raw += iq_z * float(mach_cfg["iq_strategic_weight"])
-	var machiavellianism: float = snappedf(clampf(mach_raw, d_min, d_max), 0.001)
+	var machiavellianism: float = snappedf(_smooth_bound(mach_raw, d_min, d_max, 0.10), 0.001)
 	traits["machiavellianism"] = machiavellianism
 
 	var emp_cfg: Dictionary = dark_cfg["empathy_affective"]
 	var emp_raw: float = rng.randfn(float(emp_cfg["mean"]), float(emp_cfg["std_dev"]) * dark_spread_mult)
 	emp_raw += (agreeableness - neutral_base) * float(emp_cfg["agreeableness_weight"])
 	emp_raw += (neutral_base - machiavellianism) * float(emp_cfg["inverse_machiavellianism_weight"])
-	var empathy_affective: float = snappedf(clampf(emp_raw, d_min, d_max), 0.001)
+	var empathy_affective: float = snappedf(_smooth_bound(emp_raw, d_min, d_max, 0.10), 0.001)
 	traits["empathy_affective"] = empathy_affective
 
 	var ent_cfg: Dictionary = dark_cfg["power_entitlement"]
@@ -263,7 +275,7 @@ static func populate_cognitive_and_clinical_profile(
 	ent_raw += (neutral_base - agreeableness) * float(ent_cfg["inverse_agreeableness_weight"])
 	ent_raw += (extraversion - neutral_base) * float(ent_cfg["extraversion_weight"])
 	ent_raw += (1.0 - clampf(deprivation_ratio, 0.0, 1.0)) * float(ent_cfg["affluence_district_bonus"])
-	var power_entitlement: float = snappedf(clampf(ent_raw, d_min, d_max), 0.001)
+	var power_entitlement: float = snappedf(_smooth_bound(ent_raw, d_min, d_max, 0.10), 0.001)
 	traits["power_entitlement"] = power_entitlement
 
 	# 3. Single Normalized Propensity Curve Tag Evaluation (uniform >= cutoff right-tail rule)
