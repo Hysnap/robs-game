@@ -1,6 +1,8 @@
 # res://systems/ui_commands/cmd_open_finance.gd
 extends RefCounted
 
+const _OrgRecordLedger = preload("res://systems/economy/org_record_ledger.gd")
+
 ## Switches to the Finance / Cashbook Ledger view and binds reported cash and filed expenses
 static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
 	if view_host == null:
@@ -40,7 +42,9 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 				reported_cash += float(e_rec.get("inventory", {}).get("CASH", 0.0))
 
 	var total_filed_expenses: float = float(pk.get("total_filed_expenses", 0.0))
+	var org_id: String = str(ws.get("operations", {}).get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
 	view_host.update_active_view_data({
 		"reported_cash": reported_cash,
-		"total_filed_expenses": total_filed_expenses
+		"total_filed_expenses": total_filed_expenses,
+		"inscriptions": _OrgRecordLedger.get_filed_inscriptions(org_id, "FINANCE")
 	})

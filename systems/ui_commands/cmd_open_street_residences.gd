@@ -34,17 +34,23 @@ static func execute(payload: Dictionary, view_host: ViewHost, context_refs: Dict
 	var district_name: String = str(ws.get("districts", {}).get(district_id, {}).get("display_name", district_id))
 	var raw_units: Array[Dictionary] = SocietyQueriesScript.get_street_residential_units(district_id, street_name, intel_ctx)
 
+	var observers: Array = intel_ctx.get("observers", [])
 	var units_summary: Array[Dictionary] = []
 	for u in raw_units:
+		var est_id: int = int(u.get("establishment_id", 0))
 		var is_vacant: bool = int(u.get("is_vacant", 0)) != 0
 		var occ_count: int = int(u.get("occupant_count", 0))
+		var est_score: float = IntelManagerScript.get_collective_score(ws, observers, "ESTABLISHMENT", str(est_id)) if est_id > 0 else 0.0
+		var show_headcount: bool = IntelManagerScript.is_field_exposed(est_score, "ESTABLISHMENT", "residents.all")
+
 		var summary_text: String = str(TranslationServer.translate("UI_LBL_OCCUPIED_UNIT"))
 		if is_vacant:
 			summary_text = str(TranslationServer.translate("UI_LBL_VACANT_UNIT"))
-		elif occ_count > 0:
+		elif show_headcount and occ_count > 0:
 			summary_text = "%d %s" % [occ_count, str(TranslationServer.translate("UI_LBL_RESIDENTS_COUNT"))]
+
 		units_summary.append({
-			"establishment_id": int(u.get("establishment_id", 0)),
+			"establishment_id": est_id,
 			"unit_door_number": str(u.get("unit_door_number", u.get("name", ""))),
 			"occupant_summary": summary_text
 		})

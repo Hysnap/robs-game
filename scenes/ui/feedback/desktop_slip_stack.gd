@@ -7,6 +7,7 @@ signal stack_count_changed(unread_count: int)
 
 const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 const STATIONERY_REGISTRY = preload("res://scenes/ui/feedback/stationery_registry.gd")
+const STATIONERY_RENDERER = preload("res://scenes/ui/components/stationery_renderer.gd")
 
 @onready var drag_handle: Label = $VBoxContainer/Header/DragHandle
 @onready var close_btn: Button = $VBoxContainer/Header/BtnMinimize
@@ -122,20 +123,10 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 		push_warning("[DesktopSlipStack] Stationery '%s' not allowed in active manifest; resolving default '%s'." % [def_id, default_def_id])
 		def = STATIONERY_REGISTRY.get_definition(default_def_id)
 
-	var palettes: Dictionary = def.get("palettes", {})
-	var palette_key: String = str(slip.get("palette_key", "")).to_upper()
-	var fallback_palette: Dictionary = palettes.values()[0] if not palettes.is_empty() else {"bg": "#f5f5f0", "ink": "#1a1a1a", "title": "MEMO"}
-	var palette: Dictionary = palettes.get(palette_key, fallback_palette)
-
 	var mono_font: Font = RETRO_THEME.get_monospace_font()
-
-	var card := PanelContainer.new()
-	var dims: Array = def.get("dimensions", [270.0, 240.0])
-	var card_w: float = float(dims[0]) if dims.size() > 0 else 270.0
-	var card_h: float = float(dims[1]) if dims.size() > 1 else 240.0
-	card.custom_minimum_size = Vector2(card_w, card_h)
-	card.size = Vector2(card_w, card_h)
-	card.pivot_offset = Vector2(card_w * 0.5, card_h * 0.5)
+	var rendered: Dictionary = STATIONERY_RENDERER.build_slip_card(def, slip, mono_font, is_top, depth_index)
+	var card: PanelContainer = rendered["card"]
+	var vbox: VBoxContainer = rendered["vbox"]
 
 	var slot_center := card_slot.size * 0.5
 	if slot_center == Vector2.ZERO:
@@ -145,100 +136,7 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 	card.position = slot_center - card.pivot_offset + jitter
 	card.rotation_degrees = float(slip.get("tilt_degrees", 0.0))
 
-	if not is_top:
-		card.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	var sb := StyleBoxFlat.new()
-	var bg_color := Color(palette.get("bg", "#f5f5f0"))
-	var ink_color := Color(palette.get("ink", "#1a1a1a"))
-	if not is_top:
-		bg_color = bg_color.darkened(0.05 * (depth_index + 1))
-	sb.bg_color = bg_color
-	sb.set_corner_radius_all(int(def.get("corner_radius", 2)))
-	sb.set_content_margin_all(int(def.get("padding", 8)))
-
-	# Optional outer border defined by stationery JSON
-	if def.has("border") and def["border"] is Dictionary:
-		var border_cfg: Dictionary = def["border"]
-		var bw: int = int(border_cfg.get("width", 1))
-		sb.set_border_width_all(bw)
-		sb.border_color = Color(border_cfg.get("color", ink_color.to_html()))
-
-	var shadow_cfg: Dictionary = def.get("shadow", {})
-	var shadow_offset: Array = shadow_cfg.get("offset", [2.0, 3.0])
-	var shadow_alpha: float = float(shadow_cfg.get("alpha", 0.28))
-	sb.shadow_color = Color(0.0, 0.0, 0.0, shadow_alpha if not is_top else shadow_alpha + 0.1)
-	sb.shadow_size = int(shadow_cfg.get("size", 6))
-	sb.shadow_offset = Vector2(float(shadow_offset[0]), float(shadow_offset[1]))
-	card.add_theme_stylebox_override("panel", sb)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 3)
-	if not is_top:
-		vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	card.add_child(vbox)
-
-	# 1. Header
-	var title_text: String = tr(palette.get("title_token", palette.get("title", "MEMO NOTE")))
-	var hdr := Label.new()
-	hdr.text = "%s // WK %02d" % [title_text, int(slip.get("week", slip.get("tick", 1)))]
-	hdr.add_theme_font_override("font", mono_font)
-	hdr.add_theme_font_size_override("font_size", 9)
-	hdr.add_theme_color_override("font_color", ink_color)
-	vbox.add_child(hdr)
-
-	var sep := HSeparator.new()
-	sep.modulate = ink_color
-	sep.modulate.a = 0.25
-	vbox.add_child(sep)
-
-	# 2. Optional Grid Boxes Layout (e.g., Argos Catalogue Order Pad)
-	var layout_variant: String = str(def.get("layout_variant", "")).to_upper()
-	if layout_variant == "GRID_BOXES" and def.has("grid_boxes") and def["grid_boxes"] is Dictionary:
-		_append_grid_boxes_header(vbox, def["grid_boxes"], ink_color, mono_font)
-
-	# 3. Body (wrapped in a ruled box if grid_boxes.body_box is enabled)
-	var body := RichTextLabel.new()
-	body.bbcode_enabled = true
-	body.text = str(slip.get("display_text", slip.get("text", "Shift completed.")))
-	body.fit_content = true
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.add_theme_font_override("normal_font", mono_font)
-	body.add_theme_font_size_override("normal_font_size", 10)
-	body.add_theme_color_override("default_color", ink_color)
-	if not is_top:
-		body.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	if layout_variant == "GRID_BOXES" and bool(def.get("grid_boxes", {}).get("body_box", false)):
-		var grid_cfg: Dictionary = def["grid_boxes"]
-		var box_color := Color(grid_cfg.get("border_color", ink_color.to_html()))
-		var body_frame := PanelContainer.new()
-		body_frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var frame_sb := StyleBoxFlat.new()
-		frame_sb.bg_color = Color(0, 0, 0, 0)
-		frame_sb.set_border_width_all(1)
-		frame_sb.border_color = box_color
-		frame_sb.set_content_margin_all(4)
-		body_frame.add_theme_stylebox_override("panel", frame_sb)
-		if not is_top:
-			body_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		body_frame.add_child(body)
-		vbox.add_child(body_frame)
-	else:
-		vbox.add_child(body)
-
-	# 4. Footer
-	var author: String = str(slip.get("author", tr("DEFAULT_OPERATIVE_TITLE")))
-	var ftr := Label.new()
-	ftr.text = "- %s" % author
-	ftr.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	ftr.add_theme_font_override("font", mono_font)
-	ftr.add_theme_font_size_override("font_size", 9)
-	ftr.add_theme_color_override("font_color", ink_color.lightened(0.2))
-	vbox.add_child(ftr)
-
-	# 5. Interactive Destination Routing on Top Slip
+	# Interactive Destination Routing on Top Slip
 	if is_top:
 		var routing_box := HBoxContainer.new()
 		routing_box.add_theme_constant_override("separation", 4)
@@ -287,62 +185,27 @@ func _render_slip_card(slip: Dictionary, is_top: bool, depth_index: int) -> void
 
 	card_slot.add_child(card)
 
-func _append_grid_boxes_header(parent_vbox: VBoxContainer, grid_cfg: Dictionary, default_ink: Color, mono_font: Font) -> void:
-	var columns: Array = grid_cfg.get("columns", [])
-	if columns.is_empty():
-		return
-
-	var box_border_color := Color(grid_cfg.get("border_color", default_ink.to_html()))
-	var accent_color := Color(grid_cfg.get("accent_color", box_border_color.to_html()))
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 0)
-
-	for col in columns:
-		if not (col is Dictionary):
-			continue
-		var cell := PanelContainer.new()
-		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.size_flags_stretch_ratio = float(col.get("width_ratio", 0.25))
-
-		var cell_sb := StyleBoxFlat.new()
-		cell_sb.bg_color = Color(box_border_color.r, box_border_color.g, box_border_color.b, 0.08)
-		cell_sb.set_border_width_all(1)
-		cell_sb.border_color = box_border_color
-		cell_sb.set_content_margin_all(2)
-		cell.add_theme_stylebox_override("panel", cell_sb)
-
-		var col_token: String = str(col.get("token", ""))
-		var col_fallback: String = str(col.get("fallback", ""))
-		var translated: String = tr(col_token) if not col_token.is_empty() else ""
-		var lbl := Label.new()
-		lbl.text = translated if (not translated.is_empty() and translated != col_token) else col_fallback
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.add_theme_font_override("font", mono_font)
-		lbl.add_theme_font_size_override("font_size", 8)
-		lbl.add_theme_color_override("font_color", accent_color)
-		cell.add_child(lbl)
-		row.add_child(cell)
-
-	parent_vbox.add_child(row)
-
 func _on_file_pressed(slip: Dictionary, destination: String) -> void:
 	_pending_slips.pop_front()
 	slip["destination"] = destination
 	top_card_action.emit("file_slip", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
+	if _pending_slips.is_empty():
+		visible = false
 
 func _on_discard_pressed(slip: Dictionary) -> void:
 	_pending_slips.pop_front()
 	top_card_action.emit("discard_slip", slip)
 	_refresh_display()
 	stack_count_changed.emit(_pending_slips.size())
+	if _pending_slips.is_empty():
+		visible = false
 
 func _normalize_card_payload(raw_card: Variant) -> Dictionary:
 	var card: Dictionary = raw_card.duplicate(true) if raw_card is Dictionary else {}
 	if not card.has("display_text"):
-		card["display_text"] = card.get("text", "Shift completed.")
+		card["display_text"] = card.get("text", "")
 	if not card.has("stationery_profile"):
 		card["stationery_profile"] = card.get("slip_style", STATIONERY_REGISTRY.get_default_definition_id())
 	if not card.has("destination"):

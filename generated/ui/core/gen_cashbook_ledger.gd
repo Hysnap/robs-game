@@ -102,6 +102,14 @@ func bind_data(data: Dictionary) -> void:
 		else:
 			var val_str := "%.2f" % float(data["total_filed_expenses"])
 			ctrl.text = tr("FMT_CURRENCY").replace("{val}", val_str) + ""
+	if data.has("inscriptions") and data["inscriptions"] is Array:
+		var insc_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+		if insc_box is Container:
+			for child in insc_box.get_children():
+				child.queue_free()
+			for entry in data["inscriptions"]:
+				if entry is Dictionary:
+					inscribe_entry(entry)
 
 func inscribe_entry(entry: Dictionary) -> void:
 	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):

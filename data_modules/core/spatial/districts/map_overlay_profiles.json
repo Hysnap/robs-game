@@ -84,10 +84,10 @@
       "default_color": "#38bdf8",
       "bucket_colors": {
         "UI_HEAT_COLD": "#38bdf8",
-        "UI_HEAT_LOW": "#2ecc71",
-        "UI_HEAT_MODERATE": "#facc15",
-        "UI_HEAT_HIGH": "#f97316",
-        "UI_HEAT_CRITICAL": "#dc2626"
+        "UI_HEAT_NORMAL": "#2ecc71",
+        "UI_HEAT_HEIGHTENED": "#facc15",
+        "UI_HEAT_CRITICAL": "#f97316",
+        "UI_HEAT_ACUTE": "#dc2626"
       },
       "legend": [
         {
@@ -98,22 +98,22 @@
         {
           "color": "#2ecc71",
           "pattern_mode": "NONE",
-          "label_token": "UI_HEAT_LOW"
+          "label_token": "UI_HEAT_NORMAL"
         },
         {
           "color": "#facc15",
           "pattern_mode": "NONE",
-          "label_token": "UI_HEAT_MODERATE"
+          "label_token": "UI_HEAT_HEIGHTENED"
         },
         {
           "color": "#f97316",
           "pattern_mode": "NONE",
-          "label_token": "UI_HEAT_HIGH"
+          "label_token": "UI_HEAT_CRITICAL"
         },
         {
           "color": "#dc2626",
           "pattern_mode": "NONE",
-          "label_token": "UI_HEAT_CRITICAL"
+          "label_token": "UI_HEAT_ACUTE"
         }
       ]
     },
@@ -125,22 +125,22 @@
       "min_intel_score": 20.0,
       "default_color": "#eab308",
       "bucket_colors": {
-        "UI_ZHI_CRITICAL": "#dc2626",
-        "UI_ZHI_DEPRESSED": "#f97316",
+        "UI_ZHI_COLLAPSED": "#dc2626",
+        "UI_ZHI_DECAYING": "#f97316",
         "UI_ZHI_STABLE": "#eab308",
-        "UI_ZHI_PROSPEROUS": "#22c55e",
-        "UI_ZHI_THRIVING": "#10b981"
+        "UI_ZHI_HEALTHY": "#22c55e",
+        "UI_ZHI_PRISTINE": "#10b981"
       },
       "legend": [
         {
           "color": "#dc2626",
           "pattern_mode": "NONE",
-          "label_token": "UI_ZHI_CRITICAL"
+          "label_token": "UI_ZHI_COLLAPSED"
         },
         {
           "color": "#f97316",
           "pattern_mode": "NONE",
-          "label_token": "UI_ZHI_DEPRESSED"
+          "label_token": "UI_ZHI_DECAYING"
         },
         {
           "color": "#eab308",
@@ -150,12 +150,12 @@
         {
           "color": "#22c55e",
           "pattern_mode": "NONE",
-          "label_token": "UI_ZHI_PROSPEROUS"
+          "label_token": "UI_ZHI_HEALTHY"
         },
         {
           "color": "#10b981",
           "pattern_mode": "NONE",
-          "label_token": "UI_ZHI_THRIVING"
+          "label_token": "UI_ZHI_PRISTINE"
         }
       ]
     },
@@ -167,21 +167,27 @@
       "min_intel_score": 40.0,
       "default_color": "#94a3b8",
       "bucket_colors": {
-        "UI_INCOME_IMPOVERISHED": "#991b1b",
-        "UI_INCOME_WORKING_CLASS": "#d97706",
+        "UI_INCOME_DESTITUTE": "#991b1b",
+        "UI_INCOME_LOW": "#d97706",
+        "UI_INCOME_MODERATE": "#facc15",
         "UI_INCOME_COMFORTABLE": "#0284c7",
-        "UI_INCOME_AFFLUENT": "#16a34a"
+        "UI_INCOME_HIGH": "#16a34a"
       },
       "legend": [
         {
           "color": "#991b1b",
           "pattern_mode": "NONE",
-          "label_token": "UI_INCOME_IMPOVERISHED"
+          "label_token": "UI_INCOME_DESTITUIE"
         },
         {
           "color": "#d97706",
           "pattern_mode": "NONE",
-          "label_token": "UI_INCOME_WORKING_CLASS"
+          "label_token": "UI_INCOME_LOW"
+        },
+        {
+          "color": "#facc15",
+          "pattern_mode": "NONE",
+          "label_token": "UI_INCOME_MODERATE"
         },
         {
           "color": "#0284c7",
@@ -191,7 +197,7 @@
         {
           "color": "#16a34a",
           "pattern_mode": "NONE",
-          "label_token": "UI_INCOME_AFFLUENT"
+          "label_token": "UI_INCOME_HIGH"
         }
       ]
     },
@@ -203,16 +209,17 @@
       "min_intel_score": 40.0,
       "default_color": "#94a3b8",
       "bucket_colors": {
-        "UI_UNEMP_FULL_EMPLOYMENT": "#16a34a",
+        "UI_UNEMP_NEGLIGIBLE": "#16a34a",
         "UI_UNEMP_LOW": "#0284c7",
         "UI_UNEMP_ELEVATED": "#f59e0b",
-        "UI_UNEMP_SEVERE": "#dc2626"
+        "UI_UNEMP_ACUTE": "#dc2626",
+        "UI_UNEMP_CRITICAL": "#dc2626"
       },
       "legend": [
         {
           "color": "#16a34a",
           "pattern_mode": "NONE",
-          "label_token": "UI_UNEMP_FULL_EMPLOYMENT"
+          "label_token": "UI_UNEMP_NEGLIGIBLE"
         },
         {
           "color": "#0284c7",
@@ -227,7 +234,12 @@
         {
           "color": "#dc2626",
           "pattern_mode": "NONE",
-          "label_token": "UI_UNEMP_SEVERE"
+          "label_token": "UI_UNEMP_ACUTE"
+        },
+        {
+          "color": "#dc2626",
+          "pattern_mode": "NONE",
+          "label_token": "UI_UNEMP_CRITICAL"
         }
       ]
     },

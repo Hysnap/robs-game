@@ -1093,14 +1093,26 @@ static func _resolve_crew_and_associate_event_ids(crew_int_ids: Array[int]) -> D
 	return out
 
 static func _resolve_directive_author(world_state: Dictionary, directive: Dictionary) -> String:
-	var agent_id: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", directive.get("counterparty_id", "")))))
+	var agent_id: String = str(directive.get("assigned_to", directive.get("assigned_agent", directive.get("initiator_id", directive.get("counterparty_id", ""))))).strip_edges()
 	if agent_id.is_empty() or agent_id == "PLAYER":
-		return TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")
+		return str(TranslationServer.translate("DEFAULT_OPERATIVE_TITLE"))
 
 	var residents: Dictionary = world_state.get("residents", {})
+	var record: Variant = null
 	if residents.has(agent_id):
-		var record = residents[agent_id]
-		if record is Dictionary and record.has("name"):
-			return str(record["name"])
+		record = residents[agent_id]
+	elif agent_id.is_valid_int() and residents.has(int(agent_id)):
+		record = residents[int(agent_id)]
+
+	if record is Dictionary:
+		for name_key in ["name", "full_name", "display_name"]:
+			var candidate: String = str(record.get(name_key, "")).strip_edges()
+			if not candidate.is_empty():
+				return candidate
+		var first: String = str(record.get("first_name", "")).strip_edges()
+		var last: String = str(record.get("last_name", record.get("surname", ""))).strip_edges()
+		var combined: String = ("%s %s" % [first, last]).strip_edges()
+		if not combined.is_empty():
+			return combined
 
 	return agent_id

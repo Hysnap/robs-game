@@ -263,6 +263,7 @@ func _mount_shell_and_views(initial_domain: String, preserved_directives: Array)
 
 		if view_host != null:
 			view_host.set_desk_inbox(feedback_inbox)
+			OperationsControllerScript.hydrate_pending_slips(view_host)
 
 	# F. Query active spread for its era-specific composer modal and bind to action planner & ViewHost
 	directive_modal = outer_shell.get_slot("MODAL")

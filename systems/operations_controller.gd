@@ -7,6 +7,7 @@ const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 const FeedbackTranslatorScript = preload("res://scenes/ui/feedback/feedback_translator.gd")
 const UIActionCommandScript = preload("res://scenes/ui/shell_host/ui_action_command.gd")
 const FileSystemCrawlerScript = preload("res://systems/file_system_crawler.gd")
+const OrgRecordLedgerScript = preload("res://systems/economy/org_record_ledger.gd")
 
 const UI_COMMANDS_DIR := "res://systems/ui_commands/"
 
@@ -92,22 +93,45 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 	# 1. Run pure simulation cycle
 	var report: Dictionary = SimControllerScript.process_turn_cycle(gs.world_state, staged_orders)
 
-	# 2. Ingest outcome slips via FeedbackTranslator
+	var current_day_tick: int = int(report["current_sim_day"]) if (report.has("current_sim_day") and report["current_sim_day"] != null) else CalendarHelperScript.get_current_sim_day(gs.world_state)
+	var ops: Dictionary = gs.world_state.get("operations", {})
+	var org_id: String = str(ops.get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
+	var hq_estab_id: int = int(ops.get("hq_establishment_id", 0))
+
+	# 2. Ingest outcome slips via FeedbackTranslator & persist as PENDING in org_records
 	var events: Array = report.get("executed_events", [])
 	var cards: Array = FeedbackTranslatorScript.triggers_to_slip_cards(events)
+	for card in cards:
+		if card is Dictionary:
+			var rec_id: int = OrgRecordLedgerScript.record_slip(org_id, card, current_day_tick, hq_estab_id, "PENDING")
+			if rec_id > 0:
+				card["record_id"] = rec_id
+
+	# 2b. Persist turn diary memos as FILED DIARY records scoped to current_day_tick
+	var current_date_str: String = str(report.get("calendar_date", "Shift Report"))
+	for memo in report.get("diary_memos", []):
+		var memo_text: String = "[%s] %s" % [current_date_str, str(memo)]
+		OrgRecordLedgerScript.record_slip(
+			org_id,
+			{
+				"stationery_profile": "DIARY_MEMO",
+				"destination": "DIARY",
+				"display_text": memo_text,
+				"tick": current_day_tick
+			},
+			current_day_tick,
+			hq_estab_id,
+			"FILED",
+			"DIARY",
+			"DAY",
+			str(current_day_tick)
+		)
 
 	# 3. If a ViewHost is present, update the UI layers using the typed mount contract
 	if view_host != null:
 		var planner_view: Control = view_host.get_action_component()
 		if is_instance_valid(planner_view) and planner_view.has_method("clear_staged_directives"):
 			planner_view.clear_staged_directives()
-
-		var current_date_str: String = report.get("calendar_date", "Shift Report")
-		for memo in report.get("diary_memos", []):
-			view_host.inscribe_entry_to_domain("DIARY", {
-				"tick": report.get("week", 1),
-				"text": "[%s] %s" % [current_date_str, memo]
-			})
 
 		if not cards.is_empty():
 			view_host.push_feedback_slips(cards)
@@ -118,8 +142,20 @@ static func execute_staged_cycle(staged_orders: Array, view_host: ViewHost = nul
 
 	# 4. Notify world of timeline step
 	if gs.has_signal("turn_advanced"):
-		var current_day_tick: int = int(report["current_sim_day"]) if (report.has("current_sim_day") and report["current_sim_day"] != null) else CalendarHelperScript.get_current_sim_day(gs.world_state)
 		gs.turn_advanced.emit(current_day_tick)
 
 	SystemLogger.log_info("[OperationsController] Operational cycle produced %d feedback cards." % cards.size())
 	return report
+
+## Hydrates unread PENDING desk slips from org_records into the active ViewHost inbox on session load
+static func hydrate_pending_slips(view_host: ViewHost) -> void:
+	if view_host == null:
+		return
+	var gs = ScenarioManifestManager.get_game_state()
+	if gs == null or not "world_state" in gs:
+		return
+
+	var org_id: String = str(gs.world_state.get("operations", {}).get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
+	var pending_cards: Array[Dictionary] = OrgRecordLedgerScript.get_pending_slips(org_id)
+	if not pending_cards.is_empty():
+		view_host.push_feedback_slips(pending_cards)

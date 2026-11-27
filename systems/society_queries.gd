@@ -138,26 +138,6 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 					if not pay_exposed_by_estab and not known_res_lookup.has(r_id) and not known_hh_lookup.has(hh_id) and not IntelManagerScript.is_field_exposed(res_score, "RESIDENT", "hourly_wage"):
 						clear_row["weekly_wage"] = null
 					masked_residents.append(clear_row)
-				else:
-					var age_val: int = int(row.get("age", 30))
-					var age_decade: int = int(floor(float(age_val) / 10.0)) * 10
-					masked_residents.append({
-						"resident_id": 0,
-						"household_id": 0,
-						"full_name": "UI_MASKED_OCCUPANT",
-						"gender_code": row.get("gender_code", "U"),
-						"gender": row.get("gender", "UI_INTEL_UNKNOWN"),
-						"age": -1,
-						"age_decade": age_decade,
-						"education": "UI_INTEL_UNKNOWN",
-						"occupation": "UI_INTEL_UNKNOWN",
-						"weekly_wage": null,
-						"church_id": null,
-						"church_name": "UI_INTEL_UNKNOWN",
-						"local_pub_id": null,
-						"local_pub_name": "UI_INTEL_UNKNOWN",
-						"is_masked": true
-					})
 			res_rows = masked_residents
 
 		if apply_fow and not any_occupant_known and not hh_rows.is_empty():
@@ -211,19 +191,6 @@ static func get_establishment_docket(estab_id: int, current_sim_day: int = 0, pl
 						clear_emp["weekly_pay"] = null
 						clear_emp["compensation_rate"] = 0.0
 					masked_emps.append(clear_emp)
-				else:
-					masked_emps.append({
-						"resident_id": 0,
-						"household_id": 0,
-						"full_name": "UI_MASKED_STAFF",
-						"role_title": "UI_INTEL_UNKNOWN",
-						"contract_class": "UI_INTEL_UNKNOWN",
-						"schedule_window": "UI_INTEL_UNKNOWN",
-						"weekly_hours": 0.0,
-						"compensation_rate": 0.0,
-						"weekly_pay": null,
-						"is_masked": true
-					})
 			emp_rows = masked_emps
 
 		docket["employees"] = emp_rows
@@ -284,9 +251,24 @@ static func _resolve_crew_intel_sets(player_context: Dictionary) -> Dictionary:
 		JOIN households h ON r.household_id = h.household_id
 		WHERE r.resident_id IN (%s);
 	""" % in_clause)
+	var hh_id_strings: Array[String] = []
 	for row in crew_hh_rows:
-		known_households[int(row["household_id"])] = true
+		var hh_id: int = int(row["household_id"])
+		known_households[hh_id] = true
 		own_establishments[int(row["establishment_id"])] = true
+		if hh_id > 0 and not hh_id_strings.has(str(hh_id)):
+			hh_id_strings.append(str(hh_id))
+
+	if not hh_id_strings.is_empty():
+		var co_res_rows: Array = DBManager.query_rows("""
+			SELECT resident_id
+			FROM residents
+			WHERE household_id IN (%s) AND dod IS NULL;
+		""" % ", ".join(hh_id_strings))
+		for cr in co_res_rows:
+			var co_id: int = int(cr.get("resident_id", 0))
+			if co_id > 0:
+				known_residents[co_id] = true
 
 	# 2. Crew members' active workplaces
 	var crew_work_rows: Array = DBManager.query_rows("""
@@ -1528,6 +1510,218 @@ static func get_crew_family_bible(player_context: Dictionary, current_sim_day: i
 		"document_title": "UI_HDR_FAMILY_BIBLE",
 		"enterprise_subtitle": enterprise_title,
 		"crew_lineages": crew_lineages,
+		"vital_records": vital_records
+	}
+
+## Returns a subject-centric family tree (parents, spouse/partner, siblings, children, extended kin, and vital events) gated by Fog of War
+static func get_subject_family_tree(subject_resident_id: int, player_context: Dictionary, current_sim_day: int = 0) -> Dictionary:
+	var effective_day: int = current_sim_day if current_sim_day > 0 else CalendarHelperScript.get_current_sim_day()
+	var enterprise_title: String = "CREW_ENTERPRISE"
+	var ws_ref = player_context.get("world_state", null)
+	if ws_ref is Dictionary:
+		enterprise_title = str(ws_ref.get("operations", {}).get("enterprise_name", "CREW_ENTERPRISE"))
+
+	if subject_resident_id <= 0:
+		return {
+			"document_title": "UI_HDR_FAMILY_BIBLE",
+			"enterprise_subtitle": enterprise_title,
+			"subject_resident_id": 0,
+			"subject_name": "",
+			"subject_summary": "",
+			"parents": [],
+			"spouses": [],
+			"siblings": [],
+			"children": [],
+			"extended_kin": [],
+			"crew_lineages": [],
+			"vital_records": []
+		}
+
+	var subj_rows: Array = DBManager.query_rows("""
+		SELECT
+			r.resident_id,
+			h.establishment_id,
+			r.first_name || ' ' || r.current_surname AS full_name,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dob || ' days') AS birth_date,
+			CASE WHEN r.dod IS NOT NULL
+				THEN date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dod || ' days')
+				ELSE ''
+			END AS death_date,
+			r.dod,
+			CAST((%d - r.dob) / 365.25 AS INTEGER) AS age,
+			e.name AS home_address
+		FROM residents r
+		JOIN households h ON r.household_id = h.household_id
+		JOIN establishments e ON h.establishment_id = e.establishment_id
+		WHERE r.resident_id = %d;
+	""" % [effective_day, subject_resident_id])
+
+	if subj_rows.is_empty():
+		return {
+			"document_title": "UI_HDR_FAMILY_BIBLE",
+			"enterprise_subtitle": enterprise_title,
+			"subject_resident_id": subject_resident_id,
+			"subject_name": "",
+			"subject_summary": "",
+			"parents": [],
+			"spouses": [],
+			"siblings": [],
+			"children": [],
+			"extended_kin": [],
+			"crew_lineages": [],
+			"vital_records": []
+		}
+
+	var subj: Dictionary = subj_rows[0]
+	var subj_name: String = str(subj.get("full_name", ""))
+	var subj_bdate: String = str(subj.get("birth_date", ""))
+	var subj_ddate: String = str(subj.get("death_date", ""))
+	var subj_addr: String = str(subj.get("home_address", ""))
+	var subj_deceased: bool = subj.get("dod", null) != null
+	var subj_span: String = "b. %s – d. %s" % [subj_bdate, subj_ddate] if subj_deceased else "b. %s" % subj_bdate
+	var subj_summary: String = "%s • %s" % [subj_span, subj_addr] if not subj_addr.is_empty() else subj_span
+
+	var rel_rows: Array = DBManager.query_rows("""
+		SELECT
+			sr.to_resident_id AS relative_id,
+			h.establishment_id,
+			l_rel.code AS rel_code,
+			l_rel.title AS rel_title,
+			sr.valid_from AS union_day,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || sr.valid_from || ' days') AS union_date,
+			r.first_name || ' ' || r.current_surname AS full_name,
+			r.dob,
+			r.dod,
+			date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dob || ' days') AS birth_date,
+			CASE WHEN r.dod IS NOT NULL
+				THEN date((SELECT value FROM world_metadata WHERE key = 'epoch_date'), '+' || r.dod || ' days')
+				ELSE ''
+			END AS death_date
+		FROM social_relationships sr
+		JOIN system_labels l_rel ON sr.relationship_type_id = l_rel.label_id
+		JOIN residents r ON sr.to_resident_id = r.resident_id
+		JOIN households h ON r.household_id = h.household_id
+		WHERE sr.from_resident_id = %d
+		  AND sr.valid_to IS NULL
+		  AND l_rel.code NOT IN ('CIVIC_PEER', 'DRINKING_MATE', 'CONGREGATIONAL', 'HOUSEHOLD_PEER')
+		ORDER BY r.dob ASC, r.resident_id ASC;
+	""" % subject_resident_id)
+
+	var intel: Dictionary = _resolve_crew_intel_sets(player_context)
+	var known_res_lookup: Dictionary = intel["known_residents"]
+	var observers_ref = player_context.get("observers", null)
+
+	var parents: Array[Dictionary] = []
+	var spouses: Array[Dictionary] = []
+	var siblings: Array[Dictionary] = []
+	var children: Array[Dictionary] = []
+	var extended_kin: Array[Dictionary] = []
+	var lineages: Array[Dictionary] = [{
+		"resident_id": 0 if subj_deceased else subject_resident_id,
+		"establishment_id": 0 if subj_deceased else int(subj.get("establishment_id", 0)),
+		"name": subj_name,
+		"summary_line": subj_summary
+	}]
+
+	var vital_events: Array[Dictionary] = [{
+		"sort_day": -999999,
+		"date_str": subj_bdate,
+		"text": "%s — %s (%s)" % [subj_bdate, subj_name, TranslationServer.translate("UI_VITAL_BIRTH")]
+	}]
+	if subj_deceased and not subj_ddate.is_empty():
+		vital_events.append({
+			"sort_day": int(subj.get("dod", 0)),
+			"date_str": subj_ddate,
+			"text": "%s — %s (%s)" % [subj_ddate, subj_name, TranslationServer.translate("UI_VITAL_DEATH")]
+		})
+
+	var seen_relatives: Dictionary = {}
+	for row in rel_rows:
+		var rel_id: int = int(row.get("relative_id", 0))
+		if rel_id <= 0 or rel_id == subject_resident_id or seen_relatives.has(rel_id):
+			continue
+
+		var is_known: bool = known_res_lookup.has(rel_id)
+		if not is_known and ws_ref is Dictionary and observers_ref is Array:
+			var score: float = IntelManagerScript.get_collective_score(ws_ref, observers_ref, "RESIDENT", str(rel_id))
+			is_known = IntelManagerScript.is_entity_known(score, "RESIDENT")
+
+		if not is_known:
+			continue
+
+		seen_relatives[rel_id] = true
+		var rel_code: String = str(row.get("rel_code", "")).to_upper()
+		var rel_title: String = str(row.get("rel_title", rel_code))
+		var r_name: String = str(row.get("full_name", ""))
+		var b_date: String = str(row.get("birth_date", ""))
+		var d_date: String = str(row.get("death_date", ""))
+		var u_date: String = str(row.get("union_date", ""))
+		var is_deceased: bool = row.get("dod", null) != null
+
+		var life_span: String = "b. %s – d. %s" % [b_date, d_date] if is_deceased else "b. %s" % b_date
+		if rel_code in ["HUSBAND", "WIFE", "PARTNER"] and not u_date.is_empty():
+			life_span += " • m. %s" % u_date
+
+		var node_entry: Dictionary = {
+			"resident_id": 0 if is_deceased else rel_id,
+			"establishment_id": 0 if is_deceased else int(row.get("establishment_id", 0)),
+			"relation_code": rel_code,
+			"relation_title": rel_title,
+			"name": "%s (%s)" % [r_name, rel_title],
+			"summary_line": life_span
+		}
+
+		if rel_code in ["FATHER", "MOTHER", "PARENT", "GRANDFATHER", "GRANDMOTHER"]:
+			parents.append(node_entry)
+		elif rel_code in ["HUSBAND", "WIFE", "PARTNER"]:
+			spouses.append(node_entry)
+		elif rel_code in ["BROTHER", "SISTER", "SIBLING"]:
+			siblings.append(node_entry)
+		elif rel_code in ["SON", "DAUGHTER", "CHILD", "GRANDSON", "GRANDDAUGHTER"]:
+			children.append(node_entry)
+		else:
+			extended_kin.append(node_entry)
+
+		lineages.append(node_entry)
+
+		vital_events.append({
+			"sort_day": int(row.get("dob", 0)),
+			"date_str": b_date,
+			"text": "%s — %s (%s)" % [b_date, r_name, TranslationServer.translate("UI_VITAL_BIRTH")]
+		})
+		if rel_code in ["HUSBAND", "WIFE", "PARTNER"] and not u_date.is_empty():
+			vital_events.append({
+				"sort_day": int(row.get("union_day", 0)),
+				"date_str": u_date,
+				"text": "%s — %s & %s (%s)" % [u_date, subj_name.split(" ")[0], r_name, TranslationServer.translate("UI_VITAL_MARRIAGE")]
+			})
+		if is_deceased and not d_date.is_empty():
+			vital_events.append({
+				"sort_day": int(row.get("dod", 0)),
+				"date_str": d_date,
+				"text": "%s — %s (%s)" % [d_date, r_name, TranslationServer.translate("UI_VITAL_DEATH")]
+			})
+
+	vital_events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["sort_day"]) < int(b["sort_day"])
+	)
+
+	var vital_records: Array[String] = []
+	for ev in vital_events:
+		vital_records.append(str(ev["text"]))
+
+	return {
+		"document_title": "UI_HDR_FAMILY_BIBLE",
+		"enterprise_subtitle": "%s • %s" % [enterprise_title, subj_name],
+		"subject_resident_id": subject_resident_id,
+		"subject_name": subj_name,
+		"subject_summary": subj_summary,
+		"parents": parents,
+		"spouses": spouses,
+		"siblings": siblings,
+		"children": children,
+		"extended_kin": extended_kin,
+		"crew_lineages": lineages,
 		"vital_records": vital_records
 	}
 

@@ -409,6 +409,14 @@ func bind_data(data: Dictionary) -> void:
 			ctrl.text = tr("UI_INTEL_MASKED_BLANK")
 		else:
 			ctrl.text = tr(str(data["heat_bucket_token"])) + ""
+	if data.has("inscriptions") and data["inscriptions"] is Array:
+		var insc_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+		if insc_box is Container:
+			for child in insc_box.get_children():
+				child.queue_free()
+			for entry in data["inscriptions"]:
+				if entry is Dictionary:
+					inscribe_entry(entry)
 
 func inscribe_entry(entry: Dictionary) -> void:
 	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
