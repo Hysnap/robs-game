@@ -8,35 +8,44 @@ const RESOLVERS_BASE_DIR := "res://systems/target_resolvers/"
 
 static var _cached_scopes: Dictionary = {} # "VERB_CODE" -> Dictionary
 static var _cached_resolvers: Dictionary = {} # "DOMAIN_TOKEN" -> GDScript
-static var _active_variant: String = ""
+static var _module_chain: Array[String] = ["core"]
 static var _initialized: bool = false
 
 ## Clears in-memory cached scopes and resolvers (useful during testing or live-reloading)
 static func clear_cache() -> void:
 	_cached_scopes.clear()
 	_cached_resolvers.clear()
-	_active_variant = ""
+	_module_chain = ["core"]
 	_initialized = false
 
-## Initializes scopes from core and optional active flavour overlay (mirrors VerbRouter.initialize)
+## Initializes scopes from core and an optional single active flavour overlay (mirrors VerbRouter.initialize)
 static func initialize(active_variant: String = "") -> void:
+	var chain: Array[String] = ["core"]
+	var clean_var: String = active_variant.strip_edges()
+	if not clean_var.is_empty() and clean_var != "core" and clean_var != "shared":
+		chain.append(clean_var)
+	initialize_chain(chain)
+
+## Initializes and merges target_scope.json overlays across an ordered module chain (mirrors VerbRouter.initialize_chain)
+static func initialize_chain(module_chain: Array) -> void:
 	clear_cache()
-	_active_variant = active_variant.strip_edges()
+	var ordered: Array[String] = ["core"]
+	for raw_mod in module_chain:
+		var slug: String = str(raw_mod).strip_edges()
+		if not slug.is_empty() and slug != "core" and slug != "shared" and not ordered.has(slug):
+			ordered.append(slug)
+	_module_chain = ordered
 	_ensure_initialized()
 
-## Eagerly scans and indexes all target_scope.json definitions (core + active flavour overlay) and pluggable resolvers
+## Eagerly scans and indexes all target_scope.json definitions (core + active module chain) and pluggable resolvers
 static func _ensure_initialized() -> void:
 	if _initialized:
 		return
 
-	# 1. Mount baseline canonical verb scopes from core
-	_scan_and_mount_scopes(VERBS_BASE_DIR)
-
-	# 2. Merge flavour pack target_scope.json overlays if active
-	if not _active_variant.is_empty() and _active_variant != "core":
-		var variant_verbs: String = "res://data_modules/%s/verbs/" % _active_variant
-		if DirAccess.dir_exists_absolute(variant_verbs):
-			_scan_and_mount_scopes(variant_verbs)
+	for mod_slug in _module_chain:
+		var verbs_dir: String = "res://data_modules/%s/verbs/" % mod_slug
+		if DirAccess.dir_exists_absolute(verbs_dir):
+			_scan_and_mount_scopes(verbs_dir)
 
 	var resolver_files := FileSystemCrawlerScript.find_files_recursive(RESOLVERS_BASE_DIR, "", ".gd")
 	for res_path in resolver_files:

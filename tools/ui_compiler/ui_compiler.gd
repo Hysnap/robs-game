@@ -205,10 +205,19 @@ static func compile_schema(schema_path: String, out_tokens: Dictionary = {}) -> 
 		for row in sec.get("rows", []):
 			binding_lines.append_array(UI_BINDER_EMITTERS.emit_binding_logic(row))
 
-	if binding_lines.is_empty():
+	if binding_lines.is_empty() and not has_inscriptions_container:
 		lines.append("\tpass")
 	else:
 		lines.append_array(binding_lines)
+		if has_inscriptions_container:
+			lines.append("\tif data.has(\"inscriptions\") and data[\"inscriptions\"] is Array:")
+			lines.append("\t\tvar insc_box = _value_labels.get(\"__inscriptions__\", _value_labels.get(\"observations_box\"))")
+			lines.append("\t\tif insc_box is Container:")
+			lines.append("\t\t\tfor child in insc_box.get_children():")
+			lines.append("\t\t\t\tchild.queue_free()")
+			lines.append("\t\t\tfor entry in data[\"inscriptions\"]:")
+			lines.append("\t\t\t\tif entry is Dictionary:")
+			lines.append("\t\t\t\t\tinscribe_entry(entry)")
 
 	# inscribe_entry() (if supported)
 	if has_inscriptions_container:

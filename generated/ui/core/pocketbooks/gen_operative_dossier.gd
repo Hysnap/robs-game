@@ -206,6 +206,19 @@ func build_ui() -> void:
 	_value_labels["inventory_list"] = list_inventory_list
 	add_child(list_inventory_list)
 
+	# --- Inscriptions Container: operative_notes_section ---
+	var hdr_operative_notes_section := Label.new()
+	hdr_operative_notes_section.text = "[ " + tr("UI_SEC_FIELD_OBSERVATIONS").to_upper() + " ]"
+	hdr_operative_notes_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hdr_operative_notes_section.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hdr_operative_notes_section.add_theme_font_override("font", mono_font)
+	hdr_operative_notes_section.add_theme_color_override("font_color", clr_blue)
+	add_child(hdr_operative_notes_section)
+	var insc_list_operative_notes_section := VBoxContainer.new()
+	insc_list_operative_notes_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_value_labels["__inscriptions__"] = insc_list_operative_notes_section
+	add_child(insc_list_operative_notes_section)
+
 	# --- Section: navigation_section ---
 	var sec_navigation_section := VBoxContainer.new()
 	sec_navigation_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -281,3 +294,30 @@ func bind_data(data: Dictionary) -> void:
 				var items: Array = data["inventory_lines"]
 				for item in items:
 					ctrl.add_item(str(item))
+	if data.has("inscriptions") and data["inscriptions"] is Array:
+		var insc_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+		if insc_box is Container:
+			for child in insc_box.get_children():
+				child.queue_free()
+			for entry in data["inscriptions"]:
+				if entry is Dictionary:
+					inscribe_entry(entry)
+
+func inscribe_entry(entry: Dictionary) -> void:
+	if not _value_labels.has("__inscriptions__") and not _value_labels.has("observations_box"):
+		return
+	var target_box = _value_labels.get("__inscriptions__", _value_labels.get("observations_box"))
+	if not target_box is Container:
+		return
+	var author: String = str(entry.get("author", ""))
+	var text_content: String = str(entry.get("text", ""))
+	var note_lbl := Label.new()
+	if not author.is_empty():
+		note_lbl.text = "[" + author + "] " + text_content
+	else:
+		note_lbl.text = text_content
+	note_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note_lbl.add_theme_font_override("font", RETRO_THEME.get_monospace_font())
+	note_lbl.add_theme_color_override("font_color", RETRO_THEME.get_ink_color("body"))
+	target_box.add_child(note_lbl)

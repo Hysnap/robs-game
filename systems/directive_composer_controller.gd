@@ -10,16 +10,34 @@ const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 static var _variant_synced: bool = false
 
-## Synchronizes VerbRouter and TargetDomainRegistry with the active scenario flavour/variant
+## Synchronizes VerbRouter and TargetDomainRegistry with the active scenario module chain
 static func sync_active_variant(explicit_variant: String = "") -> String:
 	var variant: String = explicit_variant.strip_edges()
-	if variant.is_empty():
+	if not variant.is_empty():
+		VerbRouterScript.initialize(variant)
+		TargetDomainRegistryScript.initialize(variant)
+		_variant_synced = true
+		return variant
+
+	var chain: Array[String] = ["core"]
+	var ws: Dictionary = _resolve_active_world_state()
+	var raw_flavours = ws.get("metadata", {}).get("active_flavours", [])
+	if raw_flavours is Array:
+		for f in raw_flavours:
+			var slug: String = str(f).strip_edges()
+			if not slug.is_empty() and slug != "core" and slug != "shared" and not chain.has(slug):
+				chain.append(slug)
+
+	if chain.size() == 1:
 		var manifest: Dictionary = ScenarioManifestManager.get_manifest()
-		variant = str(manifest.get("active_variant", manifest.get("flavour", ""))).strip_edges()
-	VerbRouterScript.initialize(variant)
-	TargetDomainRegistryScript.initialize(variant)
+		var manifest_var: String = str(manifest.get("active_variant", manifest.get("flavour", ""))).strip_edges()
+		if not manifest_var.is_empty() and manifest_var != "core" and manifest_var != "shared":
+			chain.append(manifest_var)
+
+	VerbRouterScript.initialize_chain(chain)
+	TargetDomainRegistryScript.initialize_chain(chain)
 	_variant_synced = true
-	return variant
+	return chain[chain.size() - 1] if chain.size() > 1 else ""
 
 ## Returns all registered verbs from VerbRouter that are enabled for player composition
 static func get_registered_verbs() -> Array[String]:

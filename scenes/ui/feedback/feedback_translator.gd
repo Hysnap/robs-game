@@ -26,14 +26,21 @@ static func triggers_to_slip_cards(event_triggers: Array) -> Array:
 			]
 
 		# Resolve operative author cleanly
-		var author_name: String = str(trigger.get("author", ""))
+		var author_name: String = str(trigger.get("author", "")).strip_edges()
 		if author_name.is_empty():
-			author_name = str(trigger.get("assigned_agent", trigger.get("staff_id", "Runner Dispatch")))
+			author_name = str(trigger.get("assigned_agent", TranslationServer.translate("DEFAULT_OPERATIVE_TITLE")))
+
+		var verb_token: String = verb.to_upper().strip_edges()
+		var verb_key: String = "VERB_" + verb_token
+		var translated_verb: String = str(TranslationServer.translate(verb_key))
+		var action_label: String = translated_verb if (not verb_token.is_empty() and translated_verb != verb_key) else verb_token.replace("_", " ")
 
 		# Presentation payload constructed strictly from configs
 		var card := {
 			"stationery_profile": binding.get("default_definition", default_def_id),
 			"destination": binding.get("default_filing_domain", "DIARY"),
+			"verb": verb_token,
+			"action_label": action_label,
 			"display_text": text,
 			"tick": trigger.get("tick", trigger.get("day_offset", 1)),
 			"week": trigger.get("week", 1),

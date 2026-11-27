@@ -61,6 +61,16 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 		intel_ctx,
 		crew_org_id
 	)
+	var network_tree: Dictionary = SocietyQueriesScript.get_crew_social_and_kinship_hierarchy(
+		intel_ctx,
+		current_sim_day
+	)
+	if not network_tree.is_empty():
+		network_tree["parent_id"] = str(org_tree.get("node_id", crew_org_id))
+		network_tree["depth"] = 1
+		if not org_tree.has("children") or not (org_tree["children"] is Array):
+			org_tree["children"] = []
+		org_tree["children"].append(network_tree)
 
 	var raw_contacts: Array[Dictionary] = SocietyQueriesScript.get_known_contacts_for_crew(
 		intel_ctx,
@@ -70,7 +80,15 @@ static func execute(_payload: Dictionary, view_host: ViewHost, _context_refs: Di
 	for c in raw_contacts:
 		var c_occ: String = str(c.get("occupation", ""))
 		var c_addr: String = str(c.get("home_address", ""))
-		var c_summary: String = "%s • %s" % [c_occ, c_addr] if not c_occ.is_empty() else c_addr
+		var c_links: String = str(c.get("crew_links_summary", ""))
+		var parts: PackedStringArray = []
+		if not c_links.is_empty():
+			parts.append(c_links)
+		if not c_occ.is_empty():
+			parts.append(c_occ)
+		if not c_addr.is_empty():
+			parts.append(c_addr)
+		var c_summary: String = " • ".join(parts)
 		known_contacts.append({
 			"resident_id": int(c["resident_id"]),
 			"name": str(c.get("full_name", "")),

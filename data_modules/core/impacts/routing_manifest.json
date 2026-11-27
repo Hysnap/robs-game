@@ -15,7 +15,6 @@
     },
     "RESIDENT": {
       "path": "residents.{target_id}.{state_field}",
-      "fallback_path": "staff.{target_id}.{state_field}",
       "create_missing": false
     },
     "EVENT": {
@@ -31,6 +30,11 @@
       "stamp_field": "last_updated_day",
       "create_missing": true,
       "erase_at_min": true
+    },
+    "STANDINGS": {
+      "path": "standings.{observer_scope}.{observer_id}.{target_key}.{state_field}",
+      "stamp_field": "last_updated_day",
+      "create_missing": true
     },
     "OPERATIONS_STAMP": {
       "path": "operations.{state_field}.{target_id}",

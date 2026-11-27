@@ -190,6 +190,11 @@
       "title": "Industrial Accident"
     },
     {
+      "code": "ARCHITECT_AND_SURVEYOR",
+      "domain": "DEMOLITION_CLEARED_SITE",
+      "title": "Demolition Cleared Site"
+    },
+    {
       "code": "A_LEVELS",
       "domain": "EDUCATION_LEVEL",
       "title": "A-Levels Qualifications"

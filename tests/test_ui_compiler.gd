@@ -5,7 +5,7 @@ const UICompilerScript = preload("res://tools/ui_compiler/ui_compiler.gd")
 const RetroThemeScript = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 const SCHEMAS_VIEW_DIR := "res://data_modules/core/ui_schemas/views/"
-const GENERATED_DIR := "res://generated/ui/"
+const GENERATED_DIR := "res://generated/ui/core/"
 
 func _init() -> void:
 	SystemLogger.log_info("\n=======================================================")

@@ -53,7 +53,8 @@
     { "min_age": 70, "max_age": 74, "male_pct": 1.8, "female_pct": 2.5 },
     { "min_age": 75, "max_age": 79, "male_pct": 1.1, "female_pct": 1.9 },
     { "min_age": 80, "max_age": 84, "male_pct": 0.5, "female_pct": 1.2 },
-    { "min_age": 85, "max_age": 92, "male_pct": 0.2, "female_pct": 0.8 }
+    { "min_age": 85, "max_age": 92, "male_pct": 0.2, "female_pct": 0.8 },
+    { "min_age": 93, "max_age": 105, "male_pct": 0.1, "female_pct": 0.1 }
   ],
   "household_typology_model": {
     "types_by_head_age": [
@@ -61,10 +62,10 @@
         "age_min": 16,
         "age_max": 20,
         "weights": {
-          "SINGLE_PERSON": 0.46,
-          "FLATSHARE_SHARED": 0.16,
+          "SINGLE_PERSON": 0.38,
+          "FLATSHARE_SHARED": 0.22,
           "COUPLE_WITHOUT_DEP": 0.2,
-          "COUPLE_WITH_DEP": 0.1,
+          "COUPLE_WITH_DEP": 0.12,
           "LONE_PARENT": 0.08
         }
       },
@@ -72,43 +73,43 @@
         "age_min": 21,
         "age_max": 34,
         "weights": {
-          "SINGLE_PERSON": 0.18,
-          "FLATSHARE_SHARED": 0.06,
-          "COUPLE_WITHOUT_DEP": 0.22,
-          "COUPLE_WITH_DEP": 0.44,
-          "LONE_PARENT": 0.1
+          "SINGLE_PERSON": 0.13,
+          "FLATSHARE_SHARED": 0.07,
+          "COUPLE_WITHOUT_DEP": 0.18,
+          "COUPLE_WITH_DEP": 0.51,
+          "LONE_PARENT": 0.11
         }
       },
       {
         "age_min": 35,
         "age_max": 49,
         "weights": {
-          "SINGLE_PERSON": 0.12,
+          "SINGLE_PERSON": 0.08,
           "FLATSHARE_SHARED": 0.02,
-          "COUPLE_WITHOUT_DEP": 0.18,
-          "COUPLE_WITH_DEP": 0.58,
-          "LONE_PARENT": 0.1
+          "COUPLE_WITHOUT_DEP": 0.12,
+          "COUPLE_WITH_DEP": 0.67,
+          "LONE_PARENT": 0.11
         }
       },
       {
         "age_min": 50,
         "age_max": 64,
         "weights": {
-          "SINGLE_PERSON": 0.24,
+          "SINGLE_PERSON": 0.2,
           "FLATSHARE_SHARED": 0.01,
-          "COUPLE_WITHOUT_DEP": 0.58,
-          "COUPLE_WITH_DEP": 0.14,
-          "LONE_PARENT": 0.03
+          "COUPLE_WITHOUT_DEP": 0.54,
+          "COUPLE_WITH_DEP": 0.21,
+          "LONE_PARENT": 0.04
         }
       },
       {
         "age_min": 65,
-        "age_max": 95,
+        "age_max": 105,
         "weights": {
-          "SINGLE_PERSON": 0.58,
+          "SINGLE_PERSON": 0.52,
           "FLATSHARE_SHARED": 0.0,
-          "COUPLE_WITHOUT_DEP": 0.4,
-          "COUPLE_WITH_DEP": 0.01,
+          "COUPLE_WITHOUT_DEP": 0.45,
+          "COUPLE_WITH_DEP": 0.02,
           "LONE_PARENT": 0.01
         }
       }
@@ -198,8 +199,8 @@
       ]
     },
     "birth_spacing": {
-      "min_spacing_years": 0.8,
-      "max_spacing_years": 8,
+      "min_spacing_years": 1,
+      "max_spacing_years": 5,
       "mean_spacing_years": 2.3
     },
     "multiple_birth_rates": {
@@ -208,12 +209,12 @@
     },
     "parity_distribution": {
       "base_weights": {
-        "1": 0.42,
-        "2": 0.45,
-        "3": 0.18,
-        "4": 0.05
+        "1": 0.22,
+        "2": 0.46,
+        "3": 0.24,
+        "4": 0.08
       },
-      "continuation_probability_beyond_4": 0.35,
+      "continuation_probability_beyond_4": 0.38,
       "absolute_max_children": 10
     },
     "cohabiting_adult_offspring_retention": {

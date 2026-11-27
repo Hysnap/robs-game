@@ -13,7 +13,6 @@ var state_field: String = ""
 
 # Route definition resolved from routing_manifest.json
 var route_path: String = ""
-var fallback_path: String = ""
 var search_containers: Array = []
 var stamp_field: String = ""
 var create_missing: bool = false
@@ -70,13 +69,13 @@ func _resolve_route_from_manifest(profile: Dictionary) -> void:
 	if routes.has(lookup_key) and routes[lookup_key] is Dictionary:
 		var r: Dictionary = routes[lookup_key]
 		route_path = str(r.get("path", ""))
-		fallback_path = str(r.get("fallback_path", ""))
 		search_containers = r.get("search_containers", [])
 		stamp_field = str(r.get("stamp_field", ""))
 		create_missing = bool(r.get("create_missing", false))
 		erase_at_min = bool(r.get("erase_at_min", false))
 	else:
-		route_path = "%s.{target_id}.%s" % [state_container, state_field]
+		push_error("[UniversalMetricSink FATAL] Metric '%s' declares unmapped target_scope '%s' (missing from routing_manifest.json)." % [metric_id, lookup_key])
+		route_path = ""
 		create_missing = false
 
 func _configure_ambient_rule(profile: Dictionary, tuning: Dictionary) -> void:
@@ -125,9 +124,6 @@ func apply_delta(world_state: Dictionary, target_id: String, delta: float) -> vo
 	if not route_path.is_empty():
 		if _mutate_path(world_state, route_path, tokens, delta, create_missing):
 			return
-
-	if not fallback_path.is_empty():
-		_mutate_path(world_state, fallback_path, tokens, delta, create_missing)
 
 ## 3. AMBIENT HEARTBEAT CONTRACT
 func process_ambient(world_state: Dictionary) -> void:

@@ -90,6 +90,11 @@
       ]
     },
     {
+      "id": "operative_notes_section",
+      "type": "INSCRIPTIONS",
+      "header_token": "UI_SEC_FIELD_OBSERVATIONS"
+    },
+    {
       "id": "navigation_section",
       "header_token": "UI_HDR_CREW_DOSSIER",
       "font_size": 8,
@@ -108,9 +113,7 @@
     {
       "id": "operative_doc_signals",
       "type": "SIGNALS",
-      "signals": [
-        "action_clicked(action_code: String, payload: Dictionary)"
-      ]
+      "signals": ["action_clicked(action_code: String, payload: Dictionary)"]
     }
   ]
 }

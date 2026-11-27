@@ -2,21 +2,22 @@
   "_meta": {
     "version": "1.3.0",
     "scope": "IMPACT_METRIC_PROFILE",
-    "description": "Public, interpersonal, and institutional standing across actors, organizations, and spatial districts."
+    "description": "Pairwise reverence and public esteem across actors, organizations, and spatial districts, with RESIDENT -> ORG -> GLOBAL inheritance."
   },
   "metric_id": "REPUTATION",
   "label_token": "UI_METRIC_REPUTATION",
-  "target_scope": "ACTOR",
-  "routing_mode": "MULTI_CONTAINER",
+  "target_scope": "STANDINGS",
+  "routing_mode": "DIRECT",
   "state_container": "standings",
   "state_field": "reputation",
+  "inheritance_chain": ["RESIDENT", "ORG", "GLOBAL"],
   "format": "SIGNED_FLOAT",
   "decimals": 2,
   "min_value": -1.0,
   "max_value": 1.0,
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "standings.{id}"
+    "state_path": "standings.{observer_scope}.{observer_id}.{target_key}.reputation"
   },
   "tuning": {
     "default_baseline_reputation": 0.0,
@@ -36,10 +37,10 @@
       "error_floor": 0.01,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": -0.60, "token": "UI_REP_LOATHED" },
-        { "max": -0.20, "token": "UI_REP_DISTORIOUS" },
-        { "max": 0.20, "token": "UI_REP_NEUTRAL" },
-        { "max": 0.60, "token": "UI_REP_FAVORED" },
+        { "max": -0.6, "token": "UI_REP_LOATHED" },
+        { "max": -0.2, "token": "UI_REP_DISTORIOUS" },
+        { "max": 0.2, "token": "UI_REP_NEUTRAL" },
+        { "max": 0.6, "token": "UI_REP_FAVORED" },
         { "token": "UI_REP_REVERED" }
       ]
     }

@@ -399,6 +399,22 @@ static func _seed_starting_crew_knowledge(
 				{"distance": 0.0, "access_permeability": 1.0, "max_cap": 99.95}
 			)
 
+		# Household Co-Residents: every operative deeply knows the people they live with
+		var hh_id: int = int(rec.get("household_id", 0))
+		if hh_id > 0:
+			var housemate_rows: Array = DB_MANAGER.query_rows("""
+				SELECT resident_id
+				FROM residents
+				WHERE household_id = %d AND dod IS NULL;
+			""" % hh_id)
+			for hm in housemate_rows:
+				var hm_id: int = int(hm.get("resident_id", 0))
+				if hm_id > 0 and hm_id != r_id:
+					INTEL_MANAGER.apply_effort_impulse(
+						world_state, "RESIDENT", obs_id, "RESIDENT", str(hm_id), 250.0,
+						{"distance": 0.0, "access_permeability": 1.0, "max_cap": 95.0}
+					)
+
 		var work_est: int = int(rec.get("primary_employer_establishment_id", 0))
 		if work_est > 0:
 			INTEL_MANAGER.apply_effort_impulse(

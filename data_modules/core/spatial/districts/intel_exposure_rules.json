@@ -40,19 +40,19 @@
         },
         {
           "min_score": 20.0,
-          "fields": ["zone_health_bucket_token", "heat_bucket_token"]
+          "fields": ["active_population", "total_households"]
         },
         {
           "min_score": 40.0,
-          "fields": [
-            "unemployment_bucket_token",
-            "income_bucket_token",
-            "establishments_summary"
-          ]
+          "fields": ["unemployment_bucket_token", "establishments_summary"]
         },
         {
           "min_score": 60.0,
-          "fields": ["active_population", "total_households"]
+          "fields": [
+            "zone_health_bucket_token",
+            "income_bucket_token",
+            "heat_bucket_token"
+          ]
         },
         {
           "min_score": 80.0,
@@ -126,6 +126,7 @@
           "min_score": 20.0,
           "fields": [
             "age",
+            "role_title",
             "home_address",
             "home_establishment_id",
             "district_id"
@@ -133,12 +134,7 @@
         },
         {
           "min_score": 40.0,
-          "fields": [
-            "role_title",
-            "employer_entity_id",
-            "employer_name",
-            "relationship_type"
-          ]
+          "fields": ["employer_entity_id", "employer_name", "relationship_type"]
         },
         {
           "min_score": 60.0,

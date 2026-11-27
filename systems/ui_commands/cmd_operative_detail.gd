@@ -4,6 +4,7 @@ extends RefCounted
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
 const CmdOpenResidentialDocketScript = preload("res://systems/ui_commands/cmd_open_residential_docket.gd")
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
+const _OrgRecordLedger = preload("res://systems/economy/org_record_ledger.gd")
 
 ## Opens the operational dossier for a crew operative, or the home residential docket for a street contact
 static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dictionary = {}) -> void:
@@ -75,6 +76,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 		if view_host.get_active_domain() != "OPERATIVE_DOSSIER":
 			SystemLogger.log_error("[CmdOperativeDetail] FAIL_LOUD: ViewHost did not switch to OPERATIVE_DOSSIER.")
 			return
+		var org_id: String = str(ws.get("operations", {}).get("crew_org_id", "ORG:CREW_ENTERPRISE")).strip_edges()
 		view_host.update_active_view_data({
 			"operative_name": op_name,
 			"role_title": role_title,
@@ -84,6 +86,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, _context_refs: Dic
 			"fatigue_display": "%.1f" % fatigue_val,
 			"cash_display": "£%.2f" % cash_val,
 			"inventory_lines": inv_lines,
+			"inscriptions": _OrgRecordLedger.get_filed_inscriptions(org_id, "ROSTER", "", -1, res_id),
 			"navigation_links": [
 				{
 					"target_id": "ROSTER",

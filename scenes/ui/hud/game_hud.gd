@@ -7,6 +7,7 @@ signal toggle_messages_inbox_requested
 signal map_overlay_selected(overlay_id: String)
 
 const MapOverlayHudBarScript = preload("res://scenes/ui/hud/map_overlay_hud_bar.gd")
+const RETRO_THEME = preload("res://scenes/ui/shell_host/retro_theme.gd")
 
 @onready var top_bar: HBoxContainer = $MarginContainer/TopBar
 @onready var btn_main_menu: Button = $MarginContainer/TopBar/HBoxLeft/BtnMainMenu
@@ -16,6 +17,8 @@ const MapOverlayHudBarScript = preload("res://scenes/ui/hud/map_overlay_hud_bar.
 @onready var lbl_ticker_status: Label = $MarginContainer/BottomBar/LblTickerStatus
 
 var _map_overlay_bar: HBoxContainer = null
+var _floating_legend_panel: PanelContainer = null
+var _floating_legend_list: VBoxContainer = null
 
 func _ready() -> void:
 	layer = 10
@@ -35,6 +38,7 @@ func _ready() -> void:
 		lbl_ticker_status.text = tr("UI_HUD_TICKER_STATUS_DEFAULT")
 
 	_mount_map_overlay_bar()
+	_mount_floating_legend_box()
 
 	# Bind reactive timeline updates from GameState safely
 	var gs = ScenarioManifestManager.get_game_state()
@@ -56,9 +60,82 @@ func _mount_map_overlay_bar() -> void:
 		map_overlay_selected.emit(overlay_id)
 	)
 
+func _mount_floating_legend_box() -> void:
+	if _floating_legend_panel != null:
+		return
+
+	_floating_legend_panel = PanelContainer.new()
+	_floating_legend_panel.name = "FloatingMapLegendPanel"
+	_floating_legend_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_floating_legend_panel.visible = false
+	_floating_legend_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_floating_legend_panel.grow_horizontal = Control.GROW_DIRECTION_END
+	_floating_legend_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_floating_legend_panel.offset_left = 16.0
+	_floating_legend_panel.offset_right = 260.0
+	_floating_legend_panel.offset_top = -220.0
+	_floating_legend_panel.offset_bottom = -44.0
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = RETRO_THEME.color_page_bg
+	sb.bg_color.a = 0.92
+	sb.border_color = RETRO_THEME.get_ink_color("body")
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(3)
+	sb.set_content_margin_all(8)
+	_floating_legend_panel.add_theme_stylebox_override("panel", sb)
+
+	_floating_legend_list = VBoxContainer.new()
+	_floating_legend_list.name = "FloatingLegendList"
+	_floating_legend_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_floating_legend_list.add_theme_constant_override("separation", 4)
+	_floating_legend_panel.add_child(_floating_legend_list)
+
+	add_child(_floating_legend_panel)
+
 func set_overlay_legend(legend_entries: Array) -> void:
-	if _map_overlay_bar != null:
-		_map_overlay_bar.update_legend(legend_entries)
+	if _floating_legend_panel == null or _floating_legend_list == null:
+		return
+
+	for child in _floating_legend_list.get_children():
+		_floating_legend_list.remove_child(child)
+		child.queue_free()
+
+	if legend_entries.is_empty():
+		_floating_legend_panel.visible = false
+		return
+
+	var ink_color: Color = RETRO_THEME.get_ink_color("body")
+	for item in legend_entries:
+		if not (item is Dictionary):
+			continue
+		var swatch_color: Color = item.get("color", Color.GRAY)
+		var pattern_mode: String = str(item.get("pattern_mode", "NONE")).to_upper()
+		var label_tok: String = str(item.get("label_token", ""))
+
+		var row := HBoxContainer.new()
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_theme_constant_override("separation", 6)
+
+		var swatch := ColorRect.new()
+		swatch.custom_minimum_size = Vector2(14, 14)
+		swatch.color = swatch_color
+		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(swatch)
+
+		var lbl := Label.new()
+		var text_str: String = tr(label_tok)
+		if pattern_mode == "STALE_STRIPE" or pattern_mode == "CONFLICT_STRIPE" or pattern_mode == "FOG_HATCH":
+			text_str = "[//] " + text_str
+		lbl.text = text_str
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lbl.add_theme_color_override("font_color", ink_color)
+		row.add_child(lbl)
+
+		_floating_legend_list.add_child(row)
+
+	_floating_legend_panel.visible = true
 
 func set_selected_map_overlay(overlay_id: String) -> void:
 	if _map_overlay_bar != null:
