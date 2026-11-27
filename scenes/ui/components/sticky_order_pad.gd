@@ -148,8 +148,8 @@ func _ready() -> void:
 	_configure_scrollable_popups()
 	_populate_default_verbs()
 
-	_populate_default_verbs()
-	_sync_simulation_data()
+	if not _active_district_id.is_empty():
+		_sync_simulation_data()
 	_apply_sticky_note_skins()
 	_apply_form_layout_for_verb(_get_active_verb())
 	_recalculate_estimate()
@@ -576,7 +576,19 @@ func _on_where_filter_selected(_idx: int) -> void:
 	_apply_location_filter()
 	_refresh_contact_options()
 
-func _on_where_location_selected(_idx: int) -> void:
+func _on_where_location_selected(idx: int) -> void:
+	if opt_where != null and idx >= 0 and idx < opt_where.item_count:
+		var meta = opt_where.get_item_metadata(idx)
+		if meta is Dictionary and str(meta.get("type", "")) == "DISTRICT":
+			var chosen_dist: String = str(meta.get("id", ""))
+			if not chosen_dist.is_empty() and chosen_dist != _active_district_id:
+				_active_district_id = chosen_dist
+				var ws: Dictionary = _get_world_state()
+				_cached_locations = DirectiveComposerControllerScript.build_locations_cache(_get_active_verb(), _active_district_id, ws)
+				_apply_location_filter()
+				_select_where_by_id(chosen_dist)
+				_recalculate_estimate()
+				return
 	_refresh_contact_options()
 	_recalculate_estimate()
 

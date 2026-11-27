@@ -131,6 +131,52 @@ static func get_effective_score(
 
 	return clampf(best_score, 0.0, 100.0)
 
+## Resolves a cascading override value (e.g. REPUTATION / STANDING) across:
+##   1. Direct observer entry (e.g. RESIDENT:<id>)
+##   2. Ordered organizational affiliations (e.g. ORG:<id> / ESTABLISHMENT:<id>)
+##   3. Global baseline entry (e.g. GLOBAL:PUBLIC)
+##   4. default_baseline when no explicit score exists at any tier
+static func get_cascading_value(
+	world_state: Dictionary,
+	observer_scope: String,
+	observer_id: String,
+	target_scope: String,
+	target_id: String,
+	affiliations: Array = [],
+	pool_container: String = "standings",
+	value_field: String = "reputation",
+	default_baseline: float = 0.0,
+	min_val: float = -1.0,
+	max_val: float = 1.0,
+	global_scope: String = "GLOBAL",
+	global_id: String = "PUBLIC"
+) -> float:
+	# 1. Personal / direct override
+	if not observer_id.is_empty():
+		var direct_entry: Dictionary = get_direct_entry(world_state, observer_scope, observer_id, target_scope, target_id, pool_container)
+		if direct_entry.has(value_field):
+			return clampf(float(direct_entry[value_field]), min_val, max_val)
+
+	# 2. Organizational / institutional inheritance
+	for aff in affiliations:
+		if not (aff is Dictionary):
+			continue
+		var org_scope: String = str(aff.get("org_scope", "ORG")).to_upper()
+		var org_id: String = str(aff.get("org_id", "")).strip_edges()
+		if org_id.is_empty():
+			continue
+		var org_entry: Dictionary = get_direct_entry(world_state, org_scope, org_id, target_scope, target_id, pool_container)
+		if org_entry.has(value_field):
+			return clampf(float(org_entry[value_field]), min_val, max_val)
+
+	# 3. Global public baseline
+	if not global_scope.is_empty() and not global_id.is_empty():
+		var global_entry: Dictionary = get_direct_entry(world_state, global_scope, global_id, target_scope, target_id, pool_container)
+		if global_entry.has(value_field):
+			return clampf(float(global_entry[value_field]), min_val, max_val)
+
+	return clampf(default_baseline, min_val, max_val)
+
 ## Computes collective best score across multiple observers
 static func get_collective_score(
 	world_state: Dictionary,
@@ -688,19 +734,70 @@ static func get_crew_residents(ws: Dictionary) -> Array[Dictionary]:
 	)
 	return crew
 
-## Returns player-known districts and establishments in active_district_id filtered by 0-100 perception thresholds
+## Returns player-known districts and establishments (in active_district_id plus known external venues) filtered by 0-100 perception thresholds
 static func get_known_locations(active_district_id: String, ws: Dictionary) -> Array[Dictionary]:
 	var locations: Array[Dictionary] = []
 	var intel_ctx: Dictionary = build_player_intel_context(ws)
 	var observers: Array = intel_ctx.get("observers", [])
+	var pools: Dictionary = ws.get(DEFAULT_POOL_CONTAINER, {})
 
-	# A. Known Districts
+	# Harvest all DISTRICT:<id> and ESTABLISHMENT:<id> keys present across crew & affiliated org dossiers
+	var pool_district_ids: Array[String] = []
+	var pool_estab_ids: Array[int] = []
+	var seen_pool_estabs: Dictionary = {}
+
+	var collect_from_dossier := func(dossier: Variant) -> void:
+		if not (dossier is Dictionary):
+			return
+		for raw_key in dossier.keys():
+			var k_str := str(raw_key)
+			if k_str.begins_with("DISTRICT:"):
+				var d_id := k_str.trim_prefix("DISTRICT:").strip_edges()
+				if not d_id.is_empty() and not pool_district_ids.has(d_id):
+					pool_district_ids.append(d_id)
+			elif k_str.begins_with("ESTABLISHMENT:"):
+				var e_str := k_str.trim_prefix("ESTABLISHMENT:").strip_edges()
+				if e_str.is_valid_int():
+					var e_int := int(e_str)
+					if e_int > 0 and not seen_pool_estabs.has(e_int):
+						seen_pool_estabs[e_int] = true
+						pool_estab_ids.append(e_int)
+
+	for obs in observers:
+		if not (obs is Dictionary):
+			continue
+		var o_scope := str(obs.get("observer_scope", "RESIDENT")).to_upper()
+		var o_id := str(obs.get("observer_id", ""))
+		collect_from_dossier.call(pools.get(o_scope, {}).get(o_id, null))
+		for aff in obs.get("affiliations", []):
+			if aff is Dictionary:
+				var a_scope := str(aff.get("org_scope", "ORG")).to_upper()
+				var a_id := str(aff.get("org_id", ""))
+				collect_from_dossier.call(pools.get(a_scope, {}).get(a_id, null))
+
+	# A. Known Districts (from world_state["districts"], active_district_id, and knowledge_pools)
 	var districts_map: Dictionary = ws.get("districts", {})
 	var candidate_ids: Array[String] = []
 	for d_key in districts_map.keys():
-		candidate_ids.append(str(d_key))
+		var ds := str(d_key)
+		if not ds.is_empty() and not candidate_ids.has(ds):
+			candidate_ids.append(ds)
+	for pd_id in pool_district_ids:
+		if not candidate_ids.has(pd_id):
+			candidate_ids.append(pd_id)
 	if not active_district_id.is_empty() and not candidate_ids.has(active_district_id):
 		candidate_ids.append(active_district_id)
+
+	var district_names_by_id: Dictionary = {}
+	if DBManager.is_database_open() and not candidate_ids.is_empty():
+		var escaped_d: Array[String] = []
+		for cid in candidate_ids:
+			escaped_d.append("'%s'" % cid.replace("'", "''"))
+		var d_rows: Array = DBManager.query_rows(
+			"SELECT district_id, display_name FROM districts WHERE district_id IN (%s);" % ", ".join(escaped_d)
+		)
+		for dr in d_rows:
+			district_names_by_id[str(dr.get("district_id", ""))] = str(dr.get("display_name", ""))
 
 	for s_id in candidate_ids:
 		var dist_rec: Dictionary = districts_map.get(s_id, {}) if districts_map.has(s_id) and districts_map[s_id] is Dictionary else {}
@@ -712,14 +809,15 @@ static func get_known_locations(active_district_id: String, ws: Dictionary) -> A
 			continue
 
 		var d_name: String = str(dist_rec.get("display_name", ""))
-		if d_name.is_empty() and SocietyQueriesScript != null:
-			var census: Dictionary = SocietyQueriesScript.get_district_census(s_id)
-			d_name = str(census.get("district_name", ""))
+		if d_name.is_empty():
+			d_name = str(district_names_by_id.get(s_id, ""))
 		if d_name.is_empty():
 			d_name = s_id.trim_prefix("DISTRICT_").capitalize().replace("_", " ")
+		district_names_by_id[s_id] = d_name
 
 		locations.append({
 			"id": s_id,
+			"district_id": s_id,
 			"type": "DISTRICT",
 			"category": "DISTRICT",
 			"sector": "DISTRICT",
@@ -727,32 +825,78 @@ static func get_known_locations(active_district_id: String, ws: Dictionary) -> A
 			"intel_score": score
 		})
 
-	# B. Known Establishments in active district
+	# B. Known Establishments (all known in active_district_id + known external commercial/civic venues from knowledge_pools)
+	var seen_estab_ids: Dictionary = {}
+	var candidate_estab_rows: Array = []
+
 	if not active_district_id.is_empty():
-		var estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
-		for e in estabs:
-			var estab_id: int = int(e.get("establishment_id", 0))
-			if estab_id <= 0:
-				continue
-			var e_score: float = get_collective_score(ws, observers, "ESTABLISHMENT", str(estab_id))
-			if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
-				e_score = 20.0
-			if not is_entity_known(e_score, "ESTABLISHMENT"):
-				continue
+		var active_estabs: Array = SocietyQueriesScript.get_district_establishments(active_district_id)
+		for ae in active_estabs:
+			var ae_id := int(ae.get("establishment_id", 0))
+			if ae_id > 0 and not seen_estab_ids.has(ae_id):
+				seen_estab_ids[ae_id] = true
+				var row_copy: Dictionary = ae.duplicate()
+				row_copy["district_id"] = active_district_id
+				candidate_estab_rows.append(row_copy)
 
-			var e_name: String = str(e.get("name", ""))
-			var cat_code: String = str(e.get("category_code", ""))
-			var is_residential: bool = (cat_code == "RESIDENTIAL_UNIT" or cat_code.begins_with("RESIDENTIAL"))
-			var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
+	var extra_estab_ids: Array[String] = []
+	for pe_id in pool_estab_ids:
+		if not seen_estab_ids.has(pe_id):
+			extra_estab_ids.append(str(pe_id))
 
-			locations.append({
-				"id": estab_id,
-				"type": "ESTABLISHMENT",
-				"category": cat_code,
-				"sector": sector,
-				"display": e_name,
-				"intel_score": e_score
-			})
+	if not extra_estab_ids.is_empty() and DBManager.is_database_open():
+		var extra_rows: Array = DBManager.query_rows("""
+			SELECT
+				e.establishment_id,
+				e.name,
+				e.district_id,
+				d.display_name AS district_name,
+				e.unit_door_number,
+				l_cat.code AS category_code,
+				l_cat.title AS category_title,
+				e.capacity
+			FROM establishments e
+			JOIN districts d ON e.district_id = d.district_id
+			JOIN system_labels l_cat ON e.category_id = l_cat.label_id
+			WHERE e.establishment_id IN (%s)
+			  AND e.is_vacant = 0;
+		""" % ", ".join(extra_estab_ids))
+		for er in extra_rows:
+			var er_id := int(er.get("establishment_id", 0))
+			if er_id > 0 and not seen_estab_ids.has(er_id):
+				seen_estab_ids[er_id] = true
+				candidate_estab_rows.append(er)
+
+	for e in candidate_estab_rows:
+		var estab_id: int = int(e.get("establishment_id", 0))
+		if estab_id <= 0:
+			continue
+		var e_score: float = get_collective_score(ws, observers, "ESTABLISHMENT", str(estab_id))
+		if bool(e.get("is_public_landmark", false)) and e_score < 20.0:
+			e_score = 20.0
+		if not is_entity_known(e_score, "ESTABLISHMENT"):
+			continue
+
+		var e_name: String = str(e.get("name", ""))
+		var e_dist_id: String = str(e.get("district_id", active_district_id))
+		if not e_dist_id.is_empty() and e_dist_id != active_district_id:
+			var ext_dist_name: String = str(e.get("district_name", district_names_by_id.get(e_dist_id, "")))
+			if not ext_dist_name.is_empty():
+				e_name = "%s (%s)" % [e_name, ext_dist_name]
+
+		var cat_code: String = str(e.get("category_code", ""))
+		var is_residential: bool = (cat_code == "RESIDENTIAL_UNIT" or cat_code.begins_with("RESIDENTIAL"))
+		var sector: String = "RESIDENTIAL" if is_residential else "WORKPLACE"
+
+		locations.append({
+			"id": estab_id,
+			"district_id": e_dist_id,
+			"type": "ESTABLISHMENT",
+			"category": cat_code,
+			"sector": sector,
+			"display": e_name,
+			"intel_score": e_score
+		})
 
 	return locations
 

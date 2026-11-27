@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "IMPACT_METRIC_PROFILE",
+    "description": "Pairwise trust and dependability standing across actors, organizations, and spatial districts, with RESIDENT -> ORG -> GLOBAL inheritance."
+  },
+  "metric_id": "STANDING",
+  "label_token": "UI_METRIC_STANDING",
+  "target_scope": "STANDINGS",
+  "routing_mode": "DIRECT",
+  "state_container": "standings",
+  "state_field": "standing",
+  "inheritance_chain": ["RESIDENT", "ORG", "GLOBAL"],
+  "format": "SIGNED_FLOAT",
+  "decimals": 2,
+  "min_value": -1.0,
+  "max_value": 1.0,
+  "telemetry_source": {
+    "type": "WORLD_STATE",
+    "state_path": "standings.{observer_scope}.{observer_id}.{target_key}.standing"
+  },
+  "tuning": {
+    "default_baseline": 0.0,
+    "passive_decay_rate_per_tick": 0.01,
+    "minimum_floor": -1.0,
+    "maximum_ceiling": 1.0
+  },
+  "perception": {
+    "bucket_channel": {
+      "id": "standing_bucket",
+      "source_field": "standing",
+      "target_field": "standing_bucket_token",
+      "mode": "N_BUCKET",
+      "fuzz_jitter_min": -0.05,
+      "fuzz_jitter_max": 0.05,
+      "home_modifier": 0.02,
+      "error_floor": 0.01,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "buckets": [
+        { "max": -0.6, "token": "UI_STANDING_TREACHEROUS" },
+        { "max": -0.2, "token": "UI_STANDING_UNRELIABLE" },
+        { "max": 0.2, "token": "UI_STANDING_UNPROVEN" },
+        { "max": 0.6, "token": "UI_STANDING_DEPENDABLE" },
+        { "token": "UI_STANDING_IMPLICIT_TRUST" }
+      ]
+    }
+  }
+}

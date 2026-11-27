@@ -178,8 +178,8 @@ func _test_target_domain_scope_overlays() -> bool:
 		if opt is Dictionary:
 			crime_ids.append(str(opt.get("id", "")))
 
-	if crime_ids.size() != 5 or not crime_ids.has("FRIENDLY") or not crime_ids.has("THREATEN") or not crime_ids.has("BRIBE"):
-		printerr("FAIL [Scope Crime]: Expected 5 merged intents (core + THREATEN/BRIBE), got: %s" % str(crime_ids))
+	if crime_ids.size() != 6 or not crime_ids.has("FRIENDLY") or not crime_ids.has("THREATEN") or not crime_ids.has("BRIBE") or not crime_ids.has("BRIBE_OFFICIAL"):
+		printerr("FAIL [Scope Crime]: Expected 6 merged intents (core + THREATEN/BRIBE/BRIBE_OFFICIAL), got: %s" % str(crime_ids))
 		return false
 
 	var amount_sec: Dictionary = crime_layout.get("amount_section", {})
@@ -263,8 +263,8 @@ func _test_investigate_cascading_modes() -> bool:
 		if opt is Dictionary:
 			mode_ids.append(str(opt.get("id", "")))
 
-	if mode_ids.size() != 3 or not mode_ids.has("CASUAL_PROBE") or not mode_ids.has("STAKEOUT") or not mode_ids.has("CASE_JOINT"):
-		printerr("FAIL [INVESTIGATE Crime]: Expected 3 merged modes, got: %s" % str(mode_ids))
+	if mode_ids.size() != 4 or not mode_ids.has("CASUAL_PROBE") or not mode_ids.has("STAKEOUT") or not mode_ids.has("CASE_JOINT") or not mode_ids.has("TAIL_TARGET"):
+		printerr("FAIL [INVESTIGATE Crime]: Expected 4 merged modes (core + STAKEOUT/CASE_JOINT/TAIL_TARGET), got: %s" % str(mode_ids))
 		return false
 
 	var ws_crime := _build_mode_test_world_state()
@@ -338,8 +338,8 @@ func _test_collect_from_cascading_modes() -> bool:
 	TargetDomainRegistryScript.initialize("crime")
 	var crime_scope: Dictionary = TargetDomainRegistryScript.get_verb_scope_definition("COLLECT_FROM")
 	var crime_opts: Array = crime_scope.get("form_layout", {}).get("mode_section", {}).get("options", [])
-	if crime_opts.size() != 6:
-		printerr("FAIL [COLLECT_FROM Crime]: Expected 6 merged extraction modes, got: %s" % str(crime_opts))
+	if crime_opts.size() != 7:
+		printerr("FAIL [COLLECT_FROM Crime]: Expected 7 merged extraction modes, got: %s" % str(crime_opts))
 		return false
 
 	var ws_crime := _build_mode_test_world_state()

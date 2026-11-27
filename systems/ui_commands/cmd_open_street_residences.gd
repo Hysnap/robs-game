@@ -2,6 +2,7 @@
 extends RefCounted
 
 const SocietyQueriesScript = preload("res://systems/society_queries.gd")
+const IntelManagerScript = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 
 ## Opens the road/building residential drill-down view listing known house and flat numbers
 static func execute(payload: Dictionary, view_host: ViewHost, context_refs: Dictionary = {}) -> void:
@@ -28,11 +29,7 @@ static func execute(payload: Dictionary, view_host: ViewHost, context_refs: Dict
 		push_error("[CmdOpenStreetResidences] Missing district_id or street_name for drill-down.")
 		return
 
-	var intel_ctx: Dictionary = {}
-	if gs != null and gs.has_method("build_player_intel_context"):
-		intel_ctx = gs.build_player_intel_context()
-	elif not ws.is_empty():
-		intel_ctx = {"world_state": ws}
+	var intel_ctx: Dictionary = IntelManagerScript.build_player_intel_context(ws)
 
 	var district_name: String = str(ws.get("districts", {}).get(district_id, {}).get("display_name", district_id))
 	var raw_units: Array[Dictionary] = SocietyQueriesScript.get_street_residential_units(district_id, street_name, intel_ctx)

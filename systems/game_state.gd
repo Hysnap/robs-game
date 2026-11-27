@@ -25,6 +25,7 @@ const INTEL_MANAGER = preload("res://systems/multilayer_info_loop/intel_manager.
 const SOCIETY_QUERIES = preload("res://systems/society_queries.gd")
 const COMMODITY_MANAGER = preload("res://systems/commodity_manager.gd")
 const VERB_ROUTER = preload("res://systems/verb_router.gd")
+const TARGET_DOMAIN_REGISTRY = preload("res://systems/target_domain_registry.gd")
 const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
 
 func _ready() -> void:
@@ -193,16 +194,9 @@ func initialize_fresh_state(custom_flavours: Array = []) -> void:
 	else:
 		SystemLogger.log_info("[GAME_STATE] Ingested %d transport services across %s." % [world_state["transport_registry"].size(), str(module_chain)])
 
-	# 5. Mount VerbRouter & ImpactRouter across the active module chain
-	var secondary_flavours: Array[String] = []
-	for mod_slug in module_chain:
-		if mod_slug != "core":
-			secondary_flavours.append(mod_slug)
-	if secondary_flavours.is_empty():
-		VERB_ROUTER.initialize()
-	else:
-		for mod_slug in secondary_flavours:
-			VERB_ROUTER.initialize(mod_slug)
+	# 5. Mount VerbRouter, TargetDomainRegistry & ImpactRouter across the active module chain
+	VERB_ROUTER.initialize_chain(module_chain)
+	TARGET_DOMAIN_REGISTRY.initialize_chain(module_chain)
 
 	IMPACT_ROUTER.reset()
 	for mod_slug in module_chain:
