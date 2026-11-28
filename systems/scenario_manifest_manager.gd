@@ -4,12 +4,15 @@ extends RefCounted
 
 const BUSINESS_RULES_PATH := "res://data_modules/core/business_rules.cfg"
 const DATA_MODULES_ROOT := "res://data_modules/"
+const VALID_MEMORY_TIERS: Array[String] = ["FINE_IN_MEMORY", "ACTIVE_KEY_ONLY", "SQLITE_BACKGROUND"]
 
 static var _cached_manifest: Dictionary = {}
 static var _cached_modules: Dictionary = {} # "module_key" -> parsed Dictionary
 static var _active_manifest_path: String = ""
 static var _active_flavours: Array[String] = []
 static var _flavour_overlays: Dictionary = {} # "module_key" -> Array[String] of overlay paths
+static var _cached_business_rules: ConfigFile = null
+static var _cached_memory_priorities: Dictionary = {}
 
 ## Sets active flavour slugs (e.g. ["crime"]) and invalidates cached manifest/modules so overlays apply
 static func set_active_flavours(flavours: Array) -> void:
@@ -24,11 +27,67 @@ static func set_active_flavours(flavours: Array) -> void:
 	_cached_manifest.clear()
 	_cached_modules.clear()
 	_flavour_overlays.clear()
+	_cached_business_rules = null
+	_cached_memory_priorities.clear()
 	if DBManager.is_database_open():
 		DBManager.populate_core_system_labels()
 		
 static func get_active_flavours() -> Array[String]:
 	return _active_flavours.duplicate()
+
+## Loads core business_rules.cfg and overlays any active flavour business_rules.cfg files in locked flavour order
+static func get_business_rules_config() -> ConfigFile:
+	if _cached_business_rules != null:
+		return _cached_business_rules
+
+	assert(FileAccess.file_exists(BUSINESS_RULES_PATH), "FATAL: business_rules.cfg missing at: %s" % BUSINESS_RULES_PATH)
+	var merged := ConfigFile.new()
+	var err: int = merged.load(BUSINESS_RULES_PATH)
+	assert(err == OK, "FATAL: Failed to parse %s (Error code: %d)" % [BUSINESS_RULES_PATH, err])
+
+	for flavour_slug in _active_flavours:
+		var flavour_cfg_path: String = "%s%s/business_rules.cfg" % [DATA_MODULES_ROOT, flavour_slug]
+		if not FileAccess.file_exists(flavour_cfg_path):
+			continue
+		var overlay := ConfigFile.new()
+		var f_err: int = overlay.load(flavour_cfg_path)
+		assert(f_err == OK, "FATAL: Failed to parse flavour business_rules.cfg at %s (Error code: %d)" % [flavour_cfg_path, f_err])
+		for section in overlay.get_sections():
+			for key in overlay.get_section_keys(section):
+				merged.set_value(section, key, overlay.get_value(section, key))
+
+	_cached_business_rules = merged
+	return _cached_business_rules
+
+## Returns the validated [memory_priorities] map across core + active flavours
+static func get_memory_priorities() -> Dictionary:
+	if not _cached_memory_priorities.is_empty():
+		return _cached_memory_priorities.duplicate()
+
+	var cfg: ConfigFile = get_business_rules_config()
+	assert(cfg.has_section("memory_priorities"),
+		"FATAL: [ScenarioManifestManager] Missing '[memory_priorities]' section in layered business_rules.cfg.")
+
+	var resolved: Dictionary = {}
+	for raw_key in cfg.get_section_keys("memory_priorities"):
+		var domain_key: String = str(raw_key).strip_edges().to_lower()
+		var tier: String = str(cfg.get_value("memory_priorities", raw_key, "")).strip_edges().to_upper()
+		assert(VALID_MEMORY_TIERS.has(tier),
+			"FATAL: [ScenarioManifestManager] Invalid memory priority tier '%s' for domain '%s'. Expected one of %s." % [
+				tier, domain_key, str(VALID_MEMORY_TIERS)
+			])
+		resolved[domain_key] = tier
+
+	_cached_memory_priorities = resolved
+	return _cached_memory_priorities.duplicate()
+
+## Returns the canonical retention tier for a single simulation domain, failing loudly if unconfigured
+static func get_memory_priority(domain: String) -> String:
+	var norm_domain: String = domain.strip_edges().to_lower()
+	var priorities: Dictionary = get_memory_priorities()
+	assert(priorities.has(norm_domain),
+		"FATAL: [ScenarioManifestManager] Unconfigured memory priority domain '%s' in [memory_priorities]." % norm_domain)
+	return str(priorities[norm_domain])
 
 ## Resolves the scenario manifest path from business_rules.cfg
 static func get_manifest_path() -> String:
@@ -164,6 +223,8 @@ static func reset_cache() -> void:
 	_active_manifest_path = ""
 	_active_flavours.clear()
 	_flavour_overlays.clear()
+	_cached_business_rules = null
+	_cached_memory_priorities.clear()
 
 ## Universal module loader: Dispatches to JSON parser or Engine Resource loader based on extension
 static func load_resource_module(module_key: String) -> Resource:

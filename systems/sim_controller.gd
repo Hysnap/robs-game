@@ -16,6 +16,7 @@ const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 const _MacroEconomyProcessor = preload("res://systems/economy/macro_economy_processor.gd")
+const _LifeCycleProcessor = preload("res://systems/life_cycle_processor.gd")
 
 const WINDOW_ANCHOR_HOURS := {
 	"EARLY_MORNING": 6.0,
@@ -345,6 +346,17 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	var crossed_boundary := _CalendarHelper.crosses_week_boundary(start_day, days_to_advance)
 	var economy_rollover: Dictionary = {}
+	var life_cycle_rollover := {
+		"scheduled_births": 0,
+		"scheduled_deaths": 0,
+		"scheduled_illnesses": 0,
+		"scheduled_outbreaks": 0,
+		"births_resolved": 0,
+		"deaths_resolved": 0,
+		"illnesses_started": 0,
+		"illnesses_recovered": 0,
+		"health_records_in_memory": 0
+	}
 	var obligation_rollover := {
 		"delivered_mail": [],
 		"cleared_settlements": [],
@@ -358,9 +370,28 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	for step in range(1, days_to_advance + 1):
 		var day_tick: int = start_day + step
+		var tick_month_meta: Dictionary = _CalendarHelper.get_month_grid_meta(day_tick, 0)
+		var tick_month_key: String = "%04d-%02d" % [int(tick_month_meta["year"]), int(tick_month_meta["month"])]
+		if str(meta.get("lifecycle_last_scheduled_month", "")) != tick_month_key:
+			var sched_res: Dictionary = _LifeCycleProcessor.schedule_upcoming_month_events(world_state, day_tick)
+			life_cycle_rollover["scheduled_births"] += int(sched_res.get("scheduled_births", 0))
+			life_cycle_rollover["scheduled_deaths"] += int(sched_res.get("scheduled_deaths", 0))
+			life_cycle_rollover["scheduled_illnesses"] += int(sched_res.get("scheduled_illnesses", 0))
+			life_cycle_rollover["scheduled_outbreaks"] += int(sched_res.get("scheduled_outbreaks", 0))
+			meta["lifecycle_last_scheduled_month"] = tick_month_key
 		if step > 1:
 			_execute_standing_orders_for_rollover_day(world_state, day_tick, executed_events, diary_memos)
 		var daily_res: Dictionary = _ObligationLedger.process_daily_tick(day_tick)
+		var lc_daily: Dictionary = _LifeCycleProcessor.process_daily_resolution(
+			world_state,
+			day_tick,
+			daily_res.get("activated_events", [])
+		)
+		life_cycle_rollover["births_resolved"] += int(lc_daily.get("births_resolved", 0))
+		life_cycle_rollover["deaths_resolved"] += int(lc_daily.get("deaths_resolved", 0))
+		life_cycle_rollover["illnesses_started"] += int(lc_daily.get("illnesses_started", 0))
+		life_cycle_rollover["illnesses_recovered"] += int(lc_daily.get("illnesses_recovered", 0))
+		life_cycle_rollover["health_records_in_memory"] = int(lc_daily.get("health_records_in_memory", 0))
 		obligation_rollover["delivered_mail"].append_array(daily_res.get("delivered_mail", []))
 		obligation_rollover["cleared_settlements"].append_array(daily_res.get("cleared_settlements", []))
 		obligation_rollover["dishonoured_settlements"].append_array(daily_res.get("dishonoured_settlements", []))
@@ -421,6 +452,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"background_district_count": district_partition["background_count"],
 		"week_rollover": crossed_boundary,
 		"economy_rollover": economy_rollover,
+		"life_cycle_rollover": life_cycle_rollover,
 		"obligation_rollover": obligation_rollover,
 		"executed_events": witnessed_events,
 		"all_executed_events": executed_events,

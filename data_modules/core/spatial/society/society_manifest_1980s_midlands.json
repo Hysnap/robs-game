@@ -52,6 +52,7 @@
     "intel_exposure": "res://data_modules/core/spatial/districts/intel_exposure_rules.json",
     "job_definitions": "res://data_modules/core/spatial/society/job_definitions.json",
     "lexicon": "res://data_modules/core/spatial/society/names.json",
+    "life_cycle_rules": "res://data_modules/core/spatial/society/life_cycle_rules_1980s_uk.json",
     "manager_adaptation": "res://data_modules/core/economy/manager_adaptation_rules.json",
     "map_overlays": "res://data_modules/core/spatial/districts/map_overlay_profiles.json",
     "obligation_types": "res://data_modules/core/economy/obligation_types.json",

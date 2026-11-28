@@ -73,3 +73,22 @@ CREATE TABLE IF NOT EXISTS resident_behavioral_tags (
 	FOREIGN KEY (tag_label_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
 	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
 );
+
+CREATE TABLE IF NOT EXISTS resident_health_conditions (
+	condition_id INTEGER PRIMARY KEY AUTOINCREMENT,
+	resident_id INTEGER NOT NULL,
+	condition_label_id INTEGER NOT NULL,
+	severity REAL NOT NULL DEFAULT 0.5,
+	is_contagious INTEGER NOT NULL DEFAULT 0,
+	is_chronic INTEGER NOT NULL DEFAULT 0,
+	is_diagnosed INTEGER NOT NULL DEFAULT 0,
+	is_treated INTEGER NOT NULL DEFAULT 0,
+	contracted_day INTEGER NOT NULL,
+	expected_recovery_day INTEGER DEFAULT NULL,
+	valid_from INTEGER NOT NULL,
+	valid_to INTEGER DEFAULT NULL,
+	change_reason_id INTEGER,
+	FOREIGN KEY (resident_id) REFERENCES residents(resident_id) ON DELETE CASCADE,
+	FOREIGN KEY (condition_label_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION,
+	FOREIGN KEY (change_reason_id) REFERENCES system_labels(label_id) ON DELETE NO ACTION
+);

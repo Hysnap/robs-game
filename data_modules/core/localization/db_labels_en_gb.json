@@ -85,6 +85,11 @@
       "title": "Youth Conduct / Oppositional Profile"
     },
     {
+      "code": "BIRTH",
+      "domain": "CHANGE_REASON",
+      "title": "Live Birth"
+    },
+    {
       "code": "DEATH",
       "domain": "CHANGE_REASON",
       "title": "Deceased"
@@ -93,6 +98,16 @@
       "code": "EVICTION",
       "domain": "CHANGE_REASON",
       "title": "Tenancy Eviction"
+    },
+    {
+      "code": "ILLNESS_ONSET",
+      "domain": "CHANGE_REASON",
+      "title": "Illness Onset"
+    },
+    {
+      "code": "ILLNESS_RECOVERY",
+      "domain": "CHANGE_REASON",
+      "title": "Illness Recovery"
     },
     {
       "code": "MIGRATION",
@@ -170,14 +185,49 @@
       "title": "Standard Full-Time Agreement"
     },
     {
+      "code": "CARDIOVASCULAR",
+      "domain": "DEATH_REASON",
+      "title": "Ischaemic Heart / Cardiovascular Disease"
+    },
+    {
+      "code": "CEREBROVASCULAR_STROKE",
+      "domain": "DEATH_REASON",
+      "title": "Cerebrovascular Disease / Stroke"
+    },
+    {
       "code": "CHRONIC_ILLNESS",
       "domain": "DEATH_REASON",
       "title": "Chronic Illness"
     },
     {
+      "code": "INFECTIOUS_DISEASE",
+      "domain": "DEATH_REASON",
+      "title": "Infectious Disease"
+    },
+    {
       "code": "NATURAL_CAUSES",
       "domain": "DEATH_REASON",
       "title": "Natural Causes / Old Age"
+    },
+    {
+      "code": "NEOPLASM_CANCER",
+      "domain": "DEATH_REASON",
+      "title": "Malignant Neoplasm / Cancer"
+    },
+    {
+      "code": "PERINATAL_INFANT",
+      "domain": "DEATH_REASON",
+      "title": "Perinatal / Infant Condition"
+    },
+    {
+      "code": "RESPIRATORY_ACUTE",
+      "domain": "DEATH_REASON",
+      "title": "Pneumonia / Acute Respiratory Failure"
+    },
+    {
+      "code": "ROAD_TRAFFIC_ACCIDENT",
+      "domain": "DEATH_REASON",
+      "title": "Road Traffic Accident"
     },
     {
       "code": "STREET_VIOLENCE",
@@ -670,6 +720,11 @@
       "title": "Borough Public Library"
     },
     {
+      "code": "RAILWAY_SIDINGS_AND_SCRAP",
+      "domain": "ESTABLISHMENT_CATEGORY",
+      "title": "Abandoned Railway sidlings and scrap"
+    },
+    {
       "code": "RAILWAY_SIDLINGS_AND_SCRAP",
       "domain": "ESTABLISHMENT_CATEGORY",
       "title": "Abandoned Railway sidlings and scrap"
@@ -853,6 +908,61 @@
       "code": "M",
       "domain": "GENDER",
       "title": "Male"
+    },
+    {
+      "code": "ACUTE_BRONCHITIS",
+      "domain": "HEALTH_CONDITION",
+      "title": "Acute Bronchitis / Chest Infection"
+    },
+    {
+      "code": "CHRONIC_CARDIOVASCULAR",
+      "domain": "HEALTH_CONDITION",
+      "title": "Chronic Cardiovascular Disease"
+    },
+    {
+      "code": "CHRONIC_RESPIRATORY_COPD",
+      "domain": "HEALTH_CONDITION",
+      "title": "Chronic Bronchitis / Emphysema"
+    },
+    {
+      "code": "FOOD_POISONING",
+      "domain": "HEALTH_CONDITION",
+      "title": "Bacterial Food Poisoning"
+    },
+    {
+      "code": "HEPATITIS_B_C",
+      "domain": "HEALTH_CONDITION",
+      "title": "Viral Hepatitis (Blood-Borne)"
+    },
+    {
+      "code": "HIV_AIDS",
+      "domain": "HEALTH_CONDITION",
+      "title": "HIV / AIDS"
+    },
+    {
+      "code": "LEGIONNAIRES_DISEASE",
+      "domain": "HEALTH_CONDITION",
+      "title": "Legionnaires' Disease"
+    },
+    {
+      "code": "MEASLES",
+      "domain": "HEALTH_CONDITION",
+      "title": "Measles"
+    },
+    {
+      "code": "SEASONAL_INFLUENZA",
+      "domain": "HEALTH_CONDITION",
+      "title": "Seasonal Influenza"
+    },
+    {
+      "code": "VIRAL_GASTROENTERITIS",
+      "domain": "HEALTH_CONDITION",
+      "title": "Viral Gastroenteritis"
+    },
+    {
+      "code": "WHOOPING_COUGH",
+      "domain": "HEALTH_CONDITION",
+      "title": "Whooping Cough (Pertussis)"
     },
     {
       "code": "AUNT",
