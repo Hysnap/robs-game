@@ -5,6 +5,7 @@
     "description": "Spatial district total commercial workforce and active establishment staffing headcount."
   },
   "metric_id": "ESTABLISHMENT_HEADCOUNT",
+  "metric_class": "FACTUAL_COUNTER",
   "label_token": "UI_METRIC_ESTABLISHMENT_HEADCOUNT",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -13,7 +14,6 @@
   "format": "INTEGER",
   "decimals": 0,
   "min_value": 0,
-  "max_value": 50000,
   "suffix": " staff",
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
@@ -22,25 +22,23 @@
     "where": "district_id = '{id}'"
   },
   "tuning": {
-    "default_baseline": 250,
-    "minimum_floor": 0,
-    "maximum_ceiling": 50000
+    "minimum_floor": 0
   },
   "perception": {
-    "STEPPED_ROUNDING":{
-    "id": "headcount_bucket",
-    "source_field": "actual_establishment_headcount",
-    "target_field": "headcount_bucket_token",
-    "mode": "STEPPED_ROUNDING",
-    "default_step": 1,
-    "fallback_token": "UI_INTEL_MASKED_BLANK",
-    "tiers": [
-      { "threshold": 10, "round_to": 1 },
-      { "threshold": 50, "round_to": 5 },
-      { "threshold": 250, "round_to": 25 },
-      { "threshold": 1000, "round_to": 100 }
-    ]
-  },
+    "STEPPED_ROUNDING": {
+      "id": "headcount_bucket",
+      "source_field": "actual_establishment_headcount",
+      "target_field": "headcount_bucket_token",
+      "mode": "STEPPED_ROUNDING",
+      "default_step": 1,
+      "fallback_token": "UI_INTEL_MASKED_BLANK",
+      "tiers": [
+        { "threshold": 10, "round_to": 1 },
+        { "threshold": 50, "round_to": 5 },
+        { "threshold": 250, "round_to": 25 },
+        { "threshold": 1000, "round_to": 100 }
+      ]
+    },
     "bucket_channel": {
       "id": "headcount_bucket",
       "source_field": "actual_establishment_headcount",

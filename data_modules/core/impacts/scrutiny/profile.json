@@ -5,6 +5,7 @@
     "description": "Municipal health, customs, and commercial regulatory audit pressure applied to districts and operations."
   },
   "metric_id": "REGULATORY_SCRUTINY",
+  "metric_class": "SEVERITY_IMPACT",
   "label_token": "UI_METRIC_REGULATORY_SCRUTINY",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -13,7 +14,7 @@
   "format": "PERCENT",
   "decimals": 1,
   "min_value": 0.0,
-  "max_value": 1.0,
+  "max_value": 100.0,
   "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
@@ -21,9 +22,9 @@
   },
   "tuning": {
     "default_baseline": 0.0,
-    "ambient_decay_step": 0.05,
+    "ambient_decay_step": 5,
     "minimum_floor": 0.0,
-    "maximum_ceiling": 1.0
+    "maximum_ceiling": 100.0
   },
   "perception": {
     "id": "scrutiny_bucket",
@@ -36,10 +37,10 @@
     "error_floor": 0.02,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
-      { "max": 0.15, "token": "UI_SCRUTINY_DORMANT" },
-      { "max": 0.35, "token": "UI_SCRUTINY_ROUTINE" },
-      { "max": 0.60, "token": "UI_SCRUTINY_ELEVATED" },
-      { "max": 0.80, "token": "UI_SCRUTINY_ACUTE" },
+      { "max": 15, "token": "UI_SCRUTINY_DORMANT" },
+      { "max": 35, "token": "UI_SCRUTINY_ROUTINE" },
+      { "max": 60, "token": "UI_SCRUTINY_ELEVATED" },
+      { "max": 80, "token": "UI_SCRUTINY_ACUTE" },
       { "token": "UI_SCRUTINY_SEIZURE" }
     ]
   }

@@ -5,11 +5,11 @@
     "description": "Physical unit counts of raw materials, prepped batches, and packaged retail commodities"
   },
   "metric_id": "INVENTORY",
+  "metric_class": "FACTUAL_COUNTER",
   "label_token": "UI_METRIC_INVENTORY",
   "format": "INTEGER",
   "decimals": 0,
   "min_value": 0.0,
-  "max_value": 999999.0,
   "suffix": " units",
   "telemetry_source": {
     "type": "ACTOR_STATE",
@@ -24,8 +24,6 @@
     "mode": "STEPPED_ROUNDING",
     "default_step": 1,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
-    "tiers": [
-      { "threshold": 999999, "round_to": 1 }
-    ]
+    "tiers": [{ "threshold": 999999, "round_to": 1 }]
   }
 }

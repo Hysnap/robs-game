@@ -5,6 +5,7 @@
     "description": "Acute physiological impairment and motor/cognitive intoxication level"
   },
   "metric_id": "INTOXICATION",
+  "metric_class": "SEVERITY_IMPACT",
   "label_token": "UI_METRIC_INTOXICATION",
   "target_scope": "RESIDENT",
   "routing_mode": "DIRECT",
@@ -19,18 +20,13 @@
     "type": "ACTOR_STATE",
     "state_path": "residents.{id}.intoxication"
   },
-  "tuning": {
-    "ambient_sober_rate": 15.0,
-    "min_intoxication": 0.0,
-    "max_intoxication": 100.0
-  },
   "perception": {
     "target_field": "perceived_intoxication",
     "mode": "N_BUCKET",
-    "fuzz_jitter_min": -5.0,
-    "fuzz_jitter_max": 5.0,
-    "home_modifier": 2.0,
-    "error_floor": 1.0,
+    "fuzz_jitter_min": -0.05,
+    "fuzz_jitter_max": 0.05,
+    "home_modifier": 0.02,
+    "error_floor": 0.01,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
       { "max": 10.0, "token": "UI_INTOX_SOBER" },

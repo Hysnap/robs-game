@@ -2148,6 +2148,31 @@
       "code": "WORKING_CLASS",
       "domain": "WEALTH_BRACKET",
       "title": "Working Class"
+    },
+    {
+      "code": "SEVERITY_IMPACT",
+      "domain": "METRIC_CLASS",
+      "title": "Severity Impact (0 to 100, 0 Normal)"
+    },
+    {
+      "code": "BIPOLAR_IMPACT",
+      "domain": "METRIC_CLASS",
+      "title": "Bipolar Impact (-100 to +100, 0 Neutral)"
+    },
+    {
+      "code": "PERC_MEASURE",
+      "domain": "METRIC_CLASS",
+      "title": "Percentage Measure (0% to 100% Display Rate)"
+    },
+    {
+      "code": "FACTUAL_COUNTER",
+      "domain": "METRIC_CLASS",
+      "title": "Factual Counter (0 to Unbounded)"
+    },
+    {
+      "code": "CONTROL_FLAG",
+      "domain": "METRIC_CLASS",
+      "title": "Control Flag (Day-Stamped Active Window)"
     }
   ]
 }

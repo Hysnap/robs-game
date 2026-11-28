@@ -7,14 +7,14 @@ const CALENDAR_HELPER = preload("res://systems/calendar_helper.gd")
 const DB_MANAGER = preload("res://systems/db_manager.gd")
 const MANIFEST_MANAGER = preload("res://systems/scenario_manifest_manager.gd")
 
-## Returns true if the operative's recurring orders are paused for exact sim_day
+## Returns true if the operative's recurring orders are paused through a stamped day >= sim_day
 static func is_paused_for_day(world_state: Dictionary, resident_id: Variant, sim_day: int) -> bool:
 	var ops: Dictionary = world_state.get("operations", {})
 	var paused_map: Dictionary = ops.get("paused_standing_orders_day", {})
 	var key_str: String = str(resident_id)
-	if paused_map.has(key_str) and int(paused_map[key_str]) == sim_day:
+	if paused_map.has(key_str) and sim_day <= int(paused_map[key_str]):
 		return true
-	if paused_map.has(resident_id) and int(paused_map[resident_id]) == sim_day:
+	if paused_map.has(resident_id) and sim_day <= int(paused_map[resident_id]):
 		return true
 	return false
 

@@ -5,6 +5,7 @@
     "description": "Spatial precinct law enforcement vigilance, surveillance, and interdiction intensity."
   },
   "metric_id": "POLICE_HEAT",
+  "metric_class": "SEVERITY_IMPACT",
   "label_token": "UI_METRIC_POLICE_HEAT",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -13,7 +14,7 @@
   "format": "PERCENT",
   "decimals": 1,
   "min_value": 0.0,
-  "max_value": 1.0,
+  "max_value": 100.0,
   "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
@@ -37,10 +38,10 @@
       "error_floor": 0.01,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.15, "token": "UI_HEAT_COLD" },
-        { "max": 0.35, "token": "UI_HEAT_NORMAL" },
-        { "max": 0.60, "token": "UI_HEAT_HEIGHTENED" },
-        { "max": 0.85, "token": "UI_HEAT_ACUTE" },
+        { "max": 15, "token": "UI_HEAT_COLD" },
+        { "max": 35, "token": "UI_HEAT_NORMAL" },
+        { "max": 6, "token": "UI_HEAT_HEIGHTENED" },
+        { "max": 85, "token": "UI_HEAT_ACUTE" },
         { "token": "UI_HEAT_CRITICAL" }
       ]
     }

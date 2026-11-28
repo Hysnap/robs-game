@@ -5,6 +5,7 @@
     "description": "Spatial district residential household units and domestic dwelling count."
   },
   "metric_id": "HOUSEHOLDS",
+  "metric_class": "FACTUAL_COUNTER",
   "label_token": "UI_METRIC_HOUSEHOLDS",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -13,18 +14,12 @@
   "format": "INTEGER",
   "decimals": 0,
   "min_value": 0,
-  "max_value": 2000000,
   "suffix": " households",
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
     "table": "households",
     "aggregate": "COUNT(*)",
     "where": "district_id = '{id}'"
-  },
-  "tuning": {
-    "default_baseline": 1800,
-    "minimum_floor": 0,
-    "maximum_ceiling": 2000000
   },
   "perception": {
     "STEPPED_ROUNDING":{

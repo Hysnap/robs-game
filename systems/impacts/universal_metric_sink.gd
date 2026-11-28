@@ -7,6 +7,7 @@ const ScenarioManifestManagerScript = preload("res://systems/scenario_manifest_m
 const CalendarHelperScript = preload("res://systems/calendar_helper.gd")
 
 var metric_id: String = ""
+var metric_class: String = ""
 var target_scope: String = "DISTRICT"
 var state_container: String = "districts"
 var state_field: String = ""
@@ -40,14 +41,52 @@ func _init(profile: Dictionary) -> void:
 	state_field = str(profile.get("state_field", metric_id.to_lower()))
 
 	var tuning: Dictionary = profile.get("tuning", {})
-	min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0)))
-	max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 1.0)))
-	default_baseline = float(tuning.get("default_baseline", tuning.get("default_baseline_sentiment", tuning.get("default_baseline_reputation", min_floor))))
+	metric_class = _resolve_metric_class(profile, tuning)
+	_apply_metric_class_defaults(profile, tuning)
 	allow_negative = bool(tuning.get("allow_negative_balance", tuning.get("allow_negative_stock", false)))
 	discovery_floor = float(tuning.get("discovery_floor", min_floor))
 
 	_resolve_route_from_manifest(profile)
 	_configure_ambient_rule(profile, tuning)
+
+func _resolve_metric_class(profile: Dictionary, tuning: Dictionary) -> String:
+	var explicit: String = str(profile.get("metric_class", tuning.get("metric_class", ""))).to_upper().strip_edges()
+	if not explicit.is_empty():
+		return explicit
+	var raw_min: float = float(tuning.get("minimum_floor", profile.get("min_value", 0.0)))
+	var raw_max: float = float(tuning.get("maximum_ceiling", profile.get("max_value", 1.0)))
+	if raw_min < 0.0:
+		return "BIPOLAR_IMPACT"
+	if raw_max > 100.0:
+		return "FACTUAL_COUNTER"
+	if raw_max > 1.0:
+		return "SEVERITY_IMPACT"
+	return "SEVERITY_IMPACT"
+
+func _apply_metric_class_defaults(profile: Dictionary, tuning: Dictionary) -> void:
+	var has_explicit_min: bool = tuning.has("minimum_floor") or profile.has("min_value")
+	var has_explicit_max: bool = tuning.has("maximum_ceiling") or profile.has("max_value")
+	match metric_class:
+		"BIPOLAR_IMPACT":
+			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", -100.0))) if has_explicit_min else -100.0
+			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
+			default_baseline = 0.0
+		"PERC_MEASURE":
+			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
+			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
+			default_baseline = 0.0
+		"FACTUAL_COUNTER":
+			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
+			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", INF))) if has_explicit_max else INF
+			default_baseline = 0.0
+		"CONTROL_FLAG":
+			min_floor = 0.0
+			max_ceiling = 1.0
+			default_baseline = 0.0
+		_:
+			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
+			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
+			default_baseline = 0.0
 
 func _resolve_route_from_manifest(profile: Dictionary) -> void:
 	var legacy_mode: String = str(profile.get("routing_mode", "")).to_upper()
@@ -204,9 +243,21 @@ func _mutate_path(world_state: Dictionary, template: String, tokens: Dictionary,
 	if not cur_node.has(leaf_key) and not allow_create:
 		return false
 
+	var current_day: int = CalendarHelperScript.get_current_sim_day(world_state)
+	if metric_class == "CONTROL_FLAG":
+		var duration_days: int = maxi(0, int(round(delta)) - 1) if delta >= 1.0 else 0
+		var stamped_until: int = current_day + duration_days
+		cur_node[leaf_key] = 1.0
+		if not stamp_field.is_empty():
+			var resolved_flag_stamp := _expand_segment(stamp_field, tokens)
+			if not resolved_flag_stamp.is_empty():
+				cur_node[resolved_flag_stamp] = stamped_until
+		return true
+
 	var cur_val: float = float(cur_node.get(leaf_key, default_baseline))
 	var updated: float = cur_val + delta
-	var final_val: float = updated if allow_negative else clampf(updated, min_floor, max_ceiling)
+	var is_unbounded: bool = is_inf(max_ceiling) or metric_class == "FACTUAL_COUNTER"
+	var final_val: float = updated if (allow_negative or is_unbounded) else clampf(updated, min_floor, max_ceiling)
 
 	if erase_at_min and final_val <= min_floor:
 		cur_node.erase(leaf_key)
@@ -216,7 +267,7 @@ func _mutate_path(world_state: Dictionary, template: String, tokens: Dictionary,
 	if not stamp_field.is_empty():
 		var resolved_stamp_key := _expand_segment(stamp_field, tokens)
 		if not resolved_stamp_key.is_empty():
-			cur_node[resolved_stamp_key] = CalendarHelperScript.get_current_sim_day(world_state)
+			cur_node[resolved_stamp_key] = current_day
 	return true
 
 func _walk_ambient(node: Variant, segments: Array[String], depth: int, root_state: Dictionary) -> void:
@@ -246,7 +297,8 @@ func _walk_ambient(node: Variant, segments: Array[String], depth: int, root_stat
 			"CEILING":
 				next_val = minf(max_ceiling, cur + ambient_rate)
 			"BASELINE":
-				next_val = maxf(default_baseline, cur - ambient_rate) if cur > default_baseline else minf(default_baseline, cur + ambient_rate)
+				var target_base: float = 0.0 if metric_class == "BIPOLAR_IMPACT" else default_baseline
+				next_val = maxf(target_base, cur - ambient_rate) if cur > target_base else minf(target_base, cur + ambient_rate)
 			"RESET":
 				next_val = 0.0
 

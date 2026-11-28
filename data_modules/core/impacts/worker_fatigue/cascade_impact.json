@@ -1,0 +1,70 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "scope": "CASCADE_IMPACTS",
+    "metric_id": "WORKER_FATIGUE",
+    "description": "Pre-action turn cascade rules triggered when resident fatigue crosses severity thresholds on the 0-100 scale, including FORCED_BEDREST and ATTEND_HOSPITAL."
+  },
+  "cascades": [
+    {
+      "id": "FATIGUE_HEIGHTENED_SHIFT_DRAG",
+      "scope": "ACTOR",
+      "metric_gate": {
+        "field": "fatigue",
+        "operator": ">=",
+        "value": 60.0
+      },
+      "target_metric": "WORKER_FATIGUE",
+      "target_scope": "ACTOR",
+      "delta": 5.0,
+      "scale_by_horizon": false
+    },
+    {
+      "id": "FATIGUE_ACUTE_GP_ATTEMPT",
+      "scope": "ACTOR",
+      "metric_gate": {
+        "field": "fatigue",
+        "operator": ">=",
+        "value": 80.0
+      },
+      "follow_on_action": {
+        "verb": "VISIT_GP",
+        "base_probability": 0.45,
+        "ocean_trait": "neuroticism",
+        "ocean_weight": 0.4
+      }
+    },
+    {
+      "id": "FATIGUE_CRITICAL_FORCED_BEDREST",
+      "scope": "ACTOR",
+      "metric_gate": {
+        "field": "fatigue",
+        "operator": ">=",
+        "value": 90.0
+      },
+      "target_metric": "FORCED_BEDREST",
+      "target_scope": "OPERATIONS_STAMP",
+      "delta": 2.0,
+      "scale_by_horizon": false
+    },
+    {
+      "id": "FATIGUE_EXTREME_ATTEND_HOSPITAL",
+      "scope": "ACTOR",
+      "metric_gate": {
+        "field": "fatigue",
+        "operator": ">=",
+        "value": 95.0
+      },
+      "target_metric": "ATTEND_HOSPITAL",
+      "target_scope": "OPERATIONS_STAMP",
+      "delta": 3.0,
+      "scale_by_horizon": false,
+      "follow_on_action": {
+        "verb": "ATTEND_HOSPITAL",
+        "base_probability": 0.55,
+        "ocean_trait": "neuroticism",
+        "ocean_weight": 0.35
+      }
+    }
+  ]
+}

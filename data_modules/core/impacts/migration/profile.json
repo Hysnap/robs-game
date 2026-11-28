@@ -5,43 +5,38 @@
     "description": "Spatial district net population inflow and resident relocation rate."
   },
   "metric_id": "MIGRATION",
+  "metric_class": "BIPOLAR_IMPACT",
   "label_token": "UI_METRIC_MIGRATION",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
   "state_container": "districts",
   "state_field": "net_migration_rate",
   "format": "FLOAT",
-  "decimals": 1,
-  "min_value": -1000.0,
-  "max_value": 1000.0,
-  "suffix": " /cycle",
+  "decimals": 2,
+  "min_value": -100.0,
+  "max_value": 100.0,
+  "suffix": " %",
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
     "table": "citizen_migration_logs",
     "aggregate": "COALESCE(SUM(CASE WHEN destination_district_id = '{id}' THEN 1 WHEN origin_district_id = '{id}' THEN -1 ELSE 0 END), 0)",
     "where": "timestamp >= '{cycle_start}'"
   },
-  "tuning": {
-    "default_baseline": 0.0,
-    "passive_drift_per_tick": 0.05,
-    "minimum_floor": -1000.0,
-    "maximum_ceiling": 1000.0
-  },
   "perception": {
     "id": "migration_bucket",
     "source_field": "net_migration_rate",
     "target_field": "migration_bucket_token",
     "mode": "N_BUCKET",
-    "fuzz_jitter_min": -2.0,
-    "fuzz_jitter_max": 2.0,
-    "home_modifier": 0.5,
-    "error_floor": 0.2,
+    "fuzz_jitter_min": -0.02,
+    "fuzz_jitter_max": 0.02,
+    "home_modifier": 0.05,
+    "error_floor": 0.02,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
-      { "max": -20.0, "token": "UI_MIGRATION_RAPID_EXODUS" },
+      { "max": -30.0, "token": "UI_MIGRATION_RAPID_EXODUS" },
       { "max": -5.0, "token": "UI_MIGRATION_GRADUAL_DECLINE" },
       { "max": 5.0, "token": "UI_MIGRATION_STABLE" },
-      { "max": 20.0, "token": "UI_MIGRATION_MODERATE_INFLUX" },
+      { "max": 30.0, "token": "UI_MIGRATION_MODERATE_INFLUX" },
       { "token": "UI_MIGRATION_HEAVY_INFLUX" }
     ]
   }

@@ -5,6 +5,7 @@
     "description": "Spatial district labor participation and citizen employment rate."
   },
   "metric_id": "EMPLOYMENT",
+  "metric_class": "PERC_MEASURE",
   "label_token": "UI_METRIC_EMPLOYMENT",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -13,7 +14,7 @@
   "format": "PERCENT",
   "decimals": 1,
   "min_value": 0.0,
-  "max_value": 1.0,
+  "max_value": 100.0,
   "suffix": "%",
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
@@ -21,28 +22,22 @@
     "aggregate": "AVG(CASE WHEN employment_status = 'EMPLOYED' THEN 1.0 ELSE 0.0 END)",
     "where": "district_id = '{id}' AND age >= 16 AND age < 65"
   },
-  "tuning": {
-    "default_baseline": 0.88,
-    "passive_drift_per_tick": 0.005,
-    "minimum_floor": 0.0,
-    "maximum_ceiling": 1.0
-  },
   "perception": {
     "bucket_channel": {
       "id": "unemployment_bucket",
       "source_field": "unemployment_rate",
       "target_field": "unemployment_bucket_token",
       "mode": "N_BUCKET",
-      "fuzz_jitter_min": -0.15,
-      "fuzz_jitter_max": 0.15,
-      "home_modifier": 0.10,
-      "error_floor": 0.03,
+      "fuzz_jitter_min": -15,
+      "fuzz_jitter_max": 15,
+      "home_modifier": 10,
+      "error_floor": 3,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.04, "token": "UI_UNEMP_NEGLIGIBLE" },
-        { "max": 0.09, "token": "UI_UNEMP_LOW" },
-        { "max": 0.16, "token": "UI_UNEMP_ELEVATED" },
-        { "max": 0.25, "token": "UI_UNEMP_ACUTE" },
+        { "max": 4, "token": "UI_UNEMP_NEGLIGIBLE" },
+        { "max": 9, "token": "UI_UNEMP_LOW" },
+        { "max": 16, "token": "UI_UNEMP_ELEVATED" },
+        { "max": 25, "token": "UI_UNEMP_ACUTE" },
         { "token": "UI_UNEMP_CRITICAL" }
       ]
     },
@@ -51,10 +46,10 @@
       "source_field": "unemployment_rate",
       "target_field": "unemployment_fuzzed_ratio",
       "mode": "FUZZ_RATIO",
-      "fuzz_jitter_min": -0.15,
-      "fuzz_jitter_max": 0.15,
-      "home_modifier": 0.10,
-      "error_floor": 0.03,
+      "fuzz_jitter_min": -15,
+      "fuzz_jitter_max": 15,
+      "home_modifier": 10,
+      "error_floor": 3,
       "fallback_token": "UI_INTEL_MASKED_BLANK"
     },
     "bucket_employment_channel": {
@@ -62,15 +57,15 @@
       "source_field": "actual_employment_rate",
       "target_field": "employment_bucket_token",
       "mode": "N_BUCKET",
-      "fuzz_jitter_min": -0.04,
-      "fuzz_jitter_max": 0.04,
-      "home_modifier": 0.015,
-      "error_floor": 0.01,
+      "fuzz_jitter_min": 4,
+      "fuzz_jitter_max": 4,
+      "home_modifier": 1.5,
+      "error_floor": 1,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.70, "token": "UI_EMPLOYMENT_DEPRESSED" },
-        { "max": 0.82, "token": "UI_EMPLOYMENT_STAGNANT" },
-        { "max": 0.93, "token": "UI_EMPLOYMENT_STABLE" },
+        { "max": 70, "token": "UI_EMPLOYMENT_DEPRESSED" },
+        { "max": 82, "token": "UI_EMPLOYMENT_STAGNANT" },
+        { "max": 93, "token": "UI_EMPLOYMENT_STABLE" },
         { "token": "UI_EMPLOYMENT_BOOMING" }
       ]
     }

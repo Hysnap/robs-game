@@ -5,13 +5,14 @@
     "description": "Operational labor time logged by staff operatives or the central player enterprise per cycle."
   },
   "metric_id": "OPERATIONAL_TIME",
+  "metric_class": "FACTUAL_COUNTER",
   "label_token": "UI_METRIC_OPERATIONAL_TIME",
   "target_scope": "ACTOR",
   "routing_mode": "ACTOR_FALLBACK",
   "state_container": "staff",
   "state_field": "shift_time_spent",
   "format": "FLOAT",
-  "decimals": 1,
+  "decimals": 2,
   "min_value": 0.0,
   "max_value": 168.0,
   "suffix": "h",
@@ -32,8 +33,6 @@
     "mode": "STEPPED_ROUNDING",
     "default_step": 1,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
-    "tiers": [
-      { "threshold": 720, "round_to": 1 }
-    ]
+    "tiers": [{ "threshold": 720, "round_to": 1 }]
   }
 }

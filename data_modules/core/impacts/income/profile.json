@@ -5,7 +5,9 @@
     "description": "Spatial district citizen earned wage level and median household income telemetry."
   },
   "metric_id": "INCOME",
+
   "label_token": "UI_METRIC_INCOME",
+  "metric_class": "FACTUAL_COUNTER",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
   "state_container": "districts",
@@ -13,28 +15,22 @@
   "format": "CURRENCY",
   "decimals": 0,
   "min_value": 0.0,
-  "max_value": 100000.0,
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
     "table": "citizens",
     "aggregate": "COALESCE(AVG(wage_income), 0.0)",
     "where": "district_id = '{id}' AND employment_status = 'EMPLOYED'"
   },
-  "tuning": {
-    "default_baseline": 4500.0,
-    "passive_drift_per_tick": 5.0,
-    "minimum_floor": 0.0,
-    "maximum_ceiling": 100000.0
-  },
-  "perception": {"bucket_channel": {
+  "perception": {
+    "bucket_channel": {
       "id": "income_bucket",
       "source_field": "actual_median_income",
       "target_field": "income_bucket_token",
       "mode": "N_BUCKET",
-      "fuzz_jitter_min": -15.0,
-      "fuzz_jitter_max": 15.0,
-      "home_modifier": 5.0,
-      "error_floor": 7.0,
+      "fuzz_jitter_min": -0.15,
+      "fuzz_jitter_max": 0.15,
+      "home_modifier": 0.1,
+      "error_floor": 0.02,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
         { "max": 40.0, "token": "UI_INCOME_DESTITUTE" },

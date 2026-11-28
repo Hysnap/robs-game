@@ -5,25 +5,25 @@
     "description": "Spatial district consumer confidence, market optimism, and willingness to spend."
   },
   "metric_id": "CONSUMER_SENTIMENT",
+  "metric_class": "BIPOLAR_IMPACT",
   "label_token": "UI_METRIC_CONSUMER_SENTIMENT",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
   "state_container": "districts",
   "state_field": "consumer_sentiment",
-  "format": "PERCENT",
-  "decimals": 1,
-  "min_value": 0.0,
-  "max_value": 1.0,
-  "suffix": "%",
+  "format": "FLOAT",
+  "decimals": 2,
+  "min_value": -100.0,
+  "max_value": 100.0,
   "telemetry_source": {
     "type": "WORLD_STATE",
     "state_path": "districts.consumer_sentiment"
   },
   "tuning": {
-    "default_baseline_sentiment": 0.50,
-    "passive_drift_per_tick": 0.02,
-    "minimum_floor": 0.0,
-    "maximum_ceiling": 1.0
+    "default_baseline_sentiment": 0.0,
+    "passive_drift_per_tick": 2,
+    "minimum_floor": -100.0,
+    "maximum_ceiling": 100.0
   },
   "perception": {
     "bucket_channel": {
@@ -31,15 +31,15 @@
       "source_field": "consumer_sentiment",
       "target_field": "sentiment_bucket_token",
       "mode": "N_BUCKET",
-      "fuzz_jitter_min": -0.05,
-      "fuzz_jitter_max": 0.05,
-      "home_modifier": 0.02,
-      "error_floor": 0.01,
+      "fuzz_jitter_min": -5,
+      "fuzz_jitter_max": 5,
+      "home_modifier": 2,
+      "error_floor": 1,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.25, "token": "UI_SENTIMENT_DESPERATE" },
-        { "max": 0.45, "token": "UI_SENTIMENT_DISSATISFIED" },
-        { "max": 0.75, "token": "UI_SENTIMENT_CONTENT" },
+        { "max": 25, "token": "UI_SENTIMENT_DESPERATE" },
+        { "max": 45, "token": "UI_SENTIMENT_DISSATISFIED" },
+        { "max": 75, "token": "UI_SENTIMENT_CONTENT" },
         { "token": "UI_SENTIMENT_ELATED" }
       ]
     }

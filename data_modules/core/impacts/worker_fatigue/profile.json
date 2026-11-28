@@ -5,6 +5,7 @@
     "description": "Physical and mental exhaustion accumulated by rostered staff operatives or the player operations pool."
   },
   "metric_id": "WORKER_FATIGUE",
+  "metric_class": "SEVERITY_IMPACT",
   "label_token": "UI_METRIC_WORKER_FATIGUE",
   "target_scope": "ACTOR",
   "routing_mode": "ACTOR_FALLBACK",

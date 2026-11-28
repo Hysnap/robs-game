@@ -5,30 +5,33 @@
     "description": "Civic and institutional tolerance for bribery, graft, and informal arrangements within a district"
   },
   "metric_id": "CORRUPTION_TOLERANCE",
+  "metric_class": "BIPOLAR_IMPACT",
   "label_token": "UI_METRIC_CORRUPTION_TOLERANCE",
   "format": "FLOAT",
-  "decimals": 1,
+  "decimals": 2,
+  "min_value": -100.0,
+  "max_value": 100.0,
   "telemetry_source": {
     "type": "WORLD_STATE",
     "state_path": "corruption_tolerance"
   },
   "tuning": {
-    "default_baseline_tolerance": 0.20,
-    "passive_drift_per_tick": 0.01
+    "default_baseline_tolerance": 0.0,
+    "passive_drift_per_tick": 1.0
   },
   "perception": {
     "target_field": "corruption_bucket_token",
     "mode": "N_BUCKET",
-    "fuzz_jitter_min": -0.10,
-    "fuzz_jitter_max": 0.10,
-    "home_modifier": 0.05,
-    "error_floor": 0.02,
+    "fuzz_jitter_min": -10,
+    "fuzz_jitter_max": 10,
+    "home_modifier": 5,
+    "error_floor": 2,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
-      { "max": 0.15, "token": "UI_CORRUPT_INTOLERANT" },
-      { "max": 0.35, "token": "UI_CORRUPT_RESISTANT" },
-      { "max": 0.60, "token": "UI_CORRUPT_FLEXIBLE" },
-      { "max": 0.80, "token": "UI_CORRUPT_PERMISSIVE" },
+      { "max": 15, "token": "UI_CORRUPT_INTOLERANT" },
+      { "max": 35, "token": "UI_CORRUPT_RESISTANT" },
+      { "max": 60, "token": "UI_CORRUPT_FLEXIBLE" },
+      { "max": 80, "token": "UI_CORRUPT_PERMISSIVE" },
       { "token": "UI_CORRUPT_ENTRENCHED" }
     ]
   }

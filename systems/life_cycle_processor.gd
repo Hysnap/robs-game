@@ -9,8 +9,12 @@ const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
 const _HouseholdComposer = preload("res://systems/society/household_composition_generator.gd")
 const _PersonalityHydrator = preload("res://systems/society/citizen_personality_hydrator.gd")
+const _RoutineFlowResolver = preload("res://systems/routine_flow_resolver.gd")
 
-const LIFE_EVENT_TYPES: Array[String] = ["LIFE_BIRTH", "LIFE_DEATH", "ILLNESS_ONSET", "ILLNESS_OUTBREAK"]
+const LIFE_EVENT_TYPES: Array[String] = [
+	"LIFE_BIRTH", "LIFE_DEATH", "ILLNESS_ONSET", "ILLNESS_OUTBREAK",
+	"CEREMONY_FUNERAL", "CEREMONY_CHRISTENING", "CEREMONY_WEDDING"
+]
 
 ## Loads and validates the active life_cycle_rules JSON module
 static func get_rules() -> Dictionary:
@@ -35,7 +39,8 @@ static func schedule_upcoming_month_events(world_state: Dictionary, anchor_day: 
 		"scheduled_births": 0,
 		"scheduled_deaths": 0,
 		"scheduled_illnesses": 0,
-		"scheduled_outbreaks": 0
+		"scheduled_outbreaks": 0,
+		"scheduled_ceremonies": 0
 	}
 	if not _DBManager.is_database_open() or not _has_table("residents") or not _has_table("calendar_events"):
 		return summary
@@ -59,22 +64,33 @@ static func schedule_upcoming_month_events(world_state: Dictionary, anchor_day: 
 
 	var tokens: Dictionary = rules["event_tokens"]
 	var leak_cfg: Dictionary = rules["proactive_event_leakage"]
+	var ceremony_rules: Dictionary = _RoutineFlowResolver.get_rules()["ceremony_rules"]
 	var intel_ctx: Dictionary = _IntelManager.build_player_intel_context(world_state)
 	var crew_by_district: Dictionary = _index_crew_observers_by_district(world_state)
 
-	# 1. Proactively schedule monthly deaths by age band & month seasonality
-	summary["scheduled_deaths"] = _schedule_monthly_deaths(
-		world_state, rules, tokens, leak_cfg, crew_by_district, intel_ctx,
+	# 1. Proactively schedule monthly deaths (+ conditional Funerals)
+	var death_counts: Dictionary = _schedule_monthly_deaths(
+		world_state, rules, tokens, leak_cfg, ceremony_rules, crew_by_district, intel_ctx,
 		anchor_day, window_start, window_end, month_idx, rng
 	)
+	summary["scheduled_deaths"] = int(death_counts.get("deaths", 0))
+	summary["scheduled_ceremonies"] += int(death_counts.get("ceremonies", 0))
 
-	# 2. Proactively schedule monthly births for eligible mothers
-	summary["scheduled_births"] = _schedule_monthly_births(
-		world_state, rules, tokens, leak_cfg, crew_by_district, intel_ctx,
+	# 2. Proactively schedule monthly births (+ conditional Christenings)
+	var birth_counts: Dictionary = _schedule_monthly_births(
+		world_state, rules, tokens, leak_cfg, ceremony_rules, crew_by_district, intel_ctx,
 		anchor_day, window_start, window_end, month_idx, rng
 	)
+	summary["scheduled_births"] = int(birth_counts.get("births", 0))
+	summary["scheduled_ceremonies"] += int(birth_counts.get("ceremonies", 0))
 
-	# 3. Proactively schedule monthly illness onsets & public outbreak alerts
+	# 3. Proactively schedule monthly Weddings
+	summary["scheduled_ceremonies"] += _schedule_monthly_weddings(
+		world_state, leak_cfg, ceremony_rules, crew_by_district,
+		anchor_day, window_start, window_end, rng
+	)
+
+	# 4. Proactively schedule monthly illness onsets & public outbreak alerts
 	var ill_counts: Dictionary = _schedule_monthly_illnesses(
 		world_state, rules, tokens, leak_cfg, crew_by_district, intel_ctx,
 		anchor_day, window_start, window_end, sim_year, month_idx, rng
@@ -92,6 +108,8 @@ static func process_daily_resolution(world_state: Dictionary, current_sim_day: i
 		"deaths_resolved": 0,
 		"illnesses_started": 0,
 		"illnesses_recovered": 0,
+		"ceremonies_resolved": 0,
+		"ceremonies_cancelled": 0,
 		"health_records_in_memory": 0
 	}
 	if not _DBManager.is_database_open():
@@ -120,6 +138,13 @@ static func process_daily_resolution(world_state: Dictionary, current_sim_day: i
 				"ILLNESS_ONSET":
 					if _resolve_illness_onset(current_sim_day, item):
 						report["illnesses_started"] += 1
+				"CEREMONY_FUNERAL", "CEREMONY_CHRISTENING", "CEREMONY_WEDDING":
+					var ev_id: int = int(ev.get("event_id", 0))
+					var created_d: int = int(ev.get("created_day", current_sim_day))
+					if _resolve_ceremony(action_type, ev_id, current_sim_day, created_d, item):
+						report["ceremonies_resolved"] += 1
+					else:
+						report["ceremonies_cancelled"] += 1
 
 	report["illnesses_recovered"] = _resolve_due_recoveries(current_sim_day)
 	report["health_records_in_memory"] = sync_health_conditions_to_memory(world_state, current_sim_day)
@@ -202,6 +227,7 @@ static func _schedule_monthly_deaths(
 	rules: Dictionary,
 	tokens: Dictionary,
 	leak_cfg: Dictionary,
+	ceremony_rules: Dictionary,
 	crew_by_district: Dictionary,
 	_intel_ctx: Dictionary,
 	anchor_day: int,
@@ -209,8 +235,10 @@ static func _schedule_monthly_deaths(
 	window_end: int,
 	month_idx: int,
 	rng: RandomNumberGenerator
-) -> int:
+) -> Dictionary:
 	var scheduled_count: int = 0
+	var scheduled_ceremonies: int = 0
+	var funeral_cfg: Dictionary = ceremony_rules["FUNERAL"]
 	var seasonality_map: Dictionary = rules["month_seasonality_multipliers"]
 	var bands: Array = rules["mortality_age_bands"]
 
@@ -252,7 +280,7 @@ static func _schedule_monthly_deaths(
 			continue
 
 		var candidates: Array = _DBManager.query_rows("""
-			SELECT r.resident_id, r.household_id, e.district_id
+			SELECT r.resident_id, r.household_id, r.church_id, r.local_pub_id, e.district_id
 			FROM residents r
 			JOIN households h ON r.household_id = h.household_id
 			JOIN establishments e ON h.establishment_id = e.establishment_id
@@ -279,7 +307,7 @@ static func _schedule_monthly_deaths(
 				"end_day": ev_day,
 				"visibility_scope": "PRIVATE",
 				"created_day": anchor_day,
-				"impacts": [ {
+				"impacts": [{
 					"lifecycle_action": "DEATH",
 					"resident_id": res_id,
 					"death_reason_code": chosen_cause,
@@ -289,13 +317,41 @@ static func _schedule_monthly_deaths(
 			_apply_participant_rumour_leakage(world_state, ev_id, dist_id, participant_count, leak_cfg, crew_by_district)
 			scheduled_count += 1
 
-	return scheduled_count
+			if rng.randf() <= float(funeral_cfg["occurrence_probability"]):
+				var delay_rng: Array = funeral_cfg["delay_days_range"]
+				var fun_day: int = ev_day + rng.randi_range(int(delay_rng[0]), int(delay_rng[1]))
+				var church_id: int = int(cand["church_id"]) if cand["church_id"] != null else 0
+				var pub_id: int = int(cand["local_pub_id"]) if cand["local_pub_id"] != null else 0
+				var venue: Dictionary = _resolve_ceremony_venue(church_id, pub_id, dist_id, false)
+				var guests: int = int(funeral_cfg["base_guest_count"]) + participant_count
+				var fun_ev_id: int = _ObligationLedger.create_calendar_event({
+					"event_type": str(funeral_cfg["event_type"]),
+					"title_token": str(funeral_cfg["title_token"]),
+					"organizer": _ObligationLedger.format_scoped_entity("RESIDENT", str(res_id)),
+					"location_scope": str(venue["scope"]),
+					"location_id": str(venue["id"]),
+					"start_day": fun_day,
+					"end_day": fun_day,
+					"visibility_scope": "PRIVATE",
+					"created_day": anchor_day,
+					"impacts": [{
+						"lifecycle_action": "CEREMONY_FUNERAL",
+						"resident_id": res_id,
+						"prerequisite_event_id": ev_id,
+						"participant_count": guests
+					}]
+				})
+				_apply_participant_rumour_leakage(world_state, fun_ev_id, dist_id, guests, leak_cfg, crew_by_district)
+				scheduled_ceremonies += 1
+
+	return { "deaths": scheduled_count, "ceremonies": scheduled_ceremonies }
 
 static func _schedule_monthly_births(
 	world_state: Dictionary,
 	rules: Dictionary,
 	tokens: Dictionary,
 	leak_cfg: Dictionary,
+	ceremony_rules: Dictionary,
 	crew_by_district: Dictionary,
 	_intel_ctx: Dictionary,
 	anchor_day: int,
@@ -303,8 +359,9 @@ static func _schedule_monthly_births(
 	window_end: int,
 	month_idx: int,
 	rng: RandomNumberGenerator
-) -> int:
+) -> Dictionary:
 	var fert: Dictionary = rules["fertility_rules"]
+	var christ_cfg: Dictionary = ceremony_rules["CHRISTENING"]
 	var female_id: int = _DBManager.get_label_id("GENDER", str(fert["female_gender_code"]))
 	var month_mults: Array = fert["month_multipliers"]
 	var month_mult: float = float(month_mults[month_idx]) if month_mults.size() > month_idx else 1.0
@@ -313,6 +370,7 @@ static func _schedule_monthly_births(
 	var female_code: String = str(fert["female_gender_code"])
 	var min_spacing: int = int(fert["min_birth_spacing_days"])
 	var scheduled_count: int = 0
+	var scheduled_ceremonies: int = 0
 
 	for band in fert["age_band_annual_rates"]:
 		if not (band is Dictionary):
@@ -339,10 +397,12 @@ static func _schedule_monthly_births(
 			continue
 
 		var candidates: Array = _DBManager.query_rows("""
-			SELECT r.resident_id, r.household_id, e.district_id
+			SELECT r.resident_id, r.household_id, r.church_id, r.local_pub_id,
+			       l_rel.code AS religion_code, e.district_id
 			FROM residents r
 			JOIN households h ON r.household_id = h.household_id
 			JOIN establishments e ON h.establishment_id = e.establishment_id
+			JOIN system_labels l_rel ON r.religion_id = l_rel.label_id
 			WHERE r.dod IS NULL AND r.gender_id = %d AND r.dob >= %d AND r.dob <= %d
 			  AND NOT EXISTS (
 				SELECT 1 FROM residents c
@@ -371,7 +431,7 @@ static func _schedule_monthly_births(
 				"end_day": ev_day,
 				"visibility_scope": "PRIVATE",
 				"created_day": anchor_day,
-				"impacts": [ {
+				"impacts": [{
 					"lifecycle_action": "BIRTH",
 					"mother_id": mother_id,
 					"household_id": hh_id,
@@ -382,7 +442,123 @@ static func _schedule_monthly_births(
 			_apply_participant_rumour_leakage(world_state, ev_id, dist_id, participant_count, leak_cfg, crew_by_district)
 			scheduled_count += 1
 
-	return scheduled_count
+			var rel_code: String = str(cand["religion_code"]).to_upper()
+			var christ_prob: float = float(christ_cfg["secular_occurrence_probability"]) if rel_code == "SECULAR_NONE" else float(christ_cfg["occurrence_probability"])
+			if rng.randf() <= christ_prob:
+				var delay_rng: Array = christ_cfg["delay_days_range"]
+				var christ_day: int = ev_day + rng.randi_range(int(delay_rng[0]), int(delay_rng[1]))
+				var church_id: int = int(cand["church_id"]) if cand["church_id"] != null else 0
+				var pub_id: int = int(cand["local_pub_id"]) if cand["local_pub_id"] != null else 0
+				var venue: Dictionary = _resolve_ceremony_venue(church_id, pub_id, dist_id, false)
+				var guests: int = int(christ_cfg["base_guest_count"]) + participant_count
+				var christ_ev_id: int = _ObligationLedger.create_calendar_event({
+					"event_type": str(christ_cfg["event_type"]),
+					"title_token": str(christ_cfg["title_token"]),
+					"organizer": _ObligationLedger.format_scoped_entity("RESIDENT", str(mother_id)),
+					"location_scope": str(venue["scope"]),
+					"location_id": str(venue["id"]),
+					"start_day": christ_day,
+					"end_day": christ_day,
+					"visibility_scope": "PRIVATE",
+					"created_day": anchor_day,
+					"impacts": [{
+						"lifecycle_action": "CEREMONY_CHRISTENING",
+						"mother_id": mother_id,
+						"household_id": hh_id,
+						"prerequisite_event_id": ev_id,
+						"participant_count": guests
+					}]
+				})
+				_apply_participant_rumour_leakage(world_state, christ_ev_id, dist_id, guests, leak_cfg, crew_by_district)
+				scheduled_ceremonies += 1
+
+	return { "births": scheduled_count, "ceremonies": scheduled_ceremonies }
+
+static func _schedule_monthly_weddings(
+	world_state: Dictionary,
+	leak_cfg: Dictionary,
+	ceremony_rules: Dictionary,
+	crew_by_district: Dictionary,
+	anchor_day: int,
+	window_start: int,
+	window_end: int,
+	rng: RandomNumberGenerator
+) -> int:
+	var wed_cfg: Dictionary = ceremony_rules["WEDDING"]
+	var min_age: int = int(wed_cfg["min_age"])
+	var max_age: int = int(wed_cfg["max_age"])
+	var dob_max: int = anchor_day - (min_age * 365)
+	var dob_min: int = anchor_day - ((max_age + 1) * 365) + 1
+
+	var cnt_rows: Array = _DBManager.query_rows("""
+		SELECT COUNT(*) AS cnt FROM residents
+		WHERE dod IS NULL AND dob >= %d AND dob <= %d;
+	""" % [dob_min, dob_max])
+	if cnt_rows.is_empty():
+		return 0
+	var eligible_pop: int = int(cnt_rows[0]["cnt"])
+	var expected_weddings: float = (float(eligible_pop) * float(wed_cfg["annual_rate_per_eligible_adult"])) / 24.0
+	var target_count: int = _stochastic_round(expected_weddings, rng)
+	if target_count <= 0:
+		return 0
+
+	var singles: Array = _DBManager.query_rows("""
+		SELECT r.resident_id, r.church_id, r.local_pub_id, e.district_id
+		FROM residents r
+		JOIN households h ON r.household_id = h.household_id
+		JOIN establishments e ON h.establishment_id = e.establishment_id
+		WHERE r.dod IS NULL AND r.dob >= %d AND r.dob <= %d
+		  AND NOT EXISTS (
+			SELECT 1 FROM social_relationships sr
+			JOIN system_labels l ON sr.relationship_type_id = l.label_id
+			WHERE sr.valid_to IS NULL
+			  AND (sr.from_resident_id = r.resident_id OR sr.to_resident_id = r.resident_id)
+			  AND l.code IN ('SPOUSE', 'HUSBAND', 'WIFE')
+		  )
+		ORDER BY RANDOM()
+		LIMIT %d;
+	""" % [dob_min, dob_max, target_count * 2])
+
+	var pref_days: Array = wed_cfg["preferred_days_of_week"]
+	var occ_prob: float = float(wed_cfg["occurrence_probability"])
+	var scheduled: int = 0
+	var pair_count: int = int(floori(float(singles.size()) / 2.0))
+
+	for i in range(pair_count):
+		var a: Dictionary = singles[i * 2]
+		var b: Dictionary = singles[(i * 2) + 1]
+		var res_a: int = int(a["resident_id"])
+		var res_b: int = int(b["resident_id"])
+		var dist_id: String = str(a["district_id"]).strip_edges()
+		if dist_id.is_empty():
+			continue
+		var wed_day: int = _pick_day_in_window_with_dow(window_start, window_end, pref_days, rng)
+		var church_id: int = int(a["church_id"]) if a["church_id"] != null else 0
+		var pub_id: int = int(a["local_pub_id"]) if a["local_pub_id"] != null else 0
+		var venue: Dictionary = _resolve_ceremony_venue(church_id, pub_id, dist_id, true)
+		var guests: int = int(wed_cfg["base_guest_count"])
+		var ev_id: int = _ObligationLedger.create_calendar_event({
+			"event_type": str(wed_cfg["event_type"]),
+			"title_token": str(wed_cfg["title_token"]),
+			"organizer": _ObligationLedger.format_scoped_entity("RESIDENT", str(res_a)),
+			"location_scope": str(venue["scope"]),
+			"location_id": str(venue["id"]),
+			"start_day": wed_day,
+			"end_day": wed_day,
+			"visibility_scope": "PRIVATE",
+			"created_day": anchor_day,
+			"impacts": [{
+				"lifecycle_action": "CEREMONY_WEDDING",
+				"resident_a_id": res_a,
+				"resident_b_id": res_b,
+				"occurrence_probability": occ_prob,
+				"participant_count": guests
+			}]
+		})
+		_apply_participant_rumour_leakage(world_state, ev_id, dist_id, guests, leak_cfg, crew_by_district)
+		scheduled += 1
+
+	return scheduled
 
 static func _schedule_monthly_illnesses(
 	world_state: Dictionary,
@@ -418,7 +594,7 @@ static func _schedule_monthly_illnesses(
 		var m_mults: Array = cfg["month_multipliers"]
 		var m_mult: float = float(m_mults[month_idx]) if m_mults.size() > month_idx else 1.0
 		var ep_years: Array = cfg.get("epidemic_years", [])
-		var ep_mult: float = float(cfg.get("epidemic_multiplier", 1.0)) if ep_years.has(sim_year) else 1.0
+		var ep_mult: float = float(cfg.get("epidemic_multiplier", 1.0)) if _int_array_has(ep_years, sim_year) else 1.0
 
 		var expected: float = float(total_living) * (annual_rate / 12.0) * m_mult * ep_mult
 		var target_count: int = _stochastic_round(expected, rng)
@@ -801,6 +977,80 @@ static func _resolve_due_recoveries(current_sim_day: int) -> int:
 	])
 	return due_rows.size()
 
+static func _resolve_ceremony(
+	action_type: String,
+	event_id: int,
+	current_sim_day: int,
+	created_day: int,
+	payload: Dictionary
+) -> bool:
+	var proceeds := false
+	match action_type:
+		"CEREMONY_FUNERAL":
+			var res_id: int = int(payload.get("resident_id", 0))
+			if res_id > 0:
+				var dead_rows: Array = _DBManager.query_rows("SELECT 1 FROM residents WHERE resident_id = %d AND dod IS NOT NULL LIMIT 1;" % res_id)
+				proceeds = not dead_rows.is_empty()
+		"CEREMONY_CHRISTENING":
+			var hh_id: int = int(payload.get("household_id", 0))
+			if hh_id > 0:
+				var baby_rows: Array = _DBManager.query_rows("SELECT 1 FROM residents WHERE household_id = %d AND dod IS NULL AND dob >= %d LIMIT 1;" % [hh_id, created_day])
+				proceeds = not baby_rows.is_empty()
+		"CEREMONY_WEDDING":
+			var res_a: int = int(payload.get("resident_a_id", 0))
+			var res_b: int = int(payload.get("resident_b_id", 0))
+			if res_a > 0 and res_b > 0:
+				var alive_rows: Array = _DBManager.query_rows("SELECT COUNT(*) AS cnt FROM residents WHERE resident_id IN (%d, %d) AND dod IS NULL;" % [res_a, res_b])
+				if not alive_rows.is_empty() and int(alive_rows[0]["cnt"]) == 2:
+					var rng := RandomNumberGenerator.new()
+					rng.seed = hash("WEDDING_PROCEED:%d:%d:%d" % [current_sim_day, res_a, res_b])
+					var occ_prob: float = float(payload.get("occurrence_probability", 0.90))
+					if rng.randf() <= occ_prob:
+						proceeds = true
+						if _has_table("social_relationships"):
+							var spouse_rel_id: int = _DBManager.get_label_id("RELATIONSHIP_TYPE", "SPOUSE")
+							var chg_id: int = _DBManager.get_label_id("CHANGE_REASON", "WORLD_GENERATION")
+							_DBManager.execute_batch([
+								"""
+								INSERT OR IGNORE INTO social_relationships (
+									from_resident_id, to_resident_id, relationship_type_id,
+									affinity_score, valid_from, change_reason_id
+								) VALUES (%d, %d, %d, 0.90, %d, %d);
+								""" % [res_a, res_b, spouse_rel_id, current_sim_day, chg_id],
+								"""
+								INSERT OR IGNORE INTO social_relationships (
+									from_resident_id, to_resident_id, relationship_type_id,
+									affinity_score, valid_from, change_reason_id
+								) VALUES (%d, %d, %d, 0.90, %d, %d);
+								""" % [res_b, res_a, spouse_rel_id, current_sim_day, chg_id]
+							])
+
+	if not proceeds and event_id > 0:
+		_DBManager.execute_batch([
+			"UPDATE calendar_events SET status = 'CANCELLED' WHERE event_id = %d;" % event_id
+		])
+	return proceeds
+
+static func _resolve_ceremony_venue(church_id: int, pub_id: int, district_id: String, allow_registry_office: bool) -> Dictionary:
+	if church_id > 0:
+		return { "scope": "ESTABLISHMENT", "id": "ESTABLISHMENT:%d" % church_id }
+	if allow_registry_office:
+		var reg: Dictionary = _RoutineFlowResolver.find_nearest_establishment(district_id, ["LOCAL_GOVERNMENT"])
+		if int(reg.get("establishment_id", 0)) > 0:
+			return { "scope": "ESTABLISHMENT", "id": "ESTABLISHMENT:%d" % int(reg["establishment_id"]) }
+	if pub_id > 0:
+		return { "scope": "ESTABLISHMENT", "id": "ESTABLISHMENT:%d" % pub_id }
+	return { "scope": "DISTRICT", "id": district_id }
+
+static func _pick_day_in_window_with_dow(window_start: int, window_end: int, pref_dows: Array, rng: RandomNumberGenerator) -> int:
+	var matching: Array[int] = []
+	for d in range(window_start, window_end + 1):
+		if _int_array_has(pref_dows, _CalendarHelper.day_of_week(d)):
+			matching.append(d)
+	if not matching.is_empty():
+		return matching[rng.randi() % matching.size()]
+	return rng.randi_range(window_start, window_end)
+
 # ==============================================================================
 # UTILITY HELPERS
 # ==============================================================================
@@ -847,6 +1097,12 @@ static func _pick_weighted_key(weights: Dictionary, rng: RandomNumberGenerator) 
 		if roll <= running:
 			return last_key
 	return last_key
+
+static func _int_array_has(arr: Array, target: int) -> bool:
+	for item in arr:
+		if int(item) == target:
+			return true
+	return false
 
 static func _has_table(table_name: String) -> bool:
 	var rows: Array = _DBManager.query_rows(

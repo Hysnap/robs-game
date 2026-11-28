@@ -205,6 +205,16 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		var cfg := ConfigFile.new()
 		if cfg.load(BUSINESS_RULES_PATH) == OK:
 			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
+	
+	var horizon_preview: Dictionary = _resolve_horizon_step(meta, horizon)
+	_evaluate_cascade_impacts(
+		world_state,
+		start_day,
+		horizon,
+		int(horizon_preview.get("days", 1)),
+		executed_events,
+		diary_memos
+	)
 
 	var day_queue: Array[Dictionary] = _build_day_execution_queue(world_state, staged_directives, start_day, diary_memos)
 	var halted_agents: Dictionary = {}
@@ -1148,3 +1158,216 @@ static func _resolve_directive_author(world_state: Dictionary, directive: Dictio
 			return combined
 
 	return agent_id
+
+## Evaluates cascade_impacts.json rules once at the start of a turn before scheduled/ordered actions run.
+## Supports configurable ordering/layers in business_rules.cfg, 0.0 baseline defaults, metric deltas,
+## and OCEAN/probability-gated follow-on actions for non-Leader actors.
+static func _evaluate_cascade_impacts(
+	world_state: Dictionary,
+	sim_day: int,
+	horizon: String,
+	days_to_advance: int,
+	executed_events: Array,
+	diary_memos: Array[String]
+) -> void:
+	var order_keys: Array[String] = []
+	var layer_keys: Array[String] = ["core"]
+
+	if FileAccess.file_exists(BUSINESS_RULES_PATH):
+		var cfg := ConfigFile.new()
+		if cfg.load(BUSINESS_RULES_PATH) == OK:
+			for raw_k in cfg.get_value("cascade_impacts", "evaluation_order", []):
+				var k_str := str(raw_k).strip_edges().to_upper()
+				if not k_str.is_empty():
+					order_keys.append(k_str)
+			var raw_layers: Array = cfg.get_value("cascade_impacts", "module_layers", [])
+			if not raw_layers.is_empty():
+				layer_keys.clear()
+				for raw_l in raw_layers:
+					var l_str := str(raw_l).strip_edges().to_lower()
+					if not l_str.is_empty() and not layer_keys.has(l_str):
+						layer_keys.append(l_str)
+
+	var active_flavours: Array = ScenarioManifestManager.get_active_flavours()
+	for flav in active_flavours:
+		var f_str := str(flav).strip_edges().to_lower()
+		if not f_str.is_empty() and not layer_keys.has(f_str):
+			layer_keys.append(f_str)
+
+	var discovered_files: Array[String] = []
+	for layer_name in layer_keys:
+		var base_impacts_dir := "res://data_modules/%s/impacts" % layer_name
+		var found: Array[String] = _FileSystemCrawler.find_files_recursive(base_impacts_dir, "cascade_impacts.json", ".json")
+		found.sort()
+		for f_path in found:
+			if not discovered_files.has(f_path):
+				discovered_files.append(f_path)
+
+	if discovered_files.is_empty():
+		return
+
+	var ordered_files: Array[String] = []
+	if not order_keys.is_empty():
+		for ord_key in order_keys:
+			for f_path in discovered_files:
+				var folder_metric := f_path.get_base_dir().get_file().to_upper()
+				if folder_metric == ord_key and not ordered_files.has(f_path):
+					ordered_files.append(f_path)
+	for f_path in discovered_files:
+		if not ordered_files.has(f_path):
+			ordered_files.append(f_path)
+
+	var horizon_scale: float = maxf(1.0, float(maxi(1, days_to_advance)))
+	var week_num: int = _CalendarHelper.day_to_week(sim_day)
+	var cal_date: String = _CalendarHelper.day_to_calendar_date(sim_day)
+	var dow: int = _CalendarHelper.day_of_week(sim_day)
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var leader_id: String = str(world_state.get("operations", {}).get("leader_resident_id", "PLAYER")).strip_edges()
+
+	for file_path in ordered_files:
+		var doc: Dictionary = ScenarioManifestManager.load_json_file(file_path)
+		var rules_arr: Array = doc.get("cascades", []) if doc.get("cascades", null) is Array else ([doc] if not doc.is_empty() else [])
+
+		for rule_raw in rules_arr:
+			if not (rule_raw is Dictionary):
+				continue
+			var rule: Dictionary = rule_raw
+			var rule_id := str(rule.get("id", file_path.get_base_dir().get_file())).strip_edges()
+			var eval_scope := str(rule.get("scope", _ImpactRouter.get_metric_scope(rule_id))).to_upper().strip_edges()
+
+			var candidate_ids: Array[String] = []
+			if eval_scope in ["ACTOR", "RESIDENT"]:
+				for r_key in residents_dict.keys():
+					candidate_ids.append(str(r_key))
+			elif eval_scope == "DISTRICT":
+				for d_key in world_state.get("districts", {}).keys():
+					candidate_ids.append(str(d_key))
+			elif eval_scope == "ESTABLISHMENT":
+				for e_key in world_state.get("establishments", {}).keys():
+					candidate_ids.append(str(e_key))
+			else:
+				candidate_ids.append(leader_id if not leader_id.is_empty() else "PLAYER")
+
+			for cand_id in candidate_ids:
+				var ctx_directive: Dictionary = {
+					"target_resident_id": cand_id,
+					"assigned_to": cand_id,
+					"target_node_id": cand_id,
+					"horizon": horizon,
+					"days_to_advance": days_to_advance
+				}
+				if not _matches_cascade_gate(world_state, cand_id, ctx_directive, rule):
+					continue
+
+				# 1. Optional follow-on metric delta (clamped 0..100 via ImpactRouter / UniversalMetricSink)
+				var target_metric := str(rule.get("target_metric", "")).to_upper().strip_edges()
+				if not target_metric.is_empty() and rule.has("delta"):
+					var base_delta: float = float(rule["delta"])
+					var scale_by_horizon: bool = bool(rule.get("scale_by_horizon", false))
+					var applied_delta: float = (base_delta * horizon_scale) if scale_by_horizon else base_delta
+					var rec_scope := str(rule.get("target_scope", _ImpactRouter.get_metric_scope(target_metric))).to_upper().strip_edges()
+					var rec_id := cand_id if rec_scope in ["ACTOR", "RESIDENT"] else str(rule.get("target_id", cand_id))
+					_ImpactRouter.dispatch_delta(world_state, rec_id, target_metric, applied_delta)
+
+				# 2. Optional follow-on action trigger (Leader never forced; non-Leader evaluated via OCEAN/probability)
+				if rule.has("follow_on_action") and rule["follow_on_action"] is Dictionary:
+					var act_cfg: Dictionary = rule["follow_on_action"]
+					var is_leader := (cand_id == leader_id or cand_id == "PLAYER")
+					if is_leader:
+						continue
+					var res_rec: Dictionary = _lookup_resident_record(residents_dict, cand_id)
+					if _should_non_leader_act(sim_day, rule_id, cand_id, res_rec, act_cfg):
+						var follow_verb := str(act_cfg.get("verb", "")).to_upper().strip_edges()
+						if not follow_verb.is_empty():
+							var follow_dir: Dictionary = {
+								"verb": follow_verb,
+								"initiator_id": cand_id,
+								"assigned_to": cand_id,
+								"target_resident_id": cand_id,
+								"target_node_id": str(res_rec.get("current_district_id", "")),
+								"cascade_source": rule_id
+							}
+							var f_res: Dictionary = execute_directive(world_state, follow_dir)
+							var f_msg := str(f_res.get("message", follow_verb))
+							executed_events.append({
+								"trigger_type": "CASCADE_ACTION",
+								"day_offset": sim_day,
+								"calendar_date": cal_date,
+								"week": week_num,
+								"day_of_week": dow,
+								"verb": follow_verb,
+								"target_item": rule_id,
+								"success": bool(f_res.get("success", false)),
+								"message": f_msg,
+								"author": _resolve_directive_author(world_state, follow_dir),
+								"target_node_id": str(follow_dir.get("target_node_id", "")),
+								"directive_snapshot": follow_dir
+							})
+							diary_memos.append(f_msg)
+
+static func _matches_cascade_gate(
+	world_state: Dictionary,
+	entity_id: String,
+	directive: Dictionary,
+	rule: Dictionary
+) -> bool:
+	if not _matches_impact_conditions(world_state, directive, rule):
+		return false
+
+	var gate: Dictionary = rule.get("metric_gate", {}) if rule.get("metric_gate", null) is Dictionary else {}
+	if gate.is_empty():
+		return true
+
+	var metric_field := str(gate.get("field", "")).strip_edges()
+	if metric_field.is_empty():
+		return true
+
+	var curr_val: float = _read_zero_baseline_metric(world_state, entity_id, metric_field)
+	var target_val: float = float(gate.get("value", 0.0))
+	var op := str(gate.get("operator", ">=")).strip_edges()
+	return _ConditionEvaluator.evaluate_gate({
+		"current": curr_val,
+		"target": target_val,
+		"operator": op
+	})
+
+static func _read_zero_baseline_metric(world_state: Dictionary, entity_id: String, field_name: String) -> float:
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var rec: Dictionary = _lookup_resident_record(residents_dict, entity_id)
+	if not rec.is_empty():
+		return float(rec.get(field_name, 0.0))
+
+	for pool_key in ["districts", "establishments", "caches"]:
+		var pool: Dictionary = world_state.get(pool_key, {})
+		if pool.has(entity_id) and pool[entity_id] is Dictionary:
+			return float(pool[entity_id].get(field_name, 0.0))
+		if entity_id.is_valid_int() and pool.has(int(entity_id)) and pool[int(entity_id)] is Dictionary:
+			return float(pool[int(entity_id)].get(field_name, 0.0))
+
+	return 0.0
+
+static func _should_non_leader_act(
+	sim_day: int,
+	rule_id: String,
+	actor_id: String,
+	res_rec: Dictionary,
+	act_cfg: Dictionary
+) -> bool:
+	var base_prob: float = float(act_cfg.get("base_probability", 0.5))
+	var trait_name := str(act_cfg.get("ocean_trait", "")).to_lower().strip_edges()
+	var trait_weight: float = float(act_cfg.get("ocean_weight", 0.0))
+	if not trait_name.is_empty() and not res_rec.is_empty():
+		var trait_val: float = float(res_rec.get(trait_name, 0.5))
+		base_prob += (trait_val - 0.5) * trait_weight
+
+	var clamped_prob: float = clampf(base_prob, 0.0, 1.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("CASCADE_ACT:%d:%s:%s" % [sim_day, rule_id, actor_id])
+	return rng.randf() <= clamped_prob
+
+static func _lookup_resident_record(residents_dict: Dictionary, entity_id: String) -> Dictionary:
+	if residents_dict.has(entity_id) and residents_dict[entity_id] is Dictionary:
+		return residents_dict[entity_id]
+	if entity_id.is_valid_int() and residents_dict.has(int(entity_id)) and residents_dict[int(entity_id)] is Dictionary:
+		return residents_dict[int(entity_id)]
+	return {}

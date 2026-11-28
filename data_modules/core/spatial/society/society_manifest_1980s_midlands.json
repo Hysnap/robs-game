@@ -57,6 +57,7 @@
     "map_overlays": "res://data_modules/core/spatial/districts/map_overlay_profiles.json",
     "obligation_types": "res://data_modules/core/economy/obligation_types.json",
     "ocean_personality": "res://data_modules/core/spatial/society/ocean_personality_rules.json",
+    "resident_routines": "res://data_modules/core/spatial/society/resident_routines.json",
     "route_rounds": "res://data_modules/core/spatial/society/route_rounds.json",
     "settlement_rails": "res://data_modules/core/economy/settlement_rails.json",
     "spatial_lexicon": "res://data_modules/core/spatial/districts/names/en_gb.json",

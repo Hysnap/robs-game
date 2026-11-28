@@ -5,6 +5,7 @@
     "description": "Stamps current_sim_day onto operations.paused_standing_orders_day.<resident_id> so recurring standing orders are ignored for that single run."
   },
   "metric_id": "PAUSE_STANDING_ORDERS",
+  "metric_class": "CONTROL_FLAG",
   "target_scope": "OPERATIONS_STAMP",
   "state_field": "paused_standing_orders_day",
   "tuning": {
