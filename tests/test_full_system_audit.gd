@@ -86,7 +86,7 @@ func _init() -> void:
 				"actual_building_count": 1,
 				"expected_pop_min": 0,
 				"expected_pop_max": 0,
-				"unemployment_rate": 0.05,
+				"unemployment_rate": 5.0,
 				"spatial_anchor": Vector2.ZERO
 			},
 			"dist_market_parade": {
@@ -97,7 +97,7 @@ func _init() -> void:
 				"actual_building_count": 2,
 				"expected_pop_min": 40,
 				"expected_pop_max": 80,
-				"unemployment_rate": 0.08,
+				"unemployment_rate": 8.0,
 				"spatial_anchor": Vector2(250.0, 0.0),
 				"building_allocations": [
 					{"building_index": 0, "habitable_units": 6, "commercial_units": 2, "industrial_units": 0},
@@ -112,7 +112,7 @@ func _init() -> void:
 				"actual_building_count": 1,
 				"expected_pop_min": 0,
 				"expected_pop_max": 0,
-				"unemployment_rate": 0.12,
+				"unemployment_rate": 12.0,
 				"spatial_anchor": Vector2(0.0, 250.0),
 				"building_allocations": [
 					{"building_index": 0, "habitable_units": 0, "commercial_units": 0, "industrial_units": 2}

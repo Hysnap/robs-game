@@ -80,7 +80,7 @@ func _init() -> void:
 		"districts": {
 			"DIST_ASTON_01": {
 				"display_name": "Aston Central",
-				"actual_police_heat": 0.10,
+				"actual_police_heat": 10.0,
 				"zone_health_index": 80.0,
 				"regulatory_scrutiny": 0.0
 			}
@@ -130,7 +130,7 @@ func _init() -> void:
 	var aston = world_state["districts"]["DIST_ASTON_01"]
 	var heat_post_sale: float = float(aston["actual_police_heat"])
 	print("  ✓ Aston Police Heat (Post-Sale): ", heat_post_sale)
-	assert(heat_post_sale > 0.10, "ERROR: Heat delta failed to sink into district!")
+	assert(heat_post_sale > 10.0, "ERROR: Heat delta failed to sink into district on the 0-100 scale!")
 
 	# STEP 4: GENUINE IDLE TURN CYCLE
 	print("\n[STEP 4] Executing Genuine Idle Turn Cycle (SimController.process_turn_cycle)...")

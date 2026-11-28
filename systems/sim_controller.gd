@@ -192,6 +192,7 @@ static func _apply_calendar_event_impacts(
 ## with 1-hour continuous timeline scheduling and witness/ownership feedback slip filtering.
 static func process_turn_cycle(world_state: Dictionary, staged_directives: Array) -> Dictionary:
 	SystemLogger.log_info("[SimController] Processing turn cycle with %d staged directives." % staged_directives.size())
+	_ImpactRouter.dispatch_cycle_start(world_state)
 	var meta: Dictionary = world_state.get("metadata", {})
 	var start_day: int = _CalendarHelper.get_current_sim_day(world_state)
 	var current_day: int = start_day

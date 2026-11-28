@@ -6,6 +6,7 @@
   },
   "metric_id": "INVENTORY",
   "metric_class": "FACTUAL_COUNTER",
+  "target_scope": "INVENTORY",
   "label_token": "UI_METRIC_INVENTORY",
   "format": "INTEGER",
   "decimals": 0,

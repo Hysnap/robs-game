@@ -9,7 +9,7 @@
   "label_token": "UI_METRIC_STAFF_SKIM",
   "target_scope": "ACTOR",
   "routing_mode": "ACTOR_FALLBACK",
-  "state_container": "staff",
+  "state_container": "residents",
   "state_field": "actual_skim",
   "format": "PERCENT",
   "decimals": 1,
@@ -18,7 +18,7 @@
   "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "staff.{id}.actual_skim"
+    "state_path": "residents.{id}.actual_skim"
   },
   "tuning": {
     "minimum_floor": 0.0,

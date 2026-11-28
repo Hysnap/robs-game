@@ -25,6 +25,7 @@ var max_ceiling: float = 1.0
 var default_baseline: float = 0.0
 var allow_negative: bool = false
 var discovery_floor: float = 0.0
+var reset_on_cycle: bool = false
 
 # Ambient Heartbeat Configuration
 var ambient_rate: float = 0.0
@@ -45,6 +46,7 @@ func _init(profile: Dictionary) -> void:
 	_apply_metric_class_defaults(profile, tuning)
 	allow_negative = bool(tuning.get("allow_negative_balance", tuning.get("allow_negative_stock", false)))
 	discovery_floor = float(tuning.get("discovery_floor", min_floor))
+	reset_on_cycle = bool(tuning.get("reset_on_cycle", false))
 
 	_resolve_route_from_manifest(profile)
 	_configure_ambient_rule(profile, tuning)
@@ -66,19 +68,17 @@ func _resolve_metric_class(profile: Dictionary, tuning: Dictionary) -> String:
 func _apply_metric_class_defaults(profile: Dictionary, tuning: Dictionary) -> void:
 	var has_explicit_min: bool = tuning.has("minimum_floor") or profile.has("min_value")
 	var has_explicit_max: bool = tuning.has("maximum_ceiling") or profile.has("max_value")
+	default_baseline = _resolve_default_baseline(tuning)
 	match metric_class:
 		"BIPOLAR_IMPACT":
 			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", -100.0))) if has_explicit_min else -100.0
 			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
-			default_baseline = 0.0
 		"PERC_MEASURE":
 			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
 			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
-			default_baseline = 0.0
 		"FACTUAL_COUNTER":
 			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
 			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", INF))) if has_explicit_max else INF
-			default_baseline = 0.0
 		"CONTROL_FLAG":
 			min_floor = 0.0
 			max_ceiling = 1.0
@@ -86,7 +86,14 @@ func _apply_metric_class_defaults(profile: Dictionary, tuning: Dictionary) -> vo
 		_:
 			min_floor = float(tuning.get("minimum_floor", profile.get("min_value", 0.0))) if has_explicit_min else 0.0
 			max_ceiling = float(tuning.get("maximum_ceiling", profile.get("max_value", 100.0))) if has_explicit_max else 100.0
-			default_baseline = 0.0
+
+func _resolve_default_baseline(tuning: Dictionary) -> float:
+	if tuning.has("default_baseline"):
+		return float(tuning["default_baseline"])
+	for key in tuning.keys():
+		if str(key).begins_with("default_baseline_"):
+			return float(tuning[key])
+	return 0.0
 
 func _resolve_route_from_manifest(profile: Dictionary) -> void:
 	var legacy_mode: String = str(profile.get("routing_mode", "")).to_upper()
@@ -146,6 +153,15 @@ func get_metric_key() -> String:
 
 func get_target_scope() -> String:
 	return target_scope
+
+func reset_for_cycle(world_state: Dictionary) -> void:
+	if not reset_on_cycle or route_path.is_empty():
+		return
+
+	var segments: Array[String] = []
+	for segment in route_path.split("."):
+		segments.append(segment.replace("{state_container}", state_container).replace("{state_field}", state_field))
+	_walk_cycle_reset(world_state, segments, 0)
 
 ## 2. ACTION IMPULSE (Delta Application via Route Template)
 func apply_delta(world_state: Dictionary, target_id: String, delta: float) -> void:
@@ -256,8 +272,14 @@ func _mutate_path(world_state: Dictionary, template: String, tokens: Dictionary,
 
 	var cur_val: float = float(cur_node.get(leaf_key, default_baseline))
 	var updated: float = cur_val + delta
-	var is_unbounded: bool = is_inf(max_ceiling) or metric_class == "FACTUAL_COUNTER"
-	var final_val: float = updated if (allow_negative or is_unbounded) else clampf(updated, min_floor, max_ceiling)
+	var is_unbounded: bool = is_inf(max_ceiling)
+	var final_val: float
+	if allow_negative:
+		final_val = updated
+	elif is_unbounded:
+		final_val = maxf(updated, min_floor)
+	else:
+		final_val = clampf(updated, min_floor, max_ceiling)
 
 	if erase_at_min and final_val <= min_floor:
 		cur_node.erase(leaf_key)
@@ -320,3 +342,20 @@ func _walk_ambient(node: Variant, segments: Array[String], depth: int, root_stat
 		_walk_ambient(child, segments, depth + 1, root_state)
 		if erase_at_min and child is Dictionary and child.is_empty():
 			dict_node.erase(seg)
+
+func _walk_cycle_reset(node: Variant, segments: Array[String], depth: int) -> void:
+	if not (node is Dictionary) or depth >= segments.size():
+		return
+
+	var dict_node: Dictionary = node
+	var seg := segments[depth]
+	if depth == segments.size() - 1:
+		if dict_node.has(seg):
+			dict_node[seg] = 0.0
+		return
+
+	if seg.begins_with("{") and seg.ends_with("}"):
+		for key in dict_node.keys():
+			_walk_cycle_reset(dict_node[key], segments, depth + 1)
+	elif dict_node.has(seg):
+		_walk_cycle_reset(dict_node[seg], segments, depth + 1)

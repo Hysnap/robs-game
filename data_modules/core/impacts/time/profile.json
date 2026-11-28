@@ -9,7 +9,7 @@
   "label_token": "UI_METRIC_OPERATIONAL_TIME",
   "target_scope": "ACTOR",
   "routing_mode": "ACTOR_FALLBACK",
-  "state_container": "staff",
+  "state_container": "residents",
   "state_field": "shift_time_spent",
   "format": "FLOAT",
   "decimals": 2,
@@ -18,7 +18,7 @@
   "suffix": "h",
   "telemetry_source": {
     "type": "WORLD_STATE",
-    "state_path": "staff.{id}.shift_time_spent"
+    "state_path": "residents.{id}.shift_time_spent"
   },
   "tuning": {
     "default_baseline": 0.0,

@@ -48,7 +48,8 @@ static func process_inventory_decay(world_state: Dictionary) -> void:
 
 		# 5. REUSE IMPACT CALCULATOR (Zero duplicate math)
 		# Evaluates the exact delta lost (negative float)
-		var delta_lost: float = CALCULATOR.calculate(model, current_qty, factor, params)
+		var calculated_delta: float = CALCULATOR.calculate(model, current_qty, factor, params)
+		var delta_lost: float = clampf(calculated_delta, -current_qty, 0.0)
 
 		# 6. REUSE IMPACT ROUTER
 		if delta_lost != 0.0:

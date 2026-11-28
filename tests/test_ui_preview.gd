@@ -46,9 +46,9 @@ func _ready() -> void:
 		"total_households": 1240,
 		"occupied_households": 1110,
 		"disposable_income": 42.50,
-		"employment_rate": 0.86,
-		"unemployment_rate": 0.14,
-		"actual_police_heat": 0.32,
+		"employment_rate": 86.0,
+		"unemployment_rate": 14.0,
+		"actual_police_heat": 32.0,
 		"zone_health_index": 54.0,
 		"establishments_summary": [
 			{

@@ -79,9 +79,9 @@ func _test_compiled_component(schema_path: String) -> void:
 	# Test mock binding
 	var mock_data := {
 		"population": 1250,
-		"unemployment_rate": 0.125,
+		"unemployment_rate": 12.5,
 		"disposable_income": 45.50,
-		"actual_police_heat": 0.35,
+		"actual_police_heat": 35.0,
 		"liquid_cash": 250.00
 	}
 	if instance.has_method("bind_data"):
