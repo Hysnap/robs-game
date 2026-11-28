@@ -5,6 +5,9 @@ extends RefCounted
 const _CalendarHelper = preload("res://systems/calendar_helper.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 const _SocietyQueries = preload("res://systems/society_queries.gd")
+const _IntelManager = preload("res://systems/multilayer_info_loop/intel_manager.gd")
+
+const PUBLIC_VISIBILITY_SCOPES: Array[String] = ["PUBLIC", "GLOBAL", "JURISDICTION"]
 
 ## Builds the perception-scoped month grid and selected-day agenda for CalendarNavigator
 static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Dictionary = {}) -> Dictionary:
@@ -18,6 +21,8 @@ static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Di
 		selected_day = current_day if (current_day >= start_day and current_day <= end_day) else start_day
 
 	var crew_ids := _extract_crew_ids(ws)
+	var intel_ctx: Dictionary = _IntelManager.build_player_intel_context(ws)
+	var observers: Array = intel_ctx.get("observers", [])
 	var events: Array = _ObligationLedger.get_calendar_events_in_window(start_day, end_day)
 	var linked_event_ids: Dictionary = _SocietyQueries.get_crew_linked_event_ids(crew_ids)
 	var standalone_obligations: Array = _SocietyQueries.get_crew_standalone_obligations_in_window(crew_ids, start_day, end_day)
@@ -25,14 +30,23 @@ static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Di
 	var marked_days: Dictionary = {}
 	var selected_day_items: Array[Dictionary] = []
 	var districts: Dictionary = ws.get("districts", {})
+	var establishments: Dictionary = ws.get("establishments", {})
 
 	for ev in events:
 		if not (ev is Dictionary):
 			continue
 		var ev_id := int(ev.get("event_id", 0))
 		var vis := str(ev.get("visibility_scope", "PUBLIC")).strip_edges().to_upper()
-		if vis == "PRIVATE" and not linked_event_ids.has(ev_id):
-			continue
+		var is_open_or_linked: bool = PUBLIC_VISIBILITY_SCOPES.has(vis) or linked_event_ids.has(ev_id)
+		var ev_score: float = 100.0
+		if not is_open_or_linked:
+			if ev_id <= 0:
+				continue
+			ev_score = _IntelManager.get_collective_score(ws, observers, "EVENT", str(ev_id))
+			if not _IntelManager.is_entity_known(ev_score, "EVENT"):
+				continue
+			if not _IntelManager.is_field_exposed(ev_score, "EVENT", "scheduled_day"):
+				continue
 
 		var ev_start := maxi(start_day, int(ev.get("start_day", start_day)))
 		var ev_end := mini(end_day, int(ev.get("end_day", ev_start)))
@@ -40,13 +54,15 @@ static func build_calendar_payload(ws: Dictionary, current_day: int, payload: Di
 			marked_days[d] = true
 
 		if selected_day >= int(ev.get("start_day", start_day)) and selected_day <= int(ev.get("end_day", ev_start)):
-			var loc_id := str(ev.get("location_id", "")).strip_edges()
+			var raw_loc_id := str(ev.get("location_id", "")).strip_edges()
+			var exposed_loc_id: String = _project_event_location_id(raw_loc_id, establishments, is_open_or_linked, ev_score)
 			var status_str := str(ev.get("status", "SCHEDULED")).to_upper()
 			selected_day_items.append({
 				"title_token": str(ev.get("title_token", "UI_EVENT_DEFAULT")),
-				"location_id": loc_id,
-				"location_label": _resolve_location_label(districts, loc_id),
+				"location_id": exposed_loc_id,
+				"location_label": _resolve_location_label(districts, exposed_loc_id),
 				"event_id": ev_id,
+				"intel_score": ev_score,
 				"can_attend": (status_str in ["SCHEDULED", "ACTIVE"]) and (selected_day >= current_day)
 			})
 
@@ -97,6 +113,24 @@ static func _extract_crew_ids(ws: Dictionary) -> Array[String]:
 			if not rid.is_empty():
 				crew_ids.append(rid)
 	return crew_ids
+
+static func _project_event_location_id(
+	raw_loc_id: String,
+	establishments: Dictionary,
+	is_open_or_linked: bool,
+	ev_score: float
+) -> String:
+	if is_open_or_linked or raw_loc_id.is_empty():
+		return raw_loc_id
+	if _IntelManager.is_field_exposed(ev_score, "EVENT", "establishment_id") or _IntelManager.is_field_exposed(ev_score, "EVENT", "venue_name"):
+		return raw_loc_id
+	if raw_loc_id.begins_with("ESTABLISHMENT:"):
+		var est_tok := raw_loc_id.trim_prefix("ESTABLISHMENT:")
+		var est_key: Variant = int(est_tok) if est_tok.is_valid_int() else est_tok
+		if establishments.has(est_key) and establishments[est_key] is Dictionary:
+			return str(establishments[est_key].get("district_id", "")).strip_edges()
+		return ""
+	return raw_loc_id
 
 static func _resolve_location_label(districts: Dictionary, loc_id: String) -> String:
 	if loc_id.is_empty():

@@ -5,9 +5,14 @@
     "description": "Continuous 0-100 sparse observer-to-target knowledge score routed via the KNOWLEDGE path template."
   },
   "metric_id": "INTEL_SCORE",
+  "metric_class": "SEVERITY_IMPACT",
   "target_scope": "KNOWLEDGE",
   "state_container": "knowledge_pools",
   "state_field": "score",
+  "format": "FLOAT",
+  "decimals": 0,
+  "min_value": 0.0,
+  "max_value": 100.0,
   "tuning": {
     "minimum_floor": 0.0,
     "maximum_ceiling": 100.0,

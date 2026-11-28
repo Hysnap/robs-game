@@ -16,6 +16,7 @@ const BUSINESS_RULES_PATH: String = "res://data_modules/core/business_rules.cfg"
 const _DBManager = preload("res://systems/db_manager.gd")
 const _ObligationLedger = preload("res://systems/economy/obligation_ledger.gd")
 const _MacroEconomyProcessor = preload("res://systems/economy/macro_economy_processor.gd")
+const _LifeCycleProcessor = preload("res://systems/life_cycle_processor.gd")
 
 const WINDOW_ANCHOR_HOURS := {
 	"EARLY_MORNING": 6.0,
@@ -204,6 +205,16 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		var cfg := ConfigFile.new()
 		if cfg.load(BUSINESS_RULES_PATH) == OK:
 			strict_halt = bool(cfg.get_value("turn_execution", "strict_fifo_halt_on_failure", false))
+	
+	var horizon_preview: Dictionary = _resolve_horizon_step(meta, horizon)
+	_evaluate_cascade_impacts(
+		world_state,
+		start_day,
+		horizon,
+		int(horizon_preview.get("days", 1)),
+		executed_events,
+		diary_memos
+	)
 
 	var day_queue: Array[Dictionary] = _build_day_execution_queue(world_state, staged_directives, start_day, diary_memos)
 	var halted_agents: Dictionary = {}
@@ -345,6 +356,17 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	var crossed_boundary := _CalendarHelper.crosses_week_boundary(start_day, days_to_advance)
 	var economy_rollover: Dictionary = {}
+	var life_cycle_rollover := {
+		"scheduled_births": 0,
+		"scheduled_deaths": 0,
+		"scheduled_illnesses": 0,
+		"scheduled_outbreaks": 0,
+		"births_resolved": 0,
+		"deaths_resolved": 0,
+		"illnesses_started": 0,
+		"illnesses_recovered": 0,
+		"health_records_in_memory": 0
+	}
 	var obligation_rollover := {
 		"delivered_mail": [],
 		"cleared_settlements": [],
@@ -358,9 +380,28 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 
 	for step in range(1, days_to_advance + 1):
 		var day_tick: int = start_day + step
+		var tick_month_meta: Dictionary = _CalendarHelper.get_month_grid_meta(day_tick, 0)
+		var tick_month_key: String = "%04d-%02d" % [int(tick_month_meta["year"]), int(tick_month_meta["month"])]
+		if str(meta.get("lifecycle_last_scheduled_month", "")) != tick_month_key:
+			var sched_res: Dictionary = _LifeCycleProcessor.schedule_upcoming_month_events(world_state, day_tick)
+			life_cycle_rollover["scheduled_births"] += int(sched_res.get("scheduled_births", 0))
+			life_cycle_rollover["scheduled_deaths"] += int(sched_res.get("scheduled_deaths", 0))
+			life_cycle_rollover["scheduled_illnesses"] += int(sched_res.get("scheduled_illnesses", 0))
+			life_cycle_rollover["scheduled_outbreaks"] += int(sched_res.get("scheduled_outbreaks", 0))
+			meta["lifecycle_last_scheduled_month"] = tick_month_key
 		if step > 1:
 			_execute_standing_orders_for_rollover_day(world_state, day_tick, executed_events, diary_memos)
 		var daily_res: Dictionary = _ObligationLedger.process_daily_tick(day_tick)
+		var lc_daily: Dictionary = _LifeCycleProcessor.process_daily_resolution(
+			world_state,
+			day_tick,
+			daily_res.get("activated_events", [])
+		)
+		life_cycle_rollover["births_resolved"] += int(lc_daily.get("births_resolved", 0))
+		life_cycle_rollover["deaths_resolved"] += int(lc_daily.get("deaths_resolved", 0))
+		life_cycle_rollover["illnesses_started"] += int(lc_daily.get("illnesses_started", 0))
+		life_cycle_rollover["illnesses_recovered"] += int(lc_daily.get("illnesses_recovered", 0))
+		life_cycle_rollover["health_records_in_memory"] = int(lc_daily.get("health_records_in_memory", 0))
 		obligation_rollover["delivered_mail"].append_array(daily_res.get("delivered_mail", []))
 		obligation_rollover["cleared_settlements"].append_array(daily_res.get("cleared_settlements", []))
 		obligation_rollover["dishonoured_settlements"].append_array(daily_res.get("dishonoured_settlements", []))
@@ -421,6 +462,7 @@ static func process_turn_cycle(world_state: Dictionary, staged_directives: Array
 		"background_district_count": district_partition["background_count"],
 		"week_rollover": crossed_boundary,
 		"economy_rollover": economy_rollover,
+		"life_cycle_rollover": life_cycle_rollover,
 		"obligation_rollover": obligation_rollover,
 		"executed_events": witnessed_events,
 		"all_executed_events": executed_events,
@@ -1116,3 +1158,216 @@ static func _resolve_directive_author(world_state: Dictionary, directive: Dictio
 			return combined
 
 	return agent_id
+
+## Evaluates cascade_impacts.json rules once at the start of a turn before scheduled/ordered actions run.
+## Supports configurable ordering/layers in business_rules.cfg, 0.0 baseline defaults, metric deltas,
+## and OCEAN/probability-gated follow-on actions for non-Leader actors.
+static func _evaluate_cascade_impacts(
+	world_state: Dictionary,
+	sim_day: int,
+	horizon: String,
+	days_to_advance: int,
+	executed_events: Array,
+	diary_memos: Array[String]
+) -> void:
+	var order_keys: Array[String] = []
+	var layer_keys: Array[String] = ["core"]
+
+	if FileAccess.file_exists(BUSINESS_RULES_PATH):
+		var cfg := ConfigFile.new()
+		if cfg.load(BUSINESS_RULES_PATH) == OK:
+			for raw_k in cfg.get_value("cascade_impacts", "evaluation_order", []):
+				var k_str := str(raw_k).strip_edges().to_upper()
+				if not k_str.is_empty():
+					order_keys.append(k_str)
+			var raw_layers: Array = cfg.get_value("cascade_impacts", "module_layers", [])
+			if not raw_layers.is_empty():
+				layer_keys.clear()
+				for raw_l in raw_layers:
+					var l_str := str(raw_l).strip_edges().to_lower()
+					if not l_str.is_empty() and not layer_keys.has(l_str):
+						layer_keys.append(l_str)
+
+	var active_flavours: Array = ScenarioManifestManager.get_active_flavours()
+	for flav in active_flavours:
+		var f_str := str(flav).strip_edges().to_lower()
+		if not f_str.is_empty() and not layer_keys.has(f_str):
+			layer_keys.append(f_str)
+
+	var discovered_files: Array[String] = []
+	for layer_name in layer_keys:
+		var base_impacts_dir := "res://data_modules/%s/impacts" % layer_name
+		var found: Array[String] = _FileSystemCrawler.find_files_recursive(base_impacts_dir, "cascade_impacts.json", ".json")
+		found.sort()
+		for f_path in found:
+			if not discovered_files.has(f_path):
+				discovered_files.append(f_path)
+
+	if discovered_files.is_empty():
+		return
+
+	var ordered_files: Array[String] = []
+	if not order_keys.is_empty():
+		for ord_key in order_keys:
+			for f_path in discovered_files:
+				var folder_metric := f_path.get_base_dir().get_file().to_upper()
+				if folder_metric == ord_key and not ordered_files.has(f_path):
+					ordered_files.append(f_path)
+	for f_path in discovered_files:
+		if not ordered_files.has(f_path):
+			ordered_files.append(f_path)
+
+	var horizon_scale: float = maxf(1.0, float(maxi(1, days_to_advance)))
+	var week_num: int = _CalendarHelper.day_to_week(sim_day)
+	var cal_date: String = _CalendarHelper.day_to_calendar_date(sim_day)
+	var dow: int = _CalendarHelper.day_of_week(sim_day)
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var leader_id: String = str(world_state.get("operations", {}).get("leader_resident_id", "PLAYER")).strip_edges()
+
+	for file_path in ordered_files:
+		var doc: Dictionary = ScenarioManifestManager.load_json_file(file_path)
+		var rules_arr: Array = doc.get("cascades", []) if doc.get("cascades", null) is Array else ([doc] if not doc.is_empty() else [])
+
+		for rule_raw in rules_arr:
+			if not (rule_raw is Dictionary):
+				continue
+			var rule: Dictionary = rule_raw
+			var rule_id := str(rule.get("id", file_path.get_base_dir().get_file())).strip_edges()
+			var eval_scope := str(rule.get("scope", _ImpactRouter.get_metric_scope(rule_id))).to_upper().strip_edges()
+
+			var candidate_ids: Array[String] = []
+			if eval_scope in ["ACTOR", "RESIDENT"]:
+				for r_key in residents_dict.keys():
+					candidate_ids.append(str(r_key))
+			elif eval_scope == "DISTRICT":
+				for d_key in world_state.get("districts", {}).keys():
+					candidate_ids.append(str(d_key))
+			elif eval_scope == "ESTABLISHMENT":
+				for e_key in world_state.get("establishments", {}).keys():
+					candidate_ids.append(str(e_key))
+			else:
+				candidate_ids.append(leader_id if not leader_id.is_empty() else "PLAYER")
+
+			for cand_id in candidate_ids:
+				var ctx_directive: Dictionary = {
+					"target_resident_id": cand_id,
+					"assigned_to": cand_id,
+					"target_node_id": cand_id,
+					"horizon": horizon,
+					"days_to_advance": days_to_advance
+				}
+				if not _matches_cascade_gate(world_state, cand_id, ctx_directive, rule):
+					continue
+
+				# 1. Optional follow-on metric delta (clamped 0..100 via ImpactRouter / UniversalMetricSink)
+				var target_metric := str(rule.get("target_metric", "")).to_upper().strip_edges()
+				if not target_metric.is_empty() and rule.has("delta"):
+					var base_delta: float = float(rule["delta"])
+					var scale_by_horizon: bool = bool(rule.get("scale_by_horizon", false))
+					var applied_delta: float = (base_delta * horizon_scale) if scale_by_horizon else base_delta
+					var rec_scope := str(rule.get("target_scope", _ImpactRouter.get_metric_scope(target_metric))).to_upper().strip_edges()
+					var rec_id := cand_id if rec_scope in ["ACTOR", "RESIDENT"] else str(rule.get("target_id", cand_id))
+					_ImpactRouter.dispatch_delta(world_state, rec_id, target_metric, applied_delta)
+
+				# 2. Optional follow-on action trigger (Leader never forced; non-Leader evaluated via OCEAN/probability)
+				if rule.has("follow_on_action") and rule["follow_on_action"] is Dictionary:
+					var act_cfg: Dictionary = rule["follow_on_action"]
+					var is_leader := (cand_id == leader_id or cand_id == "PLAYER")
+					if is_leader:
+						continue
+					var res_rec: Dictionary = _lookup_resident_record(residents_dict, cand_id)
+					if _should_non_leader_act(sim_day, rule_id, cand_id, res_rec, act_cfg):
+						var follow_verb := str(act_cfg.get("verb", "")).to_upper().strip_edges()
+						if not follow_verb.is_empty():
+							var follow_dir: Dictionary = {
+								"verb": follow_verb,
+								"initiator_id": cand_id,
+								"assigned_to": cand_id,
+								"target_resident_id": cand_id,
+								"target_node_id": str(res_rec.get("current_district_id", "")),
+								"cascade_source": rule_id
+							}
+							var f_res: Dictionary = execute_directive(world_state, follow_dir)
+							var f_msg := str(f_res.get("message", follow_verb))
+							executed_events.append({
+								"trigger_type": "CASCADE_ACTION",
+								"day_offset": sim_day,
+								"calendar_date": cal_date,
+								"week": week_num,
+								"day_of_week": dow,
+								"verb": follow_verb,
+								"target_item": rule_id,
+								"success": bool(f_res.get("success", false)),
+								"message": f_msg,
+								"author": _resolve_directive_author(world_state, follow_dir),
+								"target_node_id": str(follow_dir.get("target_node_id", "")),
+								"directive_snapshot": follow_dir
+							})
+							diary_memos.append(f_msg)
+
+static func _matches_cascade_gate(
+	world_state: Dictionary,
+	entity_id: String,
+	directive: Dictionary,
+	rule: Dictionary
+) -> bool:
+	if not _matches_impact_conditions(world_state, directive, rule):
+		return false
+
+	var gate: Dictionary = rule.get("metric_gate", {}) if rule.get("metric_gate", null) is Dictionary else {}
+	if gate.is_empty():
+		return true
+
+	var metric_field := str(gate.get("field", "")).strip_edges()
+	if metric_field.is_empty():
+		return true
+
+	var curr_val: float = _read_zero_baseline_metric(world_state, entity_id, metric_field)
+	var target_val: float = float(gate.get("value", 0.0))
+	var op := str(gate.get("operator", ">=")).strip_edges()
+	return _ConditionEvaluator.evaluate_gate({
+		"current": curr_val,
+		"target": target_val,
+		"operator": op
+	})
+
+static func _read_zero_baseline_metric(world_state: Dictionary, entity_id: String, field_name: String) -> float:
+	var residents_dict: Dictionary = world_state.get("residents", {})
+	var rec: Dictionary = _lookup_resident_record(residents_dict, entity_id)
+	if not rec.is_empty():
+		return float(rec.get(field_name, 0.0))
+
+	for pool_key in ["districts", "establishments", "caches"]:
+		var pool: Dictionary = world_state.get(pool_key, {})
+		if pool.has(entity_id) and pool[entity_id] is Dictionary:
+			return float(pool[entity_id].get(field_name, 0.0))
+		if entity_id.is_valid_int() and pool.has(int(entity_id)) and pool[int(entity_id)] is Dictionary:
+			return float(pool[int(entity_id)].get(field_name, 0.0))
+
+	return 0.0
+
+static func _should_non_leader_act(
+	sim_day: int,
+	rule_id: String,
+	actor_id: String,
+	res_rec: Dictionary,
+	act_cfg: Dictionary
+) -> bool:
+	var base_prob: float = float(act_cfg.get("base_probability", 0.5))
+	var trait_name := str(act_cfg.get("ocean_trait", "")).to_lower().strip_edges()
+	var trait_weight: float = float(act_cfg.get("ocean_weight", 0.0))
+	if not trait_name.is_empty() and not res_rec.is_empty():
+		var trait_val: float = float(res_rec.get(trait_name, 0.5))
+		base_prob += (trait_val - 0.5) * trait_weight
+
+	var clamped_prob: float = clampf(base_prob, 0.0, 1.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("CASCADE_ACT:%d:%s:%s" % [sim_day, rule_id, actor_id])
+	return rng.randf() <= clamped_prob
+
+static func _lookup_resident_record(residents_dict: Dictionary, entity_id: String) -> Dictionary:
+	if residents_dict.has(entity_id) and residents_dict[entity_id] is Dictionary:
+		return residents_dict[entity_id]
+	if entity_id.is_valid_int() and residents_dict.has(int(entity_id)) and residents_dict[int(entity_id)] is Dictionary:
+		return residents_dict[int(entity_id)]
+	return {}

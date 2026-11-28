@@ -5,6 +5,7 @@
     "description": "Internal theft, embezzlement, and inventory skimming by disloyal staff operatives."
   },
   "metric_id": "STAFF_SKIM",
+  "metric_class": "SEVERITY_IMPACT",
   "label_token": "UI_METRIC_STAFF_SKIM",
   "target_scope": "ACTOR",
   "routing_mode": "ACTOR_FALLBACK",
@@ -13,7 +14,7 @@
   "format": "PERCENT",
   "decimals": 1,
   "min_value": 0.0,
-  "max_value": 1.0,
+  "max_value": 100.0,
   "suffix": "%",
   "telemetry_source": {
     "type": "WORLD_STATE",
@@ -21,12 +22,12 @@
   },
   "tuning": {
     "minimum_floor": 0.0,
-    "maximum_ceiling": 1.0,
+    "maximum_ceiling": 100.0,
     "loyalty_field": "loyalty",
-    "loyalty_skim_threshold": 0.60,
+    "loyalty_skim_threshold": 60,
     "loyalty_operator": "<",
-    "ambient_skim_increment": 0.01,
-    "max_ambient_skim": 0.25
+    "ambient_skim_increment": 1,
+    "max_ambient_skim": 25
   },
   "perception": {
     "bucket_channel": {
@@ -40,9 +41,9 @@
       "error_floor": 0.005,
       "fallback_token": "UI_INTEL_MASKED_BLANK",
       "buckets": [
-        { "max": 0.02, "token": "UI_SKIM_NEGLIGIBLE" },
-        { "max": 0.08, "token": "UI_SKIM_SUSPECTED" },
-        { "max": 0.15, "token": "UI_SKIM_RAMPANT" },
+        { "max": 2, "token": "UI_SKIM_NEGLIGIBLE" },
+        { "max": 8, "token": "UI_SKIM_SUSPECTED" },
+        { "max": 15, "token": "UI_SKIM_RAMPANT" },
         { "token": "UI_SKIM_HEMORRHAGING" }
       ]
     }

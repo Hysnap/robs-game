@@ -5,6 +5,7 @@
     "description": "Civic infrastructure condition, structural upkeep, and district physical livability."
   },
   "metric_id": "ZONE_HEALTH",
+  "metric_class": "BIPOLAR_IMPACT",
   "label_token": "UI_METRIC_ZONE_HEALTH",
   "target_scope": "SPATIAL",
   "routing_mode": "DIRECT",
@@ -12,7 +13,7 @@
   "state_field": "zone_health_index",
   "format": "FLOAT",
   "decimals": 1,
-  "min_value": 0.0,
+  "min_value": -100.0,
   "max_value": 100.0,
   "telemetry_source": {
     "type": "WORLD_STATE",

@@ -250,3 +250,61 @@ FROM
     LEFT JOIN residents r ON w.active_resident_id = r.resident_id
 WHERE
     w.valid_to IS NULL;
+
+CREATE VIEW
+    IF NOT EXISTS v_active_health_conditions AS
+SELECT
+    rhc.condition_id,
+    rhc.resident_id,
+    r.first_name || ' ' || r.current_surname AS full_name,
+    r.household_id,
+    e.district_id,
+    d.display_name AS district_name,
+    d.borough_id,
+    b.display_name AS borough_name,
+    r.is_active_agent,
+    l_cond.code AS condition_code,
+    l_cond.title AS condition_title,
+    rhc.severity,
+    rhc.is_contagious,
+    rhc.is_chronic,
+    rhc.is_diagnosed,
+    rhc.is_treated,
+    rhc.contracted_day,
+    date (
+        (
+            SELECT
+                value
+            FROM
+                world_metadata
+            WHERE
+                key = 'epoch_date'
+        ),
+        '+' || rhc.contracted_day || ' days'
+    ) AS formatted_contracted_date,
+    rhc.expected_recovery_day,
+    CASE
+        WHEN rhc.expected_recovery_day IS NOT NULL THEN date (
+            (
+                SELECT
+                    value
+                FROM
+                    world_metadata
+                WHERE
+                    key = 'epoch_date'
+            ),
+            '+' || rhc.expected_recovery_day || ' days'
+        )
+        ELSE NULL
+    END AS formatted_expected_recovery_date
+FROM
+    resident_health_conditions rhc
+    JOIN residents r ON rhc.resident_id = r.resident_id
+    JOIN households h ON r.household_id = h.household_id
+    JOIN establishments e ON h.establishment_id = e.establishment_id
+    JOIN districts d ON e.district_id = d.district_id
+    LEFT JOIN boroughs b ON d.borough_id = b.borough_id
+    JOIN system_labels l_cond ON rhc.condition_label_id = l_cond.label_id
+WHERE
+    rhc.valid_to IS NULL
+    AND r.dod IS NULL;

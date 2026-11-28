@@ -5,9 +5,12 @@
     "description": "Ratio of occupied residential doors to total residential premises within a spatial catchment"
   },
   "metric_id": "OCCUPIED_PROPERTIES",
+  "metric_class": "PERC_MEASURE",
   "label_token": "UI_METRIC_OCCUPIED_PROPERTIES",
   "format": "PERCENT",
   "decimals": 1,
+  "min_value": 0.0,
+  "max_value": 100.0,
   "target_scope": "SPATIAL",
   "telemetry_source": {
     "type": "SQLITE_DYNAMIC",
@@ -26,10 +29,10 @@
     "error_floor": 0.01,
     "fallback_token": "UI_INTEL_MASKED_BLANK",
     "buckets": [
-      { "max": 0.20, "token": "UI_OCC_ABANDONED" },
-      { "max": 0.50, "token": "UI_OCC_SPARSE" },
-      { "max": 0.80, "token": "UI_OCC_MODERATE" },
-      { "max": 0.95, "token": "UI_OCC_HIGH" },
+      { "max": 20, "token": "UI_OCC_ABANDONED" },
+      { "max": 50, "token": "UI_OCC_SPARSE" },
+      { "max": 80, "token": "UI_OCC_MODERATE" },
+      { "max": 95, "token": "UI_OCC_HIGH" },
       { "token": "UI_OCC_SATURATED" }
     ]
   }

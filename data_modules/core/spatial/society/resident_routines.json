@@ -1,0 +1,388 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "scope": "RESIDENT_ROUTINES",
+    "era": "1970s-1980s",
+    "region": "United Kingdom",
+    "description": "Clock-hour bounds for canonical SCHEDULE_WINDOW tokens, religion-mapped worship schedules, school runs, shopping, civic errands, local GP/dental visits, and life-milestone ceremonies. Work schedules and shift rotations are read directly from job_definitions.json."
+  },
+  "schedule_window_hours": {
+    "MORNING": {
+      "start_hour": 6.0,
+      "end_hour": 14.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "DAYTIME": {
+      "start_hour": 8.5,
+      "end_hour": 17.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "DAYTIME_OFFICE": {
+      "start_hour": 9.0,
+      "end_hour": 17.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "DAYTIME_SCHOOL": {
+      "start_hour": 9.0,
+      "end_hour": 15.5,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "AFTERNOON": {
+      "start_hour": 14.0,
+      "end_hour": 22.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "EVENING": {
+      "start_hour": 17.0,
+      "end_hour": 23.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "NIGHT": {
+      "start_hour": 22.0,
+      "end_hour": 6.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "WEEKEND": {
+      "start_hour": 9.0,
+      "end_hour": 17.0,
+      "default_days": [6, 7],
+      "commute_hours": 0.5
+    },
+    "FLEXIBLE": {
+      "start_hour": 9.0,
+      "end_hour": 16.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "FLEXIBLE_DAYTIME": {
+      "start_hour": 9.0,
+      "end_hour": 16.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "FLEXIBLE_ON_CALL": {
+      "start_hour": 8.0,
+      "end_hour": 18.0,
+      "default_days": [1, 2, 3, 4, 5, 6],
+      "commute_hours": 0.5
+    },
+    "REGULATED_FULL_TIME": {
+      "start_hour": 8.5,
+      "end_hour": 17.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    },
+    "SPLIT_SHIFT": {
+      "start_hour": 7.0,
+      "end_hour": 19.0,
+      "default_days": [1, 2, 3, 4, 5],
+      "commute_hours": 0.5
+    }
+  },
+  "interaction_profiles": {
+    "WORK_SHIFT": {
+      "contact_density": 0.65,
+      "infection_vector_weight": 0.6,
+      "gossip_exchange_weight": 0.7
+    },
+    "COMMUTE_WALK": {
+      "contact_density": 0.25,
+      "infection_vector_weight": 0.15,
+      "gossip_exchange_weight": 0.2
+    },
+    "COMMUTE_BUS": {
+      "contact_density": 0.8,
+      "infection_vector_weight": 0.75,
+      "gossip_exchange_weight": 0.45
+    },
+    "SCHOOL_DROP_OFF": {
+      "contact_density": 0.85,
+      "infection_vector_weight": 0.7,
+      "gossip_exchange_weight": 0.9
+    },
+    "SCHOOL_ATTENDANCE": {
+      "contact_density": 0.9,
+      "infection_vector_weight": 0.9,
+      "gossip_exchange_weight": 0.55
+    },
+    "WEEKLY_SHOPPING": {
+      "contact_density": 0.7,
+      "infection_vector_weight": 0.5,
+      "gossip_exchange_weight": 0.75
+    },
+    "PUB_SOCIAL": {
+      "contact_density": 0.85,
+      "infection_vector_weight": 0.7,
+      "gossip_exchange_weight": 0.95
+    },
+    "WORSHIP_SERVICE": {
+      "contact_density": 0.8,
+      "infection_vector_weight": 0.65,
+      "gossip_exchange_weight": 0.8
+    },
+    "JOBCENTRE_SIGN_ON": {
+      "contact_density": 0.85,
+      "infection_vector_weight": 0.65,
+      "gossip_exchange_weight": 0.8
+    },
+    "POST_OFFICE_QUEUE": {
+      "contact_density": 0.85,
+      "infection_vector_weight": 0.7,
+      "gossip_exchange_weight": 0.85
+    },
+    "GP_WAITING_ROOM": {
+      "contact_density": 0.95,
+      "infection_vector_weight": 0.95,
+      "gossip_exchange_weight": 0.6
+    },
+    "DENTAL_VISIT": {
+      "contact_density": 0.55,
+      "infection_vector_weight": 0.45,
+      "gossip_exchange_weight": 0.35
+    },
+    "CEREMONY_FUNERAL": {
+      "contact_density": 0.9,
+      "infection_vector_weight": 0.65,
+      "gossip_exchange_weight": 0.95
+    },
+    "CEREMONY_CHRISTENING": {
+      "contact_density": 0.85,
+      "infection_vector_weight": 0.6,
+      "gossip_exchange_weight": 0.9
+    },
+    "CEREMONY_WEDDING": {
+      "contact_density": 0.95,
+      "infection_vector_weight": 0.7,
+      "gossip_exchange_weight": 1.0
+    }
+  },
+  "school_routines": {
+    "primary_age_min": 5,
+    "primary_age_max": 10,
+    "secondary_age_min": 11,
+    "secondary_age_max": 18,
+    "school_days": [1, 2, 3, 4, 5],
+    "primary_escort": {
+      "drop_off_start": 8.5,
+      "drop_off_end": 9.0,
+      "pick_up_start": 15.0,
+      "pick_up_end": 15.5,
+      "class_start": 9.0,
+      "class_end": 15.25,
+      "categories": ["PRIMARY_SCHOOL"]
+    },
+    "secondary_independent": {
+      "commute_out_start": 8.25,
+      "commute_out_end": 8.75,
+      "class_start": 8.75,
+      "class_end": 15.5,
+      "commute_back_start": 15.5,
+      "commute_back_end": 16.25,
+      "categories": ["SECONDARY_SCHOOL"]
+    }
+  },
+  "weekly_shopping": {
+    "preferred_days": [5, 6, 4, 2, 3, 1],
+    "start_hour": 10.0,
+    "end_hour": 11.5,
+    "categories": [
+      "SUPERMARKET",
+      "HYPERMARKET",
+      "GROCER",
+      "GROCERS",
+      "CORNER_SHOP",
+      "BUTCHER",
+      "BAKERY",
+      "BAKERY_OR_BUTCHER"
+    ]
+  },
+  "pub_routines": {
+    "weekday_start_hour": 19.5,
+    "weekday_end_hour": 22.5,
+    "weekend_start_hour": 19.0,
+    "weekend_end_hour": 23.0,
+    "min_age": 18,
+    "base_weekly_visits": 1.5,
+    "extraversion_weight": 1.8,
+    "alcohol_tag_bonus_visits": 3.0
+  },
+  "civic_errands": {
+    "SIGN_ON_DAY": {
+      "routine_id": "JOBCENTRE_SIGN_ON",
+      "start_hour": 9.5,
+      "end_hour": 11.0,
+      "categories": ["JOBCENTRE", "JOBCENTRE_BLOCK"],
+      "cohort_mod": 5
+    },
+    "GIRO_DAY": {
+      "routine_id": "POST_OFFICE_QUEUE",
+      "start_hour": 9.0,
+      "end_hour": 11.5,
+      "categories": ["POST_OFFICE", "SUB_POST_OFFICE"],
+      "cohort_mod": 5
+    },
+    "PENSION_DAY": {
+      "routine_id": "POST_OFFICE_QUEUE",
+      "start_hour": 9.0,
+      "end_hour": 11.0,
+      "categories": ["POST_OFFICE", "SUB_POST_OFFICE"]
+    }
+  },
+  "medical_and_dental": {
+    "gp_visit": {
+      "categories": ["GP_SURGERY", "GP_PRACTICE"],
+      "start_hour": 9.0,
+      "end_hour": 11.5,
+      "afternoon_start_hour": 14.0,
+      "afternoon_end_hour": 16.5,
+      "visit_days": [1, 2, 3, 4, 5],
+      "acute_severity_threshold": 0.45,
+      "chronic_review_interval_days": 90,
+      "elderly_checkup_age": 70,
+      "elderly_checkup_interval_days": 120
+    },
+    "dental_checkup": {
+      "categories": ["DENTAL_PRACTICE"],
+      "start_hour": 9.5,
+      "end_hour": 16.5,
+      "slot_duration_hours": 1.0,
+      "visit_days": [1, 2, 3, 4, 5],
+      "interval_days": 180,
+      "min_age": 5
+    }
+  },
+  "worship_schedules": {
+    "devotion_model": {
+      "base_probability": 0.32,
+      "min_probability": 0.0,
+      "max_probability": 0.95,
+      "ocean_weights": {
+        "conscientiousness": 0.35,
+        "agreeableness": 0.3,
+        "openness": -0.2,
+        "neuroticism": 0.1
+      },
+      "age_bonus_start": 45,
+      "age_bonus_per_year": 0.005,
+      "age_bonus_cap": 0.18,
+      "stressor_modifiers": {
+        "recent_bereavement_days": 90,
+        "recent_bereavement_bonus": 0.2,
+        "severe_illness_bonus": 0.12,
+        "desperation_weight": 0.15
+      }
+    },
+    "by_religion": {
+      "PROTESTANT_COFE": {
+        "days_of_week": [7],
+        "start_hour": 10.0,
+        "end_hour": 11.5
+      },
+      "PROTESTANT_OTHER": {
+        "days_of_week": [7],
+        "start_hour": 10.5,
+        "end_hour": 12.0
+      },
+      "PENTECOSTAL_PROTESTANT": {
+        "days_of_week": [7],
+        "start_hour": 11.0,
+        "end_hour": 13.0
+      },
+      "CATHOLIC": { "days_of_week": [7], "start_hour": 9.5, "end_hour": 11.0 },
+      "EASTERN_ORTHODOX": {
+        "days_of_week": [7],
+        "start_hour": 10.0,
+        "end_hour": 12.0
+      },
+      "MUSLIM": { "days_of_week": [5], "start_hour": 12.5, "end_hour": 14.0 },
+      "MUSLIM_SUNNI": {
+        "days_of_week": [5],
+        "start_hour": 12.5,
+        "end_hour": 14.0
+      },
+      "MUSLIM_SHIA": {
+        "days_of_week": [5],
+        "start_hour": 12.5,
+        "end_hour": 14.0
+      },
+      "MUSLIM_IBADI": {
+        "days_of_week": [5],
+        "start_hour": 12.5,
+        "end_hour": 14.0
+      },
+      "MUSLIM_SALAFISM": {
+        "days_of_week": [5],
+        "start_hour": 12.5,
+        "end_hour": 14.0
+      },
+      "JEWISH_ORTHODOX": {
+        "days_of_week": [6],
+        "start_hour": 9.5,
+        "end_hour": 12.0
+      },
+      "JEWISH_CONSERVATIVE": {
+        "days_of_week": [6],
+        "start_hour": 10.0,
+        "end_hour": 12.0
+      },
+      "JEWISH_PROGRESSIVE": {
+        "days_of_week": [6],
+        "start_hour": 10.5,
+        "end_hour": 12.0
+      },
+      "SIKH": { "days_of_week": [7], "start_hour": 10.0, "end_hour": 12.5 },
+      "HINDU": { "days_of_week": [7], "start_hour": 10.0, "end_hour": 12.0 },
+      "BUDDHIST": { "days_of_week": [7], "start_hour": 10.0, "end_hour": 11.5 },
+      "BUDDIST": { "days_of_week": [7], "start_hour": 10.0, "end_hour": 11.5 },
+      "RASTAFARI": {
+        "days_of_week": [6],
+        "start_hour": 14.0,
+        "end_hour": 16.5
+      },
+      "SECULAR_NONE": { "days_of_week": [], "start_hour": 0.0, "end_hour": 0.0 }
+    }
+  },
+  "ceremony_rules": {
+    "FUNERAL": {
+      "event_type": "CEREMONY_FUNERAL",
+      "title_token": "UI_EVENT_CEREMONY_FUNERAL",
+      "delay_days_range": [5, 10],
+      "start_hour": 11.0,
+      "end_hour": 14.0,
+      "occurrence_probability": 0.96,
+      "base_guest_count": 18,
+      "venue_preference": ["CHURCH", "LOCAL_PUB"]
+    },
+    "CHRISTENING": {
+      "event_type": "CEREMONY_CHRISTENING",
+      "title_token": "UI_EVENT_CEREMONY_CHRISTENING",
+      "delay_days_range": [28, 75],
+      "start_hour": 11.5,
+      "end_hour": 14.5,
+      "occurrence_probability": 0.65,
+      "secular_occurrence_probability": 0.15,
+      "base_guest_count": 20,
+      "venue_preference": ["CHURCH", "LOCAL_PUB"]
+    },
+    "WEDDING": {
+      "event_type": "CEREMONY_WEDDING",
+      "title_token": "UI_EVENT_CEREMONY_WEDDING",
+      "annual_rate_per_eligible_adult": 0.018,
+      "min_age": 18,
+      "max_age": 48,
+      "preferred_days_of_week": [6, 5],
+      "start_hour": 13.0,
+      "end_hour": 21.0,
+      "occurrence_probability": 0.9,
+      "base_guest_count": 35,
+      "venue_preference": ["CHURCH", "LOCAL_GOVERNMENT", "LOCAL_PUB"]
+    }
+  }
+}
