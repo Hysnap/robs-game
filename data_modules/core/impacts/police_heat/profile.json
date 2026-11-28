@@ -22,9 +22,9 @@
   },
   "tuning": {
     "default_baseline_heat": 0.0,
-    "passive_cooling_per_week": 0.05,
+    "passive_cooling_per_week": 5.0,
     "minimum_floor": 0.0,
-    "maximum_ceiling": 1.0
+    "maximum_ceiling": 100.0
   },
   "perception": {
     "bucket_channel": {
@@ -40,7 +40,7 @@
       "buckets": [
         { "max": 15, "token": "UI_HEAT_COLD" },
         { "max": 35, "token": "UI_HEAT_NORMAL" },
-        { "max": 6, "token": "UI_HEAT_HEIGHTENED" },
+        { "max": 60, "token": "UI_HEAT_HEIGHTENED" },
         { "max": 85, "token": "UI_HEAT_ACUTE" },
         { "token": "UI_HEAT_CRITICAL" }
       ]

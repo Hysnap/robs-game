@@ -44,6 +44,13 @@ static func dispatch_ambient_tick(world_state: Dictionary) -> void:
 		if sink.has_method("process_ambient"):
 			sink.process_ambient(world_state)
 
+## Resets profile metrics marked reset_on_cycle before turn-cycle work begins
+static func dispatch_cycle_start(world_state: Dictionary) -> void:
+	for metric_key in _sinks.keys():
+		var sink = _sinks[metric_key]
+		if sink.has_method("reset_for_cycle"):
+			sink.reset_for_cycle(world_state)
+
 ## Scans the directory tree recursively, mounting UniversalMetricSink instances from profile.json
 static func autoload_sinks(root_dir: String) -> void:
 	if not DirAccess.dir_exists_absolute(root_dir):

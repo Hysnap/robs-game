@@ -64,7 +64,7 @@ func _build_test_world_state() -> Dictionary:
 				"estimated_population": 3500.0,
 				"expected_pop_min": 3000,
 				"expected_pop_max": 4000,
-				"unemployment_rate": 0.14,
+				"unemployment_rate": 14.0,
 				"avg_disposable_income": 65.0
 			},
 			"block_1_0": {
@@ -77,7 +77,7 @@ func _build_test_world_state() -> Dictionary:
 				"estimated_population": 1200.0,
 				"expected_pop_min": 900,
 				"expected_pop_max": 1500,
-				"unemployment_rate": 0.11,
+				"unemployment_rate": 11.0,
 				"avg_disposable_income": 85.0
 			},
 			"block_0_1": {
@@ -90,7 +90,7 @@ func _build_test_world_state() -> Dictionary:
 				"estimated_population": 600.0,
 				"expected_pop_min": 400,
 				"expected_pop_max": 800,
-				"unemployment_rate": 0.12,
+				"unemployment_rate": 12.0,
 				"avg_disposable_income": 75.0
 			},
 			"block_1_1": {
@@ -103,7 +103,7 @@ func _build_test_world_state() -> Dictionary:
 				"estimated_population": 2500.0,
 				"expected_pop_min": 2000,
 				"expected_pop_max": 3000,
-				"unemployment_rate": 0.16,
+				"unemployment_rate": 16.0,
 				"avg_disposable_income": 55.0
 			}
 		}

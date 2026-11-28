@@ -323,8 +323,8 @@ static func build_districts_and_civics(state: Dictionary, on_progress: Callable 
 			dist_id, borough_id, district_display.replace("'", "''"), district_type,
 			coords.x, coords.y, g_size.x, g_size.y,
 			building_count, exp_min, exp_max,
-			float(d.get("unemployment_rate", 0.0)), float(d.get("avg_disposable_income", 75.0)),
-			float(d.get("zone_health_index", 50.0)), float(d.get("actual_police_heat", 0.20)),
+			float(d.get("unemployment_rate", 0.0)) / 100.0, float(d.get("avg_disposable_income", 75.0)),
+			float(d.get("zone_health_index", 50.0)), float(d.get("actual_police_heat", 20.0)),
 			sim_start_day, reason_world_gen_id
 		])
 

@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS districts (
 	base_unemployment_rate REAL DEFAULT 0.0,
 	base_disposable_income REAL DEFAULT 0.0,
 	base_zone_health REAL DEFAULT 50.0,
-	base_police_heat REAL DEFAULT 0.20,
+	base_police_heat REAL DEFAULT 20.0,
 	is_home_turf INTEGER DEFAULT 0,
 	valid_from INTEGER NOT NULL,
 	valid_to INTEGER,

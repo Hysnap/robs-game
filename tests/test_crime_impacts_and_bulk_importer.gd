@@ -95,7 +95,7 @@ func _test_crime_mode_gated_impacts() -> void:
 		dist_a
 	)
 	assert(is_equal_approx(float(pickpocket_res.get("POLICE_HEAT", 0.0)), 2.0), "PICKPOCKET should dispatch +2.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"][dist_a]["actual_police_heat"]) > 0.0, "PICKPOCKET should raise actual_police_heat on %s." % dist_a)
+	assert(is_equal_approx(float(ws["districts"][dist_a]["actual_police_heat"]), 2.0), "PICKPOCKET should apply +2.0 on the 0-100 POLICE_HEAT scale.")
 	assert(is_equal_approx(float(ws["residents"][actor_1_key]["notoriety"]), 1.5), "PICKPOCKET should add +1.5 NOTORIETY.")
 
 	# 2. ROB (high profile)
@@ -107,7 +107,7 @@ func _test_crime_mode_gated_impacts() -> void:
 		dist_b
 	)
 	assert(is_equal_approx(float(rob_res.get("POLICE_HEAT", 0.0)), 14.0), "ROB should dispatch +14.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"][dist_b]["actual_police_heat"]) > 0.0, "ROB should raise actual_police_heat on %s." % dist_b)
+	assert(is_equal_approx(float(ws["districts"][dist_b]["actual_police_heat"]), 14.0), "ROB should apply +14.0 on the 0-100 POLICE_HEAT scale.")
 	assert(is_equal_approx(float(ws["residents"][actor_2_key]["criminal_suspicion"]), 10.0), "ROB should add +10.0 CRIMINAL_SUSPICION.")
 	assert(is_equal_approx(float(ws["residents"][actor_2_key]["notoriety"]), 8.0), "ROB should add +8.0 NOTORIETY.")
 
@@ -133,7 +133,7 @@ func _test_crime_mode_gated_impacts() -> void:
 		dist_c
 	)
 	assert(is_equal_approx(float(threaten_res.get("POLICE_HEAT", 0.0)), 6.0), "THREATEN should dispatch +6.0 POLICE_HEAT delta.")
-	assert(float(ws["districts"][dist_c]["actual_police_heat"]) > 0.0, "THREATEN should raise actual_police_heat on %s." % dist_c)
+	assert(is_equal_approx(float(ws["districts"][dist_c]["actual_police_heat"]), 6.0), "THREATEN should apply +6.0 on the 0-100 POLICE_HEAT scale.")
 	assert(is_equal_approx(float(ws["residents"][actor_1_key]["notoriety"]), 5.5), "THREATEN should add +4.0 NOTORIETY (total 5.5).")
 
 func _read_pool_score(ws: Dictionary, actor_id: String, target_key: String) -> float:

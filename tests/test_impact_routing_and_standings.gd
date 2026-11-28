@@ -10,6 +10,7 @@ func _init() -> void:
 	var passed: bool = true
 	passed = passed and _test_standings_routes_and_inheritance()
 	passed = passed and _test_intoxication_resident_route_zero_staff_fallback()
+	passed = passed and _test_profile_scale_bounds_and_cycle_reset()
 	passed = passed and _test_unmapped_scope_fails_loud()
 
 	if passed:
@@ -64,7 +65,7 @@ func _test_standings_routes_and_inheritance() -> bool:
 		printerr("FAIL [Standings]: Officer 102 personal override failed (expected -0.60, got %.2f)." % off2_trust)
 		return false
 
-	print("  PASS [1/3]: REPUTATION & STANDING routes and RESIDENT -> ORG -> GLOBAL inheritance verified.")
+	print("  PASS [1/4]: REPUTATION & STANDING routes and RESIDENT -> ORG -> GLOBAL inheritance verified.")
 	return true
 
 func _test_intoxication_resident_route_zero_staff_fallback() -> bool:
@@ -96,7 +97,81 @@ func _test_intoxication_resident_route_zero_staff_fallback() -> bool:
 		printerr("FAIL [Intoxication]: Legacy staff[999] was mutated (%.2f); zero-fallback violated." % staff_val)
 		return false
 
-	print("  PASS [2/3]: INTOXICATION RESIDENT route verified (zero legacy staff fallback).")
+	print("  PASS [2/4]: INTOXICATION RESIDENT route verified (zero legacy staff fallback).")
+	return true
+
+func _test_profile_scale_bounds_and_cycle_reset() -> bool:
+	ImpactRouterScript.reset()
+	ImpactRouterScript.autoload_sinks("res://data_modules/core/impacts/")
+
+	var ws: Dictionary = {
+		"districts": {"D1": {"zone_health_index": 80.0, "actual_police_heat": 0.0}},
+		"residents": {
+			"101": {"shift_time_spent": 167.0, "fatigue": 95.0, "actual_skim": 90.0}
+		},
+		"staff": {
+			"101": {"shift_time_spent": 10.0, "fatigue": 10.0, "actual_skim": 10.0}
+		},
+		"inventory": {"ITEM_A": {"STOCK": 3.0}}
+	}
+
+	ImpactRouterScript.dispatch_delta(ws, "D1", "ZONE_HEALTH", -10.0)
+	if not is_equal_approx(float(ws["districts"]["D1"]["zone_health_index"]), 70.0):
+		printerr("FAIL [Profile Scales]: ZONE_HEALTH must start at its profile baseline and apply the delta.")
+		return false
+	ImpactRouterScript.dispatch_delta(ws, "D1", "ZONE_HEALTH", -100.0)
+	if not is_equal_approx(float(ws["districts"]["D1"]["zone_health_index"]), 0.0):
+		printerr("FAIL [Profile Scales]: ZONE_HEALTH must respect its 0-point floor.")
+		return false
+
+	ImpactRouterScript.dispatch_delta(ws, "D1", "POLICE_HEAT", 14.0)
+	if not is_equal_approx(float(ws["districts"]["D1"]["actual_police_heat"]), 14.0):
+		printerr("FAIL [Profile Scales]: POLICE_HEAT must retain deltas on its 0-100 profile scale.")
+		return false
+
+	ImpactRouterScript.dispatch_delta(ws, "101", "OPERATIONAL_TIME", 10.0)
+	if not is_equal_approx(float(ws["residents"]["101"]["shift_time_spent"]), 168.0):
+		printerr("FAIL [Profile Scales]: OPERATIONAL_TIME must respect its declared 168-hour ceiling.")
+		return false
+
+	ImpactRouterScript.dispatch_delta(ws, "101", "WORKER_FATIGUE", 10.0)
+	ImpactRouterScript.dispatch_delta(ws, "101", "STAFF_SKIM", 20.0)
+	if not (
+		is_equal_approx(float(ws["residents"]["101"]["fatigue"]), 100.0)
+		and is_equal_approx(float(ws["residents"]["101"]["actual_skim"]), 100.0)
+	):
+		printerr("FAIL [Profile Routes]: Actor fallback metrics must write to RESIDENT records and honor their ceilings.")
+		return false
+	if not (
+		is_equal_approx(float(ws["staff"]["101"]["fatigue"]), 10.0)
+		and is_equal_approx(float(ws["staff"]["101"]["actual_skim"]), 10.0)
+		and is_equal_approx(float(ws["staff"]["101"]["shift_time_spent"]), 10.0)
+	):
+		printerr("FAIL [Profile Routes]: Actor fallback metrics must not mutate the staff container.")
+		return false
+
+	ImpactRouterScript.dispatch_delta(ws, "ITEM_A", "INVENTORY", -10.0)
+	if not is_equal_approx(float(ws["inventory"]["ITEM_A"]["STOCK"]), 0.0):
+		printerr("FAIL [Profile Scales]: INVENTORY must route to STOCK and clamp at zero.")
+		return false
+
+	var baseline_sink = UniversalMetricSinkScript.new({
+		"metric_id": "TEST_BASELINE",
+		"metric_class": "FACTUAL_COUNTER",
+		"target_scope": "INVENTORY",
+		"tuning": {"default_baseline_test": 10.0}
+	})
+	baseline_sink.apply_delta(ws, "ITEM_BASELINE", 1.0)
+	if not is_equal_approx(float(ws["inventory"]["ITEM_BASELINE"]["STOCK"]), 11.0):
+		printerr("FAIL [Profile Scales]: Profile-specific default baselines must initialize new routed values.")
+		return false
+
+	ImpactRouterScript.dispatch_cycle_start(ws)
+	if not is_equal_approx(float(ws["residents"]["101"]["shift_time_spent"]), 0.0):
+		printerr("FAIL [Profile Scales]: OPERATIONAL_TIME must reset at cycle start.")
+		return false
+
+	print("  PASS [3/4]: Profile bounds, baseline, inventory route and cycle reset verified.")
 	return true
 
 func _test_unmapped_scope_fails_loud() -> bool:
@@ -110,5 +185,5 @@ func _test_unmapped_scope_fails_loud() -> bool:
 		printerr("FAIL [Unmapped]: Expected empty route_path for unmapped scope, got '%s'." % bad_sink.route_path)
 		return false
 
-	print("  PASS [3/3]: Unmapped target_scope fails loud with empty route_path.")
+	print("  PASS [4/4]: Unmapped target_scope fails loud with empty route_path.")
 	return true

@@ -13,7 +13,7 @@
   "state_field": "zone_health_index",
   "format": "FLOAT",
   "decimals": 1,
-  "min_value": -100.0,
+  "min_value": 0.0,
   "max_value": 100.0,
   "telemetry_source": {
     "type": "WORLD_STATE",

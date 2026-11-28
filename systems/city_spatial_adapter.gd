@@ -100,13 +100,13 @@ static func ingest_citycrafter_generation(citycrafter_node: Node3D, out_world_st
 			var max_bldgs: int = int(round(float(bldg_range[1]) * scale_factor))
 			target_buildings = maxi(1, rng.randi_range(min_bldgs, max_bldgs))
 
-		var unemp_val: float = rng.randf_range(float(unemp_rng[0]), float(unemp_rng[1]))
+		var unemp_val: float = rng.randf_range(float(unemp_rng[0]), float(unemp_rng[1])) * 100.0
 		var inc_val: float = rng.randf_range(float(inc_rng[0]), float(inc_rng[1]))
 		var zhi_val: float = rng.randf_range(float(zhi_rng[0]), float(zhi_rng[1]))
 		
-		var heat_val: float = float(archetype.get("actual_police_heat", 0.0))
+		var heat_val: float = float(archetype.get("actual_police_heat", 0.0)) * 100.0
 		var desp_val: float = float(archetype.get("consumer_desperation_index", 0.0))
-		var corrupt_val: float = float(archetype.get("corruption_tolerance", 0.0))
+		var corrupt_val: float = float(archetype.get("corruption_tolerance", 0.0)) * 100.0
 
 		out_world_state["districts"][block_id] = {
 			"district_id": block_id,

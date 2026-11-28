@@ -4,6 +4,7 @@ extends SceneTree
 const COMMODITY_MGR = preload("res://systems/commodity_manager.gd")
 const IMPACT_ROUTER = preload("res://systems/impacts/impact_router.gd")
 const IMPACT_CALCULATOR = preload("res://systems/impacts/impact_calculator.gd")
+const AMBIENT_DECAY_PROCESSOR = preload("res://systems/impacts/ambient_decay_processor.gd")
 
 func _init() -> void:
 	print("\n=======================================================")
@@ -123,6 +124,10 @@ func _init() -> void:
 	IMPACT_ROUTER.autoload_sinks("res://data_modules/core/impacts/")
 
 	var world_state = {
+		"commodity_registry": {
+			"BEER_STRONG_LAGER": {"decay_properties": beer_decay_def}
+		},
+		"container_registry": containers,
 		"inventory": {
 			"BEER_OPEN": {
 				"STOCK": 100.0,
@@ -136,15 +141,18 @@ func _init() -> void:
 		}
 	}
 
-	# Apply decayed loss to inventory
-	var units_lost: float = abs(pitcher_loss) # 20 units
-	world_state["inventory"]["BEER_OPEN"]["STOCK"] -= units_lost
-	world_state["inventory"]["SPOILED_BEER"]["STOCK"] += units_lost
+	AMBIENT_DECAY_PROCESSOR.process_inventory_decay(world_state)
 
 	assert(world_state["inventory"]["BEER_OPEN"]["STOCK"] == 80.0, "FAILED: Stock did not decrement!")
 	assert(world_state["inventory"]["SPOILED_BEER"]["STOCK"] == 20.0, "FAILED: Spoiled beer did not increment!")
 	print("  ✓ Fresh Beer Stock Remaining: ", world_state["inventory"]["BEER_OPEN"]["STOCK"])
 	print("  ✓ Spoiled Waste Generated:    ", world_state["inventory"]["SPOILED_BEER"]["STOCK"])
+
+	beer_decay_def["impact"]["factor"] = -2.0
+	world_state["inventory"]["BEER_OPEN"]["STOCK"] = 10.0
+	AMBIENT_DECAY_PROCESSOR.process_inventory_decay(world_state)
+	assert(world_state["inventory"]["BEER_OPEN"]["STOCK"] == 0.0, "FAILED: Decay must not drive inventory below zero!")
+	assert(world_state["inventory"]["SPOILED_BEER"]["STOCK"] == 30.0, "FAILED: Spoilage conversion must not exceed the stock lost.")
 
 	print("\n=======================================================")
 	print("   CONTAINER & DECAY PIPELINE TEST PASSED 100% CLEAN!  ")

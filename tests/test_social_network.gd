@@ -44,20 +44,20 @@ func _init() -> void:
 
 			if dist_from_center <= 1.2:
 				dtype = "commercial"
-				unemp = 0.10
+				unemp = 10.0
 			elif gx >= 6: # Eastern industrial transit corridor
 				dtype = "industrial"
-				unemp = 0.22
+				unemp = 22.0
 			elif dist_from_center <= 2.6:
 				if (gx + gy) % 3 == 0:
 					dtype = "high_density_high_rise"
-					unemp = 0.35
+					unemp = 35.0
 				else:
 					dtype = "high_density_low_rise"
-					unemp = 0.18
+					unemp = 18.0
 			else:
 				dtype = "suburban_low_density"
-				unemp = 0.06
+				unemp = 6.0
 
 			var disp_name: String = street_names[name_idx % street_names.size()]
 			name_idx += 1

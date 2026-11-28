@@ -19,7 +19,7 @@
   "telemetry_source": {
     "type": "DATABASE_AGGREGATE",
     "table": "citizens",
-    "aggregate": "AVG(CASE WHEN employment_status = 'EMPLOYED' THEN 1.0 ELSE 0.0 END)",
+    "aggregate": "AVG(CASE WHEN employment_status = 'EMPLOYED' THEN 1.0 ELSE 0.0 END) * 100.0",
     "where": "district_id = '{id}' AND age >= 16 AND age < 65"
   },
   "perception": {
